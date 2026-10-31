@@ -8,6 +8,10 @@ a one-line status with `set_status`. Address sessions as `name@host`, roles as
 `@role:<role>`, the project as `topic:project:<key>`. Use `kind: "request"` when you need an
 answer and reply in the thread; never reply to a pure acknowledgement.
 
+When the user asks for `whoami`, use the common "Reporting `whoami`" template in the
+kommutator skill. Always include the complete hub session ID and vendor session ID from
+a fresh tool response; a handle alone does not distinguish session identity.
+
 The board is shared memory: decisions, contracts, handoff notes and the user's preferences go
 there; progress and logs do not. `board_get` before `board_put`, pass `if_version`, and leave
 `protected` entries alone unless the user asks here. Before finishing significant work, write

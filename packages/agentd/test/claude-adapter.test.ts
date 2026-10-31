@@ -145,13 +145,17 @@ describe("classifyReply", () => {
 });
 
 describe("claudeAdapter.isAlive", () => {
-  it("needs a live pid and an endpoint that is a unix socket", async () => {
+  it("keeps live owners regardless of native endpoint availability and rejects dead owners", async () => {
     const inbox = fakeInbox("");
-    expect(await claudeAdapter.isAlive(localSession("/nonexistent/inbox.sock"))).toBe(false);
+    expect(await claudeAdapter.isAlive(localSession("/nonexistent/inbox.sock"))).toBe(true);
     expect(await claudeAdapter.isAlive({ ...localSession(inbox.endpoint), pid: 2147483647 })).toBe(false);
     const plainFile = join(mkdtempSync(join(tmpdir(), "kom-")), "not-a-socket");
     writeFileSync(plainFile, "");
-    expect(await claudeAdapter.isAlive(localSession(plainFile))).toBe(false);
+    expect(await claudeAdapter.isAlive(localSession(plainFile))).toBe(true);
     expect(await claudeAdapter.isAlive(localSession(inbox.endpoint))).toBe(true);
+    const { endpoint: _endpoint, ...hookOnly } = localSession(inbox.endpoint);
+    expect(await claudeAdapter.isAlive(hookOnly)).toBe(true);
+    const { pid: _pid, ...ownerless } = hookOnly;
+    expect(await claudeAdapter.isAlive(ownerless)).toBe(false);
   });
 });

@@ -74,7 +74,7 @@ describe("production IPC and hub link", () => {
     const first = await ipc(daemon.paths.ipc);
     const second = await ipc(daemon.paths.ipc);
     await first.call("ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, pid: 1000, ppid: 55, vendor: "claude-code", vendor_session_id: "a", cwd: "/repo" });
-    await second.call("ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 1001, vendor: "claude-code", vendor_session_id: "a", cwd: "/repo" });
+    await second.call("ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 1001, ppid: 55, vendor: "claude-code", vendor_session_id: "a", cwd: "/repo" });
     const identity = z.object({ session: z.object({ id: z.string(), handle: z.string() }) }).parse(await second.call("whoami"));
     expect(identity.session.handle).toMatch(/@mac$/);
     await closeSocket(first.socket);

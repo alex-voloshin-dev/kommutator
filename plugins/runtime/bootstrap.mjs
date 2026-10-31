@@ -26,7 +26,7 @@ catch {
   } finally { await rm(temporary, { recursive: true, force: true }); }
 }
 const child = spawn(join(target, 'node'), [join(target, 'app/dist/index.js'), ...(process.argv.length > 3 ? process.argv.slice(3) : ['mcp'])], {
-  stdio: 'inherit', env: { ...process.env, KOM_PLUGIN_PROFILE: process.argv[2] },
+  stdio: 'inherit', env: { ...process.env, KOM_PLUGIN_PROFILE: process.argv[2], KOM_CLAUDE_OWNER_PID: String(process.ppid) },
 });
 for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => child.kill(signal));
 child.on('error', () => { console.error('kommutator: bundled runtime failed'); process.exitCode = 1; });

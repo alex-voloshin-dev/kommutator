@@ -13,7 +13,6 @@
 //     passed in bypass mode. Silence stays written, never accepted (see classifyReply).
 
 import { connect } from "node:net";
-import { stat } from "node:fs/promises";
 import type { Message, Session } from "@kommutator/protocol";
 import type { Adapter, DeliveryResult, LocalSession } from "./types.js";
 
@@ -131,23 +130,11 @@ export const claudeAdapter: Adapter = {
     });
   },
 
-  /**
-   * Cheap liveness: the pid answers signal 0 and the endpoint is a unix socket (not just
-   * any file). This is an existence check, not proof that the pid is still the same
-   * process — pid reuse is handled in M1 by comparing the process start time recorded at
-   * registration (DESIGN.md §19).
-   */
+  /** The core checks process birth; native socket availability is a delivery fact,
+   * not the lifetime of a hook-only mailbox. */
   async isAlive(local: LocalSession): Promise<boolean> {
-    if (!local.pid || !local.endpoint) return false;
-    try {
-      process.kill(local.pid, 0);
-    } catch {
-      return false;
-    }
-    try {
-      return (await stat(local.endpoint)).isSocket();
-    } catch {
-      return false;
-    }
+    if (!local.pid) return false;
+    try { process.kill(local.pid, 0); return true; }
+    catch { return false; }
   },
 };

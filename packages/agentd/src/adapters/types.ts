@@ -22,7 +22,7 @@ export interface Adapter {
    */
   deliver(session: LocalSession, message: Message, wake: boolean): Promise<DeliveryResult>;
 
-  /** Cheap liveness probe (pid alive, endpoint present). */
+  /** Cheap owner-process liveness probe; delivery availability is separate. */
   isAlive(session: LocalSession): Promise<boolean>;
 }
 

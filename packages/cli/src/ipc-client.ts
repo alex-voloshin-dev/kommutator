@@ -30,12 +30,19 @@ export function spawnDaemon(): void {
   child.unref();
 }
 
+export function claudeOwnerPid(): number {
+  if (process.env.KOM_PLUGIN_PROFILE === "claude-code") {
+    return z.coerce.number().int().positive().parse(process.env.KOM_CLAUDE_OWNER_PID);
+  }
+  return process.ppid;
+}
+
 export function shimHello(clientInfo?: { name: string; version?: string }): Hello {
   const codex = isCodexClient(clientInfo);
   const claude = !codex && /claude/i.test(clientInfo?.name ?? "");
   const vendorId = claude ? process.env.CLAUDE_CODE_SESSION_ID : undefined;
   return Methods["ipc.hello"].parse({
-    client: "shim", protocol_version: PROTOCOL_VERSION, pid: process.pid, ppid: process.ppid,
+    client: "shim", protocol_version: PROTOCOL_VERSION, pid: process.pid, ppid: claude ? claudeOwnerPid() : process.ppid,
     cwd: process.cwd(), vendor: codex ? "codex" : claude ? "claude-code" : "other",
     ...(vendorId ? { vendor_session_id: vendorId } : {}),
     ...(process.env.KOM_PROJECT ? { project_key: process.env.KOM_PROJECT } : {}),

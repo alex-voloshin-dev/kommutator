@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { PrivateSetup } from "../src/setup.js";
-import { savePluginContext, pluginContext, saveClaudeRegistration, claudeRegistration } from "../src/plugin-context.js";
+import { savePluginContext, pluginContext, saveClaudeRegistration, claudeRegistration, forgetClaudeRegistration } from "../src/plugin-context.js";
 import { shimHello } from "../src/ipc-client.js";
 let home: string;
 let setup: PrivateSetup;
@@ -56,24 +56,29 @@ describe("private plugin setup", () => {
   it("retains observed Claude registration privately and refuses missing or stale parents", async () => {
     await savePluginContext("claude-code", "root-one", "/project/one");
     await saveClaudeRegistration({ client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: "root-one", pid: 99999999, ppid: process.pid, cwd: "/project/one", token: "private-vendor-token" });
-    const saved = await claudeRegistration("root-one");
+    const saved = await claudeRegistration("root-one", process.pid);
     expect(saved.ppid).toBe(process.pid);
     expect(saved.token).toBe("private-vendor-token");
-    await expect(claudeRegistration("different-root")).rejects.toThrow("unavailable or expired");
-    await saveClaudeRegistration({ client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: "expired-root", pid: 99999999, ppid: 99999998, cwd: "/project/one" });
-    await expect(claudeRegistration("expired-root")).rejects.toThrow("unavailable or expired");
+    await expect(claudeRegistration("different-root", process.pid)).rejects.toThrow("unavailable or expired");
+    await expect(saveClaudeRegistration({ client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: "expired-root", pid: 99999999, ppid: 99999998, cwd: "/project/one" })).rejects.toThrow("unavailable or expired");
+    await expect(claudeRegistration("expired-root", process.pid)).rejects.toThrow("unavailable or expired");
   });
-  it("refreshes an observed resumed Claude owner only after the previous process exits", async () => {
+  it("keeps concurrent resumed Claude owner registrations separate", async () => {
     await savePluginContext("claude-code", "resumed", "/project/one");
     const owner = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
     if (!owner.pid) throw new Error("missing fixture PID");
     const hello = { client: "hook" as const, protocol_version: 1, vendor: "claude-code" as const, vendor_session_id: "resumed", pid: 99999999, ppid: owner.pid, cwd: "/project/one" };
     try {
       await saveClaudeRegistration(hello);
-      await expect(saveClaudeRegistration({ ...hello, ppid: process.pid })).rejects.toThrow("Conflicting live Claude owner");
+      await saveClaudeRegistration({ ...hello, ppid: process.pid, cwd: "/project/two" });
+      expect((await claudeRegistration("resumed", owner.pid)).cwd).toBe("/project/one");
+      expect((await claudeRegistration("resumed", process.pid)).cwd).toBe("/project/two");
+      await forgetClaudeRegistration("resumed", owner.pid);
+      await expect(claudeRegistration("resumed", owner.pid)).rejects.toThrow("unavailable or expired");
+      expect((await claudeRegistration("resumed", process.pid)).cwd).toBe("/project/two");
     } finally { owner.kill(); await new Promise<void>(resolve => owner.once("exit", () => resolve())); }
-    await saveClaudeRegistration({ ...hello, ppid: process.pid });
-    expect((await claudeRegistration("resumed")).ppid).toBe(process.pid);
+    await saveClaudeRegistration({ ...hello, ppid: process.pid, cwd: "/project/two" });
+    expect((await claudeRegistration("resumed", process.pid)).ppid).toBe(process.pid);
   });
   it("never uses inherited Claude identity for unknown or Codex clients", () => {
     const previous = process.env.CLAUDE_CODE_SESSION_ID;

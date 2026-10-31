@@ -16,9 +16,21 @@ The implemented IPC handshake pins a connection to one session; agentd stamps se
 the hub derives authorship and checks membership. The hub implements these checks and
 transactional replay for reg_id, idempotency_key and op_id. The registration journal
 returns the original snapshot on delayed replay without changing current session state.
-The production binding uses the vendor session ID, then PID or a single unbound cwd
-candidate only when no vendor ID exists. Ended bindings cannot switch identities.
-Launch-scoped endpoint/token/mode/policy reset on revival or process replacement.
+Claude binding requires the vendor session ID plus observed owner PID/process birth.
+Concurrent processes resuming the same vendor ID receive independent hub identities;
+the public vendor ID remains correlation data. Without a vendor ID, only a unique
+same-owner match is allowed; cwd cannot substitute for ownership. Cold registration and
+cleanup are owner-scoped. A unique prior owner may be resumed only with positive exit or
+PID-reuse evidence and matching cwd/project; ambiguity produces a new registration.
+Bound peers cannot follow an ended or replaced owner; ownership is rechecked after async
+probes, flushes and reads. A live hook-only owner does not require a native socket. Duplicate resumed owners sharing a
+native endpoint use hook delivery while the endpoint is ambiguous. See the
+[ownership implementation evidence](../sdlc/claude-session-identity/implementation.md).
+
+Codex roots use exact per-call MCP metadata (`sessionId`/`threadId`); inherited environment
+IDs and cwd do not establish identity. Hooks bind existing roots and the shim owns
+liveness. Fork MCP calls are rejected. Launch-scoped endpoint/token/mode/policy reset on
+revival or process replacement. The plugin daemon compatibility contract is 2.
 
 [headers.ts](../../packages/protocol/src/headers.ts) uses Unicode code points for
 previews/injection: at most five headers and 4,000 code points including the trailer.

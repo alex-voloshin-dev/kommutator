@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, writeFile, rm, rename, symlink, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createHubServer } from '../packages/hub/dist/server.js';
 import { openDatabase } from '../packages/hub/dist/db.js';
 const artifact = resolve(process.argv[2]);
@@ -33,16 +34,34 @@ await writeFile(codexSettings, installedCodex);
 const clients = [];
 const moved = [];
 const env = { HOME: home, KOM_HOME: kom, CODEX_HOME: join(home, 'codex'), PATH: join(home, 'os-bin') };
-async function hook(vendor, id, event = 'SessionStart', cwd = project) {
+function owner(id) {
+  const child = spawn(process.execPath, [fileURLToPath(new URL('./fixtures/plugin-owner.mjs', import.meta.url)), join(artifact, 'plugins/claude-code')], {
+    cwd: '/', env: { ...env, CLAUDE_CODE_SESSION_ID: id }, stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+  });
+  clients.push(child);
+  let serial = 0;
+  const pending = new Map();
+  child.on('message', reply => pending.get(reply.id)?.(reply));
+  return { child, command(action, payload = {}) {
+    const requestId = ++serial;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { pending.delete(requestId); reject(new Error(`Owner fixture timeout: ${action}`)); }, 15000);
+      pending.set(requestId, reply => { clearTimeout(timer); pending.delete(requestId); reply.error ? reject(new Error(reply.error)) : resolve(); });
+      child.send({ id: requestId, action, ...payload });
+    });
+  } };
+}
+async function hook(vendor, id, event = 'SessionStart', cwd = project, parent) {
+  if (parent) return parent.command('hook', { event, payload: { session_id: id, cwd, permission_mode: 'default' } });
   const child = spawn(join(artifact, 'plugins', vendor, 'bin/hook'), [event], { cwd: '/', env: { ...env, CLAUDE_CODE_SESSION_ID: id }, stdio: ['pipe', 'pipe', 'pipe'] });
   let stdout = ''; child.stdout.on('data', chunk => { stdout += chunk; }); child.stderr.resume();
   const done = new Promise((resolve, reject) => { child.on('error', reject); child.on('close', code => { try { assert.equal(code, 0); assert.equal(stdout, ''); resolve(); } catch (error) { reject(error); } }); });
   child.stdin.end(JSON.stringify({ session_id: id, cwd, permission_mode: 'default' }));
   await done;
 }
-async function client(vendor, id) {
-  const child = spawn(join(artifact, 'plugins', vendor, 'bin/mcp'), [], { cwd: '/', env: { ...env, CLAUDE_CODE_SESSION_ID: id }, stdio: ['pipe', 'pipe', 'pipe'] });
-  clients.push(child);
+async function client(vendor, id, parent) {
+  const child = parent?.child ?? spawn(join(artifact, 'plugins', vendor, 'bin/mcp'), [], { cwd: '/', env: { ...env, CLAUDE_CODE_SESSION_ID: id }, stdio: ['pipe', 'pipe', 'pipe'] });
+  if (!parent) clients.push(child);
   let buffer = ''; let serial = 0; const pending = new Map();
   child.stderr.resume();
   child.stdout.on('data', chunk => { buffer += chunk; let end; while ((end = buffer.indexOf('\n')) >= 0) { const reply = JSON.parse(buffer.slice(0, end)); buffer = buffer.slice(end + 1); pending.get(reply.id)?.(reply); } });
@@ -54,6 +73,7 @@ async function client(vendor, id) {
       child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id: requestId, method, params }) + '\n');
     });
   }
+  if (parent) await parent.command('start');
   await request('initialize', { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: vendor, version: 'fixture' } });
   child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
   return { child, async call(name, args = {}, root = id, expectedError = false) {
@@ -78,10 +98,57 @@ try {
   assert.equal((await setup.call('setup_status')).configured, true);
   await stop(setup.child);
   // These hooks execute before any daemon exists. First whoami must work without a second hook.
-  await hook('claude-code', 'claude-root-a');
-  const claude = await client('claude-code', 'claude-root-a');
+  const firstOwner = owner('claude-root-a');
+  const secondOwner = owner('claude-root-a');
+  assert.notEqual(firstOwner.child.pid, secondOwner.child.pid);
+  await hook('claude-code', 'claude-root-a', 'SessionStart', project, firstOwner);
+  await hook('claude-code', 'claude-root-a', 'SessionStart', project, secondOwner);
+  const claude = await client('claude-code', 'claude-root-a', firstOwner);
   const author = (await claude.call('whoami')).session;
   assert.equal(author.vendor_session_id, 'claude-root-a'); assert.equal(author.cwd, project);
+  const otherClaude = await client('claude-code', 'claude-root-a', secondOwner);
+  const otherAuthor = (await otherClaude.call('whoami')).session;
+  assert.equal(otherAuthor.vendor_session_id, author.vendor_session_id);
+  assert.equal(otherAuthor.cwd, author.cwd);
+  assert.notEqual(otherAuthor.id, author.id, 'Concurrent Claude processes sharing a vendor ID need separate hub identities');
+  assert.notEqual(otherAuthor.handle, author.handle);
+  for (let turn = 0; turn < 3; turn++) {
+    await claude.call('set_status', { status_line: `first-${turn}`, role: 'author' });
+    await otherClaude.call('set_status', { status_line: `second-${turn}`, role: 'reviewer' });
+    for (const [c, original, status, role] of [[claude, author, `first-${turn}`, 'author'], [otherClaude, otherAuthor, `second-${turn}`, 'reviewer']]) {
+      const current = (await c.call('whoami')).session;
+      assert.equal(current.id, original.id); assert.equal(current.handle, original.handle);
+      assert.equal(current.incarnation, original.incarnation, 'Alternating clients must not reincarnate one another');
+      assert.equal(current.status_line, status); assert.equal(current.role, role);
+    }
+  }
+  const toSecond = await claude.call('send', { to: otherAuthor.handle, body: 'only second owner' });
+  const toFirst = await otherClaude.call('send', { to: author.handle, body: 'only first owner' });
+  const firstInbox = (await claude.call('inbox')).headers.map(header => header.id);
+  const secondInbox = (await otherClaude.call('inbox')).headers.map(header => header.id);
+  assert(firstInbox.includes(toFirst.id)); assert(!firstInbox.includes(toSecond.id));
+  assert(secondInbox.includes(toSecond.id)); assert(!secondInbox.includes(toFirst.id));
+  assert.equal((await claude.call('read', { id: toFirst.id })).message.body, 'only first owner');
+  assert.equal((await otherClaude.call('read', { id: toSecond.id })).message.body, 'only second owner');
+  // Cross the daemon's default 20-second sweep with live owners and no native endpoint.
+  // Do not run hooks here: they could revive incorrectly ended hook-only sessions.
+  await new Promise(resolve => setTimeout(resolve, 21000));
+  for (const [c, original, status] of [[claude, author, 'first-2'], [otherClaude, otherAuthor, 'second-2']]) {
+    const current = (await c.call('whoami')).session;
+    assert.equal(current.id, original.id, 'A live hook-only owner must survive the daemon sweep');
+    assert.equal(current.incarnation, original.incarnation, 'A sweep must not force hook-only re-registration');
+    assert.equal(current.status_line, status); assert.notEqual(current.state, 'gone');
+  }
+  await hook('claude-code', 'claude-root-a', 'SessionEnd', project, secondOwner);
+  assert((await claude.call('list_sessions', { state: 'gone' })).sessions.some(session => session.id === otherAuthor.id), 'SessionEnd must end its own owner');
+  await hook('claude-code', 'claude-root-a', 'SessionStart', project, firstOwner);
+  const survivor = (await claude.call('whoami')).session;
+  assert.equal(survivor.id, author.id); assert.equal(survivor.incarnation, author.incarnation);
+  assert.equal(survivor.status_line, 'first-2'); assert.notEqual(survivor.state, 'gone');
+  await otherClaude.call('whoami', {}, 'claude-root-a', true);
+  assert.equal((await claude.call('whoami')).session.id, author.id);
+  await stop(otherClaude.child);
+  console.log('PASS: synthetic Claude owners with real process ancestry sharing vendor ID/cwd retain separate identities, statuses and inboxes; SessionEnd preserves the other owner');
   await hook('codex', 'codex-root-a'); await hook('codex', 'codex-root-b');
   const codex = await client('codex', 'codex-root-a');
   const [a, b] = await Promise.all(['codex-root-a', 'codex-root-b'].map(async root => (await codex.call('whoami', {}, root)).session));

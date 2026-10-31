@@ -532,7 +532,7 @@ for that session; no global or repository policy was changed.
 | Concern | Mechanism | Verify (spike) |
 |---|---|---|
 | Registration | `SessionStart` hook → `session.upsert` with `session_id`, `cwd`, `permission_mode`, socket path, token, and the hook's `PPID` as the session pid. Hooks use **exec form** (`command` + `args`), which Claude Code spawns directly; shell form runs under `sh -c` and `PPID` would be the shell | spike 1, measured from a real exec-form hook (`ppid-probe.sh`), not from the Bash tool: parent `comm` is `claude`. If it is not, liveness comes from the inbox socket alone |
-| Liveness | pid from the hook, inbox socket present; `SessionEnd` hook → `session.gone` | |
+| Liveness | owner pid/birth from the hook; native socket availability is separate; `SessionEnd` hook → `session.gone` | |
 | Wake / deliver | agentd connects to the inbox socket, sends the auth line, then the message line | 2.1.310: manual/default and bypass/explicit-accept native wake passed; bypass/default with token Held; production path untested |
 | Inject headers | `PostToolUse`, `UserPromptSubmit` → `additionalContext` | |
 | Stop-time poll | `Stop` → `decision: block` + `reason` | spike 4 |
@@ -547,17 +547,15 @@ and mode stay on the host (`LocalSession`); only the protocol `Session` goes to 
 **Binding the shim to the right session — two sessions in one folder.** A hook knows its
 session (`session_id` in the payload). The shim is a separate process spawned by Claude
 Code, and `cwd` cannot tell two sessions in the same repository apart. The binding key is
-therefore the **vendor's session id on both sides**: the hook reports it in `ipc.hello`;
-the shim reads `CLAUDE_CODE_SESSION_ID` from the environment Claude Code gives its MCP
-servers (verified in both simultaneous same-cwd sessions on 2.1.310) and reports
-it in its own `ipc.hello`. agentd joins the two on that id. Fallbacks, in order, only when
-the shim has no id: (a) the shim's parent pid equals a registered session's pid (both
-`ps`-visible), (b) exactly one unbound session in that cwd. If neither resolves, the shim's
-`whoami` returns an error naming the ambiguity rather than guessing — `cwd` plus "most
-recent" is never used (same rule as for Codex in §19). The live probe verified two separate
-initialized MCP processes and ID/PPID matches, not production `whoami`. M1 test: two registered
-sessions with identical cwd, two shims, each bound to the correct one; a third shim with no
-id and two candidates → error, not a guess.
+the **vendor's session id plus process ownership on both sides**: the hook reports
+`session_id` and its parent PID; the shim reads `CLAUDE_CODE_SESSION_ID` (verified on
+2.1.310) and reports the same owner PID. The bundled bootstrap preserves its observed
+parent across its extra runtime process. agentd verifies process birth and matches that
+owner, never cwd or the most recent record. Two live processes resuming one vendor ID get
+independent hub identities. Without a vendor ID, a unique same-owner match is required.
+Unprovable ownership is an error. See §19's duplicate-resumed-root contract for recovery
+and the separate native socket ambiguity boundary. Historical M1 evidence verified
+independent vendor IDs; duplicate-resume separation needs its own live vendor acceptance.
 
 Claude Code already rate-limits repeated messages per sender, drops identical repeats and
 queues at most 50 per session, so loop protection on the Claude side comes for free.
@@ -1021,7 +1019,8 @@ instruction to back up and remove old manual entries and trust plugin hooks norm
 automatic trust changes or broad settings rewrites occur. Client uninstall leaves shared
 runtime/config/state intact; explicit local removal is separate.
 
-The additive `daemon.status.runtime_contract = 1` identifies this plugin lifecycle contract.
+The initial plugin lifecycle used `daemon.status.runtime_contract = 1`; process-owner
+isolation below supersedes it with contract 2.
 Before plugin registration the MCP performs a CLI-only preflight; a missing or different
 contract on an active daemon is an explicit migration error, never a silent restart. Plugin
 hooks fail open against incompatible daemons. `setup_status` additionally reports daemon
@@ -1080,3 +1079,30 @@ Marketplace registration, enabled-plugin entries, permission strings and unrelat
 metadata are not integrations and never require deletion to use the plugin. Malformed
 JSON/settings structures fail with a fixed inspection error without exposing file contents.
 Checks remain read-only; real manual MCP/hook conflicts still require deliberate migration.
+
+### Claude process ownership (duplicate resumed roots)
+
+A Claude vendor session ID is correlation, not sufficient local ownership: two live
+processes can resume the same conversation. The daemon distinguishes Claude owners by
+observed parent PID and process birth, preserving the original vendor ID in the public
+session. Hooks and MCP must agree on that owner; the bundled MCP bootstrap passes its
+observed parent through to its child. Missing or unprovable ownership fails explicitly.
+Concurrent owners get separate hub identities, names, status and inboxes. Registration is
+serialized so simultaneous hooks cannot collapse into one record. A single prior
+owner proven dead or replaced (not merely an unavailable probe) may be resumed only with
+the same cwd and project; if prior history is ambiguous, allocate a new identity instead.
+Bound IPC peers pin the owner generation and cannot follow a later replacement.
+Claude cold registration/context is scoped to that same process owner; one owner's
+SessionEnd cannot erase another owner's registration. The shared daemon runtime contract
+is 2; upgraded plugin clients reject older daemons until an explicit local restart.
+
+If duplicate resumed owners expose the same native messaging endpoint, downgrade both
+to hook capability and do not deliver through that socket while ambiguous. Native wake
+separation for duplicated vendor conversations remains a distinct live evidence gate.
+
+Ownership is revalidated after asynchronous process probes, outbox flushes and hub reads,
+before returning owner-specific results or mutating hook state. An unbound peer pins its
+first observed process birth; it cannot later follow PID reuse. Sweeps recheck the current
+generation after liveness probes. A live Claude owner does not require a native socket: its
+hook-only mailbox remains alive while the process PID/birth is valid. Native socket failure
+is a delivery failure, not evidence that the owner exited.

@@ -6,7 +6,7 @@ export async function pluginDaemonStatus(lazyStart = false, timeoutMs = 500, wai
     const deadline = Date.now() + waitForHubMs;
     for (;;) {
       const value = await client.call("daemon.status");
-      if (!(value && typeof value === "object" && "runtime_contract" in value && value.runtime_contract === 1)) return "incompatible";
+      if (!(value && typeof value === "object" && "runtime_contract" in value && value.runtime_contract === 2)) return "incompatible";
       const hub = "hub" in value ? value.hub : undefined;
       // IPC becomes available before the restarted daemon finishes its first hub handshake.
       // Probe only status; never replay the caller's operation. Offline sends remain queueable.

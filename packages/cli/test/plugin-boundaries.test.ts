@@ -79,10 +79,10 @@ it("never returns a Claude registration for another root and removes replay auth
   const { saveClaudeRegistration, claudeRegistration, forgetClaudeRegistration } = await import("../src/plugin-context.js");
   await savePluginContext("claude-code", "root-a", "/project");
   await saveClaudeRegistration({ client: "hook", protocol_version: 1, pid: process.pid, ppid: process.pid, vendor: "claude-code", vendor_session_id: "root-a", cwd: "/project" });
-  expect(await claudeRegistration("root-a")).toMatchObject({ vendor_session_id: "root-a", ppid: process.pid, cwd: "/project" });
-  await expect(claudeRegistration("root-b")).rejects.toThrow("unavailable or expired");
-  await forgetClaudeRegistration("root-a");
-  await expect(claudeRegistration("root-a")).rejects.toThrow("unavailable or expired");
+  expect(await claudeRegistration("root-a", process.pid)).toMatchObject({ vendor_session_id: "root-a", ppid: process.pid, cwd: "/project" });
+  await expect(claudeRegistration("root-b", process.pid)).rejects.toThrow("unavailable or expired");
+  await forgetClaudeRegistration("root-a", process.pid);
+  await expect(claudeRegistration("root-a", process.pid)).rejects.toThrow("unavailable or expired");
   expect(await pluginContext("claude-code", "root-a")).toBe("/project");
 });
 
@@ -94,9 +94,9 @@ it("rejects saved registration after its observed owner exits", async () => {
     if (!child.pid) throw new Error("missing child pid");
     await savePluginContext("claude-code", "dead-owner", "/project");
     await saveClaudeRegistration({ client: "hook", protocol_version: 1, pid: process.pid, ppid: child.pid, vendor: "claude-code", vendor_session_id: "dead-owner", cwd: "/project" });
-    expect((await claudeRegistration("dead-owner")).ppid).toBe(child.pid);
+    expect((await claudeRegistration("dead-owner", child.pid)).ppid).toBe(child.pid);
     const ended = new Promise<void>(resolve => child.once("close", () => resolve()));
     child.kill("SIGTERM"); await ended;
-    await expect(claudeRegistration("dead-owner")).rejects.toThrow("unavailable or expired");
+    await expect(claudeRegistration("dead-owner", child.pid)).rejects.toThrow("unavailable or expired");
   } finally { if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM"); }
 });

@@ -17,7 +17,7 @@ import { realClock, WakeScheduler, type Clock } from "./wake.js";
 import { Projects } from "./project.js";
 
 export type Hello = z.infer<(typeof Methods)["ipc.hello"]>;
-export interface IpcPeer { hello?: Hello; key?: string }
+export interface IpcPeer { hello?: Hello; key?: string; ownerPid?: number; ownerBirth?: string; ended?: boolean }
 export interface CoreOptions {
   config: DaemonConfig;
   dbPath: string;
@@ -50,6 +50,7 @@ export class DaemonCore {
   private readonly outcomes = new Map<number, { result?: unknown; error?: RpcError }>();
   private readonly deliveryRuns = new Map<string, Promise<void>>();
   private closed = false;
+  private registrationTail: Promise<void> = Promise.resolve();
   private readonly codexHookEvents = new Map<string, Set<string>>();
   private readonly projects = new Projects();
 
@@ -111,6 +112,7 @@ export class DaemonCore {
   }
   private markGone(record: LocalRecord): void {
     this.codexHookEvents.delete(record.key);
+    for (const peer of this.peers) if (peer.key === record.key) peer.ended = true;
     record.session.state = "gone";
     this.registry.transaction(() => {
       const lifecycle = this.registry.outbox().filter((entry) => entry.local_key === record.key && entry.method === "session.upsert")
@@ -128,9 +130,12 @@ export class DaemonCore {
   async sweep(): Promise<void> {
     for (const record of this.registry.all()) {
       if (record.session.state === "gone") continue;
-      if (!await this.alive(record)) this.markGone(record);
-      else if (this.transport.connected && record.session.id) {
-        try { await this.transport.request("session.heartbeat", { session_id: record.session.id, state: record.session.state }); }
+      const alive = await this.alive(record);
+      const current = this.registry.get(record.key);
+      if (!current || current.session.state === "gone" || current.pid !== record.pid || current.processStartedAt !== record.processStartedAt) continue;
+      if (!alive) this.markGone(current);
+      else if (this.transport.connected && current.session.id) {
+        try { await this.transport.request("session.heartbeat", { session_id: current.session.id, state: current.session.state }); }
         catch { this.report("session heartbeat failed"); }
       }
     }
@@ -138,13 +143,45 @@ export class DaemonCore {
   }
 
   private async register(hello: Hello, human = false): Promise<LocalRecord> {
+    const previous = this.registrationTail;
+    let release!: () => void;
+    this.registrationTail = new Promise<void>(resolve => { release = resolve; });
+    await previous;
+    try { return await this.registerOwner(hello, human); } finally { release(); }
+  }
+
+  private async registerOwner(hello: Hello, human = false): Promise<LocalRecord> {
     const vendor = human ? "other" : hello.vendor ?? "other";
     const vendorId = human ? `human:${createHash("sha256").update(hello.cwd ?? "").digest("hex").slice(0, 24)}` : hello.vendor_session_id;
-    const key = vendorId ? `${vendor}:${vendorId}` : `shim:${hello.pid}`;
+    let key = vendorId ? `${vendor}:${vendorId}` : `shim:${hello.pid}`;
     const pid = hello.client === "hook" ? hello.ppid : hello.pid;
     const birth = pid ? await (this.options.processStart ?? processStart)(pid) : undefined;
     const project = hello.cwd ? await this.projects.key(hello.cwd, this.options.project ?? hello.project_key) : undefined;
-    const existing = this.registry.get(key);
+    let existing = this.registry.get(key);
+    if (vendor === "claude-code") {
+      if (!vendorId || !pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
+      const candidates = this.registry.all().filter(record => record.session.vendor === vendor && record.session.vendor_session_id === vendorId);
+      const sameOwner = candidates.filter(record => record.pid === pid && record.processStartedAt === birth);
+      if (sameOwner.length > 1) throw new RpcError(-32020, "ambiguous Claude process ownership");
+      existing = sameOwner[0];
+      if (existing && (existing.session.cwd !== hello.cwd || existing.session.project_key !== project)) {
+        throw new RpcError(-32020, "Conflicting project context for this Claude process owner; start a fresh session");
+      }
+      if (!existing && candidates.length === 1) {
+        const prior = candidates[0];
+        if (prior?.pid && prior.processStartedAt && prior.session.cwd === hello.cwd && prior.session.project_key === project) {
+          const observedBirth = await (this.options.processStart ?? processStart)(prior.pid);
+          let provenDead = false;
+          if (observedBirth === undefined) {
+            try { process.kill(prior.pid, 0); }
+            catch (error) { provenDead = Boolean(error && typeof error === "object" && "code" in error && error.code === "ESRCH"); }
+          }
+          if (provenDead || (observedBirth !== undefined && observedBirth !== prior.processStartedAt)) existing = prior;
+        }
+      }
+      if (existing) key = existing.key;
+      else if (candidates.length) key = `${key}:owner:${createHash("sha256").update(`${pid}:${birth}`).digest("hex")}`;
+    }
     const record: LocalRecord = existing ?? {
       key, acked: 0, stopBlocked: false,
       session: Session.parse({
@@ -177,10 +214,19 @@ export class DaemonCore {
     if (hello.permission_mode !== undefined) record.permissionMode = hello.permission_mode;
     if (hello.inbound_policy !== undefined) record.inboundPolicy = hello.inbound_policy;
     const previousCapability = record.session.capability;
-    record.session.capability = vendor === "claude-code" ? claudeCapability(record) : this.adapter(record).capability;
+    const endpointPeers = vendor === "claude-code" && record.endpoint ? this.registry.all().filter(other =>
+      other.key !== record.key && other.session.state !== "gone" && other.session.vendor === "claude-code" &&
+      other.session.vendor_session_id === vendorId && other.endpoint === record.endpoint) : [];
+    record.session.capability = vendor === "claude-code" ? (endpointPeers.length ? "hook" : claudeCapability(record)) : this.adapter(record).capability;
     record.session.state = "active";
     this.registry.transaction(() => {
       this.registry.save(record);
+      for (const other of endpointPeers) {
+        if (other.session.capability === "hook") continue;
+        other.session.capability = "hook";
+        this.registry.save(other);
+        this.registry.enqueue(other.key, "session.upsert", { op: "update", session: { capability: "hook" } }, this.clock.now());
+      }
       if (!existing) {
         const { id: _id, incarnation: _incarnation, ...session } = record.session;
         this.registry.enqueue(key, "session.upsert", { op: "register", session, reg_id: randomUUID() }, this.clock.now());
@@ -192,17 +238,47 @@ export class DaemonCore {
     return record;
   }
 
-  private bind(peer: IpcPeer): LocalRecord {
+  /** Re-read after every asynchronous boundary before using a pinned owner's data. */
+  private currentOwner(peer: IpcPeer, expected: LocalRecord): LocalRecord {
+    const current = this.registry.get(expected.key);
+    if (peer.ended || !current || current.session.state === "gone") throw new RpcError(-32020, "bound session has ended or is unavailable; open a new connection");
+    if (current.session.vendor === "claude-code" && (current.pid !== peer.ownerPid || current.processStartedAt !== peer.ownerBirth ||
+      current.pid !== expected.pid || current.processStartedAt !== expected.processStartedAt)) {
+      throw new RpcError(-32020, "bound Claude process owner has changed or exited; open a new session connection");
+    }
+    return current;
+  }
+
+  private async bind(peer: IpcPeer): Promise<LocalRecord> {
     if (!peer.hello || peer.hello.client === "cli") throw new RpcError(-32020, "session requires ipc.hello from its shim or hook");
     if (peer.key !== undefined) {
       const cached = this.registry.get(peer.key);
-      if (!cached || cached.session.state === "gone") throw new RpcError(-32020, "bound session has ended or is unavailable; open a new connection");
-      return cached;
+      if (!cached) throw new RpcError(-32020, "bound session has ended or is unavailable; open a new connection");
+      this.currentOwner(peer, cached);
+      if (cached.session.vendor === "claude-code" && (!peer.ownerPid ||
+        await (this.options.processStart ?? processStart)(peer.ownerPid) !== peer.ownerBirth)) {
+        throw new RpcError(-32020, "bound Claude process owner has changed or exited; open a new session connection");
+      }
+      return this.currentOwner(peer, cached);
     }
+    if (peer.hello.vendor === "claude-code") {
+      const pid = peer.hello.ppid;
+      const birth = pid ? await (this.options.processStart ?? processStart)(pid) : undefined;
+      if (!pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
+      if (peer.ownerBirth !== undefined && (peer.ownerPid !== pid || peer.ownerBirth !== birth)) {
+        throw new RpcError(-32020, "bound Claude process owner has changed or exited; open a new session connection");
+      }
+      peer.ownerPid = pid;
+      peer.ownerBirth = birth;
+    }
+    // Resolve only a fresh snapshot: a hook may have replaced the owner while its
+    // process birth was being probed. Even a not-yet-bound peer pins that first birth.
+    const records = this.registry.all().filter(record => peer.hello?.vendor !== "claude-code" ||
+      (record.pid === peer.ownerPid && record.processStartedAt === peer.ownerBirth));
     const bound = new Set([...this.peers].filter((candidate) => candidate !== peer && candidate.hello?.client === "shim").flatMap((candidate) => candidate.key ? [candidate.key] : []));
-    const record = resolveBinding(peer.hello, this.registry.all(), bound);
+    const record = resolveBinding(peer.hello, records, bound);
     peer.key = record.key;
-    return record;
+    return this.currentOwner(peer, record);
   }
 
   async request(peer: IpcPeer, method: string, value: unknown = {}): Promise<unknown> {
@@ -221,20 +297,23 @@ export class DaemonCore {
           peer.key = record.key;
         } else {
           // Hooks have no stable PID. Only the MCP shim may create or revive a root.
-          this.bind(peer);
+          await this.bind(peer);
         }
       } else if (parsed.data.client === "hook") {
         if (!parsed.data.vendor_session_id) throw new RpcError(-32602, "hook requires vendor_session_id");
         const record = await this.register(parsed.data);
         peer.key = record.key;
+        if (record.pid !== undefined) peer.ownerPid = record.pid;
+        if (record.processStartedAt !== undefined) peer.ownerBirth = record.processStartedAt;
       } else if (!parsed.data.vendor_session_id && (!parsed.data.vendor || parsed.data.vendor === "other")) {
         const record = await this.register(parsed.data);
         peer.key = record.key;
       } else {
-        try { this.bind(peer); } catch (error) { if (!(error instanceof RpcError)) throw error; }
+        try { await this.bind(peer); } catch (error) { if (!(error instanceof RpcError)) throw error; }
       }
       await this.flush();
-      const record = peer.key ? this.registry.get(peer.key) : undefined;
+      const found = peer.key ? this.registry.get(peer.key) : undefined;
+      const record = found ? this.currentOwner(peer, found) : undefined;
       return record?.session.id ? { bound: true, session: record.session } : { bound: Boolean(record), pending: true };
     }
     if (!peer.hello) throw new RpcError(-32020, "ipc.hello is required before requests");
@@ -284,17 +363,19 @@ export class DaemonCore {
       const record = await this.register(peer.hello, true);
       return this.send(record, { ...params.message, from: "", force_wake: params.message.origin === "human" && params.message.force_wake });
     }
-    const record = this.bind(peer);
+    const record = this.currentOwner(peer, await this.bind(peer));
     if (method === "whoami") {
       await this.flush();
-      const current = this.registry.get(record.key) ?? record;
+      const current = this.currentOwner(peer, record);
       if (!current.session.id) throw new RpcError(-32021, "session registration is pending hub connectivity");
       const topics = Results["topic.list"].parse(await this.transport.request("topic.list", { session_id: current.session.id }));
+      this.currentOwner(peer, record);
       return { session: RegisteredSession.parse(current.session), topics: topics.topics };
     }
     if (method === "hook.poll") {
       const event = Poll.parse(value).event;
-      const result = await this.poll(record, value);
+      const result = await this.poll(peer, record, value);
+      this.currentOwner(peer, record);
       if (record.session.vendor === "codex" && peer.hello.client === "hook") {
         const events = this.codexHookEvents.get(record.key) ?? new Set<string>();
         events.add(event); this.codexHookEvents.set(record.key, events);
@@ -303,7 +384,9 @@ export class DaemonCore {
     }
     if (method === "hook.ack") {
       const params = z.object({ ids: z.array(z.string()).min(1).max(200) }).parse(value);
-      return this.write(record, "receipt.mark", { ids: params.ids, state: "read" });
+      const result = await this.write(record, "receipt.mark", { ids: params.ids, state: "read" });
+      this.currentOwner(peer, record);
+      return result;
     }
     const params = ObjectParams.parse(value);
     // Callers cannot choose local identity, authorship, replay keys or lifecycle epochs.
@@ -311,13 +394,17 @@ export class DaemonCore {
     if (method === "message.send") {
       const message = Message.parse({ ...ObjectParams.parse(params["message"]), from: "" });
       if (message.origin !== "agent" || message.force_wake) throw new RpcError(-32602, "agent sessions cannot send human-origin or force-wake messages");
-      return this.send(record, message);
+      const result = await this.send(record, message);
+      this.currentOwner(peer, record);
+      return result;
     }
     if (method === "session.upsert") {
       if (params["op"] !== "update") throw new RpcError(-32602, "registration lifecycle is managed by agentd");
       const update = z.object({ name: z.string().optional(), role: z.string().optional(), status_line: z.string().optional(), wake: z.enum(["on", "off"]).optional() }).strict().parse(params["session"]);
       if (update.wake) { record.session.wake = update.wake; this.registry.save(record); }
-      return this.write(record, method, { op: "update", session: update });
+      const result = await this.write(record, method, { op: "update", session: update });
+      this.currentOwner(peer, record);
+      return result;
     }
     if (method === "session.gone") {
       this.markGone(record);
@@ -326,17 +413,22 @@ export class DaemonCore {
     }
     if (READ_METHODS.has(method)) {
       await this.flush();
-      const current = this.registry.get(record.key) ?? record;
+      const current = this.currentOwner(peer, record);
       if (!current.session.id) throw new RpcError(-32021, "session registration is pending");
       const parsed = this.validate(method, { ...params, session_id: current.session.id });
       const response = await this.transport.request(method, parsed);
+      const latest = this.currentOwner(peer, record);
       if (method === "message.read") {
         const body = Results["message.read"].parse(response);
-        this.markActedIds(current, [body.message.id]);
+        this.markActedIds(latest, [body.message.id]);
       }
       return response;
     }
-    if (WRITE_METHODS.has(method)) return this.write(record, method, params);
+    if (WRITE_METHODS.has(method)) {
+      const result = await this.write(record, method, params);
+      this.currentOwner(peer, record);
+      return result;
+    }
     throw new RpcError(-32601, "unknown or unavailable IPC method");
   }
 
@@ -453,14 +545,14 @@ export class DaemonCore {
     const set = new Set(ids);
     for (const delivery of this.registry.pending(record.session.id ?? "")) if (set.has(delivery.message.id)) this.registry.acted(record, delivery.seq);
   }
-  private async poll(record: LocalRecord, value: unknown): Promise<unknown> {
+  private async poll(peer: IpcPeer, record: LocalRecord, value: unknown): Promise<unknown> {
     const params = Poll.parse(value);
     if (params.event === "UserPromptSubmit") { record.stopBlocked = false; record.session.state = "active"; this.registry.save(record); }
     if (params.event === "Stop") { record.session.state = "idle"; this.registry.save(record); }
     if (params.event === "Stop" && (params.stop_hook_active || record.stopBlocked || record.session.wake === "off")) return { headers: [], cursor: 0, more: false, block: false, session: record.session };
     if (!record.session.id) throw new RpcError(-32021, "session registration is pending");
     const result = Results["inbox.list"].parse(await this.transport.request("inbox.list", { session_id: record.session.id, unread_only: true, waking_only: params.event === "Stop", limit: 200 }));
-    const current = this.registry.get(record.key) ?? record;
+    const current = this.currentOwner(peer, record);
     const block = params.event === "Stop" && current.session.wake === "on" && !current.stopBlocked && result.headers.length > 0;
     if (block) { current.stopBlocked = true; current.session.state = "active"; this.registry.save(current); }
     return { ...result, block, session: current.session };
@@ -493,6 +585,12 @@ export class DaemonCore {
     const qualifying = pending.filter((delivery) => unread.has(delivery.message.id));
     const selected = qualifying[0];
     if (!selected) return;
+    // A vendor conversation can expose one socket to multiple resumed owners. Never
+    // route private traffic through that ambiguous native endpoint; hooks remain isolated.
+    const endpointOwner = record;
+    if (endpointOwner.session.vendor === "claude-code" && endpointOwner.endpoint && this.registry.all().some(other =>
+      other.key !== endpointOwner.key && other.session.state !== "gone" && other.session.vendor === "claude-code" &&
+      other.session.vendor_session_id === endpointOwner.session.vendor_session_id && other.endpoint === endpointOwner.endpoint)) return;
     const result = await this.adapter(record).deliver(record, selected.message, true);
     if (result.outcome === "inbox") return;
     record = this.registry.get(key);
@@ -514,7 +612,7 @@ export class DaemonCore {
       ...(outbox.some((entry) => entry.error) ? ["Outbox has blocked entries; inspect their error before deciding whether to resend."] : []),
     ];
     return {
-      runtime_contract: 1, daemon: { pid: process.pid, version: RELEASE_VERSION, running: true }, hub: { connected: this.transport.connected },
+      runtime_contract: 2, daemon: { pid: process.pid, version: RELEASE_VERSION, running: true }, hub: { connected: this.transport.connected },
       health: { state: issues.length ? "degraded" : "healthy", issues },
       outbox_depth: outbox.length,
       outbox: outbox.map((entry) => ({ id: entry.id, method: entry.method, age_ms: Math.max(0, this.clock.now() - entry.created_at), error: entry.error })),

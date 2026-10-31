@@ -78,6 +78,17 @@ describe("hook receipts and boundary", () => {
     expect(shimHello({ name: "claude-code" })).not.toHaveProperty("vendor_session_id");
   });
 
+  it("uses the bundled bootstrap's explicit parent only for Claude plugin shims", () => {
+    vi.stubEnv("KOM_CLAUDE_OWNER_PID", "12345");
+    vi.stubEnv("KOM_PLUGIN_PROFILE", "claude-code");
+    expect(shimHello({ name: "claude-code" }).ppid).toBe(12345);
+    expect(shimHello({ name: "codex" }).ppid).toBe(process.ppid);
+    vi.stubEnv("KOM_CLAUDE_OWNER_PID", "invalid");
+    expect(() => shimHello({ name: "claude-code" })).toThrow();
+    vi.stubEnv("KOM_PLUGIN_PROFILE", "");
+    expect(shimHello({ name: "claude-code" }).ppid).toBe(process.ppid);
+  });
+
   it("forwards the caller's project override independently in each hello", () => {
     vi.stubEnv("KOM_PROJECT", "caller-project");
     expect(cliHello()).toHaveProperty("project_key", "caller-project");

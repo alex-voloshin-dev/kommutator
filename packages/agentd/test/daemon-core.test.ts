@@ -9,6 +9,7 @@ import { PROTOCOL_VERSION, Results, RegisteredSession } from "@kommutator/protoc
 import { DaemonCore, type IpcPeer } from "../src/core.js";
 import { OfflineError, RpcError } from "../src/errors.js";
 import type { HubTransport } from "../src/hub-link.js";
+import { claudeAdapter } from "../src/adapters/claude.js";
 import type { Adapter } from "../src/adapters/types.js";
 import type { Clock } from "../src/wake.js";
 
@@ -96,7 +97,7 @@ async function hook(core: DaemonCore, id: string, extra: Record<string, unknown>
 }
 async function shim(core: DaemonCore, id?: string) {
   const peer = core.peer();
-  await core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 3000, vendor: "claude-code", cwd: "/repo", ...(id ? { vendor_session_id: id } : {}) });
+  await core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 3000, ppid: 55, vendor: "claude-code", cwd: "/repo", ...(id ? { vendor_session_id: id } : {}) });
   return peer;
 }
 async function cli(core: DaemonCore) {
@@ -158,6 +159,207 @@ describe("daemon identity and IPC authorization", () => {
     expect(a.session?.id).not.toBe(b.session?.id);
     await expect(core.request(await shim(core), "whoami")).rejects.toThrow(/ambiguous/);
     await expect(core.request(await shim(core, "unknown"), "whoami")).rejects.toThrow(/waiting for its hook/);
+  });
+  it("separates simultaneous owners of one Claude conversation and pins their private traffic", async () => {
+    const { core } = await fixture();
+    const [a, b] = await Promise.all([hook(core, "resumed", { ppid: 55 }), hook(core, "resumed", { ppid: 66 })]);
+    const connectOwner = async (ppid: number) => {
+      const peer = core.peer();
+      await core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: ppid + 1000, ppid, vendor: "claude-code", vendor_session_id: "resumed", cwd: "/repo" });
+      return peer;
+    };
+    const sa = await connectOwner(55), sb = await connectOwner(66);
+    const first = Identity.parse(await core.request(sa, "whoami")).session;
+    const second = Identity.parse(await core.request(sb, "whoami")).session;
+    expect(first.id).not.toBe(second.id);
+    expect(first.handle).not.toBe(second.handle);
+    expect(first.vendor_session_id).toBe(second.vendor_session_id);
+    await core.request(sa, "session.upsert", { op: "update", session: { status_line: "first owner" } });
+    await core.request(sb, "session.upsert", { op: "update", session: { status_line: "second owner" } });
+    expect(Identity.parse(await core.request(sa, "whoami")).session.status_line).toBe("first owner");
+    expect(Identity.parse(await core.request(sb, "whoami")).session.status_line).toBe("second owner");
+    await send(core, sa, second.handle, "only second may read");
+    expect(Results["inbox.list"].parse(await core.request(sa, "inbox.list", {})).headers).toHaveLength(0);
+    expect(Results["inbox.list"].parse(await core.request(sb, "inbox.list", {})).headers).toHaveLength(1);
+    await hook(core, "resumed", { ppid: 55 });
+    await hook(core, "resumed", { ppid: 66 });
+    expect(Identity.parse(await core.request(sa, "whoami")).session.incarnation).toBe(0);
+    expect(Identity.parse(await core.request(sb, "whoami")).session.incarnation).toBe(0);
+    await core.request(a.peer, "session.gone");
+    await expect(core.request(sa, "whoami")).rejects.toThrow(/ended/);
+    expect(Identity.parse(await core.request(sb, "whoami")).session.id).toBe(b.session?.id);
+    const stranger = await connectOwner(77);
+    await expect(core.request(stranger, "whoami")).rejects.toThrow(/waiting for its hook/);
+  });
+  it("downgrades an ambiguous duplicate-root native socket and never wakes through it", async () => {
+    const { core, clock, attempts } = await fixture();
+    const a = await hook(core, "shared-endpoint", { ppid: 55 });
+    const b = await hook(core, "shared-endpoint", { ppid: 66 });
+    expect(Identity.parse(await core.request(a.peer, "whoami")).session.capability).toBe("hook");
+    expect(Identity.parse(await core.request(b.peer, "whoami")).session.capability).toBe("hook");
+    if (!b.session?.handle) throw new Error("missing test handle");
+    await send(core, a.peer, b.session.handle);
+    await clock.advance(10_000);
+    expect(attempts).toHaveLength(0);
+    expect(Results["inbox.list"].parse(await core.request(b.peer, "inbox.list", {})).headers).toHaveLength(1);
+  });
+  it("does not treat an unavailable process probe as proof that an owner exited", async () => {
+    let unavailable = false;
+    const { core } = await fixture({ birth: async pid => unavailable && pid === process.pid ? undefined : "birth" });
+    const a = await hook(core, "probe-error", { ppid: process.pid });
+    unavailable = true;
+    const b = await hook(core, "probe-error", { ppid: process.pid + 1 });
+    expect(b.session?.id).not.toBe(a.session?.id);
+    expect(core.registry.all()).toHaveLength(2);
+  });
+  it("does not inherit a dead owner's project when the resumed process changes cwd", async () => {
+    let birth = "first";
+    const { core } = await fixture({ birth: async () => birth });
+    const a = await hook(core, "moved", { cwd: "/old-project" });
+    await expect(hook(core, "moved", { cwd: "/other-project" })).rejects.toThrow(/Conflicting project context/);
+    birth = "next";
+    const b = await hook(core, "moved", { cwd: "/other-project" });
+    expect(b.session?.id).not.toBe(a.session?.id);
+    expect(b.session?.cwd).toBe("/other-project");
+    expect(b.session?.project_key).not.toBe(a.session?.project_key);
+  });
+  it("does not let a pinned Claude peer follow a reused process generation", async () => {
+    let birth = "first";
+    const { core } = await fixture({ birth: async () => birth });
+    await hook(core, "generation");
+    const old = await shim(core, "generation");
+    const first = Identity.parse(await core.request(old, "whoami")).session;
+    birth = "next";
+    const revived = await hook(core, "generation");
+    expect(revived.session?.id).toBe(first.id);
+    expect(revived.session?.incarnation).toBe(1);
+    await expect(core.request(old, "session.upsert", { op: "update", session: { status_line: "stale write" } })).rejects.toThrow(/owner has changed/);
+  });
+  it.each(["session.upsert", "whoami", "inbox.list", "hook.poll"])("rejects a stale %s after an owner probe races replacement", async method => {
+    let birth = "old";
+    let entered: () => void = () => {};
+    const probing = new Promise<void>(resolve => { entered = resolve; });
+    let release: () => void = () => {};
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let pause = false;
+    const { core } = await fixture({ birth: async () => {
+      const observed = birth;
+      if (pause) { pause = false; entered(); await held; }
+      return observed;
+    } });
+    await hook(core, "probe-race");
+    const peer = await shim(core, "probe-race");
+    pause = true;
+    const pending = core.request(peer, method, method === "session.upsert" ? { op: "update", session: { status_line: "stale" } } : method === "hook.poll" ? { event: "Stop" } : {});
+    const rejected = expect(pending).rejects.toThrow(/owner has changed/);
+    await probing;
+    birth = "new";
+    const successor = await hook(core, "probe-race");
+    await core.request(successor.peer, "session.upsert", { op: "update", session: { status_line: "successor" } });
+    release();
+    await rejected;
+    const current = Identity.parse(await core.request(successor.peer, "whoami")).session;
+    expect(current.status_line).toBe("successor");
+    expect(current.state).toBe("active");
+  });
+  it("pins an unbound peer's first observed birth across a registration race", async () => {
+    let birth = "old";
+    let entered: () => void = () => {};
+    const probing = new Promise<void>(resolve => { entered = resolve; });
+    let release: () => void = () => {};
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let pause = false;
+    const { core } = await fixture({ birth: async () => {
+      const observed = birth;
+      if (pause) { pause = false; entered(); await held; }
+      return observed;
+    } });
+    await hook(core, "unbound-race");
+    pause = true;
+    const pending = shim(core, "unbound-race");
+    await probing;
+    birth = "new";
+    await hook(core, "unbound-race");
+    release();
+    const old = await pending;
+    await expect(core.request(old, "whoami")).rejects.toThrow(/owner has changed/);
+  });
+  it.each(["whoami", "inbox.list"])("rechecks %s after flush before querying a successor", async method => {
+    let birth = "old";
+    const { core, transport } = await fixture({ birth: async () => birth });
+    await hook(core, "flush-race");
+    const peer = await shim(core, "flush-race");
+    let entered: () => void = () => {};
+    const flushing = new Promise<void>(resolve => { entered = resolve; });
+    let release: () => void = () => {};
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const flush = core.flush.bind(core);
+    let pause = true;
+    core.flush = async () => { if (pause) { pause = false; entered(); await held; } await flush(); };
+    const pending = core.request(peer, method);
+    const rejected = expect(pending).rejects.toThrow(/owner has changed/);
+    await flushing;
+    birth = "new";
+    await hook(core, "flush-race");
+    const reads = transport.calls.filter(call => call.method === "topic.list" || call.method === "inbox.list").length;
+    release();
+    await rejected;
+    expect(transport.calls.filter(call => call.method === "topic.list" || call.method === "inbox.list")).toHaveLength(reads);
+  });
+  it.each(["whoami", "inbox.list", "hook.poll"])("rejects a stale %s result after a transport await", async method => {
+    let birth = "old";
+    const { core, transport } = await fixture({ birth: async () => birth });
+    await hook(core, "result-race");
+    const peer = await shim(core, "result-race");
+    let entered: () => void = () => {};
+    const reading = new Promise<void>(resolve => { entered = resolve; });
+    let release: () => void = () => {};
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let pause = true;
+    transport.afterRequest = async name => {
+      if (pause && (name === "topic.list" || name === "inbox.list")) { pause = false; entered(); await held; }
+    };
+    const pending = core.request(peer, method, method === "hook.poll" ? { event: "Stop" } : {});
+    const rejected = expect(pending).rejects.toThrow(/owner has changed/);
+    await reading;
+    birth = "new";
+    const successor = await hook(core, "result-race");
+    release();
+    await rejected;
+    expect(Identity.parse(await core.request(successor.peer, "whoami")).session.state).toBe("active");
+  });
+  it("does not let a delayed dead-process sweep end its replacement", async () => {
+    let birth = "old";
+    let entered: () => void = () => {};
+    const probing = new Promise<void>(resolve => { entered = resolve; });
+    let release: () => void = () => {};
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let pause = false;
+    const { core } = await fixture({ alive: false, birth: async () => {
+      if (pause) { pause = false; entered(); await held; return undefined; }
+      return birth;
+    } });
+    await hook(core, "sweep-race");
+    pause = true;
+    const pending = core.sweep();
+    await probing;
+    birth = "new";
+    const successor = await hook(core, "sweep-race");
+    release();
+    await pending;
+    expect(Identity.parse(await core.request(successor.peer, "whoami")).session.state).toBe("active");
+  });
+  it("preserves a live hook-only Claude owner through repeated liveness sweeps", async () => {
+    const { core, adapter } = await fixture({ alive: false });
+    adapter.isAlive = claudeAdapter.isAlive;
+    const first = await hook(core, "hook-only", { ppid: process.pid, endpoint: undefined });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await core.sweep();
+      const repeat = await hook(core, "hook-only", { ppid: process.pid, endpoint: undefined });
+      expect(repeat.session?.id).toBe(first.session?.id);
+      expect(repeat.session?.incarnation).toBe(0);
+      expect(Identity.parse(await core.request(first.peer, "whoami")).session.capability).toBe("hook");
+    }
   });
   it("waits for hook registration when the exact shim arrives first", async () => {
     const { core } = await fixture();

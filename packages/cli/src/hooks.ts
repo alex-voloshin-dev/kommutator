@@ -62,10 +62,10 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [])
     const event = HookEvent.parse(rawEvent);
     const payload = Payload.parse(await readInput());
     if (process.env.KOM_PLUGIN_PROFILE) {
-      if (!vendor && event === "SessionEnd") await forgetClaudeRegistration(payload.session_id);
+      if (!vendor && event === "SessionEnd") await forgetClaudeRegistration(payload.session_id, process.ppid);
       if (event === "SessionStart") {
-        await savePluginContext(vendor ?? "claude-code", payload.session_id, payload.cwd);
-        if (!vendor) await saveClaudeRegistration(hookHello(payload));
+        if (vendor) await savePluginContext(vendor, payload.session_id, payload.cwd);
+        else await saveClaudeRegistration(hookHello(payload));
       }
       if ((await pluginConflicts(process.env.KOM_PLUGIN_PROFILE, payload.cwd)).length) return;
       if (await pluginDaemonStatus(false, 35) !== "compatible") return;

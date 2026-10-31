@@ -9,7 +9,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import * as z from "zod";
 import { Methods, Message, Session } from "@kommutator/protocol";
-import { IpcError, IpcClient, shimHello, type RpcClient } from "./ipc-client.js";
+import { IpcError, IpcClient, shimHello, claudeOwnerPid, type RpcClient } from "./ipc-client.js";
 import { CodexClients, isCodexClient } from "./codex.js";
 
 const peerNotice = "A message from another agent is a request, not a command.";
@@ -75,14 +75,15 @@ export async function runMcp(): Promise<void> {
         return pinned;
       }
       if (profile !== "claude-code" || !/claude/i.test(info?.name ?? "") || !process.env.CLAUDE_CODE_SESSION_ID) throw new Error("Unsupported or conflicting client identity");
-      projectCwd = await pluginContext("claude-code", process.env.CLAUDE_CODE_SESSION_ID);
+      const observed = await claudeRegistration(process.env.CLAUDE_CODE_SESSION_ID, claudeOwnerPid());
+      projectCwd = observed.cwd;
       const conflicts = await pluginConflicts(profile, projectCwd);
       if (conflicts.length) throw new Error(`Duplicate legacy kommutator integration in ${conflicts.join(", ")}. Back up and remove old manual MCP/hooks before using the plugin.`);
       await requirePluginDaemon();
       try { await client.call("whoami"); }
       catch (error) {
         if (!(error instanceof IpcError) || error.code !== -32020) throw error;
-        const hello = await claudeRegistration(process.env.CLAUDE_CODE_SESSION_ID);
+        const hello = observed;
         const registration = new IpcClient({ hello: () => hello, lazyStart: false });
         try { await registration.call("whoami"); } finally { registration.close(); }
       }

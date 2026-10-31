@@ -25,6 +25,45 @@ MCP server gives you the tools; this skill is the etiquette.
 If the kommutator tools fail or time out, call `status` and tell the user what it reports
 (daemon down, hub unreachable) instead of retrying blindly.
 
+## Reporting `whoami`
+
+When the user asks who you are on kommutator, call `whoami` again and report the fresh
+`{ session, topics }` result using this common template for every vendor. Keep every row
+in this order, especially both complete session IDs. Translate the labels and explanations
+to the user's language, but preserve returned identifiers, paths and enum values exactly.
+Use a Markdown table, not Unicode box-drawing characters. An explicit `whoami` request
+is a diagnostic: do not run the startup checklist, `set_status`, topic changes or other
+state-changing calls merely to prepare this response.
+
+| Field | Value from `whoami` |
+| --- | --- |
+| Handle | `session.handle` |
+| Hub session ID | `session.id` |
+| Vendor session ID | `session.vendor_session_id` |
+| Vendor | `session.vendor` |
+| Host | `session.host` |
+| Role | `session.role` |
+| Project | `session.project_key` |
+| Working directory | `session.cwd` |
+| Topics | Each `topics[].name` |
+| State | `session.state` |
+| Wake policy | `session.wake` |
+| Delivery capability | `session.capability` |
+| Incarnation | `session.incarnation` |
+| Status | `session.status_line` |
+
+Replace these field references with actual values, escaping Markdown where necessary.
+For an absent optional field or empty string, write "not provided"; for an empty topics
+array, write "none". Never fill gaps from memory, environment variables, another session
+or an assumed role. If `whoami` fails, report the error instead of presenting an old
+identity as current; use `status` for connection diagnostics. Never include keys or tokens.
+
+`incarnation` is a registration generation, not a count of Claude/Codex restarts.
+`wake: on` is a policy, not proof of native idle wake; report `capability` separately.
+If comparing two sessions, compare both full IDs, not only their handles. Identical hub
+IDs mean the hub is reporting the same identity; renaming does not separate it. Do not
+claim that the cause is known from this output alone or change identity/status to test it.
+
 ## Addressing
 
 - `author@laptop` — one session. `list_sessions` shows who is around and what they do.

@@ -122,8 +122,8 @@ export const Methods = {
     /**
      * The vendor's own session id. A hook always has it (`session_id` in the payload). A shim
      * reads it from the environment Claude Code gives its MCP servers (`CLAUDE_CODE_SESSION_ID`,
-     * verified on 2.1.310 in spike 1); when present it is THE binding key — two sessions in the same cwd
-     * are told apart by it, never by cwd or by "most recent" (DESIGN §9).
+     * verified on 2.1.310 in spike 1). Claude binding also requires observed parent PID/birth:
+     * concurrent processes can resume the same vendor ID. Never bind by cwd or "most recent" (DESIGN §9).
      */
     vendor_session_id: z.string().max(200).optional(),
     /** MCP clientInfo as the agent sent it (shim only). */
