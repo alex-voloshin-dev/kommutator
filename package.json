@@ -1,8 +1,8 @@
 {
   "name": "kommutator-monorepo",
   "private": true,
-  "version": "0.1.0",
-  "description": "kommutator \u2014 self-hosted cross-vendor message hub for coding-agent sessions",
+  "version": "0.2.0",
+  "description": "kommutator — self-hosted cross-vendor message hub for coding-agent sessions",
   "packageManager": "pnpm@10.18.0",
   "engines": {
     "node": ">=24.11.0"

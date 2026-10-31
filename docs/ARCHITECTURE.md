@@ -23,6 +23,9 @@ per-session policy and socket metadata. Codex independent roots use call-level
 `_meta.sessionId`/`threadId`, with shim-owned liveness and hook-time delivery; forks cannot
 create separate MCP mailboxes. Generic delivery is pull-only. See [capability matrix](../README.md).
 
+The GitHub marketplace installs a checksum-pinned complete Claude ZIP through its native
+installer. Codex uses a lightweight launcher that downloads a source-pinned archive on first
+MCP start; hooks only use an existing cache.
 The bundled plugin has private browser setup and copies its runtime outside the vendor
 cache. Both clients share private configuration and daemon state. Source/manual integration
 requires Node and `kom` in the actual client launch PATH; bundled plugins carry Node.

@@ -4,9 +4,9 @@ For the shortest default setup, use the [quickstart](QUICKSTART.md) and `sh scri
 This guide covers manual Compose configuration, client migration and source integration.
 Do not mix custom Compose deployments with the default helper.
 
-Use a local Linux x64 bundle for clients, and Docker Compose for the hub. These are local
-build artifacts, not a claim that public releases or marketplace listings exist. A trusted
-operator must [build the artifacts](PLUGIN_BUILD.md) first. macOS source-client evidence
+Use the [GitHub plugin installation](QUICKSTART.md#2-install-the-client-each-agent-computer)
+for normal Linux x64 clients, and Docker Compose for the hub. The local bundle path below
+is an offline/operator alternative; maintainers can [build the artifacts](PLUGIN_BUILD.md). macOS source-client evidence
 exists, but exported macOS bundles remain unqualified. Native Windows clients, cloud Work
 and Copilot are outside this installation path; Windows clients run inside WSL2.
 

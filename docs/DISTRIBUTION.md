@@ -1,48 +1,55 @@
-# How releases will be distributed
+# Client and hub distribution
 
-The public Git repository contains source. Client binaries, container images and official
-vendor listings are separate releases. Until a release asset exists, use
-[the quickstart](QUICKSTART.md) and an operator-built client bundle.
+## Install the client from GitHub
 
-| What you need | Planned download | What is inside |
-| --- | --- | --- |
-| Client for Linux x64 / WSL2 | A versioned `.tar.gz` attached to a GitHub Release | Claude/Codex plugins, skills, MCP server, hooks, Node, licenses and checksums |
-| Hub | Public `ghcr.io/alex-voloshin-dev/kommutator-hub` image | Hub, dashboard and SQLite runtime |
-| Development source | This repository | Code, tests, documentation and build tools |
+The repository is a Git-backed marketplace for Claude Code and Codex CLI. Follow the
+[two-command client installation](QUICKSTART.md#2-install-the-client-each-agent-computer).
+The marketplace name is `kommutator`; the plugin identifier is `kommutator@kommutator`.
+This is a repository marketplace, not a listing or approval in either vendor's public directory.
 
-## Client experience
+Claude Code 2.1.224+ installs a complete plugin ZIP from
+[GitHub Releases](https://github.com/alex-voloshin-dev/kommutator/releases), verifying the SHA-256
+pinned in its root marketplace catalog. Downloading during installation avoids the MCP
+startup deadline. Codex installs a lightweight plugin under `plugins/hosted/codex`: its first
+MCP start downloads the versioned Linux x64 tarball, checks the source-pinned SHA-256, and
+extracts it into private local storage. The bundled Node runtime starts MCP and the private
+setup form. Hooks only use an already-installed runtime;
+they never install or download. Updating a plugin selects a new explicitly pinned runtime;
+it never fetches an unversioned `latest` asset.
 
-Download the matching client asset, not GitHub's automatic “Source code” archive. Check its
-archive checksum, extract into a folder you will keep, and follow the two installation
-commands for your agent in [QUICKSTART](QUICKSTART.md#2-install-the-client-each-agent-computer).
-Approve hooks normally, then enter the connection details in the private browser form.
-No separate Node install is needed. Both agents on one computer reuse the connection.
+The release also provides an archive and checksum for offline/manual distribution. Keep
+its extracted folder if using its local `kommutator-local` marketplace. GitHub's automatic
+“Source code” downloads are not client bundles. Node and dependency license notices are
+included in the bundle. Linux x64 / WSL2 is the qualified packaging target; macOS, ARM,
+native Windows, cloud Work and Copilot remain separate work.
 
-Local catalogs are the first release route. A later hosted Claude catalog may reference
-release archives. OpenAI public listing currently excludes lifecycle hooks and restricts
-local MCP submissions; manual installation preserves functionality. Copilot and other
-platforms require their own tests. See the [source-backed research](sdlc/public-launch/research-brief.md).
+## Hub
 
-## Hub experience
+The hub currently builds using Docker Compose; see [quickstart](QUICKSTART.md).
+A public GHCR image and pull-only Compose deployment pinned by digest remain planned.
+The client release does not publish or upgrade the hub. Its private key, persistent database,
+loopback default and stable TCP 8787 endpoint remain unchanged.
 
-The current quickstart builds the image with Docker. The planned binary release adds a
-pull-only Compose file that uses a fixed image digest. It keeps the same private key, data
-storage, loopback endpoint and TCP 8787. Users should not need a registry account to pull
-the public image. A registry image does not configure LAN access or make the service safe
-for internet exposure.
+## Maintainer release procedure
 
-## Maintainer release checklist
+1. Bump the root package version and run `pnpm version:sync`. Install with
+   `pnpm install --frozen-lockfile`, then run `pnpm -r build`, `pnpm -r typecheck` and
+   `pnpm -r test`. The full release gate also checks generated catalog versions, so run it
+   after regeneration in step 3 rather than against stale catalogs.
+2. Export a fresh artifact using `node scripts/export-plugins.mjs /absolute/fresh/export`.
+3. Run `node scripts/package-client-release.mjs /absolute/fresh/export /absolute/fresh/release`.
+   This verifies the export, makes the versioned tarball, Claude ZIP and checksums, and regenerates the
+   tracked hosted plugin and both root catalogs with the exact archive hashes.
+4. Review those generated files and rerun the release checks, including hosted installer
+   failure, concurrency and offline cases. Scan the candidate source/history and artifact
+   for secrets. Never include a developer's configuration or credentials.
+5. Commit the reviewed source. Publish the exact archive and checksum as a development-preview
+   GitHub Release from that revision; publish assets before directing users to the catalogs.
+   Never replace an existing version tag or asset silently. Corrections need a new version.
+6. Verify anonymous download and the downloaded checksum. Install both plugins through their
+   real vendor CLIs in separate clean homes, and check MCP startup/setup using the published asset.
+   Record execution evidence and unvalidated platforms in the release notes.
 
-1. Choose the release commit/version and run `pnpm release:check`, source/history secret
-   scanning and the relevant real-client checks. Document any preview limitations.
-2. Export the client bundle, create its archive and checksum, then test the downloaded and
-   extracted copy. Keep executable permissions and all license notices.
-3. Publish the hub image from the same revision with source/version/revision/license labels.
-   Explicitly make the GHCR package public; test anonymous pull and a fresh isolated hub.
-4. Record the image digest in the release deployment file. Never replace an existing
-   version tag or asset silently; issue a new version for corrections.
-5. Attach instructions and the verified platform/client matrix to the release. Only then
-   replace the quickstart's operator-build wording with the actual download link.
-
-No binary release, container push or marketplace registration is performed by ordinary CI.
-GitHub-hosted release publication is a separate maintainer action.
+Ordinary CI checks packaging but does not publish releases or change user plugin configuration.
+For source rationale and official vendor links, see the
+[distribution research](sdlc/public-launch/research-brief.md).

@@ -18,10 +18,11 @@ try {
   await run('pnpm', ['install', '--frozen-lockfile']);
   await run('pnpm', ['audit', '--audit-level', 'high']);
   await run(process.execPath, ['scripts/sync-version.mjs', '--check']);
+  await run(process.execPath, ['scripts/verify-hosted-plugins.mjs']);
   await run('pnpm', ['-r', 'build']);
   await run('pnpm', ['-r', 'typecheck']);
   await run('pnpm', ['-r', 'test']);
-  await run(process.execPath, ['--test', 'scripts/release-check.test.mjs', 'scripts/hub.test.mjs']);
+  await run(process.execPath, ['--test', 'scripts/release-check.test.mjs', 'scripts/hub.test.mjs', 'scripts/hosted-plugin.test.mjs']);
   const artifact = join(scratch, 'export');
   const env = { ...process.env };
   for (const name of ['KOM_EXPORT_NODE', 'KOM_EXPORT_PLATFORM', 'KOM_EXPORT_ARCH']) delete env[name];

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "kommutator": {
+      "command": "./bin/launch",
+      "args": [
+        "mcp"
+      ],
+      "cwd": "./",
+      "startup_timeout_sec": 180
+    }
+  }
+}

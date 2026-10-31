@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { launcher } from './lib/hosted-plugin.mjs';
+const root = fileURLToPath(new URL('../', import.meta.url));
+const json = async path => JSON.parse(await readFile(join(root, path), 'utf8'));
+const { version } = await json('package.json');
+const claude = await json('.claude-plugin/marketplace.json');
+const codex = await json('.agents/plugins/marketplace.json');
+assert.equal(claude.name, 'kommutator');
+assert.equal(codex.name, 'kommutator');
+assert.equal(claude.plugins[0].source.source, 'archive');
+assert.equal(claude.plugins[0].source.url, `https://github.com/alex-voloshin-dev/kommutator/releases/download/v${version}/kommutator-v${version}-claude-linux-x64.zip`);
+assert.match(claude.plugins[0].source.sha256, /^[a-f0-9]{64}$/);
+assert.deepEqual(codex.plugins[0].source, { source: 'local', path: './plugins/hosted/codex' });
+let common;
+for (const vendor of ['codex']) {
+  const base = `plugins/hosted/${vendor}`;
+  const release = await json(`${base}/release.json`);
+  assert.equal(release.version, version);
+  assert.equal(release.platform, 'linux');
+  assert.equal(release.arch, 'x64');
+  assert.equal(release.url, `https://github.com/alex-voloshin-dev/kommutator/releases/download/v${version}/kommutator-v${version}-linux-x64.tar.gz`);
+  if (common) assert.deepEqual(release, common); else common = release;
+  assert.equal(await readFile(join(root, base, 'bin/launch'), 'utf8'), launcher({ vendor, ...release }), 'Hosted launcher differs from its trusted release identity/template');
+  const manifest = await json(`${base}/${vendor === 'codex' ? '.codex-plugin' : '.claude-plugin'}/plugin.json`);
+  assert.equal(manifest.version, version);
+  assert.equal(manifest.name, 'kommutator');
+  assert.equal(manifest.mcpServers, './.mcp.json');
+}
+console.log('Hosted catalogs, release identities and launchers match. Remote asset availability is a separate release check.');

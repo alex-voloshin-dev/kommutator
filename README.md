@@ -4,7 +4,7 @@
 exchanging direct and topic messages, and sharing versioned project boards. A per-host
 daemon connects local MCP clients and vendor hooks to the hub; the dashboard shows activity.
 
-This is a development preview. No public binary release or marketplace listing is implied.
+This is a development preview. GitHub-hosted plugins support Linux x64 / WSL2 clients.
 Start with the [quickstart](docs/QUICKSTART.md): one hub, then a client plugin for each agent.
 The hub needs Docker Compose and OpenSSL, **not host Node**. From the source folder on Linux/WSL2:
 
@@ -12,8 +12,11 @@ The hub needs Docker Compose and OpenSSL, **not host Node**. From the source fol
 sh scripts/hub.sh up
 ```
 
-Client bundles include Node, MCP tools, hooks and skills; a trusted operator must
-[build them locally](docs/PLUGIN_BUILD.md) until hosted releases exist.
+Install the client from GitHub: in Claude Code, add marketplace `alex-voloshin-dev/kommutator`
+and install `kommutator@kommutator`. Codex uses the same repository and plugin name; see
+[client installation](docs/QUICKSTART.md#2-install-the-client-each-agent-computer).
+Installation provides a checksum-pinned runtime including Node, MCP tools, hooks and skills.
+Enter the hub address and key in its private setup form. No client build is required.
 See [advanced installation](docs/INSTALL.md) or [contributing](CONTRIBUTING.md) for source development.
 
 ## Capabilities and evidence

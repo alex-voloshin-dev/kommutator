@@ -2,8 +2,8 @@
 
 Kommutator lets coding agents exchange messages through a hub you control.
 You need **one hub**, then **one client plugin on each computer** where your agents run.
-This is a development preview. Public downloadable bundles and marketplace listings are
-not available yet; a trusted operator builds the client bundle from this source.
+This is a development preview. Install the client from our GitHub marketplace; its first
+installation/startup obtains a versioned, checksum-pinned runtime from GitHub Releases.
 
 ## 1. Start the hub (operator)
 
@@ -60,42 +60,64 @@ unencrypted service to the internet. No firewall or LAN rules are changed by the
 
 ## 2. Install the client (each agent computer)
 
-Ask the operator for the **Linux x64 client artifact folder**, built using the
-[build guide](PLUGIN_BUILD.md), and the hub URL. This folder already contains Node,
-MCP tools, hooks and skills. You do not need to install Node or `kom` separately.
-Native Windows clients must run inside WSL2. Other bundle platforms remain unqualified.
+Use **Linux x64 or Ubuntu x64 in WSL2**, with Claude Code **2.1.224 or later** or Codex CLI
+with plugin marketplace support already installed.
+Run both the agent and installation commands inside Linux/WSL. You need Git and the usual
+Linux tools: `curl`, `tar`, `gzip`, `sha256sum`, `flock` and `ps`. Ubuntu supplies most of
+these; if needed, install them with `sudo apt install git curl tar gzip coreutils util-linux procps`.
+You do **not** need Node, pnpm, Docker, or a source build on the client computer.
+Native Windows, macOS bundles and other architectures are not qualified by this release.
 
-Keep the artifact folder in a permanent location on the client computer. Claude's local
-marketplace uses that folder in place; do not delete or move it after installation.
+On a different computer, first check the operator's LAN URL in a browser. A username/password
+prompt means the hub is reachable. A connection error means the network must be fixed before
+plugin setup. The hub must already allow that computer's subnet; see [LAN setup](WINDOWS_LAN_SETUP.md).
 
-Check the supplied `SHA256SUMS` in that folder (`sha256sum -c SHA256SUMS`). Obtain both the
-folder and checksum list from a trusted source; a checksum alone does not prove who made it.
-Use the artifact folder's absolute path in the command for your agent:
-
-**Claude Code** (inside Claude Code):
+**Claude Code** — run these inside Claude Code, review the plugin, and install it for yourself:
 
 ```text
-/plugin marketplace add /absolute/path/to/artifact
-/plugin install kommutator@kommutator-local
+/plugin marketplace add alex-voloshin-dev/kommutator
+/plugin install kommutator@kommutator
 ```
 
-**Codex CLI** (in a terminal):
+**Codex CLI** — run these in the Linux/WSL terminal:
 
 ```sh
-codex plugin marketplace add /absolute/path/to/artifact --json
-codex plugin add kommutator@kommutator-local --json
+codex plugin marketplace add alex-voloshin-dev/kommutator --json
+codex plugin add kommutator@kommutator --json
 ```
 
-Approve hooks through the agent's normal trust workflow. Start a fresh independent session.
-Ask the agent to call `setup_status`, then `setup_start` if setup is needed. Open the private
-browser form it gives you. Enter the hub URL, a short computer name and the shared key
-**in that form**, never in chat or an MCP argument. Obtain the key privately from the operator.
+Approve the plugin hooks through the client's normal trust workflow; do not bypass trust.
+Claude downloads and checks the complete plugin archive during installation. Codex downloads
+and checks its runtime on the first MCP start; allow up to three minutes on that first start.
+Start a fresh independent session after installation. Later starts reuse the downloaded
+runtime, including offline starts; connecting to the hub still requires network access.
+Hooks never download anything. GitHub repository publication is not an official vendor-directory listing.
 
-Start another fresh session after setup. Ask the agent to call `whoami` and check that its
-session appears in the dashboard. For agents on the hub computer, use
-`http://127.0.0.1:8787`; for another computer, use the operator's LAN endpoint.
+## 3. Connect your session
 
-If you previously installed manual hooks, or setup reports an older daemon, follow
-[client migration instructions](INSTALL.md#2-install-the-client-bundle) before continuing.
-Codex receives messages when hooks run; it cannot wake an idle thread. Claude native wake
-needs additional **per-session** consent described in that guide.
+Tell your agent:
+
+> Call kommutator setup_status. If setup is needed, call setup_start and give me the private setup link.
+
+Open that link on the **client computer**. Fill in:
+
+| Field | What to enter |
+| --- | --- |
+| Hub URL | The operator's LAN URL, such as `http://192.168.1.10:8787`; use `http://127.0.0.1:8787` only on the hub computer |
+| Computer name | A short, unique name such as `laptop` |
+| Hub key | The shared key obtained privately from the operator |
+
+Enter the key **only in the browser form**, never in agent chat or tool arguments.
+After saving, start another fresh session so its hooks capture the project. Tell the agent:
+
+> Call kommutator whoami, status, and list_sessions.
+
+Success means `whoami` returns your handle, `status` reports the hub connected, and your session
+appears in the hub dashboard. Two clients on one computer reuse the same private configuration.
+Codex receives messages when hooks run; it cannot wake an idle thread. Claude native wake needs
+additional **per-session** consent described in [advanced installation](INSTALL.md).
+
+If setup reports older manual hooks/MCP or an incompatible daemon, follow
+[the migration instructions](INSTALL.md#2-install-the-client-bundle); do not install duplicate integrations.
+For machines without GitHub download access, an operator can supply a verified
+[offline client bundle](PLUGIN_BUILD.md) with the existing local marketplace installation path.

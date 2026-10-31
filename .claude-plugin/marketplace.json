@@ -1,0 +1,17 @@
+{
+  "name": "kommutator",
+  "owner": {
+    "name": "alex-voloshin-dev"
+  },
+  "plugins": [
+    {
+      "name": "kommutator",
+      "source": {
+        "source": "archive",
+        "url": "https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.2.0/kommutator-v0.2.0-claude-linux-x64.zip",
+        "sha256": "059c8634e883bc9a1b4e236e60fe459808b813d4d2e83079327692c2a894e92b"
+      },
+      "version": "0.2.0"
+    }
+  ]
+}

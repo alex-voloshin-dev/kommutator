@@ -1047,3 +1047,25 @@ process kill inside that critical section can leave the lock behind; automatic l
 is intentionally absent. A fresh vendor session uses a new root ID and avoids the stale
 record. Cleanup of interrupted root records is a local maintenance operation, not a reason
 to guess another session or bypass the live-owner checks.
+
+### GitHub marketplace client bootstrap (2026-10-31)
+
+The root Claude catalog references a checksum-pinned ZIP containing the standalone Claude
+plugin; Claude downloads it during installation, outside its MCP startup deadline. The root
+Codex catalog references a lightweight hosted plugin. Its MCP launcher downloads the fixed-version Linux x64 client release over HTTPS and verifies its
+SHA256 against a digest shipped in the trusted Git plugin. No latest-version discovery,
+remote shell evaluation, npm install or system Node is required. Hooks never download or
+install; a cold hook fails open and the user starts a fresh session after private setup.
+
+A verified complete archive is unpacked in a private temporary directory and atomically
+renamed under the shared private downloads directory, keyed by archive digest. Concurrent
+MCP starts serialize installation; interrupted or failed downloads never become ready.
+Installed bundles remain usable offline and survive marketplace cache removal. Unsupported
+platforms fail explicitly. The existing immutable runtime bootstrap, private browser setup,
+identity bindings and daemon compatibility gates remain authoritative. Installing a new
+plugin never restarts an active daemon or changes hub/client credentials.
+
+Release preparation generates both catalogs and the Codex launcher from exact archive
+hashes. Publish that immutable asset before publishing its catalog references. Git source
+contains no Node binary or runtime archive. Vendor hooks still require normal trust; the
+hosted catalog is not an official vendor-directory approval or evidence for other platforms.

@@ -1,0 +1,12 @@
+{
+  "name": "kommutator",
+  "plugins": [
+    {
+      "name": "kommutator",
+      "source": {
+        "source": "local",
+        "path": "./plugins/hosted/codex"
+      }
+    }
+  ]
+}
