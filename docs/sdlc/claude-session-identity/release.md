@@ -76,6 +76,10 @@ typecheck, integrity checks and source/credential scans passed; two artifact sca
 matches were verified as license checksums. Both correctness and security reviews
 approved the final change.
 
+[Published upgrade verification](publication.md) records successful Claude/Codex CLI
+updates from 0.2.1, installed-runtime E2E, and the actual contract-1 to contract-2 daemon
+restart with configuration and persisted database records preserved.
+
 ## Not validated
 
 These are synthetic process-level checks, not a live Claude application test on
