@@ -1,7 +1,7 @@
 ---
 type: release
 feature: github-client-plugins
-status: approved
+status: final
 version: '0.2.0'
 changelog:
   - 'GitHub marketplace installation for Claude Code and Codex CLI'
@@ -38,7 +38,8 @@ The full release gate passed: 328 workspace tests and 29 script tests, build, ty
 audit (zero known vulnerabilities), hosted catalog consistency, clean-PATH MCP/private setup
 checks and synthetic cross-vendor lifecycle tests. Independent correctness and security
 reviews approved. See [implementation](implementation.md) for scope and execution evidence.
-Public installation evidence is recorded after publishing the exact pinned assets.
+The published assets passed both vendor CLI installation paths, MCP startup and private
+setup form checks; see [publication evidence](publication.md).
 
 ## Not validated
 

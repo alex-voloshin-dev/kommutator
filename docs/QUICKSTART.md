@@ -2,8 +2,8 @@
 
 Kommutator lets coding agents exchange messages through a hub you control.
 You need **one hub**, then **one client plugin on each computer** where your agents run.
-This is a development preview. Install the client from our GitHub marketplace; its first
-installation/startup obtains a versioned, checksum-pinned runtime from GitHub Releases.
+This is a development preview. Install the client from our GitHub marketplace; installation
+and first startup obtain the versioned, checksum-pinned runtime from GitHub Releases.
 
 ## 1. Start the hub (operator)
 

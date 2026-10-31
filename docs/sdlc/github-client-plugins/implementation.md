@@ -46,3 +46,8 @@ clients are not upgraded by this publication.
 - [Claude marketplace archive schema](https://code.claude.com/docs/en/plugins/marketplace-reference)
 - [Claude MCP startup timeout](https://code.claude.com/docs/en/env-vars)
 - [OpenAI Git-backed plugin packaging](https://developers.openai.com/plugins/build/plugins)
+
+## Published installation
+
+The exact release assets and both GitHub installation paths passed consumer checks after
+publication; see [publication evidence](publication.md).
