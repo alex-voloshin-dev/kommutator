@@ -1,7 +1,7 @@
 ---
 type: release
 feature: plugin-marketplace-fix
-status: approved
+status: final
 version: '0.2.1'
 changelog:
   - 'Do not mistake plugin marketplace metadata for a legacy manual integration'
@@ -44,7 +44,8 @@ Start a fresh independent session and approve hooks normally.
 
 ## Validation and limits
 
-Execution evidence is recorded in implementation.md. The regression must reach configured
+Execution evidence is recorded in [implementation](implementation.md) and
+[published upgrade verification](publication.md). The regression must reach configured
 `whoami` and message exchange with marketplace metadata present, not merely initialize MCP
 or open setup. Native wake, desktop UI, other platforms and external physical LAN acceptance
 remain outside this patch.

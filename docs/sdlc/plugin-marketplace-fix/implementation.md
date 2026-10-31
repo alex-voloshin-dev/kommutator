@@ -53,4 +53,4 @@ and ran tests. See [review](review-code-2.md) and [release notes](release.md).
 The configured acceptance uses a disposable hub and synthetic hook/MCP clients with real
 packaged runtimes. It does not claim model-native wake, desktop UI, other architectures,
 separate physical LAN clients, reboot or full-day acceptance. Published native CLI upgrade
-and downloaded-runtime checks are recorded after release in publication.md.
+and downloaded-runtime checks passed; see [publication evidence](publication.md).
