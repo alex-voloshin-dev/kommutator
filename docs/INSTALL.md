@@ -110,6 +110,32 @@ Never enable it globally. Bypass/default was observed Held. See the
 [Claude integration details](../plugins/claude-code/README.md). Codex delivers on hooks;
 it cannot wake an already idle thread. Desktop UI acceptance is separate from CLI evidence.
 
+### Updating the GitHub plugin
+
+Version 0.2.0 has a conflict-detector bug: Claude's normal marketplace registration can be
+reported as an older manual integration. Update to 0.2.1 or later; **keep** the
+`extraKnownMarketplaces.kommutator` entry. Removing the marketplace is not the fix.
+
+Inside Claude Code:
+
+```text
+/plugin marketplace update kommutator
+/plugin update kommutator@kommutator
+```
+
+For Codex CLI:
+
+```sh
+codex plugin marketplace upgrade kommutator --json
+codex plugin add kommutator@kommutator --json
+```
+
+Restart the session and approve changed hooks through the vendor's normal trust workflow.
+The saved hub URL/key remain in private client configuration. Check `setup_status`, then
+`whoami` and `list_sessions`; a successful MCP initialization alone does not prove the
+configured session can register. If a real manual MCP server or hook remains, the migration
+checks still apply: inspect it and back up settings before deliberate removal.
+
 ## 3. Operations
 
 Use [OPERATIONS](OPERATIONS.md) for doctor/status and bounded logs. Container operations:

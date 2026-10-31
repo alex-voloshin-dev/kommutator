@@ -60,7 +60,7 @@ reusing an interrupted root. Codex clients may filter custom `KOM_HOME` from MCP
 use default shared locations for normal installation, or configure matching MCP/hook environment
 explicitly when testing overrides.
 
-The root package.json version is the authoritative release version (currently 0.2.0,
+The root package.json version is the authoritative release version (currently 0.2.1,
 a development preview). After a deliberate version bump run `pnpm version:sync`; builds
 and the release gate check derived version consistency. Runtime content hashes and runtime
 compatibility-contract versions are separate identifiers. This does not publish a release.

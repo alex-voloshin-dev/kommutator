@@ -19,7 +19,17 @@ const hubSockets = new Set(); let offline = false;
 hub.on('connection', socket => { hubSockets.add(socket); socket.once('close', () => hubSockets.delete(socket)); });
 hub.on('upgrade', (...args) => { if (offline) { args[1].destroy(); return; } const delay = upgradeCount++ > 0 ? 200 : 0; setTimeout(() => { for (const handle of upgrades) handle(...args); }, delay); });
 await new Promise(resolve => hub.listen(0, '127.0.0.1', resolve));
-await writeFile(join(kom, 'config.json'), JSON.stringify({ hub: `http://127.0.0.1:${hub.address().port}`, key: 'synthetic-plugin-e2e-key', host: 'fixture' }), { mode: 0o600 });
+// Include the settings written by a real marketplace install, not just an empty vendor home.
+const claudeSettings = join(home, '.claude/settings.json');
+const codexSettings = join(home, 'codex/config.toml');
+const installedClaude = {
+  extraKnownMarketplaces: { kommutator: { source: { source: 'github', repo: 'alex-voloshin-dev/kommutator' } } },
+  enabledPlugins: { 'kommutator@kommutator': true },
+};
+const installedCodex = '[plugins."kommutator@kommutator"]\nenabled = true\n';
+await mkdir(join(home, '.claude')); await mkdir(join(home, 'codex'));
+await writeFile(claudeSettings, JSON.stringify(installedClaude));
+await writeFile(codexSettings, installedCodex);
 const clients = [];
 const moved = [];
 const env = { HOME: home, KOM_HOME: kom, CODEX_HOME: join(home, 'codex'), PATH: join(home, 'os-bin') };
@@ -57,6 +67,16 @@ async function stop(child) {
   const done = new Promise(resolve => child.once('close', resolve)); child.kill('SIGTERM'); await done;
 }
 try {
+  const setup = await client('claude-code', 'setup-root');
+  assert.equal((await setup.call('setup_status')).configured, false);
+  const form = new URL((await setup.call('setup_start')).url);
+  const response = await fetch(form, {
+    method: 'POST', headers: { Origin: form.origin, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ csrf: form.pathname.slice(1), hub: `http://127.0.0.1:${hub.address().port}`, host: 'fixture', key: 'synthetic-plugin-e2e-key' }),
+  });
+  assert.equal(response.status, 200);
+  assert.equal((await setup.call('setup_status')).configured, true);
+  await stop(setup.child);
   // These hooks execute before any daemon exists. First whoami must work without a second hook.
   await hook('claude-code', 'claude-root-a');
   const claude = await client('claude-code', 'claude-root-a');
@@ -79,6 +99,16 @@ try {
   assert.equal((await codex.call('board_get', { topic: 'qa-room' })).entries[0].body, 'ready');
   const topic = await claude.call('send', { to: 'topic:qa-room', kind: 'topic', body: 'topic message' });
   assert.equal((await codex.call('read', { id: topic.id })).message.body, 'topic message');
+  // Installed metadata must coexist with normal calls, but real manual integrations still block.
+  await writeFile(claudeSettings, JSON.stringify({ ...installedClaude, mcpServers: { kommutator: { command: 'kom', args: ['mcp'] } } }));
+  assert.match(await claude.call('whoami', {}, 'claude-root-a', true), /Duplicate legacy kommutator integration/);
+  await writeFile(claudeSettings, JSON.stringify(installedClaude));
+  assert.equal((await claude.call('whoami')).session.id, author.id);
+  await writeFile(codexSettings, installedCodex + '\n[mcp_servers.kommutator]\ncommand = "kom"\nargs = ["mcp"]\n');
+  assert.match(await codex.call('whoami', {}, 'codex-root-a', true), /Duplicate legacy kommutator integration/);
+  await writeFile(codexSettings, installedCodex);
+  assert.equal((await codex.call('whoami')).session.id, a.id);
+  console.log('PASS: marketplace metadata survives private setup, fresh hooks, whoami and messaging; actual legacy MCP entries still block');
   const before = JSON.parse(await readFile(join(kom, 'agentd.json'), 'utf8'));
   const release = JSON.parse(await readFile(join(artifact, 'plugins/codex/runtime/release.json'), 'utf8'));
   assert.equal(before.version, release.version);

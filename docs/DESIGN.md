@@ -1069,3 +1069,14 @@ Release preparation generates both catalogs and the Codex launcher from exact ar
 hashes. Publish that immutable asset before publishing its catalog references. Git source
 contains no Node binary or runtime archive. Vendor hooks still require normal trust; the
 hosted catalog is not an official vendor-directory approval or evidence for other platforms.
+
+### Plugin conflict detection scope (2026-10-31)
+
+Duplicate manual integrations are identified only in executable vendor configuration:
+JSON `mcpServers` and command hooks. Codex TOML retains the existing conservative
+legacy command/server text checks; this patch does not add a partial TOML parser. Claude's
+per-project entries in `.claude.json` apply only to the observed current project.
+Marketplace registration, enabled-plugin entries, permission strings and unrelated
+metadata are not integrations and never require deletion to use the plugin. Malformed
+JSON/settings structures fail with a fixed inspection error without exposing file contents.
+Checks remain read-only; real manual MCP/hook conflicts still require deliberate migration.
