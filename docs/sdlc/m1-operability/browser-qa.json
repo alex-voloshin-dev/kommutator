@@ -1,0 +1,59 @@
+{
+  "at": "2026-10-25T22:36:19.140Z",
+  "browser": "151.0.7922.34",
+  "checks": [
+    {
+      "name": "initial loading",
+      "passed": true
+    },
+    {
+      "name": "empty hub",
+      "passed": true
+    },
+    {
+      "name": "four states, wake, safe text, marked read",
+      "passed": true,
+      "rows": [
+        "active@qa-host\tother\tdemo-a\tactive\ton\t<img src=x onerror=alert(1)>",
+        "gone@qa-host\tother\tdemo-b\tgone\toff\toperability fixture",
+        "idle@qa-host\tother\tdemo-a\tidle\toff\toperability fixture",
+        "unknown@qa-host\tother\tdemo-b\tunknown\ton\toperability fixture"
+      ]
+    },
+    {
+      "name": "session filters and reset",
+      "passed": true
+    },
+    {
+      "name": "feed filters",
+      "passed": true
+    },
+    {
+      "name": "failed snapshot retains rows and last update, marks stale",
+      "passed": true
+    },
+    {
+      "name": "snapshot retry recovery",
+      "passed": true
+    },
+    {
+      "name": "actual hub outage keeps stale tables",
+      "passed": true
+    },
+    {
+      "name": "SSE reopen snapshot recovers gap",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "browser-empty.png",
+    "browser-populated.png",
+    "browser-stale.png",
+    "browser-disconnected.png",
+    "browser-recovered.png"
+  ],
+  "page_errors": [],
+  "result": "passed",
+  "scope": "Production hub HTTP/SSE and actual dashboard with conformance-driven fake sessions; no live vendor processes.",
+  "cleanup": "Browser, hub listener and harness closed after the run."
+}

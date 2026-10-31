@@ -1,0 +1,25 @@
+{
+  "license": "MIT",
+  "name": "@kommutator/protocol",
+  "version": "0.1.0",
+  "description": "kommutator wire protocol: JSON-RPC method schemas, addressing, version",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "node ../../scripts/sync-version.mjs --check && tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "node -e \"require('node:fs').rmSync('dist', {recursive:true, force:true})\""
+  },
+  "dependencies": {
+    "zod": "^4.6.6"
+  }
+}

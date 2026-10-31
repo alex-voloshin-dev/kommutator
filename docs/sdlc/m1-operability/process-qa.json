@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-25T22:40:59.786Z",
+  "scope": "Built CLI, real hub and daemon processes; fake local Claude socket only. No live vendor or day-long acceptance claim.",
+  "node": "v24.19.0",
+  "platform": "darwin",
+  "checks": [
+    {
+      "name": "absent_services_read_only",
+      "result": "pass",
+      "status": "unavailable",
+      "doctorExit": 1,
+      "doctor": {
+        "ipc": "fail",
+        "hub": "fail"
+      },
+      "emptyLogs": true,
+      "noDaemonFilesCreated": true,
+      "configAndHooksUnchanged": true
+    },
+    {
+      "name": "authenticated_hub_without_daemon",
+      "result": "pass",
+      "doctorExit": 1,
+      "hub": "pass",
+      "ipc": "fail",
+      "noDaemonAutostart": true
+    },
+    {
+      "name": "healthy_daemon_and_registered_socket",
+      "result": "pass",
+      "health": "healthy",
+      "sessionCount": 1,
+      "doctorExit": 0,
+      "doctorComplete": false,
+      "doctorChecks": {
+        "config": "pass",
+        "host": "pass",
+        "path.current": "pass",
+        "path.gui": "unknown",
+        "hooks.claude": "pass",
+        "hooks.codex": "not_configured",
+        "plugin.claude": "warning",
+        "ipc": "pass",
+        "sockets.claude": "pass",
+        "hub": "pass"
+      },
+      "nativeSocketConnections": 0
+    },
+    {
+      "name": "missing_socket_then_restore",
+      "result": "pass",
+      "missing": "fail",
+      "restored": "pass",
+      "noNativeDeliveryAttempt": true
+    },
+    {
+      "name": "hub_authentication_failure",
+      "result": "pass",
+      "doctorExit": 1,
+      "hub": "fail",
+      "diagnosticSanitized": true
+    },
+    {
+      "name": "outage_status_doctor_logs",
+      "result": "pass",
+      "status": "degraded",
+      "daemonStillRunning": true,
+      "ipc": "pass",
+      "hub": "fail",
+      "lastErrorTimestamp": true,
+      "followedJsonlRecords": 1,
+      "tailOneRecord": true,
+      "followSigintExit": 0
+    },
+    {
+      "name": "automatic_hub_recovery",
+      "result": "pass",
+      "healthy": true,
+      "sameDaemonProcess": true,
+      "registeredSessionRetained": true,
+      "historicalErrorRetained": true,
+      "doctorExit": 0,
+      "hub": "pass"
+    },
+    {
+      "name": "no_native_delivery_or_settings_mutation",
+      "result": "pass",
+      "vendorConnections": 0,
+      "configRestoredExactly": true,
+      "hooksUnchanged": true
+    }
+  ],
+  "cleanup": {
+    "ownedProcessesExited": true,
+    "noForcedKills": true,
+    "nativeSocketConnections": 0,
+    "capturedOutputContainsCredentials": false,
+    "privateCredentialsRemoved": true
+  },
+  "limitations": [
+    "GUI application inherited PATH remains unverified.",
+    "No live Claude process, real vendor delivery, or day-long operation was exercised."
+  ],
+  "result": "pass"
+}

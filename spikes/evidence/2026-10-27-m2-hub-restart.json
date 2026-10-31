@@ -1,0 +1,86 @@
+{
+  "scope": "Installed Codex root across actual Docker hub restart",
+  "before_identity": {
+    "session": {
+      "id": "7c3ff2d5-aae8-4894-8ed3-e168461eeac2",
+      "host": "wsl-workstation",
+      "name": "codex-work-8",
+      "vendor": "codex",
+      "vendor_session_id": "01a17fea-66e8-75b1-a64d-0053fed44b27",
+      "cwd": "/tmp/kom-installed-probe/work",
+      "project_key": "work",
+      "state": "active",
+      "incarnation": 0,
+      "wake": "on",
+      "capability": "hook",
+      "handle": "codex-work-8@wsl-workstation"
+    },
+    "topics": [
+      {
+        "name": "global",
+        "kind": "global"
+      },
+      {
+        "name": "project:work",
+        "kind": "project"
+      }
+    ]
+  },
+  "before_board": {
+    "entries": [
+      {
+        "topic": "project:work",
+        "key": "qa-installed-20261027-2130",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 2,
+        "author": "qa27writer@wsl-workstation",
+        "protected": false,
+        "updated_at": "2026-10-28T00:24:37.119Z"
+      }
+    ]
+  },
+  "after_identity": {
+    "session": {
+      "id": "7c3ff2d5-aae8-4894-8ed3-e168461eeac2",
+      "host": "wsl-workstation",
+      "name": "codex-work-8",
+      "vendor": "codex",
+      "vendor_session_id": "01a17fea-66e8-75b1-a64d-0053fed44b27",
+      "cwd": "/tmp/kom-installed-probe/work",
+      "project_key": "work",
+      "state": "active",
+      "incarnation": 0,
+      "wake": "on",
+      "capability": "hook",
+      "handle": "codex-work-8@wsl-workstation"
+    },
+    "topics": [
+      {
+        "name": "global",
+        "kind": "global"
+      },
+      {
+        "name": "project:work",
+        "kind": "project"
+      }
+    ]
+  },
+  "after_board": {
+    "entries": [
+      {
+        "topic": "project:work",
+        "key": "qa-installed-20261027-2130",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 2,
+        "author": "qa27writer@wsl-workstation",
+        "protected": false,
+        "updated_at": "2026-10-28T00:24:37.119Z"
+      }
+    ]
+  },
+  "result": "pass",
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

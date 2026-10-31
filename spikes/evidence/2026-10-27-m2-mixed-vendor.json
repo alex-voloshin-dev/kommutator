@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-27",
+  "scope": "Actual installed WSL daemon and Docker hub; two owned vendor sessions",
+  "checks": [
+    "Codex request",
+    "idle Claude native wake and reply",
+    "Codex next-prompt hook/body read"
+  ],
+  "versions": {
+    "claude": "2.1.310",
+    "model": "claude-sonnet-5-5",
+    "codex": "0.164.0"
+  },
+  "launch": {
+    "claude_stream_json": true,
+    "claude_initial_user_prompts": 1,
+    "claude_crossSessionInbound": "accept",
+    "claude_inbound_marker": "accept",
+    "claude_explicit_mcp_config": true,
+    "claude_global_settings_changed": false,
+    "codex_hook_bypass": false
+  },
+  "first_attempt": {
+    "result": "harness_failure",
+    "cause": "--strict-mcp-config without explicit --mcp-config omitted Claude MCP tools; model emitted literal invoke text; no test message stored",
+    "resolution": "Retried once with explicit installed kom MCP server config; Claude tools appeared and exchange passed",
+    "blocked_fixture_outbox": {
+      "id": 18,
+      "local_key": "codex:01a17fe6-2b38-7402-a942-df30c294b7a7",
+      "idempotency_key": "6fcf0cba-663a-4338-a424-82af8f608e14",
+      "disposition": "Parent performing backed-up targeted cleanup after all test roots closed; unrelated outbox records preserved"
+    }
+  },
+  "claude_tool_count": 14,
+  "claude_mcp_servers": [
+    {
+      "name": "kommutator",
+      "status": "connected",
+      "source": "dynamic"
+    }
+  ],
+  "claude_results": [
+    {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "num_turns": 3,
+      "result": "MIXED_READY"
+    },
+    {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "num_turns": 3,
+      "result": "I replied to qa27mixedcodex@wsl-workstation with subject MIXED_INSTALLED_PONG_20261027 and body \"mixed claude pong\". The reply is linked to their ping (da4a8513-2e95-4c5e-944b-a96c5d933284). The send returned status \"sent\", and the delivery shows as unread on their side."
+    }
+  ],
+  "messages": [
+    {
+      "id": "da4a8513-2e95-4c5e-944b-a96c5d933284",
+      "from_handle": "qa27mixedcodex@wsl-workstation",
+      "subject": "MIXED_INSTALLED_PING_20261027",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "da4a8513-2e95-4c5e-944b-a96c5d933284",
+      "reply_to": null,
+      "hops": 0
+    },
+    {
+      "id": "b2eb6b41-9a0d-4741-9ffc-0a7ad275d2d8",
+      "from_handle": "qa27claude@wsl-workstation",
+      "subject": "MIXED_INSTALLED_PONG_20261027",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "da4a8513-2e95-4c5e-944b-a96c5d933284",
+      "reply_to": "da4a8513-2e95-4c5e-944b-a96c5d933284",
+      "hops": 1
+    }
+  ],
+  "receipts": [
+    {
+      "message_id": "b2eb6b41-9a0d-4741-9ffc-0a7ad275d2d8",
+      "session_id": "107008aa-c06d-4e2d-9f83-694dac7a30bc",
+      "state": "read"
+    },
+    {
+      "message_id": "da4a8513-2e95-4c5e-944b-a96c5d933284",
+      "session_id": "0557bc07-2157-4f91-90d8-2fbcca3bba3c",
+      "state": "read"
+    }
+  ],
+  "codex_hook_events": {
+    "sessionStart": 1,
+    "userPromptSubmit": 3,
+    "postToolUse": 6,
+    "stop": 3,
+    "sessionEnd": 1
+  },
+  "runtime_diagnostic": [
+    {
+      "id": "sockets.claude",
+      "state": "pass",
+      "summary": "1 registered Claude inbox socket(s) exist; existence is not proof of delivery."
+    },
+    {
+      "id": "runtime.codex",
+      "state": "pass",
+      "summary": "1 Codex root(s) have live shims and observed PostToolUse/Stop polls; this does not prove header consumption, native wake or desktop UI support."
+    },
+    {
+      "id": "hub",
+      "state": "pass",
+      "summary": "Authenticated hub snapshot is reachable and has the expected protocol version."
+    }
+  ],
+  "limitations": [
+    "Codex consumed reply at next requested turn; no Codex native wake claim",
+    "Actual Work desktop UI not tested",
+    "Labeled test records retained in hub"
+  ],
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

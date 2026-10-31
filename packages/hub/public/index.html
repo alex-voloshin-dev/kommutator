@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kommutator</title>
+<style>
+  :root { color-scheme: light dark; font: 14px/1.4 system-ui, sans-serif; }
+  body { margin: 0; padding: 16px; max-width: 1100px; }
+  h1 { font-size: 18px; margin: 0 0 12px; }
+  h2 { font-size: 15px; margin: 20px 0 8px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #8884; vertical-align: top; }
+  th small { font-weight: normal; opacity: .7; }
+  .feed p { margin: 4px 0; font-family: ui-monospace, monospace; font-size: 12px; overflow-wrap: anywhere; }
+  td { overflow-wrap: anywhere; }
+  .filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 12px 0; }
+  .filters label { display: grid; gap: 4px; }
+  input, select, button { font: inherit; padding: 6px; }
+  .table-scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>kommutator — read-only</h1>
+<p id="connection" role="status">Loading snapshot; connecting to live updates…</p>
+<p>Last successful snapshot: <time id="last-update">Not yet</time></p>
+<p id="snapshot-error" role="status" hidden></p>
+<h2 id="sessions-heading">Sessions</h2>
+<p id="session-retention">All live sessions and up to 100 most recently ended sessions. Older ended sessions are not shown.</p>
+<div class="filters" aria-label="Session filters">
+  <label for="session-search">Search sessions (handle, vendor, project, status)
+    <input id="session-search" type="search" placeholder="Search sessions">
+  </label>
+  <label for="session-state">State
+    <select id="session-state"><option value="">All states</option><option>active</option><option>idle</option><option>gone</option><option>unknown</option></select>
+  </label>
+  <label for="session-wake">Wake
+    <select id="session-wake"><option value="">All wake settings</option><option>on</option><option>off</option></select>
+  </label>
+  <button id="clear-session-filters" type="button">Clear session filters</button>
+</div>
+<p id="session-summary" role="status">Loading sessions…</p>
+<div class="table-scroll"><table id="sessions" aria-labelledby="sessions-heading" aria-describedby="session-retention session-summary"><thead><tr><th scope="col">handle</th><th scope="col">vendor</th><th scope="col">project</th><th scope="col">state</th><th scope="col">wake</th><th scope="col">status</th></tr></thead><tbody></tbody></table></div>
+<h2 id="deliveries-heading">Deliveries</h2>
+<p>Latest 200 deliveries.</p>
+<p id="delivery-summary" role="status">Loading deliveries…</p>
+<!-- "marked read" is the receipt state `read`, a bookkeeping fact: the header was in a hook's
+     accepted output, the body was served to read(id), or the agent called ack(). It does
+     not mean the body was read or the request handled (DESIGN.md §5). -->
+<div class="table-scroll"><table id="deliveries" aria-labelledby="deliveries-heading" aria-describedby="delivery-summary"><thead><tr><th scope="col">#seq</th><th scope="col">to</th><th scope="col">from</th><th scope="col">subject / preview</th><th scope="col" title="Bookkeeping only: the header was in a hook's accepted output, the body was served to read(id), or the agent called ack(). Not proof the agent saw or handled it.">marked read <small>(?)</small></th></tr></thead><tbody></tbody></table></div>
+<h2>Feed</h2>
+<p>Latest 200 live events since this page connected. Reconnecting refreshes the tables; missed feed events are not replayed.</p>
+<div class="filters"><label for="feed-type">Event type
+  <select id="feed-type"><option value="">All event types</option><option>session.registered</option><option>session.updated</option><option>session.gone</option><option>message.sent</option><option>delivery.created</option><option>delivery.read</option><option>board.put</option></select>
+</label></div>
+<p id="feed-summary" role="status">Waiting for live connection.</p>
+<div class="feed" id="feed"></div>
+<script>
+const sessions = document.querySelector('#sessions tbody');
+const deliveries = document.querySelector('#deliveries tbody');
+const feed = document.querySelector('#feed');
+const connection = document.querySelector('#connection');
+const snapshotError = document.querySelector('#snapshot-error');
+const lastUpdate = document.querySelector('#last-update');
+const sessionSummary = document.querySelector('#session-summary');
+const deliverySummary = document.querySelector('#delivery-summary');
+const feedSummary = document.querySelector('#feed-summary');
+const sessionSearch = document.querySelector('#session-search');
+const sessionState = document.querySelector('#session-state');
+const sessionWake = document.querySelector('#session-wake');
+const feedType = document.querySelector('#feed-type');
+const eventTypes = [
+  'session.registered', 'session.updated', 'session.gone', 'message.sent',
+  'delivery.created', 'delivery.read', 'board.put',
+];
+let refreshing = false;
+let refreshTimer = null;
+let dirty = false;
+let snapshot = null;
+let snapshotFailed = false;
+let needsSync = true;
+let streamState = 'connecting';
+const feedEvents = [];
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function cellText(value) {
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+}
+
+function renderRows(table, rows, values) {
+  const rendered = rows.map(row => {
+    const tr = document.createElement('tr');
+    for (const value of values(row)) {
+      const td = document.createElement('td');
+      td.textContent = cellText(value);
+      tr.appendChild(td);
+    }
+    return tr;
+  });
+  table.replaceChildren(...rendered);
+}
+
+function staleSuffix() {
+  return snapshotFailed || needsSync || streamState !== 'connected'
+    ? ' Last successful snapshot; data may be stale.' : '';
+}
+
+function renderSessions() {
+  if (snapshot === null) {
+    sessionSummary.textContent = snapshotFailed ? 'Sessions unavailable until a snapshot succeeds.' : 'Loading sessions…';
+    return;
+  }
+  const query = sessionSearch.value.trim().toLowerCase();
+  const rows = snapshot.sessions.filter(row =>
+    (!sessionState.value || row.state === sessionState.value)
+    && (!sessionWake.value || row.wake === sessionWake.value)
+    && (!query || [row.handle, row.vendor, row.project_key, row.status_line]
+      .some(value => cellText(value).toLowerCase().includes(query))));
+  renderRows(sessions, rows, row => [row.handle, row.vendor, row.project_key, row.state, row.wake, row.status_line]);
+  sessionSummary.textContent = (snapshot.sessions.length === 0 ? 'No sessions in this snapshot.'
+    : rows.length === 0 ? 'No sessions match these filters.'
+    : `Showing ${rows.length} of ${snapshot.sessions.length} sessions.`) + staleSuffix();
+}
+
+function renderDeliveries() {
+  if (snapshot === null) {
+    deliverySummary.textContent = snapshotFailed ? 'Deliveries unavailable until a snapshot succeeds.' : 'Loading deliveries…';
+    return;
+  }
+  renderRows(deliveries, snapshot.deliveries,
+    row => [row.seq, row.recipient, row.sender, row.subject || row.preview, row.state === 'read' ? 'yes' : 'no']);
+  deliverySummary.textContent = (snapshot.deliveries.length === 0 ? 'No deliveries in this snapshot.'
+    : `Showing ${snapshot.deliveries.length} recent deliveries.`) + staleSuffix();
+}
+
+function renderFeed() {
+  const visible = feedEvents.filter(event => !feedType.value || event.type === feedType.value);
+  feed.replaceChildren(...visible.map(event => {
+    const line = document.createElement('p');
+    line.textContent = event.text;
+    return line;
+  }));
+  feedSummary.textContent = feedEvents.length === 0
+    ? (streamState === 'connected' ? 'No live events received yet.' : 'No live events received; waiting for connection.')
+    : visible.length === 0 ? 'No events match this event type.'
+    : `Showing ${visible.length} of ${feedEvents.length} retained live events.`;
+}
+
+function renderStatus() {
+  if (streamState === 'disconnected') connection.textContent = 'Disconnected — reload this page to reconnect.';
+  else if (streamState === 'reconnecting') connection.textContent = 'Reconnecting — live updates unavailable.';
+  else if (snapshotFailed) connection.textContent = snapshot === null
+    ? 'Snapshot unavailable; retrying.' : 'Stale data — snapshot unavailable; retrying.';
+  else if (streamState === 'connecting') connection.textContent = 'Connecting to live updates…';
+  else if (needsSync) connection.textContent = snapshot === null ? 'Loading snapshot…' : 'Refreshing snapshot…';
+  else connection.textContent = 'connected';
+  renderSessions();
+  renderDeliveries();
+  renderFeed();
+}
+
+function requestSnapshot() {
+  dirty = true;
+  needsSync = true;
+  renderStatus();
+  if (!refreshing && refreshTimer === null) refreshTimer = setTimeout(refreshSnapshot, 0);
+}
+
+async function refreshSnapshot() {
+  refreshTimer = null;
+  refreshing = true;
+  dirty = false;
+  let failed = false;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('/api/snapshot', {
+      credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
+    });
+    if (!response.ok) throw new Error('Snapshot request failed');
+    const value = await response.json();
+    if (!isRecord(value) || !Array.isArray(value.sessions) || !Array.isArray(value.deliveries)
+      || !value.sessions.every(isRecord) || !value.deliveries.every(isRecord)) {
+      throw new Error('Invalid snapshot');
+    }
+    snapshot = value;
+    snapshotFailed = false;
+    needsSync = dirty;
+    lastUpdate.textContent = new Date().toISOString();
+    lastUpdate.dateTime = lastUpdate.textContent;
+    snapshotError.hidden = true;
+    snapshotError.textContent = '';
+  } catch {
+    failed = true;
+    snapshotFailed = true;
+    snapshotError.textContent = snapshot === null ? 'Snapshot unavailable; retrying.'
+      : 'Snapshot unavailable; retrying. The tables retain the last successful snapshot.';
+    snapshotError.hidden = false;
+  } finally {
+    clearTimeout(timeout);
+    refreshing = false;
+    renderStatus();
+    // Changes received during a fetch need a subsequent snapshot, even after SSE opens.
+    if (failed || dirty) refreshTimer = setTimeout(refreshSnapshot, failed ? 3000 : 0);
+  }
+}
+
+function appendEvent(type, raw) {
+  let event;
+  try { event = JSON.parse(raw); } catch { return; }
+  if (!isRecord(event) || event.type !== type || typeof event.at !== 'string' || !isRecord(event.data)) return;
+  const data = Array.from(JSON.stringify(event.data));
+  const detail = data.length > 1000 ? data.slice(0, 999).join('') + '…' : data.join('');
+  feedEvents.push({ type, text: `${event.at} ${type} ${detail}` });
+  if (feedEvents.length > 200) feedEvents.shift();
+  renderFeed();
+}
+
+sessionSearch.addEventListener('input', renderSessions);
+sessionState.addEventListener('change', renderSessions);
+sessionWake.addEventListener('change', renderSessions);
+document.querySelector('#clear-session-filters').addEventListener('click', () => {
+  sessionSearch.value = '';
+  sessionState.value = '';
+  sessionWake.value = '';
+  renderSessions();
+});
+feedType.addEventListener('change', renderFeed);
+
+// HTTP Basic credentials stay in the browser; no key is placed in URLs or storage.
+const events = new EventSource('/api/events');
+events.addEventListener('open', () => {
+  streamState = 'connected';
+  requestSnapshot();
+});
+events.addEventListener('error', () => {
+  streamState = events.readyState === 2 ? 'disconnected' : 'reconnecting';
+  needsSync = true;
+  renderStatus();
+});
+for (const type of eventTypes) {
+  events.addEventListener(type, event => {
+    appendEvent(type, event.data);
+    if (type !== 'board.put') requestSnapshot();
+  });
+}
+requestSnapshot();
+</script>
+</body>
+</html>

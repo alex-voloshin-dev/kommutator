@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "browser": "151.0.7922.34",
+  "event_types": [
+    "session.registered",
+    "session.updated",
+    "session.gone",
+    "message.sent",
+    "delivery.created",
+    "delivery.read",
+    "board.put"
+  ],
+  "session_rows": 1,
+  "delivery_marked_read": "yes",
+  "reconnect_snapshot_passed": true,
+  "untrusted_text_rendered_safely": true,
+  "page_errors": [],
+  "snapshot_requests": 7
+}

@@ -1,0 +1,146 @@
+{
+  "date": "2026-10-27",
+  "application": "Corrected helper Apply succeeded through normal Windows UAC",
+  "installed_plan": {
+    "Mode": "Plan",
+    "Address": "192.0.2.10",
+    "Port": 8787,
+    "AllowedSubnet": "192.0.2.0/24",
+    "InterfaceAlias": "REDACTED-LAN",
+    "Target": "127.0.0.1:8787",
+    "DockerPublication": "127.0.0.1:8787",
+    "Rules": [
+      {
+        "InterfaceAlias": "Any",
+        "Name": "Kommutator-LAN-8787-BlockOutside",
+        "RemoteAddress": [
+          "0.0.0.0-192.0.1.255",
+          "192.0.3.0-255.255.255.255"
+        ],
+        "Action": "Block"
+      },
+      {
+        "InterfaceAlias": [
+          "Bluetooth Network Connection",
+          "Local Area Connection* 1",
+          "Local Area Connection* 10",
+          "vEthernet (WSL (Hyper-V firewall))",
+          "vpn25",
+          "Wi-Fi"
+        ],
+        "Name": "Kommutator-LAN-8787-BlockOtherInterfaces",
+        "RemoteAddress": [
+          "Any"
+        ],
+        "Action": "Block"
+      },
+      {
+        "InterfaceAlias": "REDACTED-LAN",
+        "Name": "Kommutator-LAN-8787-AllowSubnet",
+        "RemoteAddress": [
+          "192.0.2.0/24"
+        ],
+        "Action": "Allow"
+      }
+    ],
+    "AlreadyConfigured": true
+  },
+  "effective": {
+    "Rules": [
+      {
+        "Name": "Kommutator-LAN-8787-BlockOutside",
+        "Enabled": "True",
+        "Action": "Block",
+        "Profile": "Any",
+        "LocalAddress": [
+          "192.0.2.10"
+        ],
+        "RemoteAddress": [
+          "0.0.0.0-192.0.1.255",
+          "192.0.3.0-255.255.255.255"
+        ],
+        "Protocol": "TCP",
+        "LocalPort": [
+          "8787"
+        ],
+        "Interfaces": [
+          "Any"
+        ]
+      },
+      {
+        "Name": "Kommutator-LAN-8787-BlockOtherInterfaces",
+        "Enabled": "True",
+        "Action": "Block",
+        "Profile": "Any",
+        "LocalAddress": [
+          "192.0.2.10"
+        ],
+        "RemoteAddress": [
+          "Any"
+        ],
+        "Protocol": "TCP",
+        "LocalPort": [
+          "8787"
+        ],
+        "Interfaces": [
+          "Bluetooth Network Connection",
+          "Local Area Connection* 1",
+          "Local Area Connection* 10",
+          "vEthernet (WSL (Hyper-V firewall))",
+          "vpn25",
+          "Wi-Fi"
+        ]
+      },
+      {
+        "Name": "Kommutator-LAN-8787-AllowSubnet",
+        "Enabled": "True",
+        "Action": "Allow",
+        "Profile": "Any",
+        "LocalAddress": [
+          "192.0.2.10"
+        ],
+        "RemoteAddress": [
+          "192.0.2.0/255.255.255.0"
+        ],
+        "Protocol": "TCP",
+        "LocalPort": [
+          "8787"
+        ],
+        "Interfaces": [
+          "REDACTED-LAN"
+        ]
+      }
+    ],
+    "Listeners": [
+      {
+        "LocalAddress": "192.0.2.10",
+        "LocalPort": 8787
+      },
+      {
+        "LocalAddress": "127.0.0.1",
+        "LocalPort": 8787
+      }
+    ],
+    "DiagnosticRulesRemaining": 0
+  },
+  "auth_checks": {
+    "Source": "Windows host to its own LAN address (not a remote physical LAN client)",
+    "HttpMissing": 401,
+    "HttpWrong": 401,
+    "HttpValid": 200,
+    "WsMissing": "rejected",
+    "WsWrong": "rejected",
+    "WsValid": "Open"
+  },
+  "wsl_source_observation": {
+    "linux_source": "198.51.100.10",
+    "windows_observed_remote": "192.0.2.10",
+    "connection": "reachable",
+    "interpretation": "Host NAT rewrites source; this is not an outside-subnet client test"
+  },
+  "remote_subnet_acceptance": "not run; user confirmed no separate test machine",
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

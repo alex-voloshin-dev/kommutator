@@ -1,0 +1,16 @@
+{
+  "name": "kommutator",
+  "description": "Cross-vendor messaging, topics and shared boards for coding-agent sessions (kommutator)",
+  "version": "0.1.0",
+  "author": {
+    "name": "alex-voloshin-dev"
+  },
+  "repository": "https://github.com/alex-voloshin-dev/kommutator",
+  "keywords": ["messaging", "multi-agent", "mcp", "coordination"],
+  "mcpServers": {
+    "kommutator": {
+      "command": "kom",
+      "args": ["mcp"]
+    }
+  }
+}

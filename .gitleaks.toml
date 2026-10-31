@@ -1,0 +1,44 @@
+title = "Kommutator secret scanning"
+
+[extend]
+useDefault = true
+
+# Keep the default detector; exceptions require BOTH an exact path and value.
+# Run directory scans from the repository root: gitleaks dir --redact .
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Build-only in-memory hub smoke-test key"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docker/Dockerfile$''']
+regexes = ['''^smoke-test-key-0123456789$''']
+
+[[rules.allowlists]]
+description = "Synthetic inbox token used to verify diagnostic redaction"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^packages/agentd/test/claude-adapter\.test\.ts$''']
+regexes = ['''^fixture-secret-123$''']
+
+[[rules.allowlists]]
+description = "Synthetic daemon and conformance test key"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^packages/agentd/test/daemon-core\.test\.ts$''', '''^packages/cli/test/conformance\.test\.ts$''']
+regexes = ['''^test-key-with-16-characters$''']
+
+[[rules.allowlists]]
+description = "Synthetic hub HTTP and WebSocket test key"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^packages/hub/test/server\.test\.ts$''']
+regexes = ['''^test-key-0123456789abcdef$''']
+
+[[rules.allowlists]]
+description = "Recorded message replay UUID, not an authentication credential"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^spikes/evidence/2026-10-27-m2-mixed-vendor\.json$''']
+regexes = ['''^6fcf0cba-663a-4338-a424-82af8f608e14$''']

@@ -1,0 +1,3323 @@
+{
+  "date": "2026-10-27",
+  "result": "passed",
+  "scope": "Three real Claude sessions in WSL through production hooks/MCP/agentd to Docker hub; local loopback, not LAN or saturation benchmark",
+  "marker": "load-20261027-pxexzxtq",
+  "versions": {
+    "claude": "2.1.310",
+    "model": "claude-sonnet-5-5",
+    "node": "v24.22.1"
+  },
+  "launch": {
+    "setting_sources": "local",
+    "strict_mcp": true,
+    "builtin_tools": [],
+    "plugin": "plugins/claude-code",
+    "private_KOM_HOME": true,
+    "same_cwd": true,
+    "stream_json_sessions": true,
+    "session_persistence": false,
+    "crossSessionInbound": "accept",
+    "KOM_CLAUDE_INBOUND_POLICY": "accept",
+    "bypass_permissions": true,
+    "global_settings_changed": false
+  },
+  "initial_model_failure": {
+    "model": "claude-fable-5-1",
+    "sessions": 3,
+    "result": "usage credits exhausted; registered and connected MCP but sent no messages",
+    "errors": [
+      "You're out of usage credits. Switch to another model, or manage usage credits at https://claude.ai/settings/usage?from=cc_cli_limit_message, to continue.",
+      "You're out of usage credits. Switch to another model, or manage usage credits at https://claude.ai/settings/usage?from=cc_cli_limit_message, to continue.",
+      "You're out of usage credits. Switch to another model, or manage usage credits at https://claude.ai/settings/usage?from=cc_cli_limit_message, to continue."
+    ],
+    "fallback_probe": {
+      "is_error": false,
+      "result": "OK",
+      "duration_ms": 2856,
+      "num_turns": 1,
+      "total_cost_usd": 0.011760900000000001
+    }
+  },
+  "sessions": [
+    {
+      "id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "host": "wsl-live-pxexzxtq",
+      "handle": "atlas@wsl-live-pxexzxtq",
+      "name": "atlas",
+      "requested_name": "atlas",
+      "role": null,
+      "vendor": "claude-code",
+      "vendor_session_id": "1ebf1803-76e0-4ca4-8baa-86c2842e4152",
+      "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+      "project_key": "load-20261027-pxexzxtq",
+      "state": "gone",
+      "status_line": "load-20261027-pxexzxtq READY",
+      "incarnation": 0,
+      "wake": "on",
+      "capability": "native",
+      "reg_id": "5b2b6f0c-b64d-4f20-9c20-45412383f9d7",
+      "next_seq": 8,
+      "started_at": "2026-10-27T11:02:05.195Z",
+      "last_seen_at": "2026-10-27T11:06:02.385Z",
+      "ended_at": "2026-10-27T11:06:02.385Z"
+    },
+    {
+      "id": "e7009695-c520-4162-abb0-305c865a2576",
+      "host": "wsl-live-pxexzxtq",
+      "handle": "boreas@wsl-live-pxexzxtq",
+      "name": "boreas",
+      "requested_name": "boreas",
+      "role": null,
+      "vendor": "claude-code",
+      "vendor_session_id": "bbc37d0c-a6b9-4700-a05f-e0467a69ca74",
+      "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+      "project_key": "load-20261027-pxexzxtq",
+      "state": "gone",
+      "status_line": "load-20261027-pxexzxtq READY",
+      "incarnation": 0,
+      "wake": "on",
+      "capability": "native",
+      "reg_id": "f73d9656-4129-4528-85fb-8b5bd33191dd",
+      "next_seq": 9,
+      "started_at": "2026-10-27T11:02:05.209Z",
+      "last_seen_at": "2026-10-27T11:08:26.082Z",
+      "ended_at": "2026-10-27T11:08:26.082Z"
+    },
+    {
+      "id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "host": "wsl-live-pxexzxtq",
+      "handle": "cirrus@wsl-live-pxexzxtq",
+      "name": "cirrus",
+      "requested_name": "cirrus",
+      "role": null,
+      "vendor": "claude-code",
+      "vendor_session_id": "9f34f75b-9a18-4856-a65c-49b8c8911106",
+      "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+      "project_key": "load-20261027-pxexzxtq",
+      "state": "gone",
+      "status_line": "load-20261027-pxexzxtq READY",
+      "incarnation": 0,
+      "wake": "on",
+      "capability": "native",
+      "reg_id": "47787426-bf71-4974-8d6d-eb523f1bccaa",
+      "next_seq": 8,
+      "started_at": "2026-10-27T11:02:05.248Z",
+      "last_seen_at": "2026-10-27T11:08:26.071Z",
+      "ended_at": "2026-10-27T11:08:26.071Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+      "from": "atlas@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq native-one",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:03:01.150Z"
+    },
+    {
+      "id": "94f25d4a-ae59-4ffb-b737-dc264f39ef57",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "atlas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+      "reply_to": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:03:10.811Z"
+    },
+    {
+      "id": "3424067e-d473-47dc-b52d-297cf8321922",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "cirrus@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "3424067e-d473-47dc-b52d-297cf8321922",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:05.057Z"
+    },
+    {
+      "id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+      "from": "cirrus@wsl-live-pxexzxtq",
+      "to": [
+        "atlas@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:05.572Z"
+    },
+    {
+      "id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "cirrus@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:05.848Z"
+    },
+    {
+      "id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+      "from": "cirrus@wsl-live-pxexzxtq",
+      "to": [
+        "atlas@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:06.069Z"
+    },
+    {
+      "id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+      "from": "atlas@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:06.236Z"
+    },
+    {
+      "id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "cirrus@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:06.473Z"
+    },
+    {
+      "id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+      "from": "atlas@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:06.633Z"
+    },
+    {
+      "id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+      "from": "cirrus@wsl-live-pxexzxtq",
+      "to": [
+        "atlas@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:06.746Z"
+    },
+    {
+      "id": "55838890-c393-4877-bb04-bd50a95424f5",
+      "from": "atlas@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "55838890-c393-4877-bb04-bd50a95424f5",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:07.349Z"
+    },
+    {
+      "id": "5a4ad4d6-ef33-42b3-8aa3-fea9b7843b36",
+      "from": "cirrus@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "3424067e-d473-47dc-b52d-297cf8321922",
+      "reply_to": "3424067e-d473-47dc-b52d-297cf8321922",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:13.931Z"
+    },
+    {
+      "id": "46b64150-8abb-4391-bcb2-03ea0152f370",
+      "from": "atlas@wsl-live-pxexzxtq",
+      "to": [
+        "cirrus@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+      "reply_to": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:14.536Z"
+    },
+    {
+      "id": "ce612900-5507-4c81-8a6a-3abdd8739138",
+      "from": "cirrus@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+      "reply_to": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:14.799Z"
+    },
+    {
+      "id": "1814db7f-ecbe-40c4-a3fd-3dfda01a992c",
+      "from": "atlas@wsl-live-pxexzxtq",
+      "to": [
+        "cirrus@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+      "reply_to": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:15.330Z"
+    },
+    {
+      "id": "f579636c-a5ef-41e5-884b-ca2e59a0b927",
+      "from": "cirrus@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+      "reply_to": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:15.791Z"
+    },
+    {
+      "id": "f8d0e856-16f5-479d-a38f-d5453e6ba586",
+      "from": "atlas@wsl-live-pxexzxtq",
+      "to": [
+        "cirrus@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+      "reply_to": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:15.965Z"
+    },
+    {
+      "id": "4b9b2220-7abc-4826-a777-40bcf9f38161",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "atlas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+      "reply_to": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:16.197Z"
+    },
+    {
+      "id": "31c14616-ce65-4cd7-b7ce-8570bc35db3e",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "atlas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+      "reply_to": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:16.688Z"
+    },
+    {
+      "id": "22fade38-61d2-44fd-90e4-4a64307d23ba",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "atlas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "55838890-c393-4877-bb04-bd50a95424f5",
+      "reply_to": "55838890-c393-4877-bb04-bd50a95424f5",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:04:18.670Z"
+    },
+    {
+      "id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+      "from": "boreas@wsl-live-pxexzxtq",
+      "to": [
+        "cirrus@wsl-live-pxexzxtq"
+      ],
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq survival",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+      "reply_to": null,
+      "hops": 0,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:07:31.836Z"
+    },
+    {
+      "id": "f160cc7d-b4c6-4180-90af-656e7205b0e9",
+      "from": "cirrus@wsl-live-pxexzxtq",
+      "to": [
+        "boreas@wsl-live-pxexzxtq"
+      ],
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq survival",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "thread_id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+      "reply_to": "14863a28-a40a-473f-ae06-f2120d9233b2",
+      "hops": 1,
+      "origin": "agent",
+      "force_wake": false,
+      "created_at": "2026-10-27T11:07:38.424Z"
+    }
+  ],
+  "deliveries": [
+    {
+      "id": "f160cc7d-b4c6-4180-90af-656e7205b0e9",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 8,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:07:38.570Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "cirrus@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq survival",
+      "preview": "LOAD_PONG load-20261027-pxexzxtq after-atlas-exit"
+    },
+    {
+      "id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+      "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "seq": 7,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:07:32.081Z",
+      "recipient": "cirrus@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq survival",
+      "preview": "LOAD_PING load-20261027-pxexzxtq after-atlas-exit"
+    },
+    {
+      "id": "22fade38-61d2-44fd-90e4-4a64307d23ba",
+      "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "seq": 7,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:20.050Z",
+      "recipient": "atlas@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": null,
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-atlas-3"
+    },
+    {
+      "id": "31c14616-ce65-4cd7-b7ce-8570bc35db3e",
+      "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "seq": 6,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:18.273Z",
+      "recipient": "atlas@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": null,
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-atlas-2"
+    },
+    {
+      "id": "f579636c-a5ef-41e5-884b-ca2e59a0b927",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 7,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:16.361Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "cirrus@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-boreas-3"
+    },
+    {
+      "id": "4b9b2220-7abc-4826-a777-40bcf9f38161",
+      "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "seq": 5,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:16.290Z",
+      "recipient": "atlas@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": null,
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-atlas-1"
+    },
+    {
+      "id": "f8d0e856-16f5-479d-a38f-d5453e6ba586",
+      "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "seq": 6,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:16.083Z",
+      "recipient": "cirrus@wsl-live-pxexzxtq",
+      "sender": "atlas@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": null,
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-cirrus-3"
+    },
+    {
+      "id": "1814db7f-ecbe-40c4-a3fd-3dfda01a992c",
+      "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "seq": 5,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:15.929Z",
+      "recipient": "cirrus@wsl-live-pxexzxtq",
+      "sender": "atlas@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": null,
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-cirrus-2"
+    },
+    {
+      "id": "ce612900-5507-4c81-8a6a-3abdd8739138",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 6,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:15.424Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "cirrus@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-boreas-2"
+    },
+    {
+      "id": "5a4ad4d6-ef33-42b3-8aa3-fea9b7843b36",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 5,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:15.424Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "cirrus@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-boreas-1"
+    },
+    {
+      "id": "46b64150-8abb-4391-bcb2-03ea0152f370",
+      "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "seq": 4,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:14.930Z",
+      "recipient": "cirrus@wsl-live-pxexzxtq",
+      "sender": "atlas@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": null,
+      "preview": "LOAD_PONG load-20261027-pxexzxtq burst-cirrus-1"
+    },
+    {
+      "id": "55838890-c393-4877-bb04-bd50a95424f5",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 4,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:12.582Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "atlas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-atlas-3"
+    },
+    {
+      "id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+      "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "seq": 3,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:06.892Z",
+      "recipient": "cirrus@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-boreas-3"
+    },
+    {
+      "id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+      "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "seq": 4,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:06.788Z",
+      "recipient": "atlas@wsl-live-pxexzxtq",
+      "sender": "cirrus@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-cirrus-3"
+    },
+    {
+      "id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 3,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:06.778Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "atlas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-atlas-2"
+    },
+    {
+      "id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 2,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:06.609Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "atlas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-atlas-1"
+    },
+    {
+      "id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+      "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "seq": 3,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:06.364Z",
+      "recipient": "atlas@wsl-live-pxexzxtq",
+      "sender": "cirrus@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-cirrus-2"
+    },
+    {
+      "id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+      "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "seq": 2,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:06.364Z",
+      "recipient": "atlas@wsl-live-pxexzxtq",
+      "sender": "cirrus@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-cirrus-1"
+    },
+    {
+      "id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+      "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "seq": 2,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:06.211Z",
+      "recipient": "cirrus@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-boreas-2"
+    },
+    {
+      "id": "3424067e-d473-47dc-b52d-297cf8321922",
+      "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+      "seq": 1,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:04:05.709Z",
+      "recipient": "cirrus@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq burst",
+      "preview": "LOAD_PING load-20261027-pxexzxtq burst-boreas-1"
+    },
+    {
+      "id": "94f25d4a-ae59-4ffb-b737-dc264f39ef57",
+      "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+      "seq": 1,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:03:11.002Z",
+      "recipient": "atlas@wsl-live-pxexzxtq",
+      "sender": "boreas@wsl-live-pxexzxtq",
+      "kind": "dm",
+      "priority": "normal",
+      "subject": null,
+      "preview": "LOAD_PONG load-20261027-pxexzxtq native-one"
+    },
+    {
+      "id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+      "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+      "seq": 1,
+      "state": "read",
+      "wake": 1,
+      "updated_at": "2026-10-27T11:03:01.328Z",
+      "recipient": "boreas@wsl-live-pxexzxtq",
+      "sender": "atlas@wsl-live-pxexzxtq",
+      "kind": "request",
+      "priority": "normal",
+      "subject": "load-20261027-pxexzxtq native-one",
+      "preview": "LOAD_PING load-20261027-pxexzxtq native-one"
+    }
+  ],
+  "roundtrips": [
+    {
+      "request": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+      "reply": "94f25d4a-ae59-4ffb-b737-dc264f39ef57",
+      "tag": "native-one",
+      "seconds": 9.661
+    },
+    {
+      "request": "3424067e-d473-47dc-b52d-297cf8321922",
+      "reply": "5a4ad4d6-ef33-42b3-8aa3-fea9b7843b36",
+      "tag": "burst-boreas-1",
+      "seconds": 8.874
+    },
+    {
+      "request": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+      "reply": "46b64150-8abb-4391-bcb2-03ea0152f370",
+      "tag": "burst-cirrus-1",
+      "seconds": 8.964
+    },
+    {
+      "request": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+      "reply": "ce612900-5507-4c81-8a6a-3abdd8739138",
+      "tag": "burst-boreas-2",
+      "seconds": 8.951
+    },
+    {
+      "request": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+      "reply": "1814db7f-ecbe-40c4-a3fd-3dfda01a992c",
+      "tag": "burst-cirrus-2",
+      "seconds": 9.261
+    },
+    {
+      "request": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+      "reply": "4b9b2220-7abc-4826-a777-40bcf9f38161",
+      "tag": "burst-atlas-1",
+      "seconds": 9.961
+    },
+    {
+      "request": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+      "reply": "f579636c-a5ef-41e5-884b-ca2e59a0b927",
+      "tag": "burst-boreas-3",
+      "seconds": 9.318
+    },
+    {
+      "request": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+      "reply": "31c14616-ce65-4cd7-b7ce-8570bc35db3e",
+      "tag": "burst-atlas-2",
+      "seconds": 10.055
+    },
+    {
+      "request": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+      "reply": "f8d0e856-16f5-479d-a38f-d5453e6ba586",
+      "tag": "burst-cirrus-3",
+      "seconds": 9.219
+    },
+    {
+      "request": "55838890-c393-4877-bb04-bd50a95424f5",
+      "reply": "22fade38-61d2-44fd-90e4-4a64307d23ba",
+      "tag": "burst-atlas-3",
+      "seconds": 11.321
+    },
+    {
+      "request": "14863a28-a40a-473f-ae06-f2120d9233b2",
+      "reply": "f160cc7d-b4c6-4180-90af-656e7205b0e9",
+      "tag": "after-atlas-exit",
+      "seconds": 6.588
+    }
+  ],
+  "summary": {
+    "requests": 11,
+    "replies": 11,
+    "messages": 22,
+    "missing_replies": 0,
+    "duplicate_replies": 0,
+    "all_thread_links_valid": true,
+    "all_marked_read": true,
+    "all_request_bodies_served_via_read": true,
+    "explicit_read_count": 19,
+    "marked_read_without_body_read": [
+      "46b64150-8abb-4391-bcb2-03ea0152f370",
+      "1814db7f-ecbe-40c4-a3fd-3dfda01a992c",
+      "f8d0e856-16f5-479d-a38f-d5453e6ba586"
+    ],
+    "delivery_sequences_gap_free": true,
+    "tool_errors": 0,
+    "all_send_results": "sent",
+    "roundtrip_min_seconds": 6.588,
+    "roundtrip_p50_seconds": 9.261,
+    "roundtrip_max_seconds": 11.321,
+    "cpu_sampled_max_percent": 30.78,
+    "ram_sampled_min_MiB": 34.62,
+    "ram_sampled_max_MiB": 48.71,
+    "resource_samples": 81
+  },
+  "http_load": {
+    "requests": 200,
+    "concurrency": 8,
+    "successful": 200,
+    "errors": [],
+    "duration_ms": 360.459588,
+    "p50_ms": 9.110084999999998,
+    "p95_ms": 21.66270400000002,
+    "max_ms": 73.686192
+  },
+  "boards": {
+    "atlas": {
+      "topic": "project:load-20261027-pxexzxtq",
+      "key": "roundtrip",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "version": 1,
+      "author": "atlas@wsl-live-pxexzxtq",
+      "protected": false,
+      "updated_at": "2026-10-27T11:05:20.017Z"
+    },
+    "boreas": {
+      "topic": "project:load-20261027-pxexzxtq",
+      "key": "roundtrip",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "version": 1,
+      "author": "atlas@wsl-live-pxexzxtq",
+      "protected": false,
+      "updated_at": "2026-10-27T11:05:20.017Z"
+    },
+    "cirrus": {
+      "topic": "project:load-20261027-pxexzxtq",
+      "key": "roundtrip",
+      "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+      "version": 1,
+      "author": "atlas@wsl-live-pxexzxtq",
+      "protected": false,
+      "updated_at": "2026-10-27T11:05:20.017Z"
+    }
+  },
+  "idle_before_native": {
+    "at": 1793098978.149756,
+    "snapshot": {
+      "at": 1793098974.416335,
+      "sessions": [
+        {
+          "id": "90aad803-a35a-409c-9a84-521d83bda914",
+          "host": "wsl-live-pxexzxtq",
+          "handle": "atlas@wsl-live-pxexzxtq",
+          "name": "atlas",
+          "requested_name": "atlas",
+          "role": null,
+          "vendor": "claude-code",
+          "vendor_session_id": "1ebf1803-76e0-4ca4-8baa-86c2842e4152",
+          "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+          "project_key": "load-20261027-pxexzxtq",
+          "state": "idle",
+          "status_line": "load-20261027-pxexzxtq READY",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "reg_id": "5b2b6f0c-b64d-4f20-9c20-45412383f9d7",
+          "next_seq": 1,
+          "started_at": "2026-10-27T11:02:05.195Z",
+          "last_seen_at": "2026-10-27T11:02:44.243Z",
+          "ended_at": null
+        },
+        {
+          "id": "e7009695-c520-4162-abb0-305c865a2576",
+          "host": "wsl-live-pxexzxtq",
+          "handle": "boreas@wsl-live-pxexzxtq",
+          "name": "boreas",
+          "requested_name": "boreas",
+          "role": null,
+          "vendor": "claude-code",
+          "vendor_session_id": "bbc37d0c-a6b9-4700-a05f-e0467a69ca74",
+          "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+          "project_key": "load-20261027-pxexzxtq",
+          "state": "idle",
+          "status_line": "load-20261027-pxexzxtq READY",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "reg_id": "f73d9656-4129-4528-85fb-8b5bd33191dd",
+          "next_seq": 1,
+          "started_at": "2026-10-27T11:02:05.209Z",
+          "last_seen_at": "2026-10-27T11:02:44.258Z",
+          "ended_at": null
+        },
+        {
+          "id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+          "host": "wsl-live-pxexzxtq",
+          "handle": "cirrus@wsl-live-pxexzxtq",
+          "name": "cirrus",
+          "requested_name": "cirrus",
+          "role": null,
+          "vendor": "claude-code",
+          "vendor_session_id": "9f34f75b-9a18-4856-a65c-49b8c8911106",
+          "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+          "project_key": "load-20261027-pxexzxtq",
+          "state": "idle",
+          "status_line": "load-20261027-pxexzxtq READY",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "reg_id": "47787426-bf71-4974-8d6d-eb523f1bccaa",
+          "next_seq": 1,
+          "started_at": "2026-10-27T11:02:05.248Z",
+          "last_seen_at": "2026-10-27T11:02:44.269Z",
+          "ended_at": null
+        }
+      ],
+      "deliveries": []
+    },
+    "manifest": {
+      "marker": "load-20261027-pxexzxtq",
+      "sessions": {
+        "atlas": {
+          "pid": 919290,
+          "uuid": "1ebf1803-76e0-4ca4-8baa-86c2842e4152"
+        },
+        "boreas": {
+          "pid": 919292,
+          "uuid": "bbc37d0c-a6b9-4700-a05f-e0467a69ca74"
+        },
+        "cirrus": {
+          "pid": 919294,
+          "uuid": "9f34f75b-9a18-4856-a65c-49b8c8911106"
+        }
+      },
+      "driver_pid": 919221
+    }
+  },
+  "native_wake_evidence": "All three sessions idle before atlas-only operator prompt. Boreas autonomously read/replied with no operator input between its READY result and reply. Same observation for cirrus after atlas exit. Socket silence or capability alone is not evidence.",
+  "operator_stages": [
+    "initialize all three",
+    "atlas-only native-one send",
+    "simultaneous ring burst prompts to all three",
+    "atlas-only board write/read",
+    "close atlas stdin",
+    "board/status reads by boreas and cirrus",
+    "boreas-only survival send to idle cirrus",
+    "close remaining sessions and stop private daemon"
+  ],
+  "survival": {
+    "before": {
+      "daemon": {
+        "pid": 919243,
+        "version": "0.0.0",
+        "running": true
+      },
+      "hub": {
+        "connected": true
+      },
+      "health": {
+        "state": "healthy",
+        "issues": []
+      },
+      "outbox_depth": 0,
+      "outbox": [],
+      "sessions": [
+        {
+          "id": "90aad803-a35a-409c-9a84-521d83bda914",
+          "host": "wsl-live-pxexzxtq",
+          "name": "atlas",
+          "vendor": "claude-code",
+          "vendor_session_id": "1ebf1803-76e0-4ca4-8baa-86c2842e4152",
+          "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+          "project_key": "load-20261027-pxexzxtq",
+          "state": "idle",
+          "status_line": "load-20261027-pxexzxtq READY",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "handle": "atlas@wsl-live-pxexzxtq",
+          "acked_seq": 7,
+          "permission_mode": "bypassPermissions",
+          "inbound_policy": "accept"
+        },
+        {
+          "id": "e7009695-c520-4162-abb0-305c865a2576",
+          "host": "wsl-live-pxexzxtq",
+          "name": "boreas",
+          "vendor": "claude-code",
+          "vendor_session_id": "bbc37d0c-a6b9-4700-a05f-e0467a69ca74",
+          "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+          "project_key": "load-20261027-pxexzxtq",
+          "state": "idle",
+          "status_line": "load-20261027-pxexzxtq READY",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "handle": "boreas@wsl-live-pxexzxtq",
+          "acked_seq": 7,
+          "permission_mode": "bypassPermissions",
+          "inbound_policy": "accept"
+        },
+        {
+          "id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+          "host": "wsl-live-pxexzxtq",
+          "name": "cirrus",
+          "vendor": "claude-code",
+          "vendor_session_id": "9f34f75b-9a18-4856-a65c-49b8c8911106",
+          "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+          "project_key": "load-20261027-pxexzxtq",
+          "state": "idle",
+          "status_line": "load-20261027-pxexzxtq READY",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "handle": "cirrus@wsl-live-pxexzxtq",
+          "acked_seq": 6,
+          "permission_mode": "bypassPermissions",
+          "inbound_policy": "accept"
+        }
+      ]
+    },
+    "after": {
+      "at": 1793099176.5084453,
+      "status": {
+        "daemon": {
+          "pid": 919243,
+          "version": "0.0.0",
+          "running": true
+        },
+        "hub": {
+          "connected": true
+        },
+        "health": {
+          "state": "healthy",
+          "issues": []
+        },
+        "outbox_depth": 0,
+        "outbox": [],
+        "sessions": [
+          {
+            "id": "90aad803-a35a-409c-9a84-521d83bda914",
+            "host": "wsl-live-pxexzxtq",
+            "name": "atlas",
+            "vendor": "claude-code",
+            "vendor_session_id": "1ebf1803-76e0-4ca4-8baa-86c2842e4152",
+            "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+            "project_key": "load-20261027-pxexzxtq",
+            "state": "gone",
+            "status_line": "load-20261027-pxexzxtq READY",
+            "incarnation": 0,
+            "wake": "on",
+            "capability": "native",
+            "handle": "atlas@wsl-live-pxexzxtq",
+            "acked_seq": 7,
+            "permission_mode": "bypassPermissions",
+            "inbound_policy": "accept"
+          },
+          {
+            "id": "e7009695-c520-4162-abb0-305c865a2576",
+            "host": "wsl-live-pxexzxtq",
+            "name": "boreas",
+            "vendor": "claude-code",
+            "vendor_session_id": "bbc37d0c-a6b9-4700-a05f-e0467a69ca74",
+            "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+            "project_key": "load-20261027-pxexzxtq",
+            "state": "idle",
+            "status_line": "load-20261027-pxexzxtq READY",
+            "incarnation": 0,
+            "wake": "on",
+            "capability": "native",
+            "handle": "boreas@wsl-live-pxexzxtq",
+            "acked_seq": 7,
+            "permission_mode": "bypassPermissions",
+            "inbound_policy": "accept"
+          },
+          {
+            "id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+            "host": "wsl-live-pxexzxtq",
+            "name": "cirrus",
+            "vendor": "claude-code",
+            "vendor_session_id": "9f34f75b-9a18-4856-a65c-49b8c8911106",
+            "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+            "project_key": "load-20261027-pxexzxtq",
+            "state": "idle",
+            "status_line": "load-20261027-pxexzxtq READY",
+            "incarnation": 0,
+            "wake": "on",
+            "capability": "native",
+            "handle": "cirrus@wsl-live-pxexzxtq",
+            "acked_seq": 6,
+            "permission_mode": "bypassPermissions",
+            "inbound_policy": "accept"
+          }
+        ]
+      }
+    },
+    "final": {
+      "at": 1793099305.5575185,
+      "status": {
+        "daemon": {
+          "pid": 919243,
+          "version": "0.0.0",
+          "running": true
+        },
+        "hub": {
+          "connected": true
+        },
+        "health": {
+          "state": "healthy",
+          "issues": []
+        },
+        "outbox_depth": 0,
+        "outbox": [],
+        "sessions": [
+          {
+            "id": "90aad803-a35a-409c-9a84-521d83bda914",
+            "host": "wsl-live-pxexzxtq",
+            "name": "atlas",
+            "vendor": "claude-code",
+            "vendor_session_id": "1ebf1803-76e0-4ca4-8baa-86c2842e4152",
+            "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+            "project_key": "load-20261027-pxexzxtq",
+            "state": "gone",
+            "status_line": "load-20261027-pxexzxtq READY",
+            "incarnation": 0,
+            "wake": "on",
+            "capability": "native",
+            "handle": "atlas@wsl-live-pxexzxtq",
+            "acked_seq": 7,
+            "permission_mode": "bypassPermissions",
+            "inbound_policy": "accept"
+          },
+          {
+            "id": "e7009695-c520-4162-abb0-305c865a2576",
+            "host": "wsl-live-pxexzxtq",
+            "name": "boreas",
+            "vendor": "claude-code",
+            "vendor_session_id": "bbc37d0c-a6b9-4700-a05f-e0467a69ca74",
+            "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+            "project_key": "load-20261027-pxexzxtq",
+            "state": "idle",
+            "status_line": "load-20261027-pxexzxtq READY",
+            "incarnation": 0,
+            "wake": "on",
+            "capability": "native",
+            "handle": "boreas@wsl-live-pxexzxtq",
+            "acked_seq": 8,
+            "permission_mode": "bypassPermissions",
+            "inbound_policy": "accept"
+          },
+          {
+            "id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+            "host": "wsl-live-pxexzxtq",
+            "name": "cirrus",
+            "vendor": "claude-code",
+            "vendor_session_id": "9f34f75b-9a18-4856-a65c-49b8c8911106",
+            "cwd": "/tmp/kom-live-20261027-pxexzxtq/project",
+            "project_key": "load-20261027-pxexzxtq",
+            "state": "idle",
+            "status_line": "load-20261027-pxexzxtq READY",
+            "incarnation": 0,
+            "wake": "on",
+            "capability": "native",
+            "handle": "cirrus@wsl-live-pxexzxtq",
+            "acked_seq": 7,
+            "permission_mode": "bypassPermissions",
+            "inbound_policy": "accept"
+          }
+        ]
+      }
+    }
+  },
+  "metrics": [
+    {
+      "at": 1793098943.973846,
+      "cpu_percent": 0.02,
+      "ram_MiB": 35.15,
+      "snapshot_ms": 3.8721370074199513
+    },
+    {
+      "at": 1793098948.9516587,
+      "cpu_percent": 0.0,
+      "ram_MiB": 34.62,
+      "snapshot_ms": 2.165621001040563
+    },
+    {
+      "at": 1793098953.9591115,
+      "cpu_percent": 0.0,
+      "ram_MiB": 34.71,
+      "snapshot_ms": 2.0262189937056974
+    },
+    {
+      "at": 1793098958.9833503,
+      "cpu_percent": 0.0,
+      "ram_MiB": 34.84,
+      "snapshot_ms": 2.009818999795243
+    },
+    {
+      "at": 1793098963.955037,
+      "cpu_percent": 0.0,
+      "ram_MiB": 34.97,
+      "snapshot_ms": 2.0822189981117845
+    },
+    {
+      "at": 1793098968.9570854,
+      "cpu_percent": 0.0,
+      "ram_MiB": 34.85,
+      "snapshot_ms": 2.8686270088655874
+    },
+    {
+      "at": 1793098973.9557455,
+      "cpu_percent": 0.02,
+      "ram_MiB": 34.86,
+      "snapshot_ms": 2.656324999406934
+    },
+    {
+      "at": 1793098978.9604578,
+      "cpu_percent": 0.14,
+      "ram_MiB": 35.14,
+      "snapshot_ms": 2.066518005449325
+    },
+    {
+      "at": 1793098983.9579198,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.53,
+      "snapshot_ms": 2.9722280014539137
+    },
+    {
+      "at": 1793098988.9727442,
+      "cpu_percent": 0.01,
+      "ram_MiB": 35.0,
+      "snapshot_ms": 3.240129997720942
+    },
+    {
+      "at": 1793098993.9724307,
+      "cpu_percent": 0.26,
+      "ram_MiB": 35.24,
+      "snapshot_ms": 2.399520992184989
+    },
+    {
+      "at": 1793098998.962662,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.36,
+      "snapshot_ms": 2.2648199956165627
+    },
+    {
+      "at": 1793099003.9778707,
+      "cpu_percent": 0.01,
+      "ram_MiB": 35.48,
+      "snapshot_ms": 3.519028003211133
+    },
+    {
+      "at": 1793099008.9583473,
+      "cpu_percent": 0.01,
+      "ram_MiB": 35.07,
+      "snapshot_ms": 2.408823012956418
+    },
+    {
+      "at": 1793099013.9592965,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.18,
+      "snapshot_ms": 2.173020999180153
+    },
+    {
+      "at": 1793099018.966998,
+      "cpu_percent": 0.01,
+      "ram_MiB": 34.89,
+      "snapshot_ms": 2.3027220013318583
+    },
+    {
+      "at": 1793099023.9597588,
+      "cpu_percent": 0.01,
+      "ram_MiB": 35.16,
+      "snapshot_ms": 2.0854199974564835
+    },
+    {
+      "at": 1793099028.9761484,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.22,
+      "snapshot_ms": 2.935427997726947
+    },
+    {
+      "at": 1793099033.9689112,
+      "cpu_percent": 0.01,
+      "ram_MiB": 35.21,
+      "snapshot_ms": 2.1756210044259205
+    },
+    {
+      "at": 1793099038.961206,
+      "cpu_percent": 0.01,
+      "ram_MiB": 35.35,
+      "snapshot_ms": 2.2656219953205436
+    },
+    {
+      "at": 1793099043.9647095,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.29,
+      "snapshot_ms": 3.253129994845949
+    },
+    {
+      "at": 1793099048.9751873,
+      "cpu_percent": 7.64,
+      "ram_MiB": 35.23,
+      "snapshot_ms": 2.128320003976114
+    },
+    {
+      "at": 1793099053.9656734,
+      "cpu_percent": 0.16,
+      "ram_MiB": 35.55,
+      "snapshot_ms": 2.376522999838926
+    },
+    {
+      "at": 1793099058.9627259,
+      "cpu_percent": 30.78,
+      "ram_MiB": 36.04,
+      "snapshot_ms": 2.4419230030616745
+    },
+    {
+      "at": 1793099063.9660656,
+      "cpu_percent": 21.81,
+      "ram_MiB": 35.77,
+      "snapshot_ms": 3.436733008129522
+    },
+    {
+      "at": 1793099068.9681685,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.77,
+      "snapshot_ms": 2.4830239999573678
+    },
+    {
+      "at": 1793099073.9704301,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.63,
+      "snapshot_ms": 2.262221009004861
+    },
+    {
+      "at": 1793099078.9703755,
+      "cpu_percent": 21.28,
+      "ram_MiB": 36.11,
+      "snapshot_ms": 2.6334249996580184
+    },
+    {
+      "at": 1793099083.9659848,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.02,
+      "snapshot_ms": 2.562823996413499
+    },
+    {
+      "at": 1793099088.9645221,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.86,
+      "snapshot_ms": 2.4613229907117784
+    },
+    {
+      "at": 1793099093.9694712,
+      "cpu_percent": 20.08,
+      "ram_MiB": 35.93,
+      "snapshot_ms": 3.200430001015775
+    },
+    {
+      "at": 1793099098.9728804,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.68,
+      "snapshot_ms": 2.622123996843584
+    },
+    {
+      "at": 1793099103.9653032,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.52,
+      "snapshot_ms": 2.5632239994592965
+    },
+    {
+      "at": 1793099108.9720805,
+      "cpu_percent": 21.49,
+      "ram_MiB": 36.05,
+      "snapshot_ms": 2.4299229989992455
+    },
+    {
+      "at": 1793099113.9801047,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.79,
+      "snapshot_ms": 2.4499229912180454
+    },
+    {
+      "at": 1793099118.9685717,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.84,
+      "snapshot_ms": 2.4435230006929487
+    },
+    {
+      "at": 1793099123.9705052,
+      "cpu_percent": 10.91,
+      "ram_MiB": 48.71,
+      "snapshot_ms": 4.197738991933875
+    },
+    {
+      "at": 1793099128.9721963,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.14,
+      "snapshot_ms": 3.9725370006635785
+    },
+    {
+      "at": 1793099133.9730978,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.21,
+      "snapshot_ms": 3.351731997099705
+    },
+    {
+      "at": 1793099138.9720008,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.98,
+      "snapshot_ms": 2.45952200202737
+    },
+    {
+      "at": 1793099143.9717448,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.26,
+      "snapshot_ms": 2.3403220111504197
+    },
+    {
+      "at": 1793099148.976368,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.06,
+      "snapshot_ms": 2.4354229972232133
+    },
+    {
+      "at": 1793099153.9808173,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.8,
+      "snapshot_ms": 2.917828009231016
+    },
+    {
+      "at": 1793099158.9747124,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.64,
+      "snapshot_ms": 3.0310289876069874
+    },
+    {
+      "at": 1793099163.9830632,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.65,
+      "snapshot_ms": 2.3958230012794957
+    },
+    {
+      "at": 1793099168.9724007,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.94,
+      "snapshot_ms": 2.5543240044498816
+    },
+    {
+      "at": 1793099173.979305,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.14,
+      "snapshot_ms": 2.264321010443382
+    },
+    {
+      "at": 1793099178.9795284,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.18,
+      "snapshot_ms": 2.5797249982133508
+    },
+    {
+      "at": 1793099183.9823866,
+      "cpu_percent": 0.08,
+      "ram_MiB": 36.05,
+      "snapshot_ms": 2.2788219939684495
+    },
+    {
+      "at": 1793099188.9810572,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.88,
+      "snapshot_ms": 2.6082239928655326
+    },
+    {
+      "at": 1793099193.9809067,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.77,
+      "snapshot_ms": 2.561824003350921
+    },
+    {
+      "at": 1793099198.9803586,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.12,
+      "snapshot_ms": 2.524824012652971
+    },
+    {
+      "at": 1793099203.9779701,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.73,
+      "snapshot_ms": 2.3345200024778023
+    },
+    {
+      "at": 1793099208.9768238,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.94,
+      "snapshot_ms": 2.4658230104250833
+    },
+    {
+      "at": 1793099213.9795134,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.04,
+      "snapshot_ms": 2.271821998874657
+    },
+    {
+      "at": 1793099218.9818919,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.79,
+      "snapshot_ms": 2.8080269985366613
+    },
+    {
+      "at": 1793099223.9878237,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.64,
+      "snapshot_ms": 2.238521003164351
+    },
+    {
+      "at": 1793099228.9846087,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.72,
+      "snapshot_ms": 3.5932339960709214
+    },
+    {
+      "at": 1793099234.0015602,
+      "cpu_percent": 0.01,
+      "ram_MiB": 36.19,
+      "snapshot_ms": 2.4225230008596554
+    },
+    {
+      "at": 1793099238.982989,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.88,
+      "snapshot_ms": 2.480024006217718
+    },
+    {
+      "at": 1793099243.9969478,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.74,
+      "snapshot_ms": 2.537323991418816
+    },
+    {
+      "at": 1793099248.9997997,
+      "cpu_percent": 0.07,
+      "ram_MiB": 35.76,
+      "snapshot_ms": 2.272921003168449
+    },
+    {
+      "at": 1793099253.9934134,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.89,
+      "snapshot_ms": 2.512523002224043
+    },
+    {
+      "at": 1793099258.9863813,
+      "cpu_percent": 0.61,
+      "ram_MiB": 36.35,
+      "snapshot_ms": 2.6835239987121895
+    },
+    {
+      "at": 1793099263.984405,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.68,
+      "snapshot_ms": 2.4527229979867116
+    },
+    {
+      "at": 1793099268.9820387,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.76,
+      "snapshot_ms": 2.466224003001116
+    },
+    {
+      "at": 1793099273.993617,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.84,
+      "snapshot_ms": 2.9648280033143237
+    },
+    {
+      "at": 1793099278.9844747,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.68,
+      "snapshot_ms": 2.45072299730964
+    },
+    {
+      "at": 1793099283.988822,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.41,
+      "snapshot_ms": 2.864626992959529
+    },
+    {
+      "at": 1793099288.993413,
+      "cpu_percent": 0.01,
+      "ram_MiB": 35.67,
+      "snapshot_ms": 2.556923995143734
+    },
+    {
+      "at": 1793099293.989962,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.98,
+      "snapshot_ms": 2.504324002075009
+    },
+    {
+      "at": 1793099298.9831734,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.82,
+      "snapshot_ms": 2.547123993281275
+    },
+    {
+      "at": 1793099304.0001192,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.07,
+      "snapshot_ms": 2.4742230016272515
+    },
+    {
+      "at": 1793099308.9932985,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.11,
+      "snapshot_ms": 2.5100240018218756
+    },
+    {
+      "at": 1793099313.9874606,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.12,
+      "snapshot_ms": 2.4056230031419545
+    },
+    {
+      "at": 1793099318.9933045,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.16,
+      "snapshot_ms": 2.7427260065451264
+    },
+    {
+      "at": 1793099323.9904265,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.07,
+      "snapshot_ms": 2.4435230006929487
+    },
+    {
+      "at": 1793099328.9899294,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.07,
+      "snapshot_ms": 2.534523999202065
+    },
+    {
+      "at": 1793099333.9885864,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.77,
+      "snapshot_ms": 2.720424992730841
+    },
+    {
+      "at": 1793099338.9935496,
+      "cpu_percent": 0.0,
+      "ram_MiB": 36.07,
+      "snapshot_ms": 2.9678279970539734
+    },
+    {
+      "at": 1793099344.0000248,
+      "cpu_percent": 0.0,
+      "ram_MiB": 35.96,
+      "snapshot_ms": 2.560124994488433
+    }
+  ],
+  "transcripts": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "public_events": [
+    {
+      "id": 22,
+      "type": "session.updated",
+      "at": "2026-10-27T11:02:24.238Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 23,
+      "type": "session.updated",
+      "at": "2026-10-27T11:02:24.251Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 24,
+      "type": "session.updated",
+      "at": "2026-10-27T11:02:24.262Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 25,
+      "type": "session.updated",
+      "at": "2026-10-27T11:02:44.250Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 26,
+      "type": "session.updated",
+      "at": "2026-10-27T11:02:44.261Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 27,
+      "type": "session.updated",
+      "at": "2026-10-27T11:02:44.272Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 28,
+      "type": "message.sent",
+      "at": "2026-10-27T11:03:01.155Z",
+      "data": {
+        "message": {
+          "id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+          "from": "atlas@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq native-one",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:03:01.150Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 29,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:03:01.155Z",
+      "data": {
+        "message_id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 1,
+        "wake": true
+      }
+    },
+    {
+      "id": 31,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:03:01.332Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 32,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:04.250Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 33,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:04.260Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "active"
+      }
+    },
+    {
+      "id": 34,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:04.271Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 35,
+      "type": "message.sent",
+      "at": "2026-10-27T11:03:10.814Z",
+      "data": {
+        "message": {
+          "id": "94f25d4a-ae59-4ffb-b737-dc264f39ef57",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "atlas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+          "reply_to": "29fc10fe-6b09-4a4d-a65f-c150dbf42ec5",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:03:10.811Z"
+        },
+        "deliveries": {
+          "90aad803-a35a-409c-9a84-521d83bda914": "unread"
+        }
+      }
+    },
+    {
+      "id": 36,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:03:10.815Z",
+      "data": {
+        "message_id": "94f25d4a-ae59-4ffb-b737-dc264f39ef57",
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "seq": 1,
+        "wake": true
+      }
+    },
+    {
+      "id": 38,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:03:11.005Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "message_id": "94f25d4a-ae59-4ffb-b737-dc264f39ef57",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 39,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:24.256Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "active"
+      }
+    },
+    {
+      "id": 40,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:24.266Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 41,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:24.277Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 42,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:44.262Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "active"
+      }
+    },
+    {
+      "id": 43,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:44.274Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 44,
+      "type": "session.updated",
+      "at": "2026-10-27T11:03:44.286Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 45,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:04.260Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "active"
+      }
+    },
+    {
+      "id": 46,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:04.272Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "active"
+      }
+    },
+    {
+      "id": 47,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:04.282Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "active"
+      }
+    },
+    {
+      "id": 48,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:05.061Z",
+      "data": {
+        "message": {
+          "id": "3424067e-d473-47dc-b52d-297cf8321922",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "cirrus@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "3424067e-d473-47dc-b52d-297cf8321922",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:05.057Z"
+        },
+        "deliveries": {
+          "e438a8d4-3f62-45b2-9821-31cecfc5f4e3": "unread"
+        }
+      }
+    },
+    {
+      "id": 49,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:05.061Z",
+      "data": {
+        "message_id": "3424067e-d473-47dc-b52d-297cf8321922",
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "seq": 1,
+        "wake": true
+      }
+    },
+    {
+      "id": 51,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:05.576Z",
+      "data": {
+        "message": {
+          "id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+          "from": "cirrus@wsl-live-pxexzxtq",
+          "to": [
+            "atlas@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:05.572Z"
+        },
+        "deliveries": {
+          "90aad803-a35a-409c-9a84-521d83bda914": "unread"
+        }
+      }
+    },
+    {
+      "id": 52,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:05.576Z",
+      "data": {
+        "message_id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "seq": 2,
+        "wake": true
+      }
+    },
+    {
+      "id": 54,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:05.711Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "message_id": "3424067e-d473-47dc-b52d-297cf8321922",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 55,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:05.852Z",
+      "data": {
+        "message": {
+          "id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "cirrus@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:05.848Z"
+        },
+        "deliveries": {
+          "e438a8d4-3f62-45b2-9821-31cecfc5f4e3": "unread"
+        }
+      }
+    },
+    {
+      "id": 56,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:05.852Z",
+      "data": {
+        "message_id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "seq": 2,
+        "wake": true
+      }
+    },
+    {
+      "id": 58,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:06.073Z",
+      "data": {
+        "message": {
+          "id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+          "from": "cirrus@wsl-live-pxexzxtq",
+          "to": [
+            "atlas@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:06.069Z"
+        },
+        "deliveries": {
+          "90aad803-a35a-409c-9a84-521d83bda914": "unread"
+        }
+      }
+    },
+    {
+      "id": 59,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:06.073Z",
+      "data": {
+        "message_id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "seq": 3,
+        "wake": true
+      }
+    },
+    {
+      "id": 61,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:06.213Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "message_id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 62,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:06.239Z",
+      "data": {
+        "message": {
+          "id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+          "from": "atlas@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:06.236Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 63,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:06.239Z",
+      "data": {
+        "message_id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 2,
+        "wake": true
+      }
+    },
+    {
+      "id": 65,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:06.367Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "message_id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 66,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:06.367Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "message_id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 67,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:06.477Z",
+      "data": {
+        "message": {
+          "id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "cirrus@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:06.473Z"
+        },
+        "deliveries": {
+          "e438a8d4-3f62-45b2-9821-31cecfc5f4e3": "unread"
+        }
+      }
+    },
+    {
+      "id": 68,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:06.477Z",
+      "data": {
+        "message_id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "seq": 3,
+        "wake": true
+      }
+    },
+    {
+      "id": 70,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:06.611Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 71,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:06.636Z",
+      "data": {
+        "message": {
+          "id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+          "from": "atlas@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:06.633Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 72,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:06.637Z",
+      "data": {
+        "message_id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 3,
+        "wake": true
+      }
+    },
+    {
+      "id": 74,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:06.752Z",
+      "data": {
+        "message": {
+          "id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+          "from": "cirrus@wsl-live-pxexzxtq",
+          "to": [
+            "atlas@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:06.746Z"
+        },
+        "deliveries": {
+          "90aad803-a35a-409c-9a84-521d83bda914": "unread"
+        }
+      }
+    },
+    {
+      "id": 75,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:06.752Z",
+      "data": {
+        "message_id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "seq": 4,
+        "wake": true
+      }
+    },
+    {
+      "id": 77,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:06.781Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 78,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:06.790Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "message_id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 79,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:06.895Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "message_id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 80,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:07.354Z",
+      "data": {
+        "message": {
+          "id": "55838890-c393-4877-bb04-bd50a95424f5",
+          "from": "atlas@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "55838890-c393-4877-bb04-bd50a95424f5",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:07.349Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 81,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:07.354Z",
+      "data": {
+        "message_id": "55838890-c393-4877-bb04-bd50a95424f5",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 4,
+        "wake": true
+      }
+    },
+    {
+      "id": 83,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:12.584Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "55838890-c393-4877-bb04-bd50a95424f5",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 84,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:13.935Z",
+      "data": {
+        "message": {
+          "id": "5a4ad4d6-ef33-42b3-8aa3-fea9b7843b36",
+          "from": "cirrus@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "3424067e-d473-47dc-b52d-297cf8321922",
+          "reply_to": "3424067e-d473-47dc-b52d-297cf8321922",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:13.931Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 85,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:13.935Z",
+      "data": {
+        "message_id": "5a4ad4d6-ef33-42b3-8aa3-fea9b7843b36",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 5,
+        "wake": true
+      }
+    },
+    {
+      "id": 87,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:14.540Z",
+      "data": {
+        "message": {
+          "id": "46b64150-8abb-4391-bcb2-03ea0152f370",
+          "from": "atlas@wsl-live-pxexzxtq",
+          "to": [
+            "cirrus@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+          "reply_to": "56f881a7-2ac0-4b7d-abff-f79e23506dfa",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:14.536Z"
+        },
+        "deliveries": {
+          "e438a8d4-3f62-45b2-9821-31cecfc5f4e3": "unread"
+        }
+      }
+    },
+    {
+      "id": 88,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:14.540Z",
+      "data": {
+        "message_id": "46b64150-8abb-4391-bcb2-03ea0152f370",
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "seq": 4,
+        "wake": true
+      }
+    },
+    {
+      "id": 90,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:14.804Z",
+      "data": {
+        "message": {
+          "id": "ce612900-5507-4c81-8a6a-3abdd8739138",
+          "from": "cirrus@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+          "reply_to": "84f4ead8-b2d8-4a07-b128-4eb3ef72ce01",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:14.799Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 91,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:14.804Z",
+      "data": {
+        "message_id": "ce612900-5507-4c81-8a6a-3abdd8739138",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 6,
+        "wake": true
+      }
+    },
+    {
+      "id": 93,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:14.931Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "message_id": "46b64150-8abb-4391-bcb2-03ea0152f370",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 94,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:15.334Z",
+      "data": {
+        "message": {
+          "id": "1814db7f-ecbe-40c4-a3fd-3dfda01a992c",
+          "from": "atlas@wsl-live-pxexzxtq",
+          "to": [
+            "cirrus@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+          "reply_to": "87bb3f9a-9925-4523-8cc2-048e62f196e6",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:15.330Z"
+        },
+        "deliveries": {
+          "e438a8d4-3f62-45b2-9821-31cecfc5f4e3": "unread"
+        }
+      }
+    },
+    {
+      "id": 95,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:15.334Z",
+      "data": {
+        "message_id": "1814db7f-ecbe-40c4-a3fd-3dfda01a992c",
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "seq": 5,
+        "wake": true
+      }
+    },
+    {
+      "id": 97,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:15.428Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "5a4ad4d6-ef33-42b3-8aa3-fea9b7843b36",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 98,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:15.428Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "ce612900-5507-4c81-8a6a-3abdd8739138",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 99,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:15.798Z",
+      "data": {
+        "message": {
+          "id": "f579636c-a5ef-41e5-884b-ca2e59a0b927",
+          "from": "cirrus@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq burst",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+          "reply_to": "89241c73-6e95-4c99-a016-fbcc6c07c129",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:15.791Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 100,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:15.798Z",
+      "data": {
+        "message_id": "f579636c-a5ef-41e5-884b-ca2e59a0b927",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 7,
+        "wake": true
+      }
+    },
+    {
+      "id": 102,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:15.932Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "message_id": "1814db7f-ecbe-40c4-a3fd-3dfda01a992c",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 103,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:15.969Z",
+      "data": {
+        "message": {
+          "id": "f8d0e856-16f5-479d-a38f-d5453e6ba586",
+          "from": "atlas@wsl-live-pxexzxtq",
+          "to": [
+            "cirrus@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+          "reply_to": "3ac0ee13-88f3-4ef8-9603-1a53cc1e2878",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:15.965Z"
+        },
+        "deliveries": {
+          "e438a8d4-3f62-45b2-9821-31cecfc5f4e3": "unread"
+        }
+      }
+    },
+    {
+      "id": 104,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:15.969Z",
+      "data": {
+        "message_id": "f8d0e856-16f5-479d-a38f-d5453e6ba586",
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "seq": 6,
+        "wake": true
+      }
+    },
+    {
+      "id": 106,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:16.086Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "message_id": "f8d0e856-16f5-479d-a38f-d5453e6ba586",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 107,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:16.201Z",
+      "data": {
+        "message": {
+          "id": "4b9b2220-7abc-4826-a777-40bcf9f38161",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "atlas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+          "reply_to": "4c764d3f-69d8-4dcd-a1d0-d9ade470fc0b",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:16.197Z"
+        },
+        "deliveries": {
+          "90aad803-a35a-409c-9a84-521d83bda914": "unread"
+        }
+      }
+    },
+    {
+      "id": 108,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:16.202Z",
+      "data": {
+        "message_id": "4b9b2220-7abc-4826-a777-40bcf9f38161",
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "seq": 5,
+        "wake": true
+      }
+    },
+    {
+      "id": 110,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:16.294Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "message_id": "4b9b2220-7abc-4826-a777-40bcf9f38161",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 111,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:16.364Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "f579636c-a5ef-41e5-884b-ca2e59a0b927",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 112,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:16.691Z",
+      "data": {
+        "message": {
+          "id": "31c14616-ce65-4cd7-b7ce-8570bc35db3e",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "atlas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+          "reply_to": "5fd4efbf-cc9a-4606-ada9-625202259b68",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:16.688Z"
+        },
+        "deliveries": {
+          "90aad803-a35a-409c-9a84-521d83bda914": "unread"
+        }
+      }
+    },
+    {
+      "id": 113,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:16.691Z",
+      "data": {
+        "message_id": "31c14616-ce65-4cd7-b7ce-8570bc35db3e",
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "seq": 6,
+        "wake": true
+      }
+    },
+    {
+      "id": 115,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:18.278Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "message_id": "31c14616-ce65-4cd7-b7ce-8570bc35db3e",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 116,
+      "type": "message.sent",
+      "at": "2026-10-27T11:04:18.674Z",
+      "data": {
+        "message": {
+          "id": "22fade38-61d2-44fd-90e4-4a64307d23ba",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "atlas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "55838890-c393-4877-bb04-bd50a95424f5",
+          "reply_to": "55838890-c393-4877-bb04-bd50a95424f5",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:04:18.670Z"
+        },
+        "deliveries": {
+          "90aad803-a35a-409c-9a84-521d83bda914": "unread"
+        }
+      }
+    },
+    {
+      "id": 117,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:04:18.674Z",
+      "data": {
+        "message_id": "22fade38-61d2-44fd-90e4-4a64307d23ba",
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "seq": 7,
+        "wake": true
+      }
+    },
+    {
+      "id": 119,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:04:20.054Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "message_id": "22fade38-61d2-44fd-90e4-4a64307d23ba",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 120,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:24.262Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 121,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:24.275Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 122,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:24.287Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 123,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:44.267Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 124,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:44.279Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 125,
+      "type": "session.updated",
+      "at": "2026-10-27T11:04:44.290Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 126,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:04.270Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 127,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:04.283Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 128,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:04.294Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 129,
+      "type": "board.put",
+      "at": "2026-10-27T11:05:20.030Z",
+      "data": {
+        "entry": {
+          "topic": "project:load-20261027-pxexzxtq",
+          "key": "roundtrip",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "version": 1,
+          "author": "atlas@wsl-live-pxexzxtq",
+          "protected": false,
+          "updated_at": "2026-10-27T11:05:20.017Z"
+        }
+      }
+    },
+    {
+      "id": 130,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:24.269Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 131,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:24.279Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 132,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:24.290Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 133,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:44.271Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 134,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:44.282Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 135,
+      "type": "session.updated",
+      "at": "2026-10-27T11:05:44.293Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 136,
+      "type": "session.gone",
+      "at": "2026-10-27T11:06:02.389Z",
+      "data": {
+        "session_id": "90aad803-a35a-409c-9a84-521d83bda914",
+        "incarnation": 0
+      }
+    },
+    {
+      "id": 137,
+      "type": "session.updated",
+      "at": "2026-10-27T11:06:04.272Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 138,
+      "type": "session.updated",
+      "at": "2026-10-27T11:06:04.283Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 139,
+      "type": "session.updated",
+      "at": "2026-10-27T11:06:24.273Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "active"
+      }
+    },
+    {
+      "id": 140,
+      "type": "session.updated",
+      "at": "2026-10-27T11:06:24.285Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 141,
+      "type": "session.updated",
+      "at": "2026-10-27T11:06:44.277Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 142,
+      "type": "session.updated",
+      "at": "2026-10-27T11:06:44.289Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 143,
+      "type": "session.updated",
+      "at": "2026-10-27T11:07:04.282Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 144,
+      "type": "session.updated",
+      "at": "2026-10-27T11:07:04.293Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 145,
+      "type": "session.updated",
+      "at": "2026-10-27T11:07:24.286Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 146,
+      "type": "session.updated",
+      "at": "2026-10-27T11:07:24.298Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 147,
+      "type": "message.sent",
+      "at": "2026-10-27T11:07:31.840Z",
+      "data": {
+        "message": {
+          "id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+          "from": "boreas@wsl-live-pxexzxtq",
+          "to": [
+            "cirrus@wsl-live-pxexzxtq"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq survival",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:07:31.836Z"
+        },
+        "deliveries": {
+          "e438a8d4-3f62-45b2-9821-31cecfc5f4e3": "unread"
+        }
+      }
+    },
+    {
+      "id": 148,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:07:31.840Z",
+      "data": {
+        "message_id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "seq": 7,
+        "wake": true
+      }
+    },
+    {
+      "id": 150,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:07:32.086Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "message_id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 151,
+      "type": "message.sent",
+      "at": "2026-10-27T11:07:38.428Z",
+      "data": {
+        "message": {
+          "id": "f160cc7d-b4c6-4180-90af-656e7205b0e9",
+          "from": "cirrus@wsl-live-pxexzxtq",
+          "to": [
+            "boreas@wsl-live-pxexzxtq"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "subject": "load-20261027-pxexzxtq survival",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "14863a28-a40a-473f-ae06-f2120d9233b2",
+          "reply_to": "14863a28-a40a-473f-ae06-f2120d9233b2",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-27T11:07:38.424Z"
+        },
+        "deliveries": {
+          "e7009695-c520-4162-abb0-305c865a2576": "unread"
+        }
+      }
+    },
+    {
+      "id": 152,
+      "type": "delivery.created",
+      "at": "2026-10-27T11:07:38.428Z",
+      "data": {
+        "message_id": "f160cc7d-b4c6-4180-90af-656e7205b0e9",
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "seq": 8,
+        "wake": true
+      }
+    },
+    {
+      "id": 154,
+      "type": "delivery.read",
+      "at": "2026-10-27T11:07:38.573Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "message_id": "f160cc7d-b4c6-4180-90af-656e7205b0e9",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 155,
+      "type": "session.updated",
+      "at": "2026-10-27T11:07:44.285Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "active"
+      }
+    },
+    {
+      "id": 156,
+      "type": "session.updated",
+      "at": "2026-10-27T11:07:44.297Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 157,
+      "type": "session.updated",
+      "at": "2026-10-27T11:08:04.304Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 158,
+      "type": "session.updated",
+      "at": "2026-10-27T11:08:04.316Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 159,
+      "type": "session.updated",
+      "at": "2026-10-27T11:08:24.322Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 160,
+      "type": "session.updated",
+      "at": "2026-10-27T11:08:24.333Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 161,
+      "type": "session.gone",
+      "at": "2026-10-27T11:08:26.077Z",
+      "data": {
+        "session_id": "e438a8d4-3f62-45b2-9821-31cecfc5f4e3",
+        "incarnation": 0
+      }
+    },
+    {
+      "id": 162,
+      "type": "session.gone",
+      "at": "2026-10-27T11:08:26.086Z",
+      "data": {
+        "session_id": "e7009695-c520-4162-abb0-305c865a2576",
+        "incarnation": 0
+      }
+    }
+  ],
+  "cleanup": {
+    "at": 1793099344.256989,
+    "test_session_processes_absent": true,
+    "test_daemon_absent": true,
+    "test_sessions_gone": true,
+    "client_exits": [
+      0,
+      0,
+      0
+    ]
+  },
+  "limitations": [
+    "local WSL loopback; remote LAN untested",
+    "stream-json sessions; interactive TUI/browser rendering not exercised",
+    "small functional concurrent load, not throughput/capacity limit",
+    "no Docker/Windows restart during this test",
+    "34-hour idle container uptime is not day-long real-use acceptance",
+    "marks read do not by themselves prove completed work; exact replies verified separately",
+    "19 of 22 bodies were explicitly read; three PONGs to cirrus were marked read by shown headers without a body read"
+  ],
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

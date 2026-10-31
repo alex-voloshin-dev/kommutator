@@ -1,0 +1,14 @@
+{
+  "artifact": "/tmp/kom-plugin-export-v8",
+  "checks": [
+    "MCP initializes without node/kom on PATH and without config",
+    "Wrong key rejected without config write",
+    "Browser setup saves private config; MCP reuses it without exposing key"
+  ],
+  "browser": "156.0.8078.4",
+  "screenshot": "connected.png",
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

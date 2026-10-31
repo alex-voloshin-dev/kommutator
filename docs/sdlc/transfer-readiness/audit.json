@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-25T23:10:36.146411+00:00",
+  "result": "source_transfer_prepared",
+  "target": {
+    "hub": "native Windows",
+    "first_client": "WSL2 Ubuntu, Claude Code",
+    "later_clients": "macOS; full Codex integration remains deferred"
+  },
+  "removed_generated_paths": [
+    "node_modules",
+    "packages/protocol/node_modules",
+    "packages/cli/node_modules",
+    "packages/hub/node_modules",
+    "packages/agentd/node_modules",
+    "packages/agentd/dist",
+    "packages/cli/dist",
+    "packages/hub/dist",
+    "packages/protocol/dist",
+    ".pnpm-store",
+    "docker/.dockerignore.old"
+  ],
+  "preserved": "All source/tests/configs/lockfile, SQL/static/plugin assets, historical docs/spikes/evidence",
+  "inventory_before_this_audit_file": {
+    "files": 171,
+    "regular_file_bytes": 2747585,
+    "symlinks": [],
+    "generated_or_runtime_artifacts": [],
+    "missing_required_files": []
+  },
+  "checks": {
+    "fresh_install": "pass; offline frozen lockfile, 179 cached packages reused, no downloads",
+    "build": "pass",
+    "typecheck": "pass",
+    "tests": {
+      "protocol": 30,
+      "hub": 141,
+      "agentd": 49,
+      "cli": 75,
+      "total": 295
+    },
+    "hub_smoke": [
+      "http_auth",
+      "dashboard",
+      "snapshot",
+      "two_host_registration",
+      "send_deliver",
+      "marked_read",
+      "online_backup",
+      "restart_persistence",
+      "backup_restore"
+    ],
+    "portable_clean": "pass",
+    "lockfile_unchanged": true,
+    "execution_os": "macOS",
+    "node": "24.19.0",
+    "pnpm": "10.18.0",
+    "copy_path_contained_spaces": true,
+    "final_production_and_test_sources_match_verified_copy": 84,
+    "active_document_links": "pass",
+    "json_files": "pass",
+    "onboarding_header": "pass",
+    "knowledge_vault": "pass"
+  },
+  "not_run": [
+    "native Windows execution",
+    "WSL2 execution",
+    "physical LAN acceptance",
+    "live WSL Claude native wake",
+    "Codex product integration",
+    "full-day operability"
+  ],
+  "secret_scan": "No real credential/runtime config files found by filename inventory and common credential-format scan; not an exhaustive guarantee.",
+  "git_initialized": false,
+  "temporary_verification_copy_removed": true
+}

@@ -1,0 +1,474 @@
+{
+  "run_date": "2026-10-25",
+  "environment": {
+    "macOS": "27.0.1 (26A434)",
+    "node": "24.19.0",
+    "claude": "2.1.310",
+    "claude_model_ui": "Opus 5.5",
+    "driver": "Interactive local macOS PTY with /usr/bin/script; Terminal app UI was unavailable",
+    "scratch_project": "/private/tmp/kommutator-m1.p18zrn",
+    "settings_sources": [
+      "local"
+    ],
+    "mcp_config": {
+      "mcpServers": {}
+    },
+    "crossSessionInbound_ui": "default; unchanged"
+  },
+  "sessions": {
+    "manual": {
+      "captured_at": "2026-10-25T16:42:20.198Z",
+      "session_id": "d804c49a-3e05-4408-ae6c-82285f8ad137",
+      "env_session_id_present": false,
+      "env_session_id_matches_payload": null,
+      "socket_present": true,
+      "token_present": true,
+      "socket_is_socket": true
+    },
+    "bypass": {
+      "captured_at": "2026-10-25T16:46:04.575Z",
+      "session_id": "607ae1be-49dd-44cc-bc77-f929b27c9ed4",
+      "env_session_id_present": false,
+      "permission_mode": null,
+      "socket_present": true,
+      "token_present": true,
+      "socket_is_socket": true
+    },
+    "stop": {
+      "captured_at": "2026-10-25T16:48:30.722Z",
+      "session_id": "69a5855f-bb41-478e-9c00-bbb2dd60abed",
+      "env_session_id_present": false,
+      "socket_present": true,
+      "token_present": true
+    },
+    "detached": {
+      "captured_at": "2026-10-25T16:50:08.572Z",
+      "session_id": "9be8969f-8831-4e20-a82b-14918a369751",
+      "env_session_id_present": false,
+      "socket_present": true,
+      "token_present": true
+    }
+  },
+  "hook_ppid_lines": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "messaging_cases": [
+    {
+      "marker": "A",
+      "permission_mode": "manual",
+      "auth_line_used": false,
+      "send_at_utc_second": "2026-10-25T16:44:58Z",
+      "first_poll_observed_by": "2026-10-25T16:45:13.065Z",
+      "envelope": {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      "outcome": "delivered; automatic pong-A",
+      "socket_reply_bytes": 0,
+      "client_half_close_after_ms": 8000,
+      "peer_closed_after_ms": 8004,
+      "post_exit_code": 0
+    },
+    {
+      "marker": "B",
+      "permission_mode": "manual",
+      "auth_line_used": true,
+      "send_at_utc_second": "2026-10-25T16:45:24Z",
+      "first_poll_observed_by": "2026-10-25T16:45:38.314Z",
+      "envelope": {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      "outcome": "delivered; automatic pong-B",
+      "socket_reply_bytes": 0,
+      "client_half_close_after_ms": 8000,
+      "peer_closed_after_ms": 8003,
+      "post_exit_code": 0
+    },
+    {
+      "marker": "C",
+      "permission_mode": "bypassPermissions",
+      "auth_line_used": true,
+      "send_at_utc_second": "2026-10-25T16:47:00Z",
+      "first_poll_observed_by": "2026-10-25T16:47:12.617Z",
+      "envelope": {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      "outcome": "held; no turn or pong-C; later denied",
+      "socket_reply_bytes": 0,
+      "client_half_close_after_ms": 8000,
+      "peer_closed_after_ms": 8004,
+      "post_exit_code": 0
+    },
+    {
+      "marker": "D",
+      "permission_mode": "bypassPermissions",
+      "auth_line_used": false,
+      "send_at_utc_second": "2026-10-25T16:47:50Z",
+      "first_poll_observed_by": "2026-10-25T16:48:00.169Z",
+      "envelope": {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      "outcome": "held; no turn or pong-D; later denied",
+      "socket_reply_bytes": 0,
+      "client_half_close_after_ms": 8000,
+      "peer_closed_after_ms": 8003,
+      "post_exit_code": 0
+    }
+  ],
+  "timing_caveat": "First UI appearance and first turn-start were not separately timestamped; first_poll_observed_by is an upper bound. Message/assistant timestamps below come from the target session transcript. No user prompt was sent between each post and its observation.",
+  "transcript_marker_records": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "held_ui_reason": "The sender did not attest its permission mode and this session bypasses prompts.",
+  "stop_records": [
+    {
+      "at": "2026-10-25T16:44:29Z",
+      "session_id": "d804c49a-3e05-4408-ae6c-82285f8ad137",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": false,
+      "last_assistant_message": "ready"
+    },
+    {
+      "at": "2026-10-25T16:45:01Z",
+      "session_id": "d804c49a-3e05-4408-ae6c-82285f8ad137",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": false,
+      "last_assistant_message": "pong-A"
+    },
+    {
+      "at": "2026-10-25T16:45:26Z",
+      "session_id": "d804c49a-3e05-4408-ae6c-82285f8ad137",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": false,
+      "last_assistant_message": "pong-B"
+    },
+    {
+      "at": "2026-10-25T16:46:45Z",
+      "session_id": "607ae1be-49dd-44cc-bc77-f929b27c9ed4",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "last_assistant_message": "ready"
+    },
+    {
+      "at": "2026-10-25T16:48:45Z",
+      "session_id": "69a5855f-bb41-478e-9c00-bbb2dd60abed",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": false,
+      "last_assistant_message": "hi"
+    },
+    {
+      "at": "2026-10-25T16:49:05Z",
+      "session_id": "69a5855f-bb41-478e-9c00-bbb2dd60abed",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": false,
+      "last_assistant_message": "hi"
+    },
+    {
+      "at": "2026-10-25T16:49:07Z",
+      "session_id": "69a5855f-bb41-478e-9c00-bbb2dd60abed",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": true,
+      "last_assistant_message": "pong"
+    },
+    {
+      "at": "2026-10-25T16:49:40Z",
+      "session_id": "69a5855f-bb41-478e-9c00-bbb2dd60abed",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": false,
+      "last_assistant_message": "hi"
+    },
+    {
+      "at": "2026-10-25T16:50:45Z",
+      "session_id": "9be8969f-8831-4e20-a82b-14918a369751",
+      "fields": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "permission_mode": "default",
+      "stop_hook_active": false,
+      "last_assistant_message": "I ran the script once, and it printed this:\n\n```\nspawned detached child pid=84346; parent pid=84345 exiting now\n```\n\nThe parent process (pid 84345) started a detached child (pid 84346) and then exited. As you asked, I didn't run any other commands, so I haven't checked whether the child is still running."
+    }
+  ],
+  "stop_fired_lines": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "detached": {
+    "parent_pid": 84345,
+    "child_pid": 84346,
+    "claude_exit_observed_at": "2026-10-25T16:51:12.058Z",
+    "check_started_at_utc_second": "2026-10-25T16:51:32Z",
+    "check_exit_code": 0,
+    "check_output": "PASS: child 84346 is alive and heart-beating (last: 2026-10-25T16:51:32.729Z)\n  PID  PPID   SESS COMM\n84346     1      0 /Users/REDACTED/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "stopped_after_identity_check_at": "2026-10-25T16:52:08.892766Z",
+    "scope": "Bash-tool descendant; MCP survival untested"
+  },
+  "discovery": {
+    "script_exit_code": 2,
+    "error": "grep: maximum repetition exceeds 255",
+    "source_evidence": {
+      "redacted": true,
+      "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+    },
+    "script_output": {
+      "redacted": true,
+      "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+    },
+    "own_child_source_explanation": {
+      "kind": "Read-only source evidence, not a trace of the actual executed branch",
+      "binary_version": "2.1.310",
+      "snippets": [
+        {
+          "byte_offset": 249643050,
+          "code": "if(e.selfSentAncestry!==void 0&&n!==1)return Ke(e.selfSentAncestry,n);return s===\"self\"||s===\"no-evidence\"&&e.childTokenPresented;"
+        },
+        {
+          "byte_offset": 249642463,
+          "code": "return Array.isArray(e)&&e.includes(n);"
+        },
+        {
+          "byte_offset": 248721606,
+          "code": "if(e?.selfSent)return {policy:\"accept\"};return i===\"bypass\"?{policy:\"hold\",holdCause:\"no-mode-asserted\"}:{policy:\"accept\"};"
+        }
+      ],
+      "inference": "A valid token does not override known non-descendant process ancestry; the observed external poster can be held when targeting bypass without sender-mode attestation."
+    }
+  },
+  "unverified": [
+    "real MCP child survival / two shims attaching one daemon",
+    "Codex / ChatGPT / Ubuntu",
+    "M1 live E2E"
+  ],
+  "other_observation": "Each target UI reported Remote Control login rejected. Local Claude API prompts worked; login and Remote Control were not changed.",
+  "mcp_binding": {
+    "servers": [
+      {
+        "started_at": "2026-10-25T16:53:51.839Z",
+        "pid": 84491,
+        "ppid": 84457,
+        "cwd": "/private/tmp/kommutator-m1.p18zrn",
+        "session_ids": {
+          "CLAUDE_CODE_SESSION_ID": "76d7fa8b-2502-4ffd-a5fc-7165514869c4"
+        },
+        "initialized": true
+      },
+      {
+        "started_at": "2026-10-25T16:54:18.079Z",
+        "pid": 84545,
+        "ppid": 84512,
+        "cwd": "/private/tmp/kommutator-m1.p18zrn",
+        "session_ids": {
+          "CLAUDE_CODE_SESSION_ID": "409ac8db-3f61-41d6-957f-9b8a186f5368"
+        },
+        "initialized": true
+      }
+    ],
+    "hooks": [
+      {
+        "label": "a",
+        "captured_at": "2026-10-25T16:53:51.752Z",
+        "session_id": "76d7fa8b-2502-4ffd-a5fc-7165514869c4",
+        "hook_pid": 84468,
+        "hook_ppid": 84457,
+        "cwd": "/private/tmp/kommutator-m1.p18zrn",
+        "env_session_id_present": false,
+        "id_matches": [
+          {
+            "pid": 84491,
+            "variable": "CLAUDE_CODE_SESSION_ID"
+          }
+        ],
+        "parent_matches": [
+          84491
+        ]
+      },
+      {
+        "label": "b",
+        "captured_at": "2026-10-25T16:54:17.993Z",
+        "session_id": "409ac8db-3f61-41d6-957f-9b8a186f5368",
+        "hook_pid": 84521,
+        "hook_ppid": 84512,
+        "cwd": "/private/tmp/kommutator-m1.p18zrn",
+        "env_session_id_present": false,
+        "id_matches": [
+          {
+            "pid": 84545,
+            "variable": "CLAUDE_CODE_SESSION_ID"
+          }
+        ],
+        "parent_matches": [
+          84545
+        ]
+      }
+    ],
+    "both_alive_checked_at": "2026-10-25T16:54:52Z",
+    "both_ui_connected": true,
+    "same_cwd": true
+  },
+  "runbook_update": "MCP binding section was added during the run; it was read and executed after spike06. Capture was refreshed from the updated runbook to include hook_pid, hook_ppid and cwd.",
+  "cleanup": {
+    "at": "2026-10-25T16:58:18.036957Z",
+    "all_six_claude_sessions_exited": true,
+    "both_mcp_processes_exited": true,
+    "detached_child_stopped": true,
+    "specific_stop_flag_absent": true,
+    "own_spike06_pid_file_removed": true,
+    "scratch_directory_removed": true,
+    "private_capture_and_temporary_config_removed": true,
+    "selected_evidence_saved": true,
+    "existing_kommutator_logs_preserved": true
+  },
+  "verification": {
+    "independent_read_only_review": "Compared six PPID lines, transcript A/B records, bypass absence of C/D, Stop counts and re-entry, both MCP start/initialize records, and detached heartbeat against original local logs; no required corrections.",
+    "artifact_checks": [
+      "JSON parse",
+      "relative report links resolve",
+      "remaining private tokens absent before capture cleanup",
+      "scratch directory absent"
+    ],
+    "build_typecheck_unit_tests": "Not run: this task changed evidence documentation only."
+  },
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

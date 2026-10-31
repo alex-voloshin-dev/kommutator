@@ -1,0 +1,788 @@
+{
+  "date": "2026-10-27",
+  "cli_version": "0.164.0",
+  "shared_daemon_version": "0.165.0",
+  "scope": "Disposable codex exec roots only; existing shared daemon and desktop threads not touched",
+  "runs": [
+    {
+      "run": 3,
+      "no_daemon": true,
+      "thread_id": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+      "assistant_messages": [
+        "I’ll call the identity probe once, then report the result and context marker.",
+        "PROBE_OK — HOOK_CONTEXT_OK marker present."
+      ]
+    },
+    {
+      "run": 4,
+      "no_daemon": true,
+      "thread_id": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+      "assistant_messages": [
+        "PROBE_OK — HOOK_CONTEXT_OK marker present."
+      ]
+    },
+    {
+      "run": 5,
+      "no_daemon": false,
+      "thread_id": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+      "assistant_messages": [
+        "I’ll call the identity probe once, then report the result and context marker.",
+        "PROBE_OK — HOOK_CONTEXT_OK marker present.",
+        "STOP_CONTINUED"
+      ]
+    },
+    {
+      "run": 6,
+      "no_daemon": false,
+      "thread_id": "01a17fcc-a446-7200-a048-70692e0a7da8",
+      "assistant_messages": [
+        "I’ll locate `identity_probe.probe_identity` and call it once.",
+        "PROBE_OK — HOOK_CONTEXT_OK marker present.",
+        "STOP_CONTINUED"
+      ]
+    }
+  ],
+  "hooks": [
+    {
+      "session_id": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionStart",
+      "permission_mode": "bypassPermissions",
+      "source": "startup",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "source"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270129,
+      "ppid": 1269825
+    },
+    {
+      "session_id": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionStart",
+      "permission_mode": "bypassPermissions",
+      "source": "startup",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "source"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270130,
+      "ppid": 1269824
+    },
+    {
+      "session_id": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "UserPromptSubmit",
+      "permission_mode": "bypassPermissions",
+      "turn_id": "01a17fcc-2e6e-7d42-9a8b-41f8201f2015",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "prompt"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270131,
+      "ppid": 1269825
+    },
+    {
+      "session_id": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "UserPromptSubmit",
+      "permission_mode": "bypassPermissions",
+      "turn_id": "01a17fcc-2e08-7840-82e1-a079d80ad338",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "prompt"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270132,
+      "ppid": 1269824
+    },
+    {
+      "session_id": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "PostToolUse",
+      "permission_mode": "bypassPermissions",
+      "tool_name": "mcp__identity_probe__probe_identity",
+      "turn_id": "01a17fcc-2e6e-7d42-9a8b-41f8201f2015",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "tool_name",
+        "tool_input",
+        "tool_response",
+        "tool_use_id"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270216,
+      "ppid": 1269825
+    },
+    {
+      "session_id": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "PostToolUse",
+      "permission_mode": "bypassPermissions",
+      "tool_name": "mcp__identity_probe__probe_identity",
+      "turn_id": "01a17fcc-2e08-7840-82e1-a079d80ad338",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "tool_name",
+        "tool_input",
+        "tool_response",
+        "tool_use_id"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270249,
+      "ppid": 1269824
+    },
+    {
+      "session_id": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "Stop",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "turn_id": "01a17fcc-2e6e-7d42-9a8b-41f8201f2015",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "stop_hook_active",
+        "last_assistant_message"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270281,
+      "ppid": 1269825
+    },
+    {
+      "session_id": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionEnd",
+      "reason": "other",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "reason"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270284,
+      "ppid": 1269825
+    },
+    {
+      "session_id": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "Stop",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "turn_id": "01a17fcc-2e08-7840-82e1-a079d80ad338",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "stop_hook_active",
+        "last_assistant_message"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270287,
+      "ppid": 1269824
+    },
+    {
+      "session_id": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionEnd",
+      "reason": "other",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "reason"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1270290,
+      "ppid": 1269824
+    },
+    {
+      "session_id": "01a17fcc-a446-7200-a048-70692e0a7da8",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionStart",
+      "permission_mode": "bypassPermissions",
+      "source": "startup",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "source"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271226,
+      "ppid": 1270939
+    },
+    {
+      "session_id": "01a17fcc-a446-7200-a048-70692e0a7da8",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "UserPromptSubmit",
+      "permission_mode": "bypassPermissions",
+      "turn_id": "01a17fcc-a610-7e00-a9fa-c5c589a0575c",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "prompt"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271227,
+      "ppid": 1270939
+    },
+    {
+      "session_id": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionStart",
+      "permission_mode": "bypassPermissions",
+      "source": "startup",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "source"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271228,
+      "ppid": 1270938
+    },
+    {
+      "session_id": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "UserPromptSubmit",
+      "permission_mode": "bypassPermissions",
+      "turn_id": "01a17fcc-a653-7100-9f56-696983952698",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "prompt"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271229,
+      "ppid": 1270938
+    },
+    {
+      "session_id": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "PostToolUse",
+      "permission_mode": "bypassPermissions",
+      "tool_name": "mcp__identity_probe__probe_identity",
+      "turn_id": "01a17fcc-a653-7100-9f56-696983952698",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "tool_name",
+        "tool_input",
+        "tool_response",
+        "tool_use_id"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271359,
+      "ppid": 1270938
+    },
+    {
+      "session_id": "01a17fcc-a446-7200-a048-70692e0a7da8",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "PostToolUse",
+      "permission_mode": "bypassPermissions",
+      "tool_name": "mcp__identity_probe__probe_identity",
+      "turn_id": "01a17fcc-a610-7e00-a9fa-c5c589a0575c",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "tool_name",
+        "tool_input",
+        "tool_response",
+        "tool_use_id"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271397,
+      "ppid": 1270939
+    },
+    {
+      "session_id": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "Stop",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "turn_id": "01a17fcc-a653-7100-9f56-696983952698",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "stop_hook_active",
+        "last_assistant_message"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271422,
+      "ppid": 1270938
+    },
+    {
+      "session_id": "01a17fcc-a446-7200-a048-70692e0a7da8",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "Stop",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "turn_id": "01a17fcc-a610-7e00-a9fa-c5c589a0575c",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "stop_hook_active",
+        "last_assistant_message"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271423,
+      "ppid": 1270939
+    },
+    {
+      "session_id": "01a17fcc-a446-7200-a048-70692e0a7da8",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "Stop",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": true,
+      "turn_id": "01a17fcc-a610-7e00-a9fa-c5c589a0575c",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "stop_hook_active",
+        "last_assistant_message"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271470,
+      "ppid": 1270939
+    },
+    {
+      "session_id": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "Stop",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": true,
+      "turn_id": "01a17fcc-a653-7100-9f56-696983952698",
+      "payload_keys": [
+        "session_id",
+        "turn_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "model",
+        "permission_mode",
+        "stop_hook_active",
+        "last_assistant_message"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271471,
+      "ppid": 1270938
+    },
+    {
+      "session_id": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionEnd",
+      "reason": "other",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "reason"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271476,
+      "ppid": 1270938
+    },
+    {
+      "session_id": "01a17fcc-a446-7200-a048-70692e0a7da8",
+      "cwd": "/tmp/kom-codex-probe/work",
+      "hook_event_name": "SessionEnd",
+      "reason": "other",
+      "payload_keys": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "hook_event_name",
+        "reason"
+      ],
+      "env": {
+        "CODEX_THREAD_ID": "inherited ancestor ID; not current probe session",
+        "CODEX_SESSION_ID": "inherited ancestor ID; not current probe session"
+      },
+      "pid": 1271478,
+      "ppid": 1270939
+    }
+  ],
+  "mcp": [
+    {
+      "pid": 1269094,
+      "ppid": 1268876,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1269095,
+      "ppid": 1268877,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1269094,
+      "ppid": 1268876,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1269095,
+      "ppid": 1268877,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1269994,
+      "ppid": 1269825,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1269994,
+      "ppid": 1269825,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1269995,
+      "ppid": 1269824,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1269995,
+      "ppid": 1269824,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1269994,
+      "ppid": 1269825,
+      "event": "call",
+      "meta": {
+        "threadId": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+        "sessionId": "01a17fcc-2c32-79c1-95f4-9934b3cbea09",
+        "windowId": "01a17fcc-2c32-79c1-95f4-9934b3cbea09:0",
+        "progressToken": 1
+      }
+    },
+    {
+      "pid": 1269995,
+      "ppid": 1269824,
+      "event": "call",
+      "meta": {
+        "threadId": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+        "sessionId": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5",
+        "windowId": "01a17fcc-2c1e-7660-bdcc-aa004e95e5f5:0",
+        "progressToken": 1
+      }
+    },
+    {
+      "pid": 1271117,
+      "ppid": 1270938,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1271117,
+      "ppid": 1270938,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1271123,
+      "ppid": 1270939,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1271123,
+      "ppid": 1270939,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1271117,
+      "ppid": 1270938,
+      "event": "call",
+      "meta": {
+        "threadId": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+        "sessionId": "01a17fcc-a44a-7da3-9035-4d976b1a6298",
+        "windowId": "01a17fcc-a44a-7da3-9035-4d976b1a6298:0",
+        "progressToken": 1
+      }
+    },
+    {
+      "pid": 1271123,
+      "ppid": 1270939,
+      "event": "call",
+      "meta": {
+        "threadId": "01a17fcc-a446-7200-a048-70692e0a7da8",
+        "sessionId": "01a17fcc-a446-7200-a048-70692e0a7da8",
+        "windowId": "01a17fcc-a446-7200-a048-70692e0a7da8:0",
+        "progressToken": 1
+      }
+    }
+  ],
+  "launch_commands": {
+    "no_daemon": [
+      "codex",
+      "--no-daemon",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--json",
+      "--sandbox",
+      "danger-full-access",
+      "--dangerously-bypass-hook-trust",
+      "-c",
+      "mcp_servers.identity_probe.command=\"/usr/bin/node\"",
+      "-c",
+      "mcp_servers.identity_probe.args=[\"/tmp/kom-codex-probe/server.mjs\"]",
+      "-c",
+      "hooks.SessionStart=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook.py\",timeout=2}]}]",
+      "-c",
+      "hooks.UserPromptSubmit=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook.py\",timeout=2}]}]",
+      "-c",
+      "hooks.PostToolUse=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook.py\",timeout=2}]}]",
+      "-c",
+      "hooks.Stop=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook.py\",timeout=2}]}]",
+      "-c",
+      "hooks.SessionEnd=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook.py\",timeout=2}]}]",
+      "Call identity_probe probe_identity exactly once. Then reply PROBE_OK and mention any HOOK_CONTEXT_OK marker. Do not use other tools or access files."
+    ],
+    "default_exec": [
+      "codex",
+      "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--skip-git-repo-check",
+      "--ephemeral",
+      "--json",
+      "--sandbox",
+      "danger-full-access",
+      "--dangerously-bypass-hook-trust",
+      "-c",
+      "mcp_servers.identity_probe.command=\"/usr/bin/node\"",
+      "-c",
+      "mcp_servers.identity_probe.args=[\"/tmp/kom-codex-probe/server.mjs\"]",
+      "-c",
+      "hooks.SessionStart=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook-stop.py\",timeout=2}]}]",
+      "-c",
+      "hooks.UserPromptSubmit=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook-stop.py\",timeout=2}]}]",
+      "-c",
+      "hooks.PostToolUse=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook-stop.py\",timeout=2}]}]",
+      "-c",
+      "hooks.Stop=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook-stop.py\",timeout=2}]}]",
+      "-c",
+      "hooks.SessionEnd=[{hooks=[{type=\"command\",command=\"python3 /tmp/kom-codex-probe/hook-stop.py\",timeout=2}]}]",
+      "Call identity_probe probe_identity exactly once. Then reply PROBE_OK and mention any HOOK_CONTEXT_OK marker. Do not use other tools or access files."
+    ]
+  },
+  "limitations": [
+    "No native desktop or Work wake tested",
+    "Default exec still yielded distinct CLI parent PIDs; does not prove shared app-server MCP ownership",
+    "Fork/subagent identity untested; documentation says parent session_id in subagent hooks",
+    "Global config unchanged; per-command inline hooks only"
+  ],
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

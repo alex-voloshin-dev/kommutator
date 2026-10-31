@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-25T20:11:24.062105+00:00",
+  "experiment": "Claude bypass explicit per-session inbound accept opt-in",
+  "authorization": "User approved testing explicit opt-in for this disposable session; no global setting or product acceptance scope change.",
+  "environment": {
+    "claude_code": "2.1.310",
+    "node": "24.19.0",
+    "macos": "27.0.1 (26A434)",
+    "ui_model": "Opus 5.5",
+    "interaction": "interactive PTY recorded by /usr/bin/script",
+    "scratch_project": "/private/tmp/kommutator-bypass-optin.jftt00dy"
+  },
+  "launch": {
+    "common_args": [
+      "--dangerously-skip-permissions",
+      "--setting-sources",
+      "local",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}",
+      "--tools",
+      ""
+    ],
+    "control_args": [
+      "--session-id",
+      "46c4bc8b-df0d-4cfd-8d90-fef70135edaf",
+      "--name",
+      "spike-bypass-control"
+    ],
+    "accept_args": [
+      "--session-id",
+      "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "--name",
+      "spike-bypass-opt-in",
+      "--settings",
+      "{\"crossSessionInbound\":\"accept\"}"
+    ],
+    "temporary_hooks": [
+      "SessionStart capture",
+      "Stop capture (non-blocking)"
+    ],
+    "global_or_repository_policy_modified": false,
+    "mcp_configured": false,
+    "production_adapter_invoked": false
+  },
+  "sessions": {
+    "control": {
+      "session_id": "46c4bc8b-df0d-4cfd-8d90-fef70135edaf",
+      "claude_pid": 86233,
+      "session_start_at": "2026-10-25T20:03:42.749Z",
+      "permission_mode_at_session_start": null,
+      "fresh_socket_present": true,
+      "fresh_token_present": true,
+      "capture_mode": "0o600"
+    },
+    "accept": {
+      "session_id": "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "claude_pid": 86337,
+      "session_start_at": "2026-10-25T20:06:37.485Z",
+      "permission_mode_at_session_start": null,
+      "fresh_socket_present": true,
+      "fresh_token_present": true,
+      "capture_mode": "0o600"
+    }
+  },
+  "ui_observations": {
+    "control_policy": "/config: Messages from your other sessions = default",
+    "accept_policy": "/config search Messages: No settings match, consistent with CLI override",
+    "control_result": "Held; verified sender PID 86300; sender did not attest permission mode while recipient bypasses prompts; denied after observation, never approved",
+    "accept_results": [
+      "New idle turn then pong-optin-delayed",
+      "New idle turn then pong-optin-immediate"
+    ],
+    "no_user_prompt_between_each_post_and_pong": true,
+    "remote_control": "Login rejected in UI; Claude API responses worked; no login changes"
+  },
+  "transport": {
+    "optin-control": {
+      "label": "optin-control",
+      "session_id": "46c4bc8b-df0d-4cfd-8d90-fef70135edaf",
+      "timing": "delayed",
+      "sender_pid": 86300,
+      "sender_ppid": 71910,
+      "started_at": "2026-10-25T20:05:12.456Z",
+      "envelope": {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      "token_present": true,
+      "reply_bytes": 0,
+      "reply_redacted": "",
+      "half_closed_at": "2026-10-25T20:05:20.460Z",
+      "closed_at": "2026-10-25T20:05:20.461Z",
+      "error": null,
+      "connected_at": "2026-10-25T20:05:12.458Z",
+      "written_at": "2026-10-25T20:05:12.458Z",
+      "sender_exit_at": "2026-10-25T20:05:57.459Z",
+      "outcome": "Held; no native idle wake/pong during observation; explicitly denied afterwards"
+    },
+    "optin-delayed": {
+      "label": "optin-delayed",
+      "session_id": "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "timing": "delayed",
+      "sender_pid": 86422,
+      "sender_ppid": 71910,
+      "started_at": "2026-10-25T20:09:20.320Z",
+      "envelope": {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      "token_present": true,
+      "reply_bytes": 0,
+      "reply_redacted": "",
+      "half_closed_at": "2026-10-25T20:09:28.326Z",
+      "closed_at": "2026-10-25T20:09:28.330Z",
+      "error": null,
+      "connected_at": "2026-10-25T20:09:20.324Z",
+      "written_at": "2026-10-25T20:09:20.324Z",
+      "sender_exit_at": "2026-10-25T20:10:05.324Z",
+      "incoming_transcript_at": "2026-10-25T20:09:20.348Z",
+      "pong_transcript_at": "2026-10-25T20:09:23.036Z",
+      "incoming_to_pong_ms": 2688,
+      "write_to_pong_ms": 2712,
+      "outcome": "Delivered; native idle wake and matching pong"
+    },
+    "optin-immediate": {
+      "label": "optin-immediate",
+      "session_id": "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "timing": "immediate",
+      "sender_pid": 86440,
+      "sender_ppid": 71910,
+      "started_at": "2026-10-25T20:09:45.305Z",
+      "envelope": {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      "token_present": true,
+      "reply_bytes": 0,
+      "reply_redacted": "",
+      "half_closed_at": "2026-10-25T20:09:45.307Z",
+      "closed_at": "2026-10-25T20:09:45.323Z",
+      "error": null,
+      "connected_at": "2026-10-25T20:09:45.307Z",
+      "written_at": "2026-10-25T20:09:45.307Z",
+      "sender_exit_at": "2026-10-25T20:10:30.309Z",
+      "incoming_transcript_at": "2026-10-25T20:09:45.317Z",
+      "pong_transcript_at": "2026-10-25T20:09:48.437Z",
+      "incoming_to_pong_ms": 3120,
+      "write_to_pong_ms": 3130,
+      "outcome": "Delivered; native idle wake and matching pong"
+    }
+  },
+  "process_ancestry": [
+    {
+      "at": "2026-10-25T20:05:30.962754+00:00",
+      "case": "optin-control",
+      "target_pid": 86233,
+      "sender_ancestry": [
+        {
+          "pid": 86300,
+          "ppid": 71910,
+          "comm": "/Users/REDACTED/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+        },
+        {
+          "pid": 71910,
+          "ppid": 71856,
+          "comm": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+        },
+        {
+          "pid": 71856,
+          "ppid": 1,
+          "comm": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+        }
+      ],
+      "target_in_sender_ancestry": false
+    },
+    {
+      "at": "2026-10-25T20:09:33.836180+00:00",
+      "label": "optin-delayed",
+      "recipient_pid": 86337,
+      "ancestry": [
+        {
+          "pid": 86422,
+          "ppid": 71910,
+          "comm": "/Users/REDACTED/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+        },
+        {
+          "pid": 71910,
+          "ppid": 71856,
+          "comm": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+        },
+        {
+          "pid": 71856,
+          "ppid": 1,
+          "comm": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+        }
+      ],
+      "recipient_is_ancestor": false
+    },
+    {
+      "at": "2026-10-25T20:09:59.832984+00:00",
+      "label": "optin-immediate",
+      "recipient_pid": 86337,
+      "ancestry": [
+        {
+          "pid": 86440,
+          "ppid": 71910,
+          "comm": "/Users/REDACTED/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+        },
+        {
+          "pid": 71910,
+          "ppid": 71856,
+          "comm": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+        },
+        {
+          "pid": 71856,
+          "ppid": 1,
+          "comm": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+        }
+      ],
+      "recipient_is_ancestor": false
+    }
+  ],
+  "control_observation": {
+    "at": "2026-10-25T20:06:02.004654+00:00",
+    "case": "optin-control",
+    "sender_alive": false,
+    "ui_outcome": "Held; no approval; no extra prompt",
+    "transcript_records": [
+      {
+        "type": "user",
+        "timestamp": "2026-10-25T20:04:59.173Z",
+        "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+      },
+      {
+        "type": "assistant",
+        "timestamp": "2026-10-25T20:05:00.212Z",
+        "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+      }
+    ]
+  },
+  "hook_events": [
+    {
+      "at": "2026-10-25T20:03:42.749Z",
+      "event": "SessionStart",
+      "session_id": "46c4bc8b-df0d-4cfd-8d90-fef70135edaf",
+      "hook_pid": 86252,
+      "hook_ppid": 86233,
+      "cwd": "/private/tmp/kommutator-bypass-optin.jftt00dy",
+      "permission_mode": null,
+      "stop_hook_active": null,
+      "last_assistant_message": null
+    },
+    {
+      "at": "2026-10-25T20:05:00.266Z",
+      "event": "Stop",
+      "session_id": "46c4bc8b-df0d-4cfd-8d90-fef70135edaf",
+      "hook_pid": 86296,
+      "hook_ppid": 86233,
+      "cwd": "/private/tmp/kommutator-bypass-optin.jftt00dy",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "last_assistant_message": "ready-control"
+    },
+    {
+      "at": "2026-10-25T20:06:37.485Z",
+      "event": "SessionStart",
+      "session_id": "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "hook_pid": 86347,
+      "hook_ppid": 86337,
+      "cwd": "/private/tmp/kommutator-bypass-optin.jftt00dy",
+      "permission_mode": null,
+      "stop_hook_active": null,
+      "last_assistant_message": null
+    },
+    {
+      "at": "2026-10-25T20:07:13.249Z",
+      "event": "Stop",
+      "session_id": "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "hook_pid": 86384,
+      "hook_ppid": 86337,
+      "cwd": "/private/tmp/kommutator-bypass-optin.jftt00dy",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "last_assistant_message": "ready-optin"
+    },
+    {
+      "at": "2026-10-25T20:09:23.100Z",
+      "event": "Stop",
+      "session_id": "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "hook_pid": 86429,
+      "hook_ppid": 86337,
+      "cwd": "/private/tmp/kommutator-bypass-optin.jftt00dy",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "last_assistant_message": "pong-optin-delayed"
+    },
+    {
+      "at": "2026-10-25T20:09:48.499Z",
+      "event": "Stop",
+      "session_id": "039924e7-c091-4e70-82da-985cc4ea5ce4",
+      "hook_pid": 86446,
+      "hook_ppid": 86337,
+      "cwd": "/private/tmp/kommutator-bypass-optin.jftt00dy",
+      "permission_mode": "bypassPermissions",
+      "stop_hook_active": false,
+      "last_assistant_message": "pong-optin-immediate"
+    }
+  ],
+  "transcripts": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "harness_source": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "policy_hashes": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "cleanup": {
+    "checked_at": "2026-10-25T20:11:24.062421+00:00",
+    "process_alive": {
+      "86233": false,
+      "86337": false,
+      "86300": false,
+      "86422": false,
+      "86440": false
+    },
+    "scratch_removed": true,
+    "normal_claude_history_preserved": true,
+    "removed_at": "2026-10-25T20:14:07.445678+00:00",
+    "vendor_socket_present_after_exit": {
+      "46c4bc8b-df0d-4cfd-8d90-fef70135edaf": false,
+      "039924e7-c091-4e70-82da-985cc4ea5ce4": false
+    },
+    "token_scan": "Both temporary tokens absent from all report/plan/instruction/vault outputs before capture deletion.",
+    "removed_resources": [
+      "private captures",
+      "temporary project hooks/settings",
+      "raw PTY recordings",
+      "temporary posting and capture harnesses",
+      "temporary observation logs"
+    ]
+  },
+  "limits": [
+    "One post per timing in one accept target; one fresh default control.",
+    "No production adapter/agentd/MCP lifecycle/M1 E2E executed.",
+    "Token omitted and sender attestation variants not repeated.",
+    "Transcript timestamps measure message/pong persistence, not UI first paint or exact turn start.",
+    "Control final 49.5-second observation occurred after sender normal 45-second exit; sender was alive through first 30 seconds.",
+    "No built-in tools or MCP tools; prompt requested local text replies only."
+  ],
+  "independent_review": {
+    "reviewer": "bypass_spike_audit",
+    "verdict": "observations consistent",
+    "checked": [
+      "raw PTY records",
+      "sender timing logs and harness",
+      "hook logs",
+      "ancestry snapshots",
+      "sanitized transcript/evidence"
+    ],
+    "limits": "Launch override is recorded from executed command, not a ps argv snapshot; /config row was absent. Production adapter/MCP/M1 E2E not run."
+  },
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

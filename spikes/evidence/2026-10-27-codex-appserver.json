@@ -1,0 +1,240 @@
+{
+  "threads": [
+    "01a17fce-2e4e-7240-aaba-162a07aca276",
+    "01a17fce-303d-7c81-bd1f-7d78c04beca2"
+  ],
+  "turns": [
+    [
+      "01a17fce-2e4e-7240-aaba-162a07aca276",
+      "01a17fce-309c-7d62-b129-c109897bfae3"
+    ],
+    [
+      "01a17fce-303d-7c81-bd1f-7d78c04beca2",
+      "01a17fce-3100-7383-ab83-4bc3dde52def"
+    ]
+  ],
+  "events": [
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "mcpToolCall",
+          "id": "exec-14977b1f-44f5-44de-aa0b-9a78c15ffb9e",
+          "server": "identity_probe",
+          "tool": "probe_identity",
+          "status": "completed",
+          "arguments": {},
+          "appContext": null,
+          "mcpAppUi": null,
+          "pluginId": null,
+          "readOnlyHint": null,
+          "result": {
+            "content": [
+              {
+                "type": "text",
+                "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+              }
+            ],
+            "structuredContent": null,
+            "_meta": null
+          },
+          "error": null,
+          "durationMs": 0
+        },
+        "threadId": "01a17fce-2e4e-7240-aaba-162a07aca276",
+        "turnId": "01a17fce-309c-7d62-b129-c109897bfae3",
+        "completedAtMs": 1793145584990
+      },
+      "emittedAtMs": 1793145584990
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "mcpToolCall",
+          "id": "exec-6e38a434-7b06-4e92-b404-f4e5a453456d",
+          "server": "identity_probe",
+          "tool": "probe_identity",
+          "status": "completed",
+          "arguments": {},
+          "appContext": null,
+          "mcpAppUi": null,
+          "pluginId": null,
+          "readOnlyHint": null,
+          "result": {
+            "content": [
+              {
+                "type": "text",
+                "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+              }
+            ],
+            "structuredContent": null,
+            "_meta": null
+          },
+          "error": null,
+          "durationMs": 1
+        },
+        "threadId": "01a17fce-303d-7c81-bd1f-7d78c04beca2",
+        "turnId": "01a17fce-3100-7383-ab83-4bc3dde52def",
+        "completedAtMs": 1793145585493
+      },
+      "emittedAtMs": 1793145585493
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_08cd0b774b6c4945016ae13af269808195900f69140804c411",
+          "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "phase": "final_answer",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a17fce-2e4e-7240-aaba-162a07aca276",
+        "turnId": "01a17fce-309c-7d62-b129-c109897bfae3",
+        "completedAtMs": 1793145586490
+      },
+      "emittedAtMs": 1793145586490
+    },
+    {
+      "method": "turn/completed",
+      "params": {
+        "threadId": "01a17fce-2e4e-7240-aaba-162a07aca276",
+        "turn": {
+          "id": "01a17fce-309c-7d62-b129-c109897bfae3",
+          "rootTurnId": "01a17fce-309c-7d62-b129-c109897bfae3",
+          "items": [
+            {
+              "type": "agentMessage",
+              "id": "msg_08cd0b774b6c4945016ae13af269808195900f69140804c411",
+              "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+              "phase": "final_answer",
+              "memoryCitation": null,
+              "delivery": null,
+              "questions": null
+            }
+          ],
+          "itemsView": "summary",
+          "status": "completed",
+          "error": null,
+          "startedAt": 1793145581,
+          "completedAt": 1793145586,
+          "durationMs": 4775
+        }
+      },
+      "emittedAtMs": 1793145586502
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_0c32638c5eb44827016ae13af2b2c481969f43a87ef875c43a",
+          "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "phase": "final_answer",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a17fce-303d-7c81-bd1f-7d78c04beca2",
+        "turnId": "01a17fce-3100-7383-ab83-4bc3dde52def",
+        "completedAtMs": 1793145586783
+      },
+      "emittedAtMs": 1793145586783
+    },
+    {
+      "method": "turn/completed",
+      "params": {
+        "threadId": "01a17fce-303d-7c81-bd1f-7d78c04beca2",
+        "turn": {
+          "id": "01a17fce-3100-7383-ab83-4bc3dde52def",
+          "rootTurnId": "01a17fce-3100-7383-ab83-4bc3dde52def",
+          "items": [
+            {
+              "type": "agentMessage",
+              "id": "msg_0c32638c5eb44827016ae13af2b2c481969f43a87ef875c43a",
+              "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+              "phase": "final_answer",
+              "memoryCitation": null,
+              "delivery": null,
+              "questions": null
+            }
+          ],
+          "itemsView": "summary",
+          "status": "completed",
+          "error": null,
+          "startedAt": 1793145581,
+          "completedAt": 1793145586,
+          "durationMs": 4957
+        }
+      },
+      "emittedAtMs": 1793145586784
+    }
+  ],
+  "mcp": [
+    {
+      "pid": 1274204,
+      "ppid": 1274117,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1274204,
+      "ppid": 1274117,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1274213,
+      "ppid": 1274117,
+      "event": "start",
+      "env": {
+        "CODEX_THREAD_ID": null,
+        "CODEX_SESSION_ID": null
+      }
+    },
+    {
+      "pid": 1274213,
+      "ppid": 1274117,
+      "event": "initialize",
+      "clientInfo": {
+        "name": "codex-mcp-client",
+        "title": "Codex",
+        "version": "0.164.0"
+      }
+    },
+    {
+      "pid": 1274204,
+      "ppid": 1274117,
+      "event": "call",
+      "meta": {
+        "threadId": "01a17fce-2e4e-7240-aaba-162a07aca276",
+        "sessionId": "01a17fce-2e4e-7240-aaba-162a07aca276",
+        "windowId": "01a17fce-2e4e-7240-aaba-162a07aca276:0"
+      }
+    },
+    {
+      "pid": 1274213,
+      "ppid": 1274117,
+      "event": "call",
+      "meta": {
+        "threadId": "01a17fce-303d-7c81-bd1f-7d78c04beca2",
+        "sessionId": "01a17fce-303d-7c81-bd1f-7d78c04beca2",
+        "windowId": "01a17fce-303d-7c81-bd1f-7d78c04beca2:0"
+      }
+    }
+  ],
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

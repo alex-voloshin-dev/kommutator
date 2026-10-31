@@ -1,0 +1,10 @@
+export { paths, pathsFor } from "./paths.js";
+export { Config, loadConfig, type DaemonConfig } from "./config.js";
+export { runDaemon, startDaemon, type DaemonOptions } from "./daemon.js";
+export { DaemonCore, type CoreOptions, type Hello, type IpcPeer } from "./core.js";
+export { HubLink, type HubTransport } from "./hub-link.js";
+export { RpcError, OfflineError } from "./errors.js";
+export { AlreadyRunningError } from "./ipc.js";
+export { Registry, processStart, type LocalRecord } from "./registry.js";
+export { WakeScheduler, realClock, type Clock } from "./wake.js";
+export type { Adapter, LocalSession } from "./adapters/types.js";

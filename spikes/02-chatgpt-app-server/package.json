@@ -1,0 +1,9 @@
+{
+  "license": "MIT",
+  "name": "spike-02-chatgpt-app-server",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

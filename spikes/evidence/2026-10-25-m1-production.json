@@ -1,0 +1,912 @@
+{
+  "date": "2026-10-25",
+  "scope": "MVP_PLAN step 6, two real Claude Code sessions through production hub/agentd/MCP/hooks",
+  "result": "passed",
+  "versions": {
+    "claude": "2.1.310",
+    "node": "v24.19.0",
+    "pnpm": "10.18.0",
+    "chromium": "151.0.7922.34"
+  },
+  "launch": {
+    "cwd": "/Users/REDACTED/kommutator",
+    "builtin_tools": [],
+    "plugin": "plugins/claude-code",
+    "mcp": "production kom mcp with explicit strict config",
+    "hub_bind": "127.0.0.1",
+    "private_KOM_HOME": true,
+    "setting_sources": "local",
+    "crossSessionInbound": "accept",
+    "KOM_CLAUDE_INBOUND_POLICY": "accept",
+    "bypass_permissions": true,
+    "trust_authorization": "User approved temporary project trust and restoration on 2026-10-25",
+    "global_or_repository_inbound_policy_changed": false
+  },
+  "marker": "M1_20261025_2210",
+  "source_transcripts": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "operator_boundary": {
+    "at": "2026-10-25T22:10:40.025335+00:00",
+    "author_manual_input_ended_at": "2026-10-25T22:10:17.489Z",
+    "author_armed_at": "2026-10-25T22:10:21.089Z",
+    "author_observed_idle_at": "2026-10-25T22:10:27.907Z",
+    "action": "Only reviewer was prompted to send; no further author input until native sequence completes."
+  },
+  "before_send": {
+    "at": "2026-10-25T22:10:27.907Z",
+    "daemon": {
+      "pid": 94008,
+      "version": "0.0.0",
+      "started_at": "2026-10-25T22:09:28.320Z"
+    },
+    "sessions": [
+      {
+        "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "handle": "reviewer@m1-mac",
+        "vendor_session_id": "c3a4ff1d-5de0-45bc-96dc-fe8d316d2402",
+        "cwd": "/Users/REDACTED/kommutator",
+        "state": "active",
+        "capability": "native",
+        "incarnation": 0,
+        "wake": "on",
+        "status_line": "M1 reviewer ready",
+        "ended_at": null
+      },
+      {
+        "id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "handle": "author@m1-mac",
+        "vendor_session_id": "c4b38d1d-8a6d-4d04-a504-4f27435d1123",
+        "cwd": "/Users/REDACTED/kommutator",
+        "state": "idle",
+        "capability": "native",
+        "incarnation": 0,
+        "wake": "on",
+        "status_line": "M1 waiting for reviewer",
+        "ended_at": null
+      }
+    ],
+    "messages": [],
+    "deliveries": [],
+    "board": [
+      {
+        "topic": "project:kommutator",
+        "key": "decisions",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 1,
+        "updated_at": "2026-10-25T22:09:56.656Z"
+      }
+    ],
+    "local_sessions": [
+      {
+        "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "pid": 94037,
+        "processStartedAt": "Sun Oct 25 18:09:30 2026",
+        "permissionMode": "bypassPermissions",
+        "inboundPolicy": "accept",
+        "acked": 0,
+        "stopBlocked": false
+      },
+      {
+        "id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "pid": 93989,
+        "processStartedAt": "Sun Oct 25 18:09:19 2026",
+        "permissionMode": "bypassPermissions",
+        "inboundPolicy": "accept",
+        "acked": 0,
+        "stopBlocked": false
+      }
+    ]
+  },
+  "completed_round_trip": {
+    "at": "2026-10-25T22:11:18.363Z",
+    "daemon": {
+      "pid": 94008,
+      "version": "0.0.0",
+      "started_at": "2026-10-25T22:09:28.320Z"
+    },
+    "sessions": [
+      {
+        "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "handle": "reviewer@m1-mac",
+        "vendor_session_id": "c3a4ff1d-5de0-45bc-96dc-fe8d316d2402",
+        "cwd": "/Users/REDACTED/kommutator",
+        "state": "idle",
+        "capability": "native",
+        "incarnation": 0,
+        "wake": "on",
+        "status_line": "M1 reviewer ready",
+        "ended_at": null
+      },
+      {
+        "id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "handle": "author@m1-mac",
+        "vendor_session_id": "c4b38d1d-8a6d-4d04-a504-4f27435d1123",
+        "cwd": "/Users/REDACTED/kommutator",
+        "state": "idle",
+        "capability": "native",
+        "incarnation": 0,
+        "wake": "on",
+        "status_line": "M1 reply complete",
+        "ended_at": null
+      }
+    ],
+    "messages": [
+      {
+        "id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "from_session": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "from_handle": "reviewer@m1-mac",
+        "kind": "request",
+        "priority": "normal",
+        "subject": "M1_20261025_2210",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "thread_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "reply_to": null,
+        "created_at": "2026-10-25T22:10:41.616Z"
+      },
+      {
+        "id": "2f2e4e65-867e-4c47-aeb6-51525365f584",
+        "from_session": "475af981-d059-450c-b231-cbbedeb8589c",
+        "from_handle": "author@m1-mac",
+        "kind": "dm",
+        "priority": "normal",
+        "subject": "M1_20261025_2210",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "thread_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "reply_to": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "created_at": "2026-10-25T22:10:55.998Z"
+      }
+    ],
+    "deliveries": [
+      {
+        "message_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "seq": 1,
+        "state": "read",
+        "wake": 1,
+        "updated_at": "2026-10-25T22:10:41.689Z"
+      },
+      {
+        "message_id": "2f2e4e65-867e-4c47-aeb6-51525365f584",
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "seq": 1,
+        "state": "read",
+        "wake": 1,
+        "updated_at": "2026-10-25T22:10:56.076Z"
+      }
+    ],
+    "board": [
+      {
+        "topic": "project:kommutator",
+        "key": "decisions",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 1,
+        "updated_at": "2026-10-25T22:09:56.656Z"
+      },
+      {
+        "topic": "project:kommutator",
+        "key": "handoff/author@m1-mac",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 1,
+        "updated_at": "2026-10-25T22:11:01.256Z"
+      }
+    ],
+    "local_sessions": [
+      {
+        "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "pid": 94037,
+        "processStartedAt": "Sun Oct 25 18:09:30 2026",
+        "permissionMode": "bypassPermissions",
+        "inboundPolicy": "accept",
+        "acked": 1,
+        "lastWake": 1792966256009,
+        "stopBlocked": false
+      },
+      {
+        "id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "pid": 93989,
+        "processStartedAt": "Sun Oct 25 18:09:19 2026",
+        "permissionMode": "bypassPermissions",
+        "inboundPolicy": "accept",
+        "acked": 1,
+        "lastWake": 1792966241627,
+        "stopBlocked": false
+      }
+    ]
+  },
+  "timings": {
+    "author_native_inbound_at": "2026-10-25T22:10:41.640Z",
+    "author_first_read_tool_at": "2026-10-25T22:10:47.857Z",
+    "request_committed_at": "2026-10-25T22:10:41.616Z",
+    "reply_committed_at": "2026-10-25T22:10:55.998Z",
+    "reply_seconds_after_request": 14.382,
+    "handoff_committed_at": "2026-10-25T22:11:01.256Z",
+    "author_done_at": "2026-10-25T22:11:06.726Z"
+  },
+  "survival": {
+    "author_exit": {
+      "at": "2026-10-25T22:11:24.326458+00:00",
+      "method": "Claude /exit",
+      "process": {
+        "launcher": 93988,
+        "pid": 93989,
+        "at": "2026-10-25T22:09:19.183Z"
+      }
+    },
+    "daemon_pid_before": 94008,
+    "daemon_pid_after": 94008,
+    "reviewer_status_at": "2026-10-25T22:12:17.524Z",
+    "seconds_after_recorded_author_exit": 53.198,
+    "reviewer_whoami_and_both_boards_succeeded": true,
+    "passed": true
+  },
+  "final_snapshot": {
+    "at": "2026-10-25T22:12:36.691Z",
+    "daemon": {
+      "pid": 94008,
+      "version": "0.0.0",
+      "started_at": "2026-10-25T22:09:28.320Z"
+    },
+    "sessions": [
+      {
+        "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "handle": "reviewer@m1-mac",
+        "vendor_session_id": "c3a4ff1d-5de0-45bc-96dc-fe8d316d2402",
+        "cwd": "/Users/REDACTED/kommutator",
+        "state": "gone",
+        "capability": "native",
+        "incarnation": 0,
+        "wake": "on",
+        "status_line": "M1 reviewer ready",
+        "ended_at": "2026-10-25T22:12:36.405Z"
+      },
+      {
+        "id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "handle": "author@m1-mac",
+        "vendor_session_id": "c4b38d1d-8a6d-4d04-a504-4f27435d1123",
+        "cwd": "/Users/REDACTED/kommutator",
+        "state": "gone",
+        "capability": "native",
+        "incarnation": 0,
+        "wake": "on",
+        "status_line": "M1 reply complete",
+        "ended_at": "2026-10-25T22:11:24.110Z"
+      }
+    ],
+    "messages": [
+      {
+        "id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "from_session": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "from_handle": "reviewer@m1-mac",
+        "kind": "request",
+        "priority": "normal",
+        "subject": "M1_20261025_2210",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "thread_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "reply_to": null,
+        "created_at": "2026-10-25T22:10:41.616Z"
+      },
+      {
+        "id": "2f2e4e65-867e-4c47-aeb6-51525365f584",
+        "from_session": "475af981-d059-450c-b231-cbbedeb8589c",
+        "from_handle": "author@m1-mac",
+        "kind": "dm",
+        "priority": "normal",
+        "subject": "M1_20261025_2210",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "thread_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "reply_to": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "created_at": "2026-10-25T22:10:55.998Z"
+      }
+    ],
+    "deliveries": [
+      {
+        "message_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "seq": 1,
+        "state": "read",
+        "wake": 1,
+        "updated_at": "2026-10-25T22:10:41.689Z"
+      },
+      {
+        "message_id": "2f2e4e65-867e-4c47-aeb6-51525365f584",
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "seq": 1,
+        "state": "read",
+        "wake": 1,
+        "updated_at": "2026-10-25T22:10:56.076Z"
+      }
+    ],
+    "board": [
+      {
+        "topic": "project:kommutator",
+        "key": "decisions",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 1,
+        "updated_at": "2026-10-25T22:09:56.656Z"
+      },
+      {
+        "topic": "project:kommutator",
+        "key": "handoff/author@m1-mac",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 1,
+        "updated_at": "2026-10-25T22:11:01.256Z"
+      }
+    ],
+    "local_sessions": [
+      {
+        "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "pid": 94037,
+        "processStartedAt": "Sun Oct 25 18:09:30 2026",
+        "permissionMode": "bypassPermissions",
+        "inboundPolicy": "accept",
+        "acked": 1,
+        "lastWake": 1792966256009,
+        "stopBlocked": false
+      },
+      {
+        "id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "pid": 93989,
+        "processStartedAt": "Sun Oct 25 18:09:19 2026",
+        "permissionMode": "bypassPermissions",
+        "inboundPolicy": "accept",
+        "acked": 1,
+        "lastWake": 1792966241627,
+        "stopBlocked": false
+      }
+    ]
+  },
+  "transcripts": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "dashboard": {
+    "ready": {
+      "browser": "151.0.7922.34",
+      "pid": 93979,
+      "connected": true,
+      "at": "2026-10-25T22:09:16.243Z"
+    },
+    "completed": {
+      "at": "2026-10-25T22:11:18.444Z",
+      "connection": "connected",
+      "sessions": [
+        "author@m1-mac\tclaude-code\tkommutator\tidle\tM1 reply complete",
+        "reviewer@m1-mac\tclaude-code\tkommutator\tidle\tM1 reviewer ready"
+      ],
+      "deliveries": [
+        "1\treviewer@m1-mac\tauthor@m1-mac\tM1_20261025_2210\tyes",
+        "1\tauthor@m1-mac\treviewer@m1-mac\tM1_20261025_2210\tyes"
+      ],
+      "feed": [
+        "2026-10-25T22:09:30.968Z session.registered [payload omitted]",
+        "2026-10-25T22:09:40.437Z session.registered [payload omitted]",
+        "2026-10-25T22:09:48.333Z session.updated [payload omitted]",
+        "2026-10-25T22:09:48.339Z session.updated [payload omitted]",
+        "2026-10-25T22:09:48.601Z session.updated [payload omitted]",
+        "2026-10-25T22:09:56.656Z board.put [payload omitted]",
+        "2026-10-25T22:10:08.178Z session.updated [payload omitted]",
+        "2026-10-25T22:10:08.331Z session.updated [payload omitted]",
+        "2026-10-25T22:10:08.335Z session.updated [payload omitted]",
+        "2026-10-25T22:10:28.338Z session.updated [payload omitted]",
+        "2026-10-25T22:10:28.344Z session.updated [payload omitted]",
+        "2026-10-25T22:10:41.617Z message.sent [payload omitted]",
+        "2026-10-25T22:10:41.617Z delivery.created [payload omitted]",
+        "2026-10-25T22:10:41.689Z delivery.read [payload omitted]",
+        "2026-10-25T22:10:48.337Z session.updated [payload omitted]",
+        "2026-10-25T22:10:48.343Z session.updated [payload omitted]",
+        "2026-10-25T22:10:55.999Z message.sent [payload omitted]",
+        "2026-10-25T22:10:55.999Z delivery.created [payload omitted]",
+        "2026-10-25T22:10:56.076Z delivery.read [payload omitted]",
+        "2026-10-25T22:11:01.256Z board.put [payload omitted]",
+        "2026-10-25T22:11:01.325Z session.updated [payload omitted]",
+        "2026-10-25T22:11:08.339Z session.updated [payload omitted]",
+        "2026-10-25T22:11:08.346Z session.updated [payload omitted]"
+      ],
+      "errors": []
+    },
+    "after_both_exits": {
+      "at": "2026-10-25T22:12:36.886Z",
+      "connection": "connected",
+      "sessions": [],
+      "deliveries": [
+        "1\treviewer@m1-mac\tauthor@m1-mac\tM1_20261025_2210\tyes",
+        "1\tauthor@m1-mac\treviewer@m1-mac\tM1_20261025_2210\tyes"
+      ],
+      "feed": [
+        "2026-10-25T22:09:30.968Z session.registered [payload omitted]",
+        "2026-10-25T22:09:40.437Z session.registered [payload omitted]",
+        "2026-10-25T22:09:48.333Z session.updated [payload omitted]",
+        "2026-10-25T22:09:48.339Z session.updated [payload omitted]",
+        "2026-10-25T22:09:48.601Z session.updated [payload omitted]",
+        "2026-10-25T22:09:56.656Z board.put [payload omitted]",
+        "2026-10-25T22:10:08.178Z session.updated [payload omitted]",
+        "2026-10-25T22:10:08.331Z session.updated [payload omitted]",
+        "2026-10-25T22:10:08.335Z session.updated [payload omitted]",
+        "2026-10-25T22:10:28.338Z session.updated [payload omitted]",
+        "2026-10-25T22:10:28.344Z session.updated [payload omitted]",
+        "2026-10-25T22:10:41.617Z message.sent [payload omitted]",
+        "2026-10-25T22:10:41.617Z delivery.created [payload omitted]",
+        "2026-10-25T22:10:41.689Z delivery.read [payload omitted]",
+        "2026-10-25T22:10:48.337Z session.updated [payload omitted]",
+        "2026-10-25T22:10:48.343Z session.updated [payload omitted]",
+        "2026-10-25T22:10:55.999Z message.sent [payload omitted]",
+        "2026-10-25T22:10:55.999Z delivery.created [payload omitted]",
+        "2026-10-25T22:10:56.076Z delivery.read [payload omitted]",
+        "2026-10-25T22:11:01.256Z board.put [payload omitted]",
+        "2026-10-25T22:11:01.325Z session.updated [payload omitted]",
+        "2026-10-25T22:11:08.339Z session.updated [payload omitted]",
+        "2026-10-25T22:11:08.346Z session.updated [payload omitted]",
+        "2026-10-25T22:11:24.110Z session.gone [payload omitted]",
+        "2026-10-25T22:11:28.339Z session.updated [payload omitted]",
+        "2026-10-25T22:11:48.342Z session.updated [payload omitted]",
+        "2026-10-25T22:12:08.343Z session.updated [payload omitted]",
+        "2026-10-25T22:12:28.454Z session.updated [payload omitted]",
+        "2026-10-25T22:12:36.406Z session.gone [payload omitted]"
+      ],
+      "errors": []
+    },
+    "screenshot": {
+      "withheld": true,
+      "reason": "Historical screenshot withheld from the public tree because its event feed exposes a personal home path; original retained privately. Structured dashboard observations and historical browser acceptance remain unchanged."
+    }
+  },
+  "public_events": [
+    {
+      "id": 1,
+      "type": "session.registered",
+      "at": "2026-10-25T22:09:30.968Z",
+      "data": {
+        "session": {
+          "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+          "host": "m1-mac",
+          "handle": "claude-code-kommutator-1@m1-mac",
+          "name": "claude-code-kommutator-1",
+          "vendor": "claude-code",
+          "state": "active",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "vendor_session_id": "c3a4ff1d-5de0-45bc-96dc-fe8d316d2402",
+          "cwd": "/Users/REDACTED/kommutator",
+          "project_key": "kommutator"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "session.registered",
+      "at": "2026-10-25T22:09:40.437Z",
+      "data": {
+        "session": {
+          "id": "475af981-d059-450c-b231-cbbedeb8589c",
+          "host": "m1-mac",
+          "handle": "claude-code-kommutator-2@m1-mac",
+          "name": "claude-code-kommutator-2",
+          "vendor": "claude-code",
+          "state": "active",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "vendor_session_id": "c4b38d1d-8a6d-4d04-a504-4f27435d1123",
+          "cwd": "/Users/REDACTED/kommutator",
+          "project_key": "kommutator"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "session.updated",
+      "at": "2026-10-25T22:09:48.333Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "active"
+      }
+    },
+    {
+      "id": 4,
+      "type": "session.updated",
+      "at": "2026-10-25T22:09:48.339Z",
+      "data": {
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "state": "active"
+      }
+    },
+    {
+      "id": 5,
+      "type": "session.updated",
+      "at": "2026-10-25T22:09:48.601Z",
+      "data": {
+        "session": {
+          "id": "475af981-d059-450c-b231-cbbedeb8589c",
+          "host": "m1-mac",
+          "handle": "author@m1-mac",
+          "name": "author",
+          "vendor": "claude-code",
+          "state": "active",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "role": "author",
+          "vendor_session_id": "c4b38d1d-8a6d-4d04-a504-4f27435d1123",
+          "cwd": "/Users/REDACTED/kommutator",
+          "project_key": "kommutator",
+          "status_line": "M1 waiting for reviewer"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "board.put",
+      "at": "2026-10-25T22:09:56.656Z",
+      "data": {
+        "entry": {
+          "topic": "project:kommutator",
+          "key": "decisions",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "version": 1,
+          "author": "author@m1-mac",
+          "protected": false,
+          "updated_at": "2026-10-25T22:09:56.656Z"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "session.updated",
+      "at": "2026-10-25T22:10:08.178Z",
+      "data": {
+        "session": {
+          "id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+          "host": "m1-mac",
+          "handle": "reviewer@m1-mac",
+          "name": "reviewer",
+          "vendor": "claude-code",
+          "state": "active",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "role": "reviewer",
+          "vendor_session_id": "c3a4ff1d-5de0-45bc-96dc-fe8d316d2402",
+          "cwd": "/Users/REDACTED/kommutator",
+          "project_key": "kommutator",
+          "status_line": "M1 reviewer ready"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "session.updated",
+      "at": "2026-10-25T22:10:08.331Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "active"
+      }
+    },
+    {
+      "id": 9,
+      "type": "session.updated",
+      "at": "2026-10-25T22:10:08.335Z",
+      "data": {
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 10,
+      "type": "session.updated",
+      "at": "2026-10-25T22:10:28.338Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 11,
+      "type": "session.updated",
+      "at": "2026-10-25T22:10:28.344Z",
+      "data": {
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 12,
+      "type": "message.sent",
+      "at": "2026-10-25T22:10:41.617Z",
+      "data": {
+        "message": {
+          "id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+          "from": "reviewer@m1-mac",
+          "to": [
+            "author@m1-mac"
+          ],
+          "kind": "request",
+          "priority": "normal",
+          "subject": "M1_20261025_2210",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+          "reply_to": null,
+          "hops": 0,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-25T22:10:41.616Z"
+        },
+        "deliveries": {
+          "475af981-d059-450c-b231-cbbedeb8589c": "unread"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "delivery.created",
+      "at": "2026-10-25T22:10:41.617Z",
+      "data": {
+        "message_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "seq": 1,
+        "wake": true
+      }
+    },
+    {
+      "id": 15,
+      "type": "delivery.read",
+      "at": "2026-10-25T22:10:41.689Z",
+      "data": {
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "message_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 16,
+      "type": "session.updated",
+      "at": "2026-10-25T22:10:48.337Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 17,
+      "type": "session.updated",
+      "at": "2026-10-25T22:10:48.343Z",
+      "data": {
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "state": "active"
+      }
+    },
+    {
+      "id": 18,
+      "type": "message.sent",
+      "at": "2026-10-25T22:10:55.999Z",
+      "data": {
+        "message": {
+          "id": "2f2e4e65-867e-4c47-aeb6-51525365f584",
+          "from": "author@m1-mac",
+          "to": [
+            "reviewer@m1-mac"
+          ],
+          "kind": "dm",
+          "priority": "normal",
+          "subject": "M1_20261025_2210",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "thread_id": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+          "reply_to": "6e9e84bb-78c8-4e8c-a63c-390870fdceec",
+          "hops": 1,
+          "origin": "agent",
+          "force_wake": false,
+          "created_at": "2026-10-25T22:10:55.998Z"
+        },
+        "deliveries": {
+          "557d239a-5e86-41a7-8220-7813fc1c3065": "unread"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "type": "delivery.created",
+      "at": "2026-10-25T22:10:55.999Z",
+      "data": {
+        "message_id": "2f2e4e65-867e-4c47-aeb6-51525365f584",
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "seq": 1,
+        "wake": true
+      }
+    },
+    {
+      "id": 21,
+      "type": "delivery.read",
+      "at": "2026-10-25T22:10:56.076Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "message_id": "2f2e4e65-867e-4c47-aeb6-51525365f584",
+        "state": "read",
+        "cause": "ack"
+      }
+    },
+    {
+      "id": 22,
+      "type": "board.put",
+      "at": "2026-10-25T22:11:01.256Z",
+      "data": {
+        "entry": {
+          "topic": "project:kommutator",
+          "key": "handoff/author@m1-mac",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+          "version": 1,
+          "author": "author@m1-mac",
+          "protected": false,
+          "updated_at": "2026-10-25T22:11:01.256Z"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "session.updated",
+      "at": "2026-10-25T22:11:01.325Z",
+      "data": {
+        "session": {
+          "id": "475af981-d059-450c-b231-cbbedeb8589c",
+          "host": "m1-mac",
+          "handle": "author@m1-mac",
+          "name": "author",
+          "vendor": "claude-code",
+          "state": "active",
+          "incarnation": 0,
+          "wake": "on",
+          "capability": "native",
+          "role": "author",
+          "vendor_session_id": "c4b38d1d-8a6d-4d04-a504-4f27435d1123",
+          "cwd": "/Users/REDACTED/kommutator",
+          "project_key": "kommutator",
+          "status_line": "M1 reply complete"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "session.updated",
+      "at": "2026-10-25T22:11:08.339Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 25,
+      "type": "session.updated",
+      "at": "2026-10-25T22:11:08.346Z",
+      "data": {
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 26,
+      "type": "session.gone",
+      "at": "2026-10-25T22:11:24.110Z",
+      "data": {
+        "session_id": "475af981-d059-450c-b231-cbbedeb8589c",
+        "incarnation": 0
+      }
+    },
+    {
+      "id": 27,
+      "type": "session.updated",
+      "at": "2026-10-25T22:11:28.339Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 28,
+      "type": "session.updated",
+      "at": "2026-10-25T22:11:48.342Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 29,
+      "type": "session.updated",
+      "at": "2026-10-25T22:12:08.343Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 30,
+      "type": "session.updated",
+      "at": "2026-10-25T22:12:28.454Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "state": "idle"
+      }
+    },
+    {
+      "id": 31,
+      "type": "session.gone",
+      "at": "2026-10-25T22:12:36.406Z",
+      "data": {
+        "session_id": "557d239a-5e86-41a7-8220-7813fc1c3065",
+        "incarnation": 0
+      }
+    }
+  ],
+  "checks": {
+    "build": "passed",
+    "typecheck": "passed",
+    "tests": {
+      "protocol": 30,
+      "hub": 136,
+      "agentd": 47,
+      "cli": 29,
+      "total": 242
+    }
+  },
+  "receipt_interpretation": "delivery.read cause=ack occurred from shown hook headers before explicit read calls. Native wake is proven by vendor-injected message and autonomous tool sequence, not receipts or socket silence.",
+  "limitations": [
+    "One same-host M1 run, not a day-long operability soak.",
+    "Bypass default policy, cross-vendor and second-host acceptance are outside this run."
+  ],
+  "cleanup": {
+    "at": "2026-10-25T22:13:28.576971+00:00",
+    "trust": {
+      "at": "2026-10-25T22:12:51.787253+00:00",
+      "before": {},
+      "during": {
+        "hasTrustDialogAccepted": true
+      },
+      "after": {},
+      "restored": true,
+      "other_current_config_fields_preserved": true
+    },
+    "processes": [
+      {
+        "pid": 93989,
+        "absent": true
+      },
+      {
+        "pid": 93988,
+        "absent": true
+      },
+      {
+        "pid": 94037,
+        "absent": true
+      },
+      {
+        "pid": 94036,
+        "absent": true
+      },
+      {
+        "pid": 94008,
+        "absent": true
+      },
+      {
+        "pid": 93976,
+        "absent": true
+      },
+      {
+        "pid": 93971,
+        "absent": true
+      },
+      {
+        "pid": 93979,
+        "absent": true
+      }
+    ],
+    "normal_claude_history_preserved": true,
+    "private_run_files_removed": true,
+    "private_run_files_removed_at": "2026-10-25T22:15:37.609516+00:00"
+  },
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

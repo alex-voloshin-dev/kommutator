@@ -1,0 +1,336 @@
+import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { Message, Methods, Notifications, packHeaders, Results, type StoredMessage } from "@kommutator/protocol";
+import type { z } from "zod";
+import { errors, RpcFault, type HubContext } from "../src/context.js";
+import { HubEvents, type HubEvent } from "../src/events.js";
+import { listInbox, markReceipt, readMessage, resyncDeliveries } from "../src/inbox.js";
+import { getStoredMessage, sendMessage, shouldWake } from "../src/routing.js";
+
+const schema = readFileSync(new URL("../schema.sql", import.meta.url), "utf8");
+const NOW = "2026-10-25T12:00:00.000Z";
+const peer = { host: "laptop" };
+
+describe("message routing and inbox", () => {
+  let db: DatabaseSync;
+  let ctx: HubContext;
+  let events: HubEvent[];
+  let counter: number;
+
+  beforeEach(() => {
+    db = new DatabaseSync(":memory:");
+    db.exec(schema);
+    counter = 0;
+    events = [];
+    ctx = { db, events: new HubEvents(() => NOW), now: () => NOW, newId: () => `message-${++counter}` };
+    ctx.events.subscribe((event) => { events.push(event); });
+    db.prepare("INSERT INTO hosts(name) VALUES (?)").run("laptop");
+    db.prepare("INSERT INTO hosts(name) VALUES (?)").run("server");
+    const insert = db.prepare(`INSERT INTO sessions(id, host, handle, name, role, vendor, reg_id, started_at, last_seen_at)
+      VALUES (?, ?, ?, ?, ?, 'claude-code', ?, ?, ?)`);
+    for (const [id, host, role] of [["a", "laptop", "author"], ["b", "laptop", "executor"], ["c", "server", "executor"], ["isolated", "server", "executor"], ["gone", "laptop", "executor"]]) {
+      if (!id || !host || !role) throw new Error("invalid fixture");
+      insert.run(id, host, `${id}@${host}`, id, role, `register-${id}`, NOW, NOW);
+      if (id !== "isolated") db.prepare("INSERT INTO memberships(session_id, topic_id) SELECT ?, id FROM topics WHERE name = 'global'").run(id);
+    }
+    db.prepare("UPDATE sessions SET ended_at = ?, state = 'gone' WHERE id = 'gone'").run(NOW);
+    db.prepare("INSERT INTO topics(name, kind) VALUES ('project:private', 'project')").run();
+    db.prepare("INSERT INTO memberships(session_id, topic_id) SELECT 'c', id FROM topics WHERE name = 'project:private'").run();
+  });
+  afterEach(() => db.close());
+
+  function params(to: string[], changes: Partial<z.input<typeof Message>> = {}, sender = "a", key = `send-key-${counter + 1}`) {
+    return Methods["message.send"].parse({
+      session_id: sender,
+      idempotency_key: key,
+      message: { from: "forged@server", to, body: "first line\nsecond line", ...changes },
+    });
+  }
+
+  function inbox(sessionId = "b", changes: Partial<z.input<(typeof Methods)["inbox.list"]>> = {}) {
+    return listInbox(ctx, sessionId === "c" ? { host: "server" } : peer,
+      Methods["inbox.list"].parse({ session_id: sessionId, ...changes }));
+  }
+
+  function stored(id: string): StoredMessage {
+    const message = getStoredMessage(ctx, id);
+    if (!message) throw new Error("expected stored message");
+    return message;
+  }
+
+  it("derives authorship, identity and root metadata and emits valid deliveries after commit", () => {
+    const committedCounts: number[] = [];
+    ctx.events.subscribe(() => {
+      // BEGIN succeeds only if the handler has committed its own transaction.
+      db.exec("BEGIN");
+      committedCounts.push(Number(db.prepare("SELECT count(*) AS n FROM deliveries").get()?.n));
+      db.exec("ROLLBACK");
+    });
+    const result = sendMessage(ctx, peer, params([" B@LAPTOP ", "@role:executor", "b@laptop"], {
+      id: "forged-id", thread_id: "forged-thread", created_at: "2000-01-01T00:00:00.000Z", hops: 99,
+    }));
+    expect(result).toEqual({ id: "message-1", deliveries: { b: "unread", c: "unread" }, replayed: false });
+    expect(stored(result.id)).toMatchObject({
+      id: "message-1", from: "a@laptop", to: ["@role:executor", "b@laptop"],
+      thread_id: "message-1", reply_to: null, hops: 0, created_at: NOW,
+    });
+    expect(events.map((event) => event.type)).toEqual(["message.sent", "delivery.created", "deliver", "delivery.created", "deliver"]);
+    expect(committedCounts).toEqual([2, 2, 2, 2, 2]);
+    const pushes = events.filter((event) => event.type === "deliver").map((event) => event.data as { host: string; notification: unknown });
+    expect(pushes.map((push) => push.host)).toEqual(["laptop", "server"]);
+    expect(pushes.map((push) => Notifications.deliver.parse(push.notification))).toMatchObject([
+      { session_id: "b", seq: 1, wake: true }, { session_id: "c", seq: 1, wake: true },
+    ]);
+  });
+
+  it("rejects unknown or invisible direct handles atomically and does not consume sequences", () => {
+    for (const address of ["missing@laptop", "isolated@server", "gone@laptop"]) {
+      expect(() => sendMessage(ctx, peer, params(["b@laptop", address]))).toThrow("unknown recipient handle");
+    }
+    expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 0 });
+    expect(events).toEqual([]);
+    sendMessage(ctx, peer, params(["b@laptop"]));
+    expect(inbox().headers.map((header) => header.seq)).toEqual([1]);
+  });
+
+  it("requires membership for topic addressing despite a shared global topic", () => {
+    expect(() => sendMessage(ctx, peer, params(["topic:project:private"], { kind: "topic" }))).toThrow("topic membership required");
+    const result = sendMessage(ctx, peer, params(["topic:global", "all"], { kind: "broadcast" }));
+    expect(Object.keys(result.deliveries).sort()).toEqual(["a", "b", "c"]);
+    expect(events.filter((event) => event.type === "deliver").map((event) => (event.data as { notification: { wake: boolean } }).notification.wake))
+      .toEqual([false, false, false]);
+  });
+
+  it("rejects malformed addresses and a caller from the wrong host", () => {
+    expect(() => sendMessage(ctx, peer, params(["not an address"]))).toThrow(RpcFault);
+    expect(() => sendMessage(ctx, { host: "server" }, params(["b@laptop"]))).toThrow("session does not belong");
+    expect(() => listInbox(ctx, { host: "server" }, Methods["inbox.list"].parse({ session_id: "b" }))).toThrow("session does not belong");
+    expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 0 });
+  });
+
+  it("rolls back every recipient sequence and all rows if a delivery insert fails", () => {
+    db.exec(`CREATE TRIGGER fail_delivery BEFORE INSERT ON deliveries WHEN NEW.session_id = 'c'
+      BEGIN SELECT RAISE(ABORT, 'injected delivery failure'); END`);
+    expect(() => sendMessage(ctx, peer, params(["b@laptop", "c@server"]))).toThrow("injected delivery failure");
+    for (const table of ["messages", "message_targets", "deliveries"]) {
+      expect(db.prepare(`SELECT count(*) AS n FROM ${table}`).get()).toEqual({ n: 0 });
+    }
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'b'").get()).toEqual({ next_seq: 1 });
+    expect(events).toEqual([]);
+    db.exec("DROP TRIGGER fail_delivery");
+    sendMessage(ctx, peer, params(["b@laptop", "c@server"]));
+    expect(inbox().headers.map((header) => header.seq)).toEqual([1]);
+  });
+
+  it("replays a lost acknowledgement without recomputing recipients, allocating sequences or emitting events", () => {
+    const original = params(["@role:executor"]);
+    const first = sendMessage(ctx, peer, original);
+    markReceipt(ctx, peer, { session_id: "b", ids: [first.id], state: "read" });
+    db.prepare("UPDATE sessions SET ended_at = ? WHERE id = 'b'").run(NOW);
+    db.prepare("DELETE FROM memberships WHERE session_id = 'c'").run();
+    const eventCount = events.length;
+    expect(sendMessage(ctx, peer, original)).toEqual({ id: first.id, deliveries: { b: "read", c: "unread" }, replayed: true });
+    expect(events).toHaveLength(eventCount);
+    expect(db.prepare("SELECT count(*) AS n FROM deliveries").get()).toEqual({ n: 2 });
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'c'").get()).toEqual({ next_seq: 2 });
+  });
+
+  it("rejects idempotency-key reuse for changed content or another caller", () => {
+    const original = params(["b@laptop"]);
+    const first = sendMessage(ctx, peer, original);
+    expect(() => sendMessage(ctx, peer, { ...original, message: { ...original.message, body: "changed" } }))
+      .toThrow("idempotency key already used");
+    expect(() => sendMessage(ctx, peer, { ...original, session_id: "b" })).toThrow("idempotency key already used");
+    expect(sendMessage(ctx, peer, { ...original, message: { ...original.message, to: [" B@LAPTOP ", "b@laptop"] } }))
+      .toMatchObject({ id: first.id, replayed: true });
+    expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 1 });
+  });
+
+  it("derives reply thread and increasing hops, rejecting an inaccessible parent", () => {
+    const root = sendMessage(ctx, peer, params(["b@laptop"]));
+    expect(() => sendMessage(ctx, { host: "server" }, params(["a@laptop"], { reply_to: root.id }, "c")))
+      .toThrow("reply parent is not accessible");
+    let parentId = root.id;
+    for (let hop = 1; hop <= 4; hop++) {
+      const sender = hop % 2 === 1 ? "b" : "a";
+      const to = sender === "a" ? "b@laptop" : "a@laptop";
+      const reply = sendMessage(ctx, peer, params([to], { reply_to: parentId, thread_id: "forged-thread", hops: 0 }, sender));
+      expect(stored(reply.id)).toMatchObject({ thread_id: root.id, reply_to: parentId, hops: hop });
+      parentId = reply.id;
+    }
+    const last = events.at(-1)?.data as { notification: { wake: boolean } };
+    expect(last.notification.wake).toBe(false);
+  });
+
+  it("paginates with gap-free sequences and does not mark listed headers read", () => {
+    for (let i = 0; i < 3; i++) sendMessage(ctx, peer, params(["b@laptop"], { body: `${"😀".repeat(210)}\nignored` }));
+    const first = inbox("b", { limit: 2 });
+    expect(first.headers.map((header) => header.seq)).toEqual([1, 2]);
+    expect(first).toMatchObject({ cursor: 2, more: true });
+    expect(Array.from(first.headers[0]?.preview ?? "")).toHaveLength(200);
+    const second = inbox("b", { since_seq: first.cursor, limit: 2 });
+    expect(second.headers.map((header) => header.seq)).toEqual([3]);
+    expect(second).toMatchObject({ cursor: 3, more: false });
+    expect(inbox("b", { since_seq: second.cursor })).toEqual({ headers: [], cursor: 3, more: false });
+    expect(inbox("b", { unread_only: true }).headers).toHaveLength(3);
+    expect(Results["inbox.list"].safeParse(first).success).toBe(true);
+  });
+
+  it("returns oldest unread even with a cursor and preserves the sixth header after packing", () => {
+    for (let i = 0; i < 6; i++) sendMessage(ctx, peer, params(["b@laptop"]));
+    const first = inbox("b", { unread_only: true, since_seq: 999 });
+    expect(first.headers.map((header) => header.seq)).toEqual([1, 2, 3, 4, 5, 6]);
+    const packed = packHeaders(first.headers);
+    expect(packed.shown).toHaveLength(5);
+    markReceipt(ctx, peer, { session_id: "b", ids: packed.shown.map((header) => header.id), state: "read" });
+    const afterRestart = listInbox({ ...ctx }, peer, Methods["inbox.list"].parse({ session_id: "b", since_seq: 999, unread_only: true }));
+    expect(afterRestart.headers.map((header) => [header.id, header.seq])).toEqual([["message-6", 6]]);
+  });
+
+  it("read and ack affect only the caller's deliveries, and unread retries never revert read", () => {
+    const first = sendMessage(ctx, peer, params(["b@laptop", "c@server"]));
+    const onlyC = sendMessage(ctx, peer, params(["c@server"]));
+    expect(() => readMessage(ctx, peer, { session_id: "a", id: first.id })).toThrow("not in this session's inbox");
+    expect(() => readMessage(ctx, peer, { session_id: "b", id: onlyC.id })).toThrow("not in this session's inbox");
+    expect(readMessage(ctx, peer, { session_id: "b", id: first.id })).toEqual({ message: stored(first.id), state: "read" });
+    const eventCount = events.length;
+    readMessage(ctx, peer, { session_id: "b", id: first.id });
+    expect(markReceipt(ctx, peer, { session_id: "b", ids: [first.id, onlyC.id, "missing"], state: "unread" })).toEqual({ ok: true });
+    markReceipt(ctx, peer, { session_id: "b", ids: [onlyC.id], state: "read" });
+    expect(events).toHaveLength(eventCount);
+    expect(inbox().headers[0]?.state).toBe("read");
+    expect(inbox("c").headers.map((header) => header.state)).toEqual(["unread", "unread"]);
+    expect(markReceipt(ctx, { host: "server" }, { session_id: "c", ids: [first.id, first.id], state: "read" })).toEqual({ ok: true });
+    expect(inbox("c").headers.map((header) => header.state)).toEqual(["read", "unread"]);
+    expect(events.at(-1)).toMatchObject({ type: "delivery.read", data: { session_id: "c", message_id: first.id, state: "read", cause: "ack" } });
+  });
+
+  it("rejects host spoofing for read and receipt changes", () => {
+    const sent = sendMessage(ctx, peer, params(["c@server"]));
+    expect(() => readMessage(ctx, peer, { session_id: "c", id: sent.id })).toThrow(RpcFault);
+    try {
+      markReceipt(ctx, peer, { session_id: "c", ids: [sent.id], state: "read" });
+      throw new Error("expected authorization failure");
+    } catch (error) {
+      expect(error).toMatchObject({ code: errors.unauthorized });
+    }
+    expect(inbox("c").headers[0]?.state).toBe("unread");
+  });
+
+  it("keeps the sender's original handle in messages, headers and replay after a rename", () => {
+    const original = params(["b@laptop"]);
+    const sent = sendMessage(ctx, peer, original);
+    db.prepare("UPDATE sessions SET name = 'renamed', handle = 'renamed@laptop' WHERE id = 'a'").run();
+    expect(stored(sent.id).from).toBe("a@laptop");
+    expect(inbox().headers[0]?.from).toBe("a@laptop");
+    expect(sendMessage(ctx, peer, original)).toMatchObject({ id: sent.id, replayed: true });
+    resyncDeliveries(ctx, peer, { acked: { b: 0 } });
+    expect(events.at(-1)).toMatchObject({ type: "deliver", data: { notification: { message: { from: "a@laptop" } } } });
+    // Older hand-written fixtures have no immutable handle; keep them readable.
+    db.prepare("UPDATE messages SET from_handle = '' WHERE id = ?").run(sent.id);
+    expect(stored(sent.id).from).toBe("renamed@laptop");
+    expect(inbox().headers[0]?.from).toBe("renamed@laptop");
+  });
+
+  it("stores wake once and filters waking headers without changing the historical decision", () => {
+    sendMessage(ctx, peer, params(["b@laptop"]));
+    sendMessage(ctx, peer, params(["b@laptop"], { priority: "fyi" }));
+    sendMessage(ctx, peer, params(["b@laptop"], { kind: "topic" }));
+    db.prepare("UPDATE sessions SET wake = 'off' WHERE id = 'b'").run();
+    sendMessage(ctx, peer, params(["b@laptop"]));
+    sendMessage(ctx, peer, params(["b@laptop"], { origin: "human", force_wake: true }));
+    db.prepare("UPDATE sessions SET wake = 'on' WHERE id = 'b'").run();
+    sendMessage(ctx, peer, params(["b@laptop"], { priority: "fyi", origin: "human", force_wake: true }));
+    expect(inbox().headers.map((header) => header.wake)).toEqual([true, false, false, false, false, true]);
+    expect(inbox("b", { unread_only: true, waking_only: true, since_seq: 999 }).headers.map((header) => header.seq)).toEqual([1, 6]);
+    expect(inbox("b", { waking_only: true, since_seq: 1, limit: 1 })).toMatchObject({ cursor: 6, more: false });
+    expect(events.filter((event) => event.type === "delivery.created").map((event) => (event.data as { wake: boolean }).wake))
+      .toEqual([true, false, false, false, false, true]);
+    db.prepare("UPDATE sessions SET wake = 'off' WHERE id = 'b'").run();
+    // Stop checks current DND separately; headers preserve the decision made at send time.
+    expect(inbox("b", { waking_only: true }).headers.map((header) => header.seq)).toEqual([1, 6]);
+    db.prepare("UPDATE sessions SET wake = 'on' WHERE id = 'b'").run();
+    const beforeResync = events.length;
+    expect(resyncDeliveries(ctx, peer, { acked: { b: 0 } })).toEqual({ replayed: 6 });
+    expect(events.slice(beforeResync).map((event) => (event.data as { notification: { wake: boolean } }).notification.wake))
+      .toEqual([true, false, false, false, false, true]);
+  });
+
+  it("replays a delivery missed while offline without allocating seq or marking it read", () => {
+    const received: unknown[] = [];
+    const disconnect = ctx.events.subscribe((event) => {
+      if (event.type === "deliver") received.push(event.data);
+    });
+    disconnect();
+    const sent = sendMessage(ctx, peer, params(["b@laptop"]));
+    expect(received).toEqual([]);
+    const before = db.prepare("SELECT * FROM deliveries WHERE session_id = 'b'").all();
+    ctx.events.subscribe((event) => { if (event.type === "deliver") received.push(event.data); });
+    expect(resyncDeliveries(ctx, peer, { acked: { b: 0 } })).toEqual({ replayed: 1 });
+    expect(received).toMatchObject([{ host: "laptop", notification: { message: { id: sent.id }, session_id: "b", seq: 1, wake: true } }]);
+    expect(db.prepare("SELECT * FROM deliveries WHERE session_id = 'b'").all()).toEqual(before);
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'b'").get()).toEqual({ next_seq: 2 });
+    expect(events.filter((event) => event.type === "message.sent")).toHaveLength(1);
+    expect(events.filter((event) => event.type === "delivery.created")).toHaveLength(1);
+    expect(resyncDeliveries(ctx, peer, { acked: { b: 1 } })).toEqual({ replayed: 0 });
+    expect(received).toHaveLength(1);
+  });
+
+  it("resync skips marked-read and acknowledged deliveries and applies current DND", () => {
+    sendMessage(ctx, peer, params(["b@laptop"]));
+    const read = sendMessage(ctx, peer, params(["b@laptop"]));
+    const pending = sendMessage(ctx, peer, params(["b@laptop"]));
+    markReceipt(ctx, peer, { session_id: "b", ids: [read.id], state: "read" });
+    db.prepare("UPDATE sessions SET wake = 'off' WHERE id = 'b'").run();
+    const previousCount = events.length;
+    expect(resyncDeliveries(ctx, peer, { acked: { b: 1 } })).toEqual({ replayed: 1 });
+    expect(events.slice(previousCount)).toMatchObject([
+      { type: "deliver", data: { notification: { message: { id: pending.id }, seq: 3, wake: false } } },
+    ]);
+    expect(inbox().headers.at(-1)).toMatchObject({ state: "unread", wake: true });
+    db.prepare("UPDATE sessions SET wake = 'on' WHERE id = 'b'").run();
+    expect(resyncDeliveries(ctx, peer, { acked: { b: 1 } })).toEqual({ replayed: 1 });
+    expect(events.at(-1)).toMatchObject({ type: "deliver", data: { notification: { seq: 3, wake: true } } });
+    expect(resyncDeliveries(ctx, peer, { acked: { b: 3 } })).toEqual({ replayed: 0 });
+    expect(events.filter((event) => event.type === "delivery.created")).toHaveLength(3);
+  });
+
+  it("authorizes every resync session before emitting anything", () => {
+    sendMessage(ctx, peer, params(["b@laptop", "c@server"]));
+    const eventCount = events.length;
+    expect(() => resyncDeliveries(ctx, peer, { acked: { b: 0, c: 0 } })).toThrow("session does not belong");
+    expect(() => resyncDeliveries(ctx, peer, { acked: { b: 0, missing: 0 } })).toThrow("session does not belong");
+    expect(() => resyncDeliveries(ctx, {}, { acked: {} })).toThrow("hello required");
+    expect(events).toHaveLength(eventCount);
+    expect(resyncDeliveries(ctx, peer, { acked: {} })).toEqual({ replayed: 0 });
+    expect(inbox().headers[0]?.state).toBe("unread");
+  });
+});
+
+describe("wake rule", () => {
+  it.each([
+    { name: "normal DM", message: {}, wake: "on", expected: true },
+    { name: "normal request", message: { kind: "request" }, wake: "on", expected: true },
+    { name: "DM at hop limit", message: { hops: 3 }, wake: "on", expected: true },
+    { name: "request at hop limit", message: { kind: "request", hops: 3 }, wake: "on", expected: true },
+    { name: "DM beyond hop limit", message: { hops: 4 }, wake: "on", expected: false },
+    { name: "request beyond hop limit", message: { kind: "request", hops: 4 }, wake: "on", expected: false },
+    { name: "FYI DM", message: { priority: "fyi" }, wake: "on", expected: false },
+    { name: "FYI request", message: { kind: "request", priority: "fyi" }, wake: "on", expected: false },
+    { name: "agent force flag", message: { priority: "fyi", force_wake: true }, wake: "on", expected: false },
+    { name: "human without force", message: { origin: "human", priority: "fyi" }, wake: "on", expected: false },
+    { name: "human override for DM", message: { origin: "human", force_wake: true, priority: "fyi", hops: 4 }, wake: "on", expected: true },
+    { name: "human override for request", message: { kind: "request", origin: "human", force_wake: true, priority: "fyi", hops: 4 }, wake: "on", expected: true },
+    { name: "topic", message: { kind: "topic" }, wake: "on", expected: false },
+    { name: "broadcast", message: { kind: "broadcast" }, wake: "on", expected: false },
+    { name: "human override on topic", message: { kind: "topic", origin: "human", force_wake: true }, wake: "on", expected: false },
+    { name: "human override on broadcast", message: { kind: "broadcast", origin: "human", force_wake: true }, wake: "on", expected: false },
+    { name: "DND DM", message: {}, wake: "off", expected: false },
+    { name: "DND request", message: { kind: "request" }, wake: "off", expected: false },
+    { name: "DND human override", message: { origin: "human", force_wake: true }, wake: "off", expected: false },
+  ] as const)("$name", ({ message, wake, expected }) => {
+    const input = Message.parse({ from: "a@laptop", to: ["b@laptop"], body: "hello", ...message });
+    expect(shouldWake({ wake }, input)).toBe(expected);
+  });
+});

@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-25",
+  "claude_version": "2.1.310",
+  "node_version": "v24.19.0",
+  "scope": "Production MCP survival and partial M1; not full E2E",
+  "mcp_survival": {
+    "daemon_pid": 92901,
+    "daemon_started_at": "2026-10-25T20:47:24.393Z",
+    "observed_after_probe_exit_at": "2026-10-25T20:49:34.566331+00:00",
+    "seconds_since_daemon_start": 130.173331,
+    "probe_exited_successfully": true,
+    "probe_tool": "mcp__kommutator__status",
+    "probe_plugin_loaded": false,
+    "probe_had_no_registered_sessions": true,
+    "passed": true
+  },
+  "m1": {
+    "status": "blocked_pending_project_trust_approval",
+    "author_identity_matches_expected": true,
+    "sessions": [
+      {
+        "id": "47631110-b4ae-4150-b483-56042d588081",
+        "handle": "author@m1-mac",
+        "vendor_session_id": "8631a92e-118a-479d-b975-cfbe51ce32c0",
+        "state": "gone",
+        "capability": "native",
+        "cwd": "/Users/REDACTED/kommutator",
+        "ended_at": "2026-10-25T20:52:57.895Z"
+      },
+      {
+        "id": "60df9884-df1b-48c9-a286-ef6a05768675",
+        "handle": "claude-code-kommutator-2@m1-mac",
+        "vendor_session_id": "522f1c96-aa3d-41f5-8f60-ab8e17d53034",
+        "state": "gone",
+        "capability": "hook",
+        "cwd": "/Users/REDACTED/kommutator",
+        "ended_at": "2026-10-25T20:52:59.828Z"
+      }
+    ],
+    "boards": [
+      {
+        "topic": "project:kommutator",
+        "key": "decisions",
+        "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]",
+        "version": 1
+      }
+    ],
+    "message_count": 0,
+    "tool_calls": [
+      {
+        "at": "2026-10-25T20:50:03.882Z",
+        "name": "mcp__kommutator__whoami",
+        "input": {}
+      },
+      {
+        "at": "2026-10-25T20:50:06.616Z",
+        "name": "mcp__kommutator__set_status",
+        "input": {
+          "name": "author",
+          "role": "author",
+          "wake": "on",
+          "status_line": "M1 waiting for reviewer"
+        }
+      },
+      {
+        "at": "2026-10-25T20:50:09.032Z",
+        "name": "mcp__kommutator__whoami",
+        "input": {}
+      },
+      {
+        "at": "2026-10-25T20:50:09.458Z",
+        "name": "mcp__kommutator__board_get",
+        "input": {
+          "topic": "project:kommutator",
+          "key": "decisions"
+        }
+      },
+      {
+        "at": "2026-10-25T20:50:12.353Z",
+        "name": "mcp__kommutator__board_put",
+        "input": {
+          "topic": "project:kommutator",
+          "key": "decisions",
+          "body": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+        }
+      },
+      {
+        "at": "2026-10-25T20:50:15.089Z",
+        "name": "mcp__kommutator__board_get",
+        "input": {
+          "topic": "project:kommutator",
+          "key": "decisions"
+        }
+      }
+    ],
+    "ready_output": [
+      {
+        "at": "2026-10-25T20:50:18.797Z",
+        "text": "[REDACTED conversation payload; conclusions retained in RESULTS.md]"
+      }
+    ],
+    "missing": [
+      "second live session",
+      "native DM wake and threaded reply",
+      "both sessions reading decisions",
+      "handoff entry"
+    ]
+  },
+  "blocker": {
+    "action": "Confirm Yes, I trust this folder for the second Claude session",
+    "reason": "Automatic approval review required explicit consent for persistent project trust in ~/.claude.json",
+    "first_session_trust_restored": true
+  },
+  "cleanup": {
+    "processes": [
+      {
+        "pid": 92901,
+        "absent": true
+      },
+      {
+        "pid": 92863,
+        "absent": true
+      },
+      {
+        "pid": 92860,
+        "absent": true
+      },
+      {
+        "pid": 92874,
+        "absent": true
+      },
+      {
+        "pid": 92916,
+        "absent": true
+      },
+      {
+        "pid": 92927,
+        "absent": true
+      }
+    ],
+    "normal_claude_history_preserved": true
+  },
+  "dashboard": {
+    "browser": "151.0.7922.34",
+    "connected": true,
+    "public_event_count": 19
+  },
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

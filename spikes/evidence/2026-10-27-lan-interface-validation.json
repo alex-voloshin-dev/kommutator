@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-27",
+  "method": "New-NetFirewallRule -WhatIf; read-only interface validation",
+  "actual_apply_error": "The specified interface was not found on the system.",
+  "rollback_observed": {
+    "owned_state": false,
+    "owned_rules": 0,
+    "listeners": [
+      "127.0.0.1:8787"
+    ]
+  },
+  "interfaces": [
+    {
+      "Alias": "Any",
+      "Accepted": true
+    },
+    {
+      "Alias": "Local Area Connection* 1",
+      "Accepted": true
+    },
+    {
+      "Alias": "Local Area Connection* 8",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "REDACTED-LAN",
+      "Accepted": true
+    },
+    {
+      "Alias": "Local Area Connection* 10",
+      "Accepted": true
+    },
+    {
+      "Alias": "Local Area Connection* 3",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Bluetooth Network Connection",
+      "Accepted": true
+    },
+    {
+      "Alias": "Teredo Tunneling Pseudo-Interface",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Local Area Connection* 2",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Local Area Connection* 7",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Wi-Fi",
+      "Accepted": true
+    },
+    {
+      "Alias": "Ethernet (Kernel Debugger)",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Local Area Connection* 4",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Local Area Connection* 5",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "vpn25",
+      "Accepted": true
+    },
+    {
+      "Alias": "Microsoft IP-HTTPS Platform Interface",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "vSwitch (WSL (Hyper-V firewall))",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Local Area Connection* 9",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "Local Area Connection* 6",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "6to4 Adapter",
+      "Accepted": false,
+      "Error": "The specified interface was not found on the system.\r\n"
+    },
+    {
+      "Alias": "vEthernet (WSL (Hyper-V firewall))",
+      "Accepted": true
+    }
+  ],
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

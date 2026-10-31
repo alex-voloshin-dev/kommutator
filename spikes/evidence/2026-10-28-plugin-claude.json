@@ -1,0 +1,39 @@
+{
+  "artifact": "/tmp/kom-plugin-export-v8/plugins/claude-code",
+  "version": "2.1.310",
+  "command": [
+    "claude",
+    "-p",
+    "--input-format",
+    "stream-json",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--no-session-persistence",
+    "--setting-sources",
+    "",
+    "--debug-file",
+    "/tmp/kom-claude-export-v8-yo6rfkh6/debug.log",
+    "--plugin-dir",
+    "/tmp/kom-plugin-export-v8/plugins/claude-code"
+  ],
+  "pid": 95169,
+  "contexts": [
+    {
+      "file": "62802985bbf2ce189d2dc233d996e53395b7f01c6172722d11ad7e5170b7c740.json",
+      "body": {
+        "cwd": "/tmp/kom-claude-export-v8-yo6rfkh6/workspace"
+      },
+      "mode": "0o600"
+    }
+  ],
+  "logs": {
+    "redacted": true,
+    "reason": "Raw transcript, machine-specific trust inventory or discovery output; original retained privately."
+  },
+  "scope": "Isolated HOME, CLAUDE_CONFIG_DIR and KOM_HOME; no model prompt",
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

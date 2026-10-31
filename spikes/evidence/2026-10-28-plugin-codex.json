@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-28",
+  "timezone": "America/New_York",
+  "artifact": "local linux-x64 export v8",
+  "codex_version": "codex-cli 0.164.0",
+  "install": [
+    {
+      "command": [
+        "codex",
+        "plugin",
+        "marketplace",
+        "add"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "codex",
+        "plugin",
+        "add",
+        "kommutator@kommutator-local"
+      ],
+      "exit": 0
+    }
+  ],
+  "mcp": {
+    "runtimeStatus": "connected",
+    "tool_count": 16
+  },
+  "hooks": [
+    {
+      "event": "postToolUse",
+      "source": "plugin",
+      "trust": "trusted"
+    },
+    {
+      "event": "sessionStart",
+      "source": "plugin",
+      "trust": "trusted"
+    },
+    {
+      "event": "sessionEnd",
+      "source": "plugin",
+      "trust": "trusted"
+    },
+    {
+      "event": "userPromptSubmit",
+      "source": "plugin",
+      "trust": "trusted"
+    },
+    {
+      "event": "stop",
+      "source": "plugin",
+      "trust": "trusted"
+    }
+  ],
+  "trust_method": "Disposable config/batchWrite with separate exact trusted_hash and trusted_content_hash; no bypass",
+  "context_checks": [
+    {
+      "thread_id": "01a1854a-6f7d-7803-b872-2c5d7229b1af",
+      "file": "c7182134f2984c0654acc2ef2fe21dbd2a46a2a84b6c81328a6c62fe3d3f4503.json",
+      "cwd_correct": true,
+      "mode": "0o600"
+    },
+    {
+      "thread_id": "01a1854a-6fb3-7eb0-b031-c44dd9d3f3d1",
+      "file": "6cfaf3560306f4c5a7bea90e3a5fb2a3f475e6a5475aeeda89cfbee043372a04.json",
+      "cwd_correct": true,
+      "mode": "0o600"
+    }
+  ],
+  "hook_durations_ms": [
+    {
+      "threadId": "01a1854a-6fb3-7eb0-b031-c44dd9d3f3d1",
+      "event": "sessionStart",
+      "durationMs": 751,
+      "status": "completed"
+    },
+    {
+      "threadId": "01a1854a-6f7d-7803-b872-2c5d7229b1af",
+      "event": "sessionStart",
+      "durationMs": 749,
+      "status": "completed"
+    },
+    {
+      "threadId": "01a1854a-6f7d-7803-b872-2c5d7229b1af",
+      "event": "userPromptSubmit",
+      "durationMs": 722,
+      "status": "completed"
+    },
+    {
+      "threadId": "01a1854a-6fb3-7eb0-b031-c44dd9d3f3d1",
+      "event": "userPromptSubmit",
+      "durationMs": 730,
+      "status": "completed"
+    }
+  ],
+  "scope": "No auth loaded; first turn initiated only to trigger trusted hooks; API unauthorized, no model result claimed",
+  "public_redaction": {
+    "date": "2026-10-29",
+    "notice": "Curated evidence, not original raw capture. Personal paths/interfaces/endpoints replaced by placeholders; raw transcripts, trust inventories and executable excerpts omitted. Originals retained privately. Documentation IPs are not measured endpoints. See ../RESULTS.md for conclusions and limitations."
+  }
+}

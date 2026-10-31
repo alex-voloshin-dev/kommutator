@@ -1,0 +1,27 @@
+{
+  "name": "kommutator-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "kommutator \u2014 self-hosted cross-vendor message hub for coding-agent sessions",
+  "packageManager": "pnpm@10.18.0",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r build && pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r clean",
+    "test:hub-smoke": "node scripts/smoke-hub.mjs",
+    "version:sync": "node scripts/sync-version.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "test:hub-helper": "node --test scripts/hub.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.12"
+  },
+  "license": "MIT"
+}
