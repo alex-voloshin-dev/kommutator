@@ -169,3 +169,39 @@ test('runner accepts only the qualified fail-closed Code Mode advisory', async t
   await assert.rejects(run(advisory, 'turn.failed'), /analysis failed/);
   await assert.rejects(run(advisory, 'item.completed', 'command_execution'), /analysis failed/);
 });
+
+test('maintainer reports reuse durable replay keys after lost message acknowledgement', async t => {
+  const { MaintainerQueue } = await import('./lib/feedback-maintainer.mjs');
+  const f = await fixture(t);
+  const source = await f.send('A real diagnostic issue.');
+  const resultDb = join(f.directory, 'maintainer.db');
+  const queue = new MaintainerQueue(resultDb, { repository: 'test', topic: 'kommutator feedback', observerDb: join(f.directory, 'observer.db') });
+  t.after(() => queue.close());
+  queue.transition({ id: source.id, attempt: 1 }, 'answered', 'Verified and explained.');
+  f.observer.resultDb = resultDb;
+  f.lose('message.send');
+  await f.observer.publishMaintainerReports();
+  await f.observer.publishMaintainerReports();
+  await f.observer.publishMaintainerReports();
+  assert.equal(f.replies().filter(row => row.body.includes('Verified and explained.')).length, 1);
+});
+
+test('observer backfills exact-key-redacted input for optional maintainer', async t => {
+  const f = await fixture(t);
+  await f.send('Diagnostic key synthetic-observer-secret-key');
+  await f.observer.tick(); await f.observer.tick();
+  const job = f.journal.jobs().find(item => item.message?.body.includes('Diagnostic key'));
+  assert.ok(job.sanitizedMessage.body.includes('[REDACTED]'));
+  assert.ok(!JSON.stringify(job.sanitizedMessage).includes('synthetic-observer-secret-key'));
+});
+
+test('optional report failures cannot stop heartbeat and new inbox capture', async t => {
+  const f = await fixture(t);
+  f.observer.publishMaintainerReports = async () => { throw new Error('protected report'); };
+  const sent = await f.send('Another real feedback report.');
+  await f.observer.tick();
+  assert.ok(f.journal.jobs().some(job => job.id === sent.id));
+  assert.ok(f.journal.get('cursor') > 0);
+  assert.ok(f.journal.get('last_poll'));
+  assert.match(f.journal.get('last_report_error'), /ingestion continues/);
+});

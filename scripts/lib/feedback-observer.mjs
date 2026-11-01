@@ -72,7 +72,7 @@ export class Journal {
     const counts = {};
     for (const job of this.jobs()) counts[job.stage] = (counts[job.stage] ?? 0) + 1;
     return { session: this.get('session')?.handle ?? null, last_poll: this.get('last_poll') ?? null,
-      last_error: this.get('last_error') ?? null, jobs: counts, cursor: this.get('cursor') ?? 0 };
+      last_error: this.get('last_error') ?? null, last_report_error: this.get('last_report_error') ?? null, jobs: counts, cursor: this.get('cursor') ?? 0 };
   }
   close() { this.db.close(); }
 }
@@ -154,9 +154,9 @@ export function codexAnalyzer(options) {
 }
 
 export class FeedbackObserver {
-  constructor({ link, journal, topic, host, analyze, key = '', now = Date.now, cooldownMs = 60_000, log = console.log }) {
+  constructor({ link, journal, topic, host, analyze, key = '', now = Date.now, cooldownMs = 60_000, log = console.log, resultDb }) {
     this.link = link; this.journal = journal; this.topic = topic; this.host = host; this.analyze = analyze;
-    this.key = key; this.now = now; this.cooldownMs = cooldownMs; this.log = log;
+    this.resultDb = resultDb; this.key = key; this.now = now; this.cooldownMs = cooldownMs; this.log = log;
     this.ready = false; this.stopped = false; this.capturing = false; this.working = false; this.abort = new AbortController(); this.ticks = new Set();
   }
   async rpc(method, params) {
@@ -190,6 +190,10 @@ export class FeedbackObserver {
     if (this.stopped || !this.ready || !this.link.connected || this.capturing) return;
     this.capturing = true;
     try {
+      for (const job of this.journal.jobs()) if (job.message && !job.sanitizedMessage) {
+        job.sanitizedMessage = { from: redact(job.message.from, this.key), subject: redact(job.message.subject ?? '', this.key), body: redact(job.message.body, this.key) };
+        this.journal.save(job);
+      }
       const session = this.journal.get('session');
       await this.rpc('session.heartbeat', { session_id: session.id, state: this.working ? 'active' : 'idle' });
       for (let page = 0; page < 10; page++) {
@@ -201,6 +205,8 @@ export class FeedbackObserver {
     } catch {
       this.journal.set('last_error', 'hub request failed; pending work retained');
     } finally { this.capturing = false; }
+    try { await this.publishMaintainerReports(); }
+    catch { this.journal.set('last_report_error', 'maintainer reports unavailable; ingestion continues'); }
     if (!this.working && !this.stopped) {
       this.work = this.processNext();
       await this.work;
@@ -255,6 +261,42 @@ export class FeedbackObserver {
       job.nextAt = this.now() + 30_000; this.journal.save(job);
       this.journal.set('last_error', 'delivery or board update failed; original replay keys retained');
     } finally { this.working = false; }
+  }
+  async publishMaintainerReports() {
+    if (!this.resultDb) return;
+    let source;
+    try { source = new DatabaseSync(this.resultDb, { readOnly: true }); }
+    catch { return; } // Maintainer may not have created its queue yet.
+    let reports;
+    try { reports = source.prepare('SELECT data FROM reports ORDER BY rowid').all().map(row => JSON.parse(row.data)); }
+    finally { source.close(); }
+    const session = this.journal.get('session');
+    let failed = false;
+    for (const report of reports) {
+      if (this.stopped) return;
+      try {
+        if (!/^[a-f0-9-]{36}$/.test(report.id) || !/^[a-f0-9-]{36}$/.test(report.source) ||
+            !['queued', 'running', 'answered', 'released', 'blocked'].includes(report.status) ||
+            typeof report.summary !== 'string' || report.summary.length > 8000) throw new Error('invalid maintainer report');
+        const key = `maintainer-report:${report.id}`;
+        const saved = this.journal.get(key) ?? { boardOp: randomUUID(), replyKey: randomUUID(), boardDone: false, done: false };
+        if (saved.done) continue;
+        this.journal.set(key, saved);
+        const boardKey = `feedback-maintainer/${report.id}`;
+        const body = `Source: ${report.source}\nStatus: ${report.status}\n\n${redact(report.summary, this.key)}`;
+        if (!saved.boardDone) {
+          const { entries } = await this.rpc('board.get', { session_id: session.id, topic: this.topic, key: boardKey });
+          if (entries.some(entry => entry.protected)) throw new Error('protected maintainer entry');
+          await this.rpc('board.put', { session_id: session.id, topic: this.topic, key: boardKey, body, op_id: saved.boardOp });
+          saved.boardDone = true; this.journal.set(key, saved);
+        }
+        await this.rpc('message.send', { session_id: session.id, idempotency_key: saved.replyKey,
+          message: { from: '', to: [`topic:${this.topic}`], kind: 'topic', priority: 'fyi',
+            subject: `Feedback maintainer: ${report.status}`, body, reply_to: report.source } });
+        saved.done = true; this.journal.set(key, saved);
+      } catch { failed = true; this.journal.set('last_report_error', 'maintainer report retained after publication failure'); }
+    }
+    if (!failed) this.journal.set('last_report_error', null);
   }
   async close() {
     this.stopped = true; this.abort.abort();

@@ -15,7 +15,7 @@ function options(argv) {
     config: join(process.env.KOM_HOME ?? join(homedir(), '.kommutator'), 'config.json'),
     topic: 'kommutator feedback', pollMs: 15_000, cooldownMs: 60_000, timeoutMs: 180_000 };
   if (!['run', '_worker', 'status', 'retry'].includes(result.command)) throw new Error('invalid command');
-  const flags = { '--state-dir': 'stateDir', '--config': 'config', '--topic': 'topic', '--codex': 'codex', '--model': 'model', '--effort': 'effort', '--poll-ms': 'pollMs', '--cooldown-ms': 'cooldownMs', '--timeout-ms': 'timeoutMs' };
+  const flags = { '--result-db': 'resultDb', '--state-dir': 'stateDir', '--config': 'config', '--topic': 'topic', '--codex': 'codex', '--model': 'model', '--effort': 'effort', '--poll-ms': 'pollMs', '--cooldown-ms': 'cooldownMs', '--timeout-ms': 'timeoutMs' };
   for (let index = 1; index < argv.length; index += 2) {
     const key = flags[argv[index]], value = argv[index + 1];
     if (!key || !value || value.length > 1024) throw new Error('invalid option');
@@ -66,7 +66,7 @@ async function main() {
   }
   const link = new HubLink({ ...config, host }, () => console.error('feedback observer: hub disconnected; reconnecting'));
   const observer = new FeedbackObserver({ link, journal, host, topic: opts.topic, key: config.key,
-    analyze: codexAnalyzer(opts), cooldownMs: opts.cooldownMs });
+    analyze: codexAnalyzer(opts), resultDb: opts.resultDb, cooldownMs: opts.cooldownMs });
   let closing = false;
   const timer = setInterval(() => { void observer.tick().catch(() => console.error('feedback observer: processing failed; journal retained')); }, opts.pollMs);
   for (const signal of ['SIGTERM', 'SIGINT']) process.once(signal, () => {

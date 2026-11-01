@@ -36,3 +36,6 @@ operability tools, M2 Codex hook mode, opt-in subnet ingress and local plugin di
 Open acceptance is tracked in [ROADMAP](ROADMAP.md). The old
 [scaffold onboarding](sdlc/repo-onboarding/onboarding.md) and [MVP_PLAN](MVP_PLAN.md)
 retain historical snapshots. [Knowledge notes](knowledge/MOC.md) preserve decision rationale.
+
+Optional host-side feedback triage and autonomous maintenance are described in
+[the maintainer runbook](FEEDBACK_MAINTAINER.md); neither is a client installation prerequisite.

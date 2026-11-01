@@ -104,3 +104,6 @@ Tests use isolated production hub dispatch and SQLite, fake workers, and synthet
 never send feedback to the operator's real hub. See DESIGN's optional observer recovery
 contract and [Codex non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode).
 Long-duration availability, Windows reboot, and external subnet checks remain separate gates.
+
+For separately authorized engineering and publication, see the opt-in
+[feedback maintainer](FEEDBACK_MAINTAINER.md). It does not grant tools to this observer.

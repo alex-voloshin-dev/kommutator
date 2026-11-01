@@ -16,7 +16,8 @@
     "version:sync": "node scripts/sync-version.mjs",
     "release:check": "node scripts/release-check.mjs",
     "test:hub-helper": "node --test scripts/hub.test.mjs",
-    "test:feedback-observer": "node --test scripts/feedback-observer.test.mjs scripts/feedback-observer-process.test.mjs"
+    "test:feedback-observer": "node --test scripts/feedback-observer.test.mjs scripts/feedback-observer-process.test.mjs",
+    "test:feedback-maintainer": "node --test scripts/feedback-maintainer.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

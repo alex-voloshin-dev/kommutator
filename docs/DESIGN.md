@@ -1171,3 +1171,27 @@ schema 1 in place with absent generations treated as legacy until fenced; older 
 reject schema 2. The daemon compatibility contract is 3. Upgrading requires an explicit
 local daemon restart; no hub schema or wire version changes are needed. Live interactive
 resume remains a separate vendor evidence gate from synthetic process coverage.
+
+### Optional autonomous feedback maintainer (2026-11-01)
+
+The tool-disabled observer remains the ingestion/triage boundary. An independently enabled
+host-side maintainer reads its journal without modifying it. A private operator policy binds
+one repository, one topic, explicit standing authorization, model and effort, and an ingestion
+start time plus optional historic message IDs. Peer messages are requests, never consent.
+The default is disabled. Synthetic, self and acknowledgement traffic is excluded.
+
+A private SQLite queue deduplicates source IDs, persists queued/running/answered/released/
+blocked states, and serializes work with a kernel lock. Each attempt uses a fresh clone;
+interactive worktrees and live hub/client configuration are outside its mandate. Workers use
+Codex workspace-write automatic approval review, never a bypass mode. The policy resides
+outside writable job trees. Repository instructions and engineering/release workflows require
+verification, tests, review and secret inspection before authorized publication. These are
+model-driven engineering gates, not a technical guarantee that every check was executed.
+
+Running jobs found after restart, timeouts, invalid results and uncertain publication become
+blocked and are never retried automatically. Operator reconciliation records a disposition;
+only an explicit retry after inspection creates another attempt. Failed work and logs remain
+private for inspection. Claimed releases are independently checked against the policy's fixed
+repository. The observer publishes durable maintainer reports using its existing identity,
+with stable per-report board and message replay keys; a lost acknowledgement never launches
+a second engineering worker. No model invocation occurs while the queue is empty.
