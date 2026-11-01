@@ -1,7 +1,7 @@
 ---
 type: release
 feature: claude-resume-binding
-status: approved
+status: final
 version: '0.3.0'
 changelog:
   - 'Fix Claude in-process resume binding with owner generations'
@@ -42,7 +42,7 @@ preserving identities, queued operations and delivery data; older daemons reject
 The hub and its database do not need upgrading. Keep the existing private client key and
 configuration. Do not downgrade the daemon over the migrated local state.
 
-After this release is published, close the agent processes using kommutator, then run:
+Close the agent processes using kommutator, then run:
 
 ```sh
 claude plugin marketplace update kommutator
@@ -75,8 +75,8 @@ See [implementation](implementation.md), [QA](qa.md), and [review](review-code-3
 The published 0.2.2 artifact reproduced the stale-ID defect in the new synthetic process
 scenario. The final candidate passed the full release gate, including 386 workspace tests,
 44 script tests, both plugin smokes and the expanded exported-plugin E2E. Source/credential
-scans passed. Assets and tag are prepared but not published; this release is awaiting
-explicit publication authorization.
+scans passed. The user authorized publication of the prepared tag and checksum-pinned assets.
+Download them from the [v0.3.0 release](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.3.0).
 
 Live interactive Claude UI resume on the reporting computer, native wake after resume,
 macOS packages, Windows reboot and full-day operation are not established by the synthetic
