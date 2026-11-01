@@ -76,7 +76,7 @@ The published 0.2.2 artifact reproduced the stale-ID defect in the new synthetic
 scenario. The final candidate passed the full release gate, including 386 workspace tests,
 44 script tests, both plugin smokes and the expanded exported-plugin E2E. Source/credential
 scans passed. The user authorized publication of the prepared tag and checksum-pinned assets.
-Download them from the [v0.3.0 release](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.3.0).
+See [published verification](publication.md). Download the assets from the [v0.3.0 release](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.3.0).
 
 Live interactive Claude UI resume on the reporting computer, native wake after resume,
 macOS packages, Windows reboot and full-day operation are not established by the synthetic

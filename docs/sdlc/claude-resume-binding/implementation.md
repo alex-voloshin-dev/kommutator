@@ -89,5 +89,6 @@ failures were corrected, not waived; see [QA](qa.md) for the negative control an
 Correctness and security review approved the final change. The bounded external reviewer
 returned no verdict within its time budget and was skipped. Source/credential scans passed;
 two artifact findings were verified as public license checksums. Handoff headers and vault
-links validated. The prepared release remains unpublished pending explicit tag/publication
-authorization; production hub, daemon, user profiles and feedback observer were not changed.
+links validated. The user subsequently authorized publication; [published verification](publication.md)
+records public downloads, native CLI installation and CI results. Production hub, daemon,
+user profiles and feedback observer were not changed.
