@@ -5,7 +5,7 @@ import * as z from "zod";
 import { Session, Notifications } from "@kommutator/protocol";
 import type { LocalSession } from "./adapters/types.js";
 
-export const STATE_SCHEMA_VERSION = 1;
+export const STATE_SCHEMA_VERSION = 2;
 const execFileAsync = promisify(execFile);
 
 /** Process birth time closes the PID-reuse hole in the adapter's existence probe. */
@@ -18,6 +18,7 @@ export async function processStart(pid: number): Promise<string | undefined> {
 
 const LocalRecordSchema = z.object({
   key: z.string(), session: Session.extend({ handle: z.string().optional() }),
+  ownerGeneration: z.number().int().positive().optional(),
   pid: z.number().optional(), processStartedAt: z.string().optional(),
   endpoint: z.string().optional(), token: z.string().optional(), permissionMode: z.string().optional(),
   inboundPolicy: z.enum(["default", "accept", "hold", "refuse"]).optional(),
@@ -26,6 +27,7 @@ const LocalRecordSchema = z.object({
 });
 export interface LocalRecord extends LocalSession {
   key: string;
+  ownerGeneration?: number;
   session: z.infer<typeof LocalRecordSchema>["session"];
   acked: number;
   lastWake?: number;
@@ -45,7 +47,7 @@ export class Registry {
     this.db = new DatabaseSync(path);
     this.db.exec("PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     const version = z.object({ user_version: z.number() }).parse(this.db.prepare("PRAGMA user_version").get()).user_version;
-    if (version !== 0 && version !== STATE_SCHEMA_VERSION) { this.db.close(); throw new Error("unsupported agentd state schema"); }
+    if (version !== 0 && version !== 1 && version !== STATE_SCHEMA_VERSION) { this.db.close(); throw new Error("unsupported agentd state schema"); }
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS sessions (local_key TEXT PRIMARY KEY, record TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS outbox (
@@ -69,6 +71,7 @@ export class Registry {
       const value = LocalRecordSchema.parse(JSON.parse(z.object({ record: z.string() }).parse(row).record));
       return {
         key: value.key, session: value.session, acked: value.acked, stopBlocked: value.stopBlocked,
+        ...(value.ownerGeneration !== undefined ? { ownerGeneration: value.ownerGeneration } : {}),
         ...(value.pid !== undefined ? { pid: value.pid } : {}),
         ...(value.processStartedAt !== undefined ? { processStartedAt: value.processStartedAt } : {}),
         ...(value.endpoint !== undefined ? { endpoint: value.endpoint } : {}),

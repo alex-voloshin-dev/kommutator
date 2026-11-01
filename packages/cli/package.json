@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "name": "kommutator",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "kommutator \u2014 switchboard for coding agents. CLI, daemon, MCP shim and hooks in one binary: kom",
   "type": "module",
   "bin": {
@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --no-file-parallelism",
     "clean": "node -e \"require('node:fs').rmSync('dist', {recursive:true, force:true})\""
   },
   "dependencies": {

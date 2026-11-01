@@ -46,7 +46,7 @@ function owner(id) {
     const requestId = ++serial;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(requestId); reject(new Error(`Owner fixture timeout: ${action}`)); }, 15000);
-      pending.set(requestId, reply => { clearTimeout(timer); pending.delete(requestId); reply.error ? reject(new Error(reply.error)) : resolve(); });
+      pending.set(requestId, reply => { clearTimeout(timer); pending.delete(requestId); reply.error ? reject(new Error(reply.error)) : resolve(reply.result); });
       child.send({ id: requestId, action, ...payload });
     });
   } };
@@ -104,7 +104,7 @@ try {
   await hook('claude-code', 'claude-root-a', 'SessionStart', project, firstOwner);
   await hook('claude-code', 'claude-root-a', 'SessionStart', project, secondOwner);
   const claude = await client('claude-code', 'claude-root-a', firstOwner);
-  const author = (await claude.call('whoami')).session;
+  let author = (await claude.call('whoami')).session;
   assert.equal(author.vendor_session_id, 'claude-root-a'); assert.equal(author.cwd, project);
   const otherClaude = await client('claude-code', 'claude-root-a', secondOwner);
   const otherAuthor = (await otherClaude.call('whoami')).session;
@@ -139,6 +139,36 @@ try {
     assert.equal(current.incarnation, original.incarnation, 'A sweep must not force hook-only re-registration');
     assert.equal(current.status_line, status); assert.notEqual(current.state, 'gone');
   }
+  // UI resume changes hook payloads while the original MCP process keeps its launch ID.
+  const originalMcp = await firstOwner.command('inspect');
+  assert.equal(originalMcp.launch_session_id, 'claude-root-a');
+  await hook('claude-code', 'claude-resumed-b', 'SessionStart', project, firstOwner);
+  const resumed = (await claude.call('whoami')).session;
+  assert.equal(resumed.vendor_session_id, 'claude-resumed-b');
+  assert.notEqual(resumed.id, author.id);
+  assert((await claude.call('list_sessions', { state: 'gone' })).sessions.some(session => session.id === author.id), 'Resume must retire the old conversation on this owner');
+  assert.equal((await otherClaude.call('whoami')).session.id, otherAuthor.id, 'Another owner of A must not be retired');
+  await claude.call('set_status', { status_line: 'resumed-B', role: 'resume-reviewer' });
+  await hook('claude-code', 'claude-root-a', 'PostToolUse', project, firstOwner);
+  await hook('claude-code', 'claude-root-a', 'SessionEnd', project, firstOwner);
+  assert.equal((await claude.call('whoami')).session.id, resumed.id, 'Late A hooks must not replace or end B');
+  await hook('claude-code', 'claude-root-a', 'SessionStart', project, firstOwner);
+  const returned = (await claude.call('whoami')).session;
+  assert.equal(returned.id, author.id); assert(returned.incarnation > author.incarnation);
+  assert.equal(returned.status_line, 'first-2'); assert.equal(returned.role, 'author');
+  assert((await claude.call('list_sessions', { state: 'gone' })).sessions.some(session => session.id === resumed.id));
+  assert.deepEqual(await firstOwner.command('inspect'), originalMcp, 'Resume must not restart MCP or rewrite its launch environment');
+  author = returned;
+  const coldResumeOwner = owner('never-registered-launch');
+  const coldResume = await client('claude-code', 'never-registered-launch', coldResumeOwner);
+  assert.equal((await coldResume.call('setup_status')).configured, true);
+  await coldResume.call('whoami', {}, 'never-registered-launch', true);
+  await hook('claude-code', 'cold-resumed-conversation', 'SessionStart', project, coldResumeOwner);
+  assert.equal((await coldResume.call('whoami')).session.vendor_session_id, 'cold-resumed-conversation');
+  await hook('claude-code', 'cold-resumed-conversation', 'SessionEnd', project, coldResumeOwner);
+  await coldResume.call('whoami', {}, 'never-registered-launch', true);
+  await stop(coldResume.child);
+  console.log('PASS: exported long-lived Claude MCP follows hook resume with stale launch ID, retires only its prior conversation, rejects late hooks, and restores A after A→B→A');
   await hook('claude-code', 'claude-root-a', 'SessionEnd', project, secondOwner);
   assert((await claude.call('list_sessions', { state: 'gone' })).sessions.some(session => session.id === otherAuthor.id), 'SessionEnd must end its own owner');
   await hook('claude-code', 'claude-root-a', 'SessionStart', project, firstOwner);

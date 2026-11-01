@@ -126,6 +126,8 @@ export const Methods = {
      * concurrent processes can resume the same vendor ID. Never bind by cwd or "most recent" (DESIGN §9).
      */
     vendor_session_id: z.string().max(200).optional(),
+    /** Monotonic Claude conversation generation within one observed PID/process birth. */
+    owner_generation: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
     /** MCP clientInfo as the agent sent it (shim only). */
     client_info: z.object({ name: z.string().max(100), version: z.string().max(40).optional() }).optional(),
     /** Vendor-specific delivery facts harvested by a hook (Claude: socket path, token, permission mode). Host-local. */

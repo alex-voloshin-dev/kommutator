@@ -548,8 +548,9 @@ and mode stay on the host (`LocalSession`); only the protocol `Session` goes to 
 session (`session_id` in the payload). The shim is a separate process spawned by Claude
 Code, and `cwd` cannot tell two sessions in the same repository apart. The binding key is
 the **vendor's session id plus process ownership on both sides**: the hook reports
-`session_id` and its parent PID; the shim reads `CLAUDE_CODE_SESSION_ID` (verified on
-2.1.310) and reports the same owner PID. The bundled bootstrap preserves its observed
+`session_id` and its parent PID; the bundled shim resolves the current owner-scoped hook
+registration and reports the same owner PID. The launch `CLAUDE_CODE_SESSION_ID` (verified
+on 2.1.310) is only a legacy fallback because interactive resume may leave it stale. The bundled bootstrap preserves its observed
 parent across its extra runtime process. agentd verifies process birth and matches that
 owner, never cwd or the most recent record. Two live processes resuming one vendor ID get
 independent hub identities. Without a vendor ID, a unique same-owner match is required.
@@ -1094,7 +1095,7 @@ the same cwd and project; if prior history is ambiguous, allocate a new identity
 Bound IPC peers pin the owner generation and cannot follow a later replacement.
 Claude cold registration/context is scoped to that same process owner; one owner's
 SessionEnd cannot erase another owner's registration. The shared daemon runtime contract
-is 2; upgraded plugin clients reject older daemons until an explicit local restart.
+is 3; upgraded plugin clients reject older daemons until an explicit local restart.
 
 If duplicate resumed owners expose the same native messaging endpoint, downgrade both
 to hook capability and do not deliver through that socket while ambiguous. Native wake
@@ -1132,3 +1133,41 @@ failures retain pending work and original replay keys. Stopping the service leav
 in `unknown` state (not `gone`) to preserve delivery backlog until restart; retiring/deleting
 that mailbox is a separate operator action. Historic messages sent before it joined are not
 retroactively delivered. Existing topic board entries remain accessible to human triage.
+
+### Claude in-process conversation changes
+
+A plugin MCP process can outlive an interactive Claude conversation switch. Its launch
+`CLAUDE_CODE_SESSION_ID` is therefore only a legacy hint. SessionStart publishes a complete
+registration in a private directory keyed by observed owner PID and process birth. Each
+immutable numbered record is published with an atomic hard link; collision retries allocate
+the next integer. There is no lock that a killed 200 ms hook can strand. Readers select only
+the greatest committed generation for this exact owner, never cwd or another process. A
+matching SessionEnd writes a generation-specific tombstone. Directory creation fences legacy
+fallback even if publication is interrupted. A missing directory permits only the exact
+legacy launch-ID/owner lookup; empty, malformed or ended current state fails explicitly.
+
+Each MCP call resolves this registration and uses a fresh immutable IPC client when its
+generation changes, including A → B → A. It revalidates after asynchronous preflight and
+registration, before dispatch and before returning results. Calls already dispatched remain
+pinned to their original identity and are never replayed automatically; a changed generation
+before return is reported as uncertain rather than silently reassigned.
+
+The local `ipc.hello.owner_generation` fences daemon records within one PID/process birth.
+A higher generation retires different earlier same-owner conversations, invalidates old
+bound peers and cancels trailing wake work. Repeated SessionStart for the same active
+conversation advances its fence while preserving hub identity, incarnation, name and role.
+Lower generations, missing generations after fencing, or the
+same generation naming another conversation or an ended record are rejected. Both process
+birth and conversation generation are rechecked after asynchronous binding, liveness and
+native-delivery waits. Other live owners of the same conversation remain independent. Old
+native calls already dispatched cannot be recalled, and a successful socket write is not a
+read receipt. Conversation revival or launch replacement resets endpoint/policy state;
+every generation refresh resets cooldown and the one-shot Stop guard.
+
+Retirement is persisted before registering its successor. A crash between these operations
+leaves the predecessor gone and therefore rejects its old generation; retrying the newer
+hook completes recovery without reviving the predecessor. Local state schema 2 upgrades
+schema 1 in place with absent generations treated as legacy until fenced; older daemons
+reject schema 2. The daemon compatibility contract is 3. Upgrading requires an explicit
+local daemon restart; no hub schema or wire version changes are needed. Live interactive
+resume remains a separate vendor evidence gate from synthetic process coverage.

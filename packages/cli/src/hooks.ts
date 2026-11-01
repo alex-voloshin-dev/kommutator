@@ -1,6 +1,6 @@
 import { pluginDaemonStatus } from "./plugin-daemon.js";
 import { pluginConflicts } from "./plugin-conflicts.js";
-import { savePluginContext, saveClaudeRegistration, forgetClaudeRegistration } from "./plugin-context.js";
+import { savePluginContext, saveClaudeRegistration, forgetClaudeRegistration, activeClaudeRegistration, type ActiveClaudeRegistration } from "./plugin-context.js";
 import * as z from "zod";
 import { Methods, MessageHeader, PROTOCOL_VERSION, packHeaders } from "@kommutator/protocol";
 import { IpcClient, spawnDaemon, type Hello, type RpcClient } from "./ipc-client.js";
@@ -61,16 +61,23 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [])
     if (vendor === null) return;
     const event = HookEvent.parse(rawEvent);
     const payload = Payload.parse(await readInput());
+    let hello = hookHello(payload, process.env, vendor);
     if (process.env.KOM_PLUGIN_PROFILE) {
-      if (!vendor && event === "SessionEnd") await forgetClaudeRegistration(payload.session_id, process.ppid);
+      let observed: ActiveClaudeRegistration | undefined;
       if (event === "SessionStart") {
         if (vendor) await savePluginContext(vendor, payload.session_id, payload.cwd);
-        else await saveClaudeRegistration(hookHello(payload));
+        else observed = await saveClaudeRegistration(hookHello(payload));
+      }
+      if (!vendor) {
+        const active = observed ?? await activeClaudeRegistration(process.ppid, payload.session_id);
+        if (active.hello.vendor_session_id !== payload.session_id) return;
+        hello = { ...hello, owner_generation: active.hello.owner_generation };
+        if (event === "SessionEnd") await forgetClaudeRegistration(payload.session_id, process.ppid, active);
       }
       if ((await pluginConflicts(process.env.KOM_PLUGIN_PROFILE, payload.cwd)).length) return;
       if (await pluginDaemonStatus(false, 35) !== "compatible") return;
     }
-    client = new IpcClient({ hello: () => hookHello(payload, process.env, vendor), lazyStart: false, timeoutMs: 90 });
+    client = new IpcClient({ hello: () => hello, lazyStart: false, timeoutMs: 90 });
     await handleHook(event, payload, client, (output) => new Promise((resolve, reject) => {
       process.stdout.write(output, (error) => error ? reject(error) : resolve());
     }));

@@ -1,0 +1,87 @@
+import { afterEach, beforeEach, expect, it } from "vitest";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { activeClaudeRegistration, saveClaudeRegistration, forgetClaudeRegistration } from "../src/plugin-context.js";
+import { ClaudePluginClient } from "../src/claude.js";
+import type { Hello, RpcClient } from "../src/ipc-client.js";
+let home: string;
+const oldHome = process.env.KOM_HOME;
+beforeEach(async () => { home = await mkdtemp(join(tmpdir(), "kom-resume-")); process.env.KOM_HOME = home; });
+afterEach(async () => { if (oldHome === undefined) delete process.env.KOM_HOME; else process.env.KOM_HOME = oldHome; await rm(home, { recursive: true, force: true }); });
+const hello = (id: string): Hello => ({ client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: id, pid: process.pid, ppid: process.pid, cwd: "/project" });
+
+it("resolves the hook's current conversation despite stale or absent launch identity", async () => {
+  await saveClaudeRegistration(hello("A"));
+  const a = await activeClaudeRegistration(process.pid, "A");
+  await saveClaudeRegistration(hello("B"));
+  const b = await activeClaudeRegistration(process.pid, "A");
+  expect(b.hello.vendor_session_id).toBe("B");
+  expect((await activeClaudeRegistration(process.pid)).generation).toBe(b.generation);
+  await forgetClaudeRegistration("A", process.pid);
+  expect((await activeClaudeRegistration(process.pid, "A")).generation).toBe(b.generation);
+  await saveClaudeRegistration(hello("A"));
+  const resumed = await activeClaudeRegistration(process.pid, "A");
+  expect(resumed.generation).not.toBe(a.generation);
+  expect(resumed.generation).not.toBe(b.generation);
+});
+
+it("uses exact legacy authority only when active authority is absent, never ended or malformed", async () => {
+  await saveClaudeRegistration(hello("A"));
+  const directoryName = (await readdir(join(home, "contexts"))).find(name => name.endsWith(".d"));
+  if (!directoryName) throw new Error("missing active fixture");
+  const directory = join(home, "contexts", directoryName);
+  const original = await readFile(join(directory, "1.json"), "utf8");
+  await rm(directory, { recursive: true });
+  expect((await activeClaudeRegistration(process.pid, "A")).hello.vendor_session_id).toBe("A");
+  await expect(activeClaudeRegistration(process.pid, "B")).rejects.toThrow("unavailable or expired");
+  await saveClaudeRegistration(hello("A"));
+  await writeFile(join(directory, "1.json"), "malformed");
+  await expect(activeClaudeRegistration(process.pid, "A")).rejects.toThrow("unavailable or expired");
+  await writeFile(join(directory, "1.json"), original);
+  await saveClaudeRegistration(hello("B"));
+  await forgetClaudeRegistration("B", process.pid);
+  await expect(activeClaudeRegistration(process.pid, "A")).rejects.toThrow("unavailable or expired");
+});
+
+it("routes a long-lived MCP client through fresh immutable IPC connections after A to B to A", async () => {
+  const calls: string[] = [], closed: string[] = [];
+  const client = new ClaudePluginClient({
+    resolve: () => activeClaudeRegistration(process.pid, "A"), prepare: async () => {},
+    shim(observed) { const id = observed.vendor_session_id ?? "missing"; return { close() { closed.push(id); }, async call(method) { calls.push(`${id}:${method}`); return id; } }; },
+    hook() { throw new Error("already registered"); },
+  });
+  for (const id of ["A", "B", "A"]) { await saveClaudeRegistration(hello(id)); expect(await client.call("session.upsert", { status_line: id })).toBe(id); }
+  expect(calls.filter(call => call.endsWith(":session.upsert"))).toEqual(["A:session.upsert", "B:session.upsert", "A:session.upsert"]);
+  expect(closed).toEqual(["A", "B"]);
+  client.close();
+});
+
+it("fails closed when resume races asynchronous preflight and does not dispatch a mutation", async () => {
+  await saveClaudeRegistration(hello("A"));
+  let calls = 0;
+  const rpc: RpcClient = { close() {}, async call() { calls++; return {}; } };
+  const client = new ClaudePluginClient({ resolve: () => activeClaudeRegistration(process.pid, "A"),
+    prepare: async () => { await saveClaudeRegistration(hello("B")); }, shim: () => rpc, hook: () => rpc });
+  await expect(client.call("message.send")).rejects.toThrow("conversation changed");
+  expect(calls).toBe(0);
+});
+
+it("never retries an already dispatched mutation if the conversation changes before its reply", async () => {
+  await saveClaudeRegistration(hello("A"));
+  let sent = 0;
+  const rpc: RpcClient = { close() {}, async call(method) { if (method === "message.send") { sent++; await saveClaudeRegistration(hello("B")); } return {}; } };
+  const client = new ClaudePluginClient({ resolve: () => activeClaudeRegistration(process.pid, "A"), prepare: async () => {}, shim: () => rpc, hook: () => rpc });
+  await expect(client.call("message.send")).rejects.toThrow("inspect its outcome");
+  expect(sent).toBe(1);
+});
+
+it("a delayed SessionEnd tombstones only its captured generation after A to B to A", async () => {
+  await saveClaudeRegistration(hello("A"));
+  const first = await activeClaudeRegistration(process.pid);
+  await saveClaudeRegistration(hello("B"));
+  await saveClaudeRegistration(hello("A"));
+  const latest = await activeClaudeRegistration(process.pid);
+  await forgetClaudeRegistration("A", process.pid, first);
+  expect((await activeClaudeRegistration(process.pid)).generation).toBe(latest.generation);
+});

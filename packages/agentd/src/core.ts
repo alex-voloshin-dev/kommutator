@@ -17,7 +17,7 @@ import { realClock, WakeScheduler, type Clock } from "./wake.js";
 import { Projects } from "./project.js";
 
 export type Hello = z.infer<(typeof Methods)["ipc.hello"]>;
-export interface IpcPeer { hello?: Hello; key?: string; ownerPid?: number; ownerBirth?: string; ended?: boolean }
+export interface IpcPeer { hello?: Hello; key?: string; ownerPid?: number; ownerBirth?: string; ownerGeneration?: number; ended?: boolean }
 export interface CoreOptions {
   config: DaemonConfig;
   dbPath: string;
@@ -112,6 +112,7 @@ export class DaemonCore {
   }
   private markGone(record: LocalRecord): void {
     this.codexHookEvents.delete(record.key);
+    this.wake.cancel(record.key);
     for (const peer of this.peers) if (peer.key === record.key) peer.ended = true;
     record.session.state = "gone";
     this.registry.transaction(() => {
@@ -132,7 +133,7 @@ export class DaemonCore {
       if (record.session.state === "gone") continue;
       const alive = await this.alive(record);
       const current = this.registry.get(record.key);
-      if (!current || current.session.state === "gone" || current.pid !== record.pid || current.processStartedAt !== record.processStartedAt) continue;
+      if (!current || current.session.state === "gone" || current.pid !== record.pid || current.processStartedAt !== record.processStartedAt || current.ownerGeneration !== record.ownerGeneration) continue;
       if (!alive) this.markGone(current);
       else if (this.transport.connected && current.session.id) {
         try { await this.transport.request("session.heartbeat", { session_id: current.session.id, state: current.session.state }); }
@@ -160,6 +161,18 @@ export class DaemonCore {
     let existing = this.registry.get(key);
     if (vendor === "claude-code") {
       if (!vendorId || !pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
+      const owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
+      const latestGeneration = Math.max(0, ...owned.map(record => record.ownerGeneration ?? 0));
+      const generation = hello.owner_generation ?? 0;
+      if (generation < latestGeneration || (generation === latestGeneration && generation > 0 && owned.some(record => record.ownerGeneration === generation && (record.session.vendor_session_id !== vendorId || record.session.state === "gone")))) {
+        throw new RpcError(-32020, "stale or conflicting Claude conversation generation; wait for its current hook");
+      }
+      if (generation > latestGeneration) for (const prior of owned) {
+        if (prior.session.state === "gone") continue;
+        this.wake.cancel(prior.key);
+        // A repeated SessionStart refreshes its fence without ending the same conversation.
+        if (prior.session.vendor_session_id !== vendorId) this.markGone(prior);
+      }
       const candidates = this.registry.all().filter(record => record.session.vendor === vendor && record.session.vendor_session_id === vendorId);
       const sameOwner = candidates.filter(record => record.pid === pid && record.processStartedAt === birth);
       if (sameOwner.length > 1) throw new RpcError(-32020, "ambiguous Claude process ownership");
@@ -205,8 +218,15 @@ export class DaemonCore {
       delete record.token;
       delete record.permissionMode;
       delete record.inboundPolicy;
+      delete record.lastWake;
       record.stopBlocked = false;
     }
+    if (hello.owner_generation !== undefined && hello.owner_generation !== record.ownerGeneration) {
+      delete record.lastWake;
+      record.stopBlocked = false;
+    }
+    if (hello.owner_generation !== undefined) record.ownerGeneration = hello.owner_generation;
+    else delete record.ownerGeneration;
     if (pid) record.pid = pid;
     if (birth) record.processStartedAt = birth;
     if (hello.endpoint !== undefined) record.endpoint = hello.endpoint;
@@ -243,7 +263,8 @@ export class DaemonCore {
     const current = this.registry.get(expected.key);
     if (peer.ended || !current || current.session.state === "gone") throw new RpcError(-32020, "bound session has ended or is unavailable; open a new connection");
     if (current.session.vendor === "claude-code" && (current.pid !== peer.ownerPid || current.processStartedAt !== peer.ownerBirth ||
-      current.pid !== expected.pid || current.processStartedAt !== expected.processStartedAt)) {
+      current.pid !== expected.pid || current.processStartedAt !== expected.processStartedAt ||
+      current.ownerGeneration !== peer.ownerGeneration || current.ownerGeneration !== expected.ownerGeneration)) {
       throw new RpcError(-32020, "bound Claude process owner has changed or exited; open a new session connection");
     }
     return current;
@@ -270,6 +291,7 @@ export class DaemonCore {
       }
       peer.ownerPid = pid;
       peer.ownerBirth = birth;
+      if (peer.hello.owner_generation !== undefined) peer.ownerGeneration = peer.hello.owner_generation;
     }
     // Resolve only a fresh snapshot: a hook may have replaced the owner while its
     // process birth was being probed. Even a not-yet-bound peer pins that first birth.
@@ -305,6 +327,7 @@ export class DaemonCore {
         peer.key = record.key;
         if (record.pid !== undefined) peer.ownerPid = record.pid;
         if (record.processStartedAt !== undefined) peer.ownerBirth = record.processStartedAt;
+        if (record.ownerGeneration !== undefined) peer.ownerGeneration = record.ownerGeneration;
       } else if (!parsed.data.vendor_session_id && (!parsed.data.vendor || parsed.data.vendor === "other")) {
         const record = await this.register(parsed.data);
         peer.key = record.key;
@@ -569,6 +592,8 @@ export class DaemonCore {
     let record = this.registry.get(key);
     if (!record?.session.id || record.session.state === "gone" || record.session.wake === "off" || !this.transport.connected) return;
     if (record.lastWake !== undefined && this.clock.now() < record.lastWake + this.wake.cooldown) { this.wake.schedule(key, record.lastWake); return; }
+    const expected = { pid: record.pid, birth: record.processStartedAt, generation: record.ownerGeneration };
+    const sameGeneration = (current: LocalRecord | undefined): current is LocalRecord => Boolean(current && current.session.state !== "gone" && current.pid === expected.pid && current.processStartedAt === expected.birth && current.ownerGeneration === expected.generation);
     const pending = this.registry.pending(record.session.id).filter((delivery) => delivery.wake);
     if (!pending.length) return;
     const unread = new Set<string>();
@@ -580,7 +605,7 @@ export class DaemonCore {
       cursor = page.cursor;
     }
     record = this.registry.get(key);
-    if (!record || record.session.wake !== "on" || record.session.state === "gone") return;
+    if (!sameGeneration(record) || record.session.wake !== "on") return;
     for (const delivery of pending) if (!unread.has(delivery.message.id)) this.registry.acted(record, delivery.seq);
     const qualifying = pending.filter((delivery) => unread.has(delivery.message.id));
     const selected = qualifying[0];
@@ -594,7 +619,7 @@ export class DaemonCore {
     const result = await this.adapter(record).deliver(record, selected.message, true);
     if (result.outcome === "inbox") return;
     record = this.registry.get(key);
-    if (!record) return;
+    if (!sameGeneration(record)) return;
     record.lastWake = this.clock.now();
     this.registry.save(record);
     if (result.outcome === "rejected") this.report("vendor rejected or held a native message; delivery remains unread");
@@ -612,7 +637,7 @@ export class DaemonCore {
       ...(outbox.some((entry) => entry.error) ? ["Outbox has blocked entries; inspect their error before deciding whether to resend."] : []),
     ];
     return {
-      runtime_contract: 2, daemon: { pid: process.pid, version: RELEASE_VERSION, running: true }, hub: { connected: this.transport.connected },
+      runtime_contract: 3, daemon: { pid: process.pid, version: RELEASE_VERSION, running: true }, hub: { connected: this.transport.connected },
       health: { state: issues.length ? "degraded" : "healthy", issues },
       outbox_depth: outbox.length,
       outbox: outbox.map((entry) => ({ id: entry.id, method: entry.method, age_ms: Math.max(0, this.clock.now() - entry.created_at), error: entry.error })),

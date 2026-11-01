@@ -30,7 +30,7 @@ native endpoint use hook delivery while the endpoint is ambiguous. See the
 Codex roots use exact per-call MCP metadata (`sessionId`/`threadId`); inherited environment
 IDs and cwd do not establish identity. Hooks bind existing roots and the shim owns
 liveness. Fork MCP calls are rejected. Launch-scoped endpoint/token/mode/policy reset on
-revival or process replacement. The plugin daemon compatibility contract is 2.
+revival or process replacement. The plugin daemon compatibility contract is 3.
 
 [headers.ts](../../packages/protocol/src/headers.ts) uses Unicode code points for
 previews/injection: at most five headers and 4,000 code points including the trailer.
@@ -47,3 +47,9 @@ prevents duplicate wake and avoids skipping holes in the resync cursor.
 board.history pages newest first, at most ten versions, with an exclusive version cursor.
 RPC results above 1 MiB UTF-8 return -32011; narrow or page the query rather than accepting
 truncation. See [PROTOCOL](../PROTOCOL.md) and [DESIGN §19](../DESIGN.md#19-implementation-decisions-and-open-questions).
+
+Claude in-process resume resolves the current owner-scoped hook generation rather than the
+MCP launch environment ID. Immutable registration generations and end tombstones survive
+hook termination; local daemon state schema 2 retains the generation fence across restart.
+Older same-owner conversations are retired before the successor registers. See
+[DESIGN recovery contract](../DESIGN.md#claude-in-process-conversation-changes).

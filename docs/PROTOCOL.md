@@ -34,8 +34,9 @@ optional caller `project_key` (`KOM_PROJECT`) and, for Claude Code hooks, `endpo
 `permission_mode`, `inbound_policy`. Vendor facts stay host-local; the resolved project key
 is part of the public session. Claude binding requires both `vendor_session_id` and
 observed process ownership (`ppid` plus its process birth). The hook's payload `session_id`
-and shim's `CLAUDE_CODE_SESSION_ID` remain unchanged correlation values; concurrent Claude
-processes can share them when resuming one conversation. Each provable live owner gets its
+is authoritative for the current conversation. The shim's launch
+`CLAUDE_CODE_SESSION_ID` is a legacy hint that can become stale after interactive resume;
+concurrent Claude processes can also share the same conversation ID. Each provable live owner gets its
 own hub identity and handle. The bundled MCP bootstrap relays its own observed parent PID
 to its runtime child; manual shims use their direct parent. Missing or ambiguous ownership
 fails explicitly, never selecting another owner by cwd. Without a vendor ID, a unique
@@ -44,10 +45,16 @@ asynchronous probes/flushes/reads. A live hook-only owner does not require a nat
 A unique prior owner may be resumed only with positive process-exit/PID-reuse evidence
 and matching cwd/project;
 otherwise register separately. Cold Claude context/registration is process-scoped, and
-SessionEnd removes only that owner's replay authority. Duplicate resumed owners sharing a
+SessionEnd removes only that owner's replay authority. Bundled Claude plugins additionally
+send optional positive `owner_generation` from their exact owner-scoped SessionStart journal.
+A higher generation retires previous same-owner conversations; stale/missing generations
+after fencing and equal generations naming another conversation are rejected. A shim
+reopens its pinned IPC connection on generation change, even if its launch environment
+still names the earlier conversation. Generation tombstones prevent ended registration
+fallback, and delayed calls never replay against a successor. Duplicate resumed owners sharing a
 native endpoint are downgraded to hook delivery; the shared socket is never used for private
 traffic while ambiguous. `hello` (agentd → hub) identifies the host only.
-The shared daemon runtime contract is 2; plugin clients reject earlier daemons and request
+The shared daemon runtime contract is 3; plugin clients reject earlier daemons and request
 an explicit local restart rather than using unsafe old binding behavior.
 
 Codex/local Work uses MCP tool-call `_meta.sessionId` and `_meta.threadId` for root
@@ -150,6 +157,6 @@ in MCP parameters/results. Plugin root identity and project association require 
 vendor selection, exact Codex call metadata and a matching private hook cwd observation;
 missing/ambiguous context is an error. The hub/IPC wire schemas are unchanged.
 
-`daemon.status` reports `runtime_contract: 2` for plugin compatibility preflight. This is
+`daemon.status` reports `runtime_contract: 3` for plugin compatibility preflight. This is
 additive for existing CLI clients. Plugin MCP/hook clients refuse an active daemon missing
 this exact contract; they never infer compatibility from the legacy `0.0.0` version.

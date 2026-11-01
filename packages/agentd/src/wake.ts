@@ -21,5 +21,6 @@ export class WakeScheduler {
       void this.run(key);
     }, delay));
   }
+  cancel(key: string): void { const timer = this.timers.get(key); if (timer !== undefined) this.clock.clearTimeout(timer); this.timers.delete(key); }
   close(): void { for (const timer of this.timers.values()) this.clock.clearTimeout(timer); this.timers.clear(); }
 }

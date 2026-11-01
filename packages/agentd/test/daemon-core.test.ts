@@ -765,3 +765,82 @@ describe("Codex root lifecycle", () => {
     await expect(core.request(core.peer(), "ipc.hello", { client: "shim", pid: 30, vendor: "codex", protocol_version: PROTOCOL_VERSION, cwd: "/same/repo" })).rejects.toThrow("vendor_session_id");
   });
 });
+
+describe("Claude conversation generation fencing", () => {
+  it("refreshes repeated SessionStart generation without reincarnating the active conversation", async () => {
+    const { core } = await fixture();
+    const first = await hook(core, "repeat", { owner_generation: 1 });
+    await core.request(first.peer, "session.upsert", { op: "update", session: { role: "developer", status_line: "kept status" } });
+    const refreshed = await hook(core, "repeat", { owner_generation: 2 });
+    expect(refreshed.session?.id).toBe(first.session?.id);
+    expect(refreshed.session?.incarnation).toBe(first.session?.incarnation);
+    expect(refreshed.session).toMatchObject({ role: "developer", status_line: "kept status" });
+    await expect(core.request(first.peer, "whoami")).rejects.toThrow("owner has changed");
+    await expect(hook(core, "repeat", { owner_generation: 1 })).rejects.toThrow("stale or conflicting");
+    expect(Identity.parse(await core.request(refreshed.peer, "whoami")).session.id).toBe(first.session?.id);
+  });
+
+  it("retires prior same-process conversations and rejects stale, missing and conflicting generations", async () => {
+    const { core } = await fixture();
+    const a = await hook(core, "resume-a", { owner_generation: 1 });
+    const independent = await hook(core, "resume-a", { ppid: 77, owner_generation: 1 });
+    const b = await hook(core, "resume-b", { owner_generation: 2 });
+    expect(core.registry.byId(a.session?.id ?? "")?.session.state).toBe("gone");
+    await expect(core.request(a.peer, "whoami")).rejects.toThrow("ended");
+    await expect(hook(core, "resume-a", { owner_generation: 1 })).rejects.toThrow("stale or conflicting");
+    await expect(hook(core, "resume-a")).rejects.toThrow("stale or conflicting");
+    await expect(hook(core, "resume-a", { owner_generation: 2 })).rejects.toThrow("stale or conflicting");
+    expect(Identity.parse(await core.request(independent.peer, "whoami")).session.state).toBe("active");
+    const resumed = await hook(core, "resume-a", { owner_generation: 3 });
+    expect(resumed.session?.id).toBe(a.session?.id);
+    expect(resumed.session?.incarnation).toBe(1);
+    expect(core.registry.byId(b.session?.id ?? "")?.session.state).toBe("gone");
+    await core.request(resumed.peer, "session.gone");
+    await expect(hook(core, "resume-a", { owner_generation: 3 })).rejects.toThrow("stale or conflicting");
+  });
+  it("does not let a deferred liveness sweep retire a resumed generation with the same PID and birth", async () => {
+    let enter: () => void = () => {}, release: () => void = () => {};
+    const entered = new Promise<void>(resolve => { enter = resolve; });
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let pause = false;
+    const { core } = await fixture({ alive: false, birth: async () => {
+      if (pause) { pause = false; enter(); await held; return undefined; }
+      return "birth";
+    } });
+    await hook(core, "resume-a", { owner_generation: 1 });
+    pause = true;
+    const sweep = core.sweep(); await entered;
+    await hook(core, "resume-b", { owner_generation: 2 });
+    const resumed = await hook(core, "resume-a", { owner_generation: 3 });
+    release(); await sweep;
+    expect(Identity.parse(await core.request(resumed.peer, "whoami")).session.state).toBe("active");
+  });
+  it("does not deliver a queued old-generation wake or advance its receipt after an A to B to A switch", async () => {
+    const { core, transport, clock, attempts } = await fixture();
+    const sender = await hook(core, "sender", { ppid: 77 });
+    const a = await hook(core, "resume-a", { owner_generation: 1 });
+    let enter: () => void = () => {}, release: () => void = () => {};
+    const entered = new Promise<void>(resolve => { enter = resolve; });
+    const held = new Promise<void>(resolve => { release = resolve; });
+    transport.afterRequest = async method => { if (method === "inbox.list") { transport.afterRequest = undefined; enter(); await held; } };
+    await send(core, sender.peer, a.session?.handle ?? "missing");
+    await clock.advance(0); await entered;
+    await hook(core, "resume-b", { owner_generation: 2 });
+    const resumed = await hook(core, "resume-a", { owner_generation: 3 });
+    release(); for (let i = 0; i < 50; i++) await Promise.resolve();
+    expect(attempts).toHaveLength(0);
+    expect(core.registry.byId(resumed.session?.id ?? "")?.acked).toBe(0);
+  });
+  it("retains the generation fence across daemon restart", async () => {
+    const home = await mkdtemp(join(tmpdir(), "kom-generation-"));
+    cleanup.push(async () => rm(home, { recursive: true, force: true }));
+    const dbPath = join(home, "state.db");
+    const first = await fixture({ dbPath });
+    await hook(first.core, "resume-a", { owner_generation: 1 });
+    await hook(first.core, "resume-b", { owner_generation: 2 });
+    await first.close();
+    const second = await fixture({ dbPath, hub: first.hub });
+    await expect(hook(second.core, "resume-a", { owner_generation: 1 })).rejects.toThrow("stale or conflicting");
+    expect((await hook(second.core, "resume-b", { owner_generation: 2 })).session?.state).toBe("active");
+  });
+});

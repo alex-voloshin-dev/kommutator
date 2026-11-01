@@ -4,6 +4,7 @@ import { join } from 'node:path';
 const plugin = process.argv[2];
 const children = new Set();
 let stopping = false;
+let mcp;
 function launch(file, args, options) {
   const child = spawn(join(plugin, 'bin', file), args, options);
   children.add(child);
@@ -12,9 +13,13 @@ function launch(file, args, options) {
 }
 process.on('message', async message => {
   try {
+    let result;
     if (message.action === 'start') {
       const child = launch('mcp', [], { cwd: '/', env: process.env, stdio: 'inherit' });
       await new Promise((resolve, reject) => { child.once('spawn', resolve); child.once('error', reject); });
+      mcp = child;
+    } else if (message.action === 'inspect') {
+      result = { pid: mcp?.pid, launch_session_id: process.env.CLAUDE_CODE_SESSION_ID };
     } else if (message.action === 'hook') {
       const child = launch('hook', [message.event], { cwd: '/', env: process.env, stdio: ['pipe', 'pipe', 'pipe'] });
       let stdout = ''; let stderr = '';
@@ -31,7 +36,7 @@ process.on('message', async message => {
       child.stdin.end(JSON.stringify(message.payload));
       await done;
     } else throw new Error('Unknown owner fixture action');
-    process.send({ id: message.id });
+    process.send({ id: message.id, result });
   } catch (error) { process.send({ id: message.id, error: error.message }); }
 });
 function stop() {
