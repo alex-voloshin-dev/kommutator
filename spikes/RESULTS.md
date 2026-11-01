@@ -490,3 +490,37 @@ Copilot, native Windows and actual Work desktop acceptance remain separate.
 
 Historical licensing note: earlier statements about an unchosen license describe their
 dated checkpoint. MIT was selected for public preparation on 2026-10-29; see the root LICENSE.
+
+## Published 0.4.0 plugin diagnostics verification — 2026-11-01
+
+Release [v0.4.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.4.0)
+points to `9d2a9a5895256b40b3b35f341ce1d7130ea08244`. Linux x64, Node 24.22.1,
+pnpm 10.18.0: 393 workspace tests and all 60 release script tests passed, followed by
+export integrity/licenses, clean-PATH smoke and synthetic messaging/recovery E2E.
+The exact exported `bin/manage` passed daemon help and plugin-aware doctor checks for
+both profiles in temporary homes without starting a daemon.
+
+Both public archives and checksum files were downloaded anonymously; SHA-256 matched the
+qualified local bytes and generated catalog pins. Real Claude Code 2.1.310 and Codex CLI
+0.164.0 installed 0.4.0 from the public marketplace into separate empty temporary profiles.
+Both installed MCP servers initialized as 0.4.0, listed setup tools, returned unconfigured
+setup status and served private loopback setup pages. Codex's installed launcher downloaded
+and verified its pinned runtime. No live user profile, hub, daemon or credentials changed.
+
+Two verification-harness assumptions were corrected: Codex requires an existing CODEX_HOME,
+and its hosted manifest launches `bin/launch mcp`, not the standalone bundle's `bin/mcp`.
+The initial corresponding checks failed before MCP startup; the corrected checks passed.
+Earlier test failures and independent review are recorded in
+[the review artifact](../docs/sdlc/plugin-doctor/review-code-3.md).
+
+Tag [release checks](https://github.com/alex-voloshin-dev/kommutator/actions/runs/41345348907)
+and [secret scan](https://github.com/alex-voloshin-dev/kommutator/actions/runs/41345348884)
+passed. Main [release checks](https://github.com/alex-voloshin-dev/kommutator/actions/runs/41345397372)
+and [secret scan](https://github.com/alex-voloshin-dev/kommutator/actions/runs/41345397480) also
+passed. The source and complete candidate history passed local Gitleaks; two artifact
+findings were public dependency license checksum values, independently verified.
+
+This does not establish interactive hook activation/trust on the reporting host, native wake,
+actual Work UI, macOS/ARM execution, reboot/logon, physical subnet filtering or day-long use.
+The hyphenated feedback topic was not inspected or aliased. Canonical maintenance remains
+`kommutator feedback` (space); no live topic operations were performed.
