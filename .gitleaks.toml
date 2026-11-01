@@ -42,3 +42,10 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^spikes/evidence/2026-10-27-m2-mixed-vendor\.json$''']
 regexes = ['''^6fcf0cba-663a-4338-a424-82af8f608e14$''']
+
+[[rules.allowlists]]
+description = "Synthetic observer credential-redaction fixture"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^scripts/feedback-observer\.test\.mjs$''']
+regexes = ['''^abcdef0123456789$''']

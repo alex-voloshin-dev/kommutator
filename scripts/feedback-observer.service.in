@@ -1,0 +1,23 @@
+[Unit]
+Description=Kommutator feedback observer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@REPO@
+ExecStart=@NODE@ @REPO@/scripts/feedback-observer.mjs run --codex @CODEX@ --model @MODEL@ --effort @EFFORT@
+Restart=on-failure
+RestartSec=15
+RestartPreventExitStatus=75
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.local/state/kommutator-feedback %h/.codex
+KillMode=control-group
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target

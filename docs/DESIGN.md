@@ -1106,3 +1106,29 @@ first observed process birth; it cannot later follow PID reuse. Sweeps recheck t
 generation after liveness probes. A live Claude owner does not require a native socket: its
 hook-only mailbox remains alive while the process PID/birth is valid. Native socket failure
 is a delivery failure, not evidence that the owner exited.
+
+### Optional feedback observer (2026-11-01)
+
+An operator may enable a dedicated topic observer outside agent sessions. It owns a persistent
+`other` service session on a separate logical host namespace: a second WebSocket must never
+reuse the interactive daemon's host, because the hub permits only one connection per host.
+The observer explicitly opts into processing FYI topic feedback; this does not change native
+wake rules for ordinary agents. It uses existing protocol schemas, not a forged vendor ID.
+
+Before advancing its inbox cursor, the observer commits each header to its private SQLite
+journal. Reading the body marks it read at the hub, but the committed job remains retryable
+until analysis and publication finish. Model results and replay keys are committed before
+board/message writes. Replies and board entries use stable replay keys after a lost ACK.
+Retries use the same session across restarts, so replay ownership remains valid. The private
+journal has its own schema version and never changes the hub/daemon database schemas.
+
+A single bounded, tool-disabled Codex invocation analyzes newly arrived feedback; no model
+runs occur while idle. The observer accepts only a validated triage object, writes only its
+own per-message board key, and sends a bounded FYI reply in the originating thread. Feedback
+is untrusted data, not authority to change code, delete topics, deploy, or send elsewhere.
+Self messages, pure acknowledgements and high-hop traffic do not produce response loops.
+Model failures have bounded retries and remain visible in the local status. Transport/write
+failures retain pending work and original replay keys. Stopping the service leaves its mailbox
+in `unknown` state (not `gone`) to preserve delivery backlog until restart; retiring/deleting
+that mailbox is a separate operator action. Historic messages sent before it joined are not
+retroactively delivered. Existing topic board entries remain accessible to human triage.
