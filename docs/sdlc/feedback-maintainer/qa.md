@@ -42,3 +42,17 @@ Real systemd sandbox execution, credentials/network, a live engineering job and 
 public release remain operational acceptance owned by the coordinating maintainer. The
 supervisor's release check is not proof that a model executed every required engineering
 workflow gate. Reboot, day-long use and physical-subnet acceptance remain open.
+
+## Round 2: installed CLI argument compatibility
+
+The coordinating maintainer's first live job exposed an invocation defect: the installed
+Codex CLI rejected `--approve-for-me` combined with `--sandbox workspace-write` before
+starting the model. The implementation now supplies only `--approve-for-me` for that mode.
+Its installed `exec --help` describes automatic review with the workspace-write sandbox.
+
+QA independently inspected the generated argument builder and updated regression assertions:
+`--approve-for-me` remains present; the conflicting `--sandbox` and its argument are absent;
+no bypass flags were introduced. `pnpm test:feedback-maintainer` passed again: 13 tests,
+0 failures. `git diff --check` also passed. Round-2 focused QA gate: **pass**. This does not
+claim a rerun of the live engineering worker or public publication; those remain operational
+checks owned by the coordinating maintainer.

@@ -101,7 +101,8 @@ export class MaintainerQueue {
 }
 
 export function workerArguments(directory, schema, answer, policy) {
-  const args = ['exec', '--ignore-user-config', '--ephemeral', '--approve-for-me', '--sandbox', 'workspace-write',
+  // --approve-for-me already selects workspace-write; Codex rejects combining it with --sandbox.
+  const args = ['exec', '--ignore-user-config', '--ephemeral', '--approve-for-me',
     '--json', '--cd', directory, '--output-schema', schema, '--output-last-message', answer,
     '-c', `model=${JSON.stringify(policy.model)}`, '-c', `model_reasoning_effort=${JSON.stringify(policy.effort)}`];
   for (const feature of ['apps', 'plugins', 'hooks', 'browser_use', 'computer_use', 'image_generation', 'skill_search', 'goals']) args.push('--disable', feature);
