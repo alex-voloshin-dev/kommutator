@@ -43,6 +43,40 @@ describe("read-only doctor", () => {
     expect(JSON.stringify(result)).not.toContain(key);
   });
 
+  it.each(["claude-code", "codex"])("recognizes %s bundled invocations without claiming activation or requiring manual hooks", async (profile) => {
+    const f = await fixture();
+    await rm(f.claudeSettings);
+    const guiPath = vi.fn(async () => f.bin);
+    const client = { call: async () => ({ claude_sessions: [], codex_sessions: [] }), close: vi.fn() };
+    const result = await runDoctor({ ...f.options, env: { PATH: "", KOM_PLUGIN_PROFILE: profile } }, { ...f.probes, client: () => client, guiPath });
+    expect(result.ok).toBe(true);
+    expect(result.complete).toBe(false);
+    for (const id of ["path.current", "path.gui", profile === "codex" ? "hooks.codex" : "hooks.claude"]) {
+      expect(result.checks.find((entry) => entry.id === id)).toMatchObject({ state: "not_applicable", summary: expect.stringContaining("unverified") });
+    }
+    expect(result.checks.find((entry) => entry.id === (profile === "codex" ? "hooks.claude" : "hooks.codex"))?.state).toBe("not_configured");
+    expect(result.checks.find((entry) => entry.id === "sockets.claude")?.state).toBe("not_configured");
+    expect(result.checks.find((entry) => entry.id === "runtime.codex")?.state).toBe("not_configured");
+    expect(guiPath).not.toHaveBeenCalled();
+  });
+
+  it("does not hide broken manual hooks or runtime failures in plugin mode", async () => {
+    const f = await fixture();
+    await writeFile(f.claudeSettings, JSON.stringify({ disableAllHooks: true }));
+    const client = { call: async () => ({ claude_sessions: [], codex_sessions: [{ id: "root", shim_alive: false, hook_events: [] }] }), close() {} };
+    const result = await runDoctor({ ...f.options, env: { PATH: "", KOM_PLUGIN_PROFILE: "claude-code" } }, { ...f.probes, client: () => client });
+    expect(result.ok).toBe(false);
+    expect(result.checks.find((entry) => entry.id === "hooks.claude")?.state).toBe("warning");
+    expect(result.checks.find((entry) => entry.id === "runtime.codex")?.state).toBe("fail");
+  });
+
+  it("does not infer a bundled invocation from an unrecognized profile", async () => {
+    const f = await fixture();
+    const result = await runDoctor({ ...f.options, env: { PATH: "", KOM_PLUGIN_PROFILE: "other" } }, f.probes);
+    expect(result.ok).toBe(false);
+    expect(result.checks.find((entry) => entry.id === "path.current")?.state).toBe("fail");
+  });
+
   it("does not claim shell PATH proves the GUI environment when launchd PATH is absent", async () => {
     const f = await fixture();
     const result = await runDoctor(f.options, { ...f.probes, guiPath: async () => undefined });
@@ -176,6 +210,9 @@ describe("read-only doctor", () => {
     const result = await runDoctor({ ...f.options, pluginDir }, f.probes);
     expect(result.checks.find((check) => check.id === "hooks.claude")?.state).toBe("not_configured");
     expect(result.checks.find((check) => check.id === "plugin.claude")).toMatchObject({ state: "warning", summary: expect.stringContaining("does not establish installation") });
+    const noPath = await runDoctor({ ...f.options, pluginDir, env: { PATH: "" } }, f.probes);
+    expect(noPath.ok).toBe(false);
+    expect(noPath.checks.find((entry) => entry.id === "path.current")?.state).toBe("fail");
     expect(await readFile(join(pluginDir, "hooks", "hooks.json"), "utf8")).toBe(JSON.stringify(mergeClaudeHooks({})));
   });
 

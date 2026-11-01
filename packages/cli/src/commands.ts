@@ -58,10 +58,10 @@ export async function runCommands(): Promise<void> {
   const main = defineCommand({
     meta: { name: "kom", description: "kommutator — switchboard for coding agents" },
     subCommands: {
-      daemon: defineCommand({ meta: { description: "manage the per-host daemon" }, subCommands: {
-        run: defineCommand({ run: async () => { await runDaemon(); } }),
-        stop: defineCommand({ run: stopDaemon }),
-        restart: defineCommand({ run: async () => { await stopDaemon(); spawnDaemon(); print(await management("daemon.status")); } }),
+      daemon: defineCommand({ meta: { name: "daemon", description: "manage the per-host daemon" }, subCommands: {
+        run: defineCommand({ meta: { name: "run" }, run: async () => { await runDaemon(); } }),
+        stop: defineCommand({ meta: { name: "stop" }, run: stopDaemon }),
+        restart: defineCommand({ meta: { name: "restart" }, run: async () => { await stopDaemon(); spawnDaemon(); print(await management("daemon.status")); } }),
       } }),
       mcp: defineCommand({ run: async () => { const { runMcp } = await import("./mcp.js"); await runMcp(); } }),
       init: defineCommand({ meta: { description: "write private daemon config and merge selected vendor hooks" }, args: {

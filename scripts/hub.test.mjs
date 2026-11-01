@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdtemp, mkdir, writeFile, readFile, stat, readdir, symlink, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, stat, readdir, symlink, rm, chmod } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -90,6 +90,8 @@ test('symlink key is refused without changing target', async t => {
   await rm(f.key);
   const target = join(f.home, 'target');
   await writeFile(target, 'unchanged', { mode: 0o644 });
+  // Explicit fixture permissions must not depend on the invoking user's umask.
+  await chmod(target, 0o644);
   await symlink(target, f.key);
   await assert.rejects(f.run('setup'), /key missing or unsafe/);
   assert.equal(await readFile(target, 'utf8'), 'unchanged');

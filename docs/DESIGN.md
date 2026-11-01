@@ -905,7 +905,11 @@ Implementation decisions for steps 3–4 (2026-10-25):
 - **Operability diagnostics:** `kom doctor` and `kom status` are read-only and do not
   lazily start the daemon. Doctor distinguishes current-shell PATH, launchd PATH evidence,
   inspected hook configuration and observed running-session facts; a plugin directory
-  inspection does not prove that a vendor loaded it. Missing GUI runtime evidence is
+  inspection does not prove that a vendor loaded it. A recognized bundled launcher profile
+  identifies the current invocation only: global `kom` PATH checks and absent manual hooks
+  for that profile are not applicable, without asserting plugin activation or hook trust.
+  Absent integrations for unused vendors are informational, not health failures; configured
+  broken integrations and observed runtime failures remain visible. Missing GUI runtime evidence is
   unknown, not a pass. CLI-only `daemon.diagnostics` checks live registered Claude socket
   presence without returning socket paths or tokens. Checks use bounded deadlines and
   sanitized diagnostics; they never execute inspected hook commands or repair settings.

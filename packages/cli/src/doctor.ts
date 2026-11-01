@@ -8,7 +8,7 @@ import { Ident, MAX_FRAME_BYTES, PROTOCOL_VERSION } from "@kommutator/protocol";
 import * as z from "zod";
 import { IpcClient, cliHello, type RpcClient } from "./ipc-client.js";
 
-type State = "pass" | "warning" | "fail" | "unknown" | "not_configured";
+type State = "pass" | "warning" | "fail" | "unknown" | "not_configured" | "not_applicable";
 export interface DoctorCheck { id: string; state: State; summary: string; remedy?: string }
 export interface DoctorOptions {
   home?: string;
@@ -132,6 +132,8 @@ export async function runDoctor(options: DoctorOptions = {}, probes: Probes = {}
   const userHome = options.userHome ?? homedir();
   const env = options.env ?? process.env;
   const platform = options.platform ?? process.platform;
+  // The launcher profile describes this invocation, not vendor activation or hook trust.
+  const pluginProfile = env.KOM_PLUGIN_PROFILE === "claude-code" || env.KOM_PLUGIN_PROFILE === "codex" ? env.KOM_PLUGIN_PROFILE : undefined;
   const checks: Array<Promise<DoctorCheck>> = [];
   const add = (id: string, work: () => Promise<DoctorCheck>): void => {
     checks.push(deadline(Promise.resolve().then(work), timeoutMs).catch(() => check(id, "unknown", "Check failed, timed out, or returned invalid data.", "Check file permissions and configuration; retry with --timeout-ms if needed.")));
@@ -150,15 +152,23 @@ export async function runDoctor(options: DoctorOptions = {}, probes: Probes = {}
     if (!parsed.success) return check("host", "unknown", "Host cannot be checked without readable configuration.");
     return Ident.safeParse(parsed.data.host).success ? check("host", "pass", "Configured host satisfies the shared identifier grammar.") : check("host", "fail", "Host must match [a-z0-9][a-z0-9_-]{0,62}.", "Set a valid short host with kom init --host.");
   });
-  add("path.current", async () => await executableOnPath(env.PATH, cwd) ? check("path.current", "pass", "An executable kom file resolves on the current process PATH; it was not executed.") : check("path.current", "fail", "kom does not resolve on the current process PATH.", "Install or link the built kom entrypoint into a PATH directory."));
+  add("path.current", async () => pluginProfile ? check("path.current", "not_applicable", "This invocation uses a bundled plugin profile; global kom PATH resolution is not required. Vendor activation remains unverified.") : await executableOnPath(env.PATH, cwd) ? check("path.current", "pass", "An executable kom file resolves on the current process PATH; it was not executed.") : check("path.current", "fail", "kom does not resolve on the current process PATH.", "Install or link the built kom entrypoint into a PATH directory."));
   add("path.gui", async () => {
+    if (pluginProfile) return check("path.gui", "not_applicable", "Bundled plugin launchers provide their runtime without a GUI kom PATH entry; vendor activation remains unverified.");
     if (platform !== "darwin") return check("path.gui", "unknown", "GUI application PATH inspection is only implemented for macOS.");
     const path = await (probes.guiPath?.() ?? launchdPath(timeoutMs));
     if (!path) return check("path.gui", "unknown", "launchd has no explicit readable PATH; a GUI application's inherited PATH is unknown.", "Verify kom from the target application's launch environment; shell PATH is separate evidence.");
     return await executableOnPath(path, cwd) ? check("path.gui", "warning", "kom resolves on launchd's explicit PATH; its Node interpreter and the actual GUI app environment remain unverified.", "Ensure Node 24 and kom resolve in the target app environment; restart the app and verify MCP or hook startup.") : check("path.gui", "warning", "kom does not resolve on launchd's explicit PATH; the actual GUI app PATH remains unverified.", "Expose Node 24 and kom to the target application's launch environment and restart that app.");
   });
-  add("hooks.claude", () => hookWiring("hooks.claude", options.claudeSettings ? [options.claudeSettings] : [join(env.CLAUDE_CONFIG_DIR ?? join(userHome, ".claude"), "settings.json"), join(cwd, ".claude", "settings.json"), join(cwd, ".claude", "settings.local.json")], "claude"));
-  add("hooks.codex", () => hookWiring("hooks.codex", options.codexHooks ? [options.codexHooks] : [join(env.CODEX_HOME ?? join(userHome, ".codex"), "hooks.json"), join(cwd, ".codex", "hooks.json")], "codex"));
+  const manualHooks = async (id: string, paths: string[], vendor: "claude" | "codex") => {
+    const result = await hookWiring(id, paths, vendor);
+    if (result.state === "not_configured" && pluginProfile === (vendor === "claude" ? "claude-code" : "codex")) {
+      return check(id, "not_applicable", "This plugin invocation does not require manual hook entries. Bundled hook activation and trust remain unverified.", "Verify plugin hooks in the vendor and exercise a live session; do not add duplicate manual hooks.");
+    }
+    return result;
+  };
+  add("hooks.claude", () => manualHooks("hooks.claude", options.claudeSettings ? [options.claudeSettings] : [join(env.CLAUDE_CONFIG_DIR ?? join(userHome, ".claude"), "settings.json"), join(cwd, ".claude", "settings.json"), join(cwd, ".claude", "settings.local.json")], "claude"));
+  add("hooks.codex", () => manualHooks("hooks.codex", options.codexHooks ? [options.codexHooks] : [join(env.CODEX_HOME ?? join(userHome, ".codex"), "hooks.json"), join(cwd, ".codex", "hooks.json")], "codex"));
   if (options.pluginDir) {
     const pluginDir = options.pluginDir;
     add("plugin.claude", async () => {
@@ -177,7 +187,7 @@ export async function runDoctor(options: DoctorOptions = {}, probes: Probes = {}
   add("sockets.claude", async () => {
     const value = (await ipc).value;
     if (!value) return check("sockets.claude", "unknown", "Registered Claude sockets cannot be checked while daemon diagnostics are unavailable.");
-    if (!value.claude_sessions.length) return check("sockets.claude", "not_configured", "No live registered Claude sessions to inspect.", "Start a Claude session with the integration enabled.");
+    if (!value.claude_sessions.length) return check("sockets.claude", "not_configured", "No live registered Claude sessions to inspect.", "If Claude is intended, start a session with the integration enabled.");
     const missing = value.claude_sessions.filter((session) => !session.endpoint_configured || session.socket_present === false).length;
     const unknown = value.claude_sessions.filter((session) => session.endpoint_configured && session.socket_present === null).length;
     if (missing) return check("sockets.claude", "fail", `${missing} registered Claude session(s) lack an existing inbox socket.`, "Check SessionStart hook wiring or restart the affected Claude session.");
@@ -188,7 +198,7 @@ export async function runDoctor(options: DoctorOptions = {}, probes: Probes = {}
     const diagnostics = (await ipc).value;
     if (!diagnostics?.codex_sessions) return check("runtime.codex", "unknown", "Codex runtime diagnostics are unavailable; start or update the daemon.");
     const sessions = diagnostics.codex_sessions;
-    if (!sessions.length) return check("runtime.codex", "not_configured", "No live Codex root registered through MCP metadata.", "Start a local Codex root with the MCP server enabled and call whoami.");
+    if (!sessions.length) return check("runtime.codex", "not_configured", "No live Codex root registered through MCP metadata.", "If Codex is intended, start a local root with the MCP server enabled and call whoami.");
     if (sessions.some((session) => !session.shim_alive)) return check("runtime.codex", "fail", "A registered Codex root has no live matching shim process.", "Restart the affected root or wait for daemon lifecycle cleanup.");
     if (sessions.some((session) => !session.hook_events.includes("Stop") || !session.hook_events.includes("PostToolUse"))) return check("runtime.codex", "warning", "Codex identities and shim liveness verified; PostToolUse and Stop polls have not both been observed for every root since daemon start.", "Review hook trust and feature overrides, then exercise a tool and finish a turn.");
     return check("runtime.codex", "pass", `${sessions.length} Codex root(s) have live shims and observed PostToolUse/Stop polls; this does not prove header consumption, native wake or desktop UI support.`);
