@@ -142,3 +142,30 @@ test('runner refuses unexpected tool activity and does not expose stderr', async
   const names = await import('node:fs/promises').then(fs => fs.readdir(directory));
   assert.deepEqual(names, ['fake-codex']);
 });
+
+test('runner accepts only the qualified fail-closed Code Mode advisory', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'kom-observer-advisory-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const runner = join(directory, 'fake-codex');
+  const advisory = 'Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.';
+  async function run(message, eventType = 'item.completed', itemType = 'error') {
+    const events = [
+      { type: 'thread.started', thread_id: 'synthetic-thread' },
+      { type: 'turn.started' },
+      { type: eventType, item: { id: 'item_0', type: itemType, message } },
+      { type: 'item.completed', item: { id: 'item_1', type: 'agent_message', text: JSON.stringify(analysis) } },
+      { type: 'turn.completed', usage: { input_tokens: 1, output_tokens: 1 } },
+    ];
+    await writeFile(runner, '#!/usr/bin/env node\n' +
+      'const fs = require("node:fs");\n' +
+      `fs.writeFileSync(process.argv[process.argv.indexOf("--output-last-message") + 1], ${JSON.stringify(JSON.stringify(analysis))});\n` +
+      `for (const event of ${JSON.stringify(events)}) console.log(JSON.stringify(event));\n`, { mode: 0o700 });
+    return codexAnalyzer({ stateDir: directory, codex: runner, timeoutMs: 2000 })(analysis, new AbortController().signal);
+  }
+  assert.deepEqual(await run(advisory), analysis);
+  await assert.rejects(run('An unknown runtime failure occurred.'), /analysis failed/);
+  await assert.rejects(run(advisory + ' Unexpected additional diagnostic.'), /analysis failed/);
+  await assert.rejects(run(advisory, 'item.started'), /analysis failed/);
+  await assert.rejects(run(advisory, 'turn.failed'), /analysis failed/);
+  await assert.rejects(run(advisory, 'item.completed', 'command_execution'), /analysis failed/);
+});

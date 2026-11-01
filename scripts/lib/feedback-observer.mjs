@@ -87,6 +87,10 @@ export function codexArguments(directory, schema, answer, options = {}) {
   args.push('-'); return args;
 }
 
+// Codex 0.164.0 emits this advisory while explicitly disabling both Code Mode features.
+// It reports a fail-closed state, not tool execution; all other error items remain fatal.
+const CODE_MODE_DISABLED_ADVISORY = 'Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`.';
+
 export function codexAnalyzer(options) {
   return async (message, signal) => {
     const directory = await mkdtemp(join(options.stateDir, 'analysis-'));
@@ -125,7 +129,9 @@ export function codexAnalyzer(options) {
             if (!line.trim()) continue;
             try {
               const event = JSON.parse(line);
-              if ((event.item && !['agent_message', 'reasoning'].includes(event.item.type)) || ['error', 'turn.failed'].includes(event.type)) kill();
+              const disabledAdvisory = event.type === 'item.completed' && event.item?.type === 'error'
+                && event.item.message === CODE_MODE_DISABLED_ADVISORY;
+              if ((event.item && !['agent_message', 'reasoning'].includes(event.item.type) && !disabledAdvisory) || ['error', 'turn.failed'].includes(event.type)) kill();
             } catch { kill(); }
           }
         });
