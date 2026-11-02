@@ -4,7 +4,8 @@ import { randomUUID, createHash } from 'node:crypto';
 import { lstat, readFile, writeFile, mkdir, realpath } from 'node:fs/promises';
 import { join, resolve, isAbsolute, sep } from 'node:path';
 import { spawn } from 'node:child_process';
-import { redact } from './feedback-observer.mjs';
+import { redact, FEEDBACK_TOPIC, LEGACY_FEEDBACK_TOPIC } from './feedback-observer.mjs';
+export const maintainerIdentity = policy => createHash('sha256').update(JSON.stringify([policy.repository, policy.topic, policy.observerDb])).digest('hex');
 
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const VERSION = /^v?\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?$/;
@@ -29,12 +30,12 @@ export async function privatePath(path, directory = false) {
       info.uid !== process.getuid() || (info.mode & 0o077)) throw new Error('unsafe private path');
   return info;
 }
-export async function loadPolicy(path, stateDir) {
+export async function loadPolicy(path, stateDir, { allowLegacyTopic = false } = {}) {
   await privatePath(path);
   const policyPath = await realpath(path), state = await realpath(stateDir);
   if (policyPath === state || policyPath.startsWith(state + sep)) throw new Error('policy must be outside state directory');
   const value = JSON.parse(await readFile(path, 'utf8'));
-  if (value.enabled !== true || value.repository !== 'alex-voloshin-dev/kommutator' || value.topic !== 'kommutator feedback' ||
+  if (value.enabled !== true || value.repository !== 'alex-voloshin-dev/kommutator' || (value.topic !== FEEDBACK_TOPIC && !(allowLegacyTopic && value.topic === LEGACY_FEEDBACK_TOPIC)) ||
       value.standingAuthorization !== 'verify-fix-test-review-publish-kommutator' ||
       typeof value.model !== 'string' || !/^[a-zA-Z0-9._-]{1,100}$/.test(value.model) ||
       !['low', 'medium', 'high', 'xhigh', 'max', 'ultra'].includes(value.effort) ||
@@ -49,13 +50,21 @@ export async function loadPolicy(path, stateDir) {
 }
 
 export class MaintainerQueue {
-  constructor(path, policy) {
+  constructor(path, policy, { allowMigration = false } = {}) {
     this.db = new DatabaseSync(path);
     this.db.exec('PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL');
     const version = this.db.prepare('PRAGMA user_version').get().user_version;
     if (![0, 1].includes(version)) throw new Error('unsupported maintainer schema');
     this.db.exec('CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS reports (id TEXT PRIMARY KEY, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); PRAGMA user_version=1');
-    const identity = createHash('sha256').update(JSON.stringify([policy.repository, policy.topic, policy.observerDb])).digest('hex');
+    if (!allowMigration) {
+      const source = new DatabaseSync(policy.observerDb, { readOnly: true });
+      try {
+        const ready = source.prepare("SELECT value FROM meta WHERE key='topic_migration_ready'").get();
+        const ownReady = this.db.prepare("SELECT value FROM meta WHERE key='topic_migration_ready'").get();
+        if (ready?.value === 'false' || ownReady?.value === 'false') throw new Error('feedback topic migration incomplete');
+      } catch (error) { this.db.close(); throw error; } finally { source.close(); }
+    }
+    const identity = maintainerIdentity(policy);
     const old = this.db.prepare("SELECT value FROM meta WHERE key='identity'").get();
     if (old && old.value !== identity) throw new Error('maintainer identity changed');
     this.db.prepare("INSERT OR IGNORE INTO meta VALUES ('identity',?)").run(identity);
@@ -78,11 +87,15 @@ export class MaintainerQueue {
       const sessionRow = source.prepare("SELECT value FROM meta WHERE key='session'").get();
       const own = sessionRow ? JSON.parse(sessionRow.value)?.handle : null;
       const known = new Set(this.jobs().map(job => job.id));
+      const migrationRow = source.prepare("SELECT value FROM meta WHERE key='topic_migration'").get();
+      const migration = migrationRow ? JSON.parse(migrationRow.value) : null;
+      const legacyIds = new Set(migration?.from === LEGACY_FEEDBACK_TOPIC && migration?.to === policy.topic ? migration.legacyJobIds : []);
       for (const row of source.prepare('SELECT id,data FROM jobs ORDER BY seq').all()) {
         const item = JSON.parse(row.data), message = item.message;
+        const topic = item.topic === LEGACY_FEEDBACK_TOPIC && legacyIds.has(row.id) ? LEGACY_FEEDBACK_TOPIC : policy.topic;
         if (known.has(row.id) || !UUID.test(row.id) || item.stage !== 'done' || !message || !item.sanitizedMessage ||
             item.analysis?.category === 'acknowledgement' || message.from === own || message.hops >= 3 ||
-            !Array.isArray(message.to) || !message.to.includes(`topic:${policy.topic}`) ||
+            !Array.isArray(message.to) || !message.to.includes(`topic:${topic}`) ||
             typeof message.body !== 'string' || message.body.length > 100_000 ||
             /\bsynthetic\b|\[automated feedback/i.test(`${message.subject ?? ''}\n${message.body}`) ||
             (!policy.includeIds.includes(row.id) && !(Date.parse(message.created_at) >= Date.parse(policy.acceptAfter)))) continue;

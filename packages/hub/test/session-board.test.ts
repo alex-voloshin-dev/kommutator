@@ -356,9 +356,23 @@ describe("session presence and visibility", () => {
 });
 
 describe("topic membership", () => {
+  it("rejects whitespace on creation while retaining legacy archive access", () => {
+    const session = register();
+    for (const name of ["release planning", "release\tplanning", "release\nplanning", "release\u00a0planning", "release\u0085planning"]) {
+      expect(() => joinTopic(ctx, peer, { session_id: session.id, name }))
+        .toThrowError(expect.objectContaining({ code: errors.invalidParams }));
+      expect(ctx.db.prepare("SELECT id FROM topics WHERE name=?").get(name)).toBeUndefined();
+    }
+    ctx.db.prepare("INSERT INTO topics(name, kind) VALUES (?, 'adhoc')").run("legacy archive");
+    expect(joinTopic(ctx, peer, { session_id: session.id, name: "legacy archive" })).toEqual({ ok: true, created: false, joined: true });
+    expect(getBoard(ctx, peer, { session_id: session.id, topic: "legacy archive" })).toEqual({ entries: [] });
+    expect(leaveTopic(ctx, peer, { session_id: session.id, name: "legacy archive" })).toEqual({ ok: true });
+    expect(joinTopic(ctx, peer, { session_id: session.id, name: "new-feedback" })).toEqual({ ok: true, created: true, joined: true });
+  });
+
   it("joins and leaves an ad-hoc topic idempotently", () => {
     const session = register();
-    const params = { session_id: session.id, name: "release planning" };
+    const params = { session_id: session.id, name: "release-planning" };
     expect(Results["topic.join"].parse(joinTopic(ctx, peer, params))).toEqual({ ok: true, created: true, joined: true });
     expect(joinTopic(ctx, peer, params)).toEqual({ ok: true, created: false, joined: false });
     expect(listTopics(ctx, peer, { session_id: session.id }).topics)

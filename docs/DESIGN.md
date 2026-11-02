@@ -1256,3 +1256,38 @@ are rejected. After image build and before any production downtime, an isolated 
 runs the actual entrypoint and healthcheck as the production non-root UID/GID with the same
 read-only/capability restrictions, a synthetic key, tmpfs database and no published ports.
 A passing root-owned build-stage import is not sufficient evidence of runtime readability.
+
+### Hyphenated feedback topic migration (2026-11-02)
+
+New ad-hoc topic names contain no whitespace; use hyphens between words. Existing legacy
+topics remain readable/joinable/leavable for archive and replay compatibility. Automatic
+project/global membership is unchanged. The canonical feedback topic is `kommutator-feedback`;
+`kommutator feedback` remains an archive, not an alias.
+
+An explicit offline operator migration retains the observer host/session, mailbox cursor,
+job IDs and publication replay keys. Historical observer jobs and already-created maintainer
+reports retain their original output topic; only the original job-ID set may be imported as
+legacy work after cutover. New arrivals on the archive are ignored. New reports and feedback
+use the canonical topic. Existing archive membership is retained for pending board/message
+replay; the hub history is never rewritten or deleted.
+
+Both services must be stopped between engineering jobs. The migrator obtains their kernel
+locks, refuses running jobs, creates private online-format SQLite backups and a policy copy,
+and writes a durable phase marker before changing either journal identity. Each phase is
+idempotent; a crash requires rerunning the same migration while services remain stopped.
+The policy changes last, and services start only after all identities are consistent.
+
+Before capture, both journals are fenced as migration-incomplete; updated runtime startup
+refuses that state. Readiness is committed only after both identities and the private policy
+are consistent. A crash after readiness only finalizes the marker on rerun, without recapturing
+or reclassifying live traffic. Capture joins the new topic using the retained session, drains
+bounded inbox pages and serves missing bodies before classifying jobs. New-topic-only jobs
+previously ignored by the old observer return to pending. Existing registration replay payloads
+remain unchanged; a later normal session update refreshes the observer status line.
+
+Explicit observer-only migration applies the same capture, identity, replay and readiness
+contracts without requiring engineering policy or skills. Its marker and private backup live
+in observer state. Existing maintainer paths or publication metadata reject standalone mode;
+partial installations use joint migration. A missing marker with an incomplete runtime fence
+is never adopted by a different mode. Both backup contents and their directory entries are
+synced before the durable marker is written.

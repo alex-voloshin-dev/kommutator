@@ -23,10 +23,10 @@ async function fixture(t, analyze = async () => analysis) {
   };
   const sender = await link('sender');
   const source = (await sender.request('session.upsert', { op: 'register', reg_id: randomUUID(), session: { host: 'sender', name: 'author', vendor: 'other' } })).session;
-  await sender.request('topic.join', { session_id: source.id, name: 'kommutator feedback' });
+  await sender.request('topic.join', { session_id: source.id, name: 'kommutator-feedback' });
   const journalPath = join(directory, 'observer.db');
   let journal = new Journal(journalPath, 'fixture');
-  const observerOptions = { topic: 'kommutator feedback', host: observerHost('host', 'kommutator feedback'), analyze,
+  const observerOptions = { topic: 'kommutator-feedback', host: observerHost('host', 'kommutator-feedback'), analyze,
     now: () => clock, cooldownMs: 60_000, log: () => {}, key: 'synthetic-observer-secret-key' };
   let observer = new FeedbackObserver({ ...observerOptions, journal, link: await link(observerOptions.host) });
   await observer.connect();
@@ -35,7 +35,7 @@ async function fixture(t, analyze = async () => analysis) {
     db, directory, source, get journal() { return journal; }, get observer() { return observer; },
     advance(ms = 120_000) { clock += ms; }, lose(method) { lose = method; },
     async send(body, options = {}) {
-      return sender.request('message.send', { session_id: source.id, idempotency_key: randomUUID(), message: { from: '', to: ['topic:kommutator feedback'], kind: 'topic', priority: 'fyi', body, ...options } });
+      return sender.request('message.send', { session_id: source.id, idempotency_key: randomUUID(), message: { from: '', to: ['topic:kommutator-feedback'], kind: 'topic', priority: 'fyi', body, ...options } });
     },
     async restart() {
       await observer.close(); journal.close(); journal = new Journal(journalPath, 'fixture');
@@ -48,7 +48,7 @@ async function fixture(t, analyze = async () => analysis) {
 
 test('dedicated service namespace cannot replace the interactive daemon host', () => {
   const host = 'a'.repeat(63);
-  const result = observerHost(host, 'kommutator feedback');
+  const result = observerHost(host, 'kommutator-feedback');
   assert.notEqual(result, host); assert(result.length <= 63); assert.match(result, /^[a-z0-9_-]+$/);
   assert.notEqual(result, observerHost(host, 'other topic'));
 });
@@ -87,8 +87,8 @@ test('read ACK loss and restart retain journaled work, ID and topic backlog', as
 test('pure acknowledgements, other topics and high hops do not invoke analysis', async t => {
   let calls = 0; const f = await fixture(t, async () => { calls++; return analysis; });
   await f.send('Спасибо!'); await f.send('Thanks.');
-  assert(ignored({ from: 'peer', to: ['topic:kommutator feedback'], hops: 3, body: 'Question' }, { handle: 'self' }, 'kommutator feedback'));
-  assert(ignored({ from: 'peer', to: ['topic:other'], hops: 0, body: 'Question' }, { handle: 'self' }, 'kommutator feedback'));
+  assert(ignored({ from: 'peer', to: ['topic:kommutator-feedback'], hops: 3, body: 'Question' }, { handle: 'self' }, 'kommutator-feedback'));
+  assert(ignored({ from: 'peer', to: ['topic:other'], hops: 0, body: 'Question' }, { handle: 'self' }, 'kommutator-feedback'));
   for (let i = 0; i < 4; i++) await f.observer.tick();
   assert.equal(calls, 0); assert.equal(f.replies().length, 0);
 });
@@ -175,7 +175,7 @@ test('maintainer reports reuse durable replay keys after lost message acknowledg
   const f = await fixture(t);
   const source = await f.send('A real diagnostic issue.');
   const resultDb = join(f.directory, 'maintainer.db');
-  const queue = new MaintainerQueue(resultDb, { repository: 'test', topic: 'kommutator feedback', observerDb: join(f.directory, 'observer.db') });
+  const queue = new MaintainerQueue(resultDb, { repository: 'test', topic: 'kommutator-feedback', observerDb: join(f.directory, 'observer.db') });
   t.after(() => queue.close());
   queue.transition({ id: source.id, attempt: 1 }, 'answered', 'Verified and explained.');
   f.observer.resultDb = resultDb;

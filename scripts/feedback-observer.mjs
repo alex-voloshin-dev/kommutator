@@ -3,17 +3,16 @@
 import { mkdir, chmod, lstat, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { HubLink, Config } from '../packages/agentd/dist/index.js';
 import { Methods } from '../packages/protocol/dist/index.js';
-import { Journal, FeedbackObserver, codexAnalyzer, observerHost } from './lib/feedback-observer.mjs';
+import { Journal, FeedbackObserver, codexAnalyzer, observerHost, observerIdentity } from './lib/feedback-observer.mjs';
 
 function options(argv) {
   const result = { command: argv[0] ?? 'status', stateDir: join(homedir(), '.local/state/kommutator-feedback'),
     config: join(process.env.KOM_HOME ?? join(homedir(), '.kommutator'), 'config.json'),
-    topic: 'kommutator feedback', pollMs: 15_000, cooldownMs: 60_000, timeoutMs: 180_000 };
+    topic: 'kommutator-feedback', pollMs: 15_000, cooldownMs: 60_000, timeoutMs: 180_000 };
   if (!['run', '_worker', 'status', 'retry'].includes(result.command)) throw new Error('invalid command');
   const flags = { '--result-db': 'resultDb', '--state-dir': 'stateDir', '--config': 'config', '--topic': 'topic', '--codex': 'codex', '--model': 'model', '--effort': 'effort', '--poll-ms': 'pollMs', '--cooldown-ms': 'cooldownMs', '--timeout-ms': 'timeoutMs' };
   for (let index = 1; index < argv.length; index += 2) {
@@ -49,8 +48,7 @@ async function main() {
   }
   const raw = await readFile(opts.config, 'utf8');
   const config = Config.parse(JSON.parse(raw));
-  const host = observerHost(config.host, opts.topic);
-  const identity = createHash('sha256').update(JSON.stringify([config.hub, config.host, opts.topic])).digest('hex');
+  const identity = observerIdentity(config, opts.topic);
   const journalPath = join(opts.stateDir, 'observer.db');
   try {
     const existing = await lstat(journalPath);
@@ -58,6 +56,8 @@ async function main() {
     await chmod(journalPath, 0o600);
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const journal = new Journal(journalPath, identity);
+  const host = journal.get('retained_host') ?? observerHost(config.host, opts.topic);
+  if (journal.get('retained_host') && host !== journal.get('session')?.host) throw new Error('retained observer host mismatch');
   if (opts.command === 'status') { console.log(JSON.stringify(journal.status(), null, 2)); journal.close(); return; }
   if (opts.command === 'retry') {
     let retried = 0;

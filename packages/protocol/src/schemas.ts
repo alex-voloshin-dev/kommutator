@@ -32,7 +32,10 @@ export const LIMITS = {
   injectionBudget: 4_000,
 } as const;
 
-export const TopicName = z.string().min(1).max(LIMITS.topicName);
+export const TopicName = z.string().min(1).max(LIMITS.topicName)
+  .describe("Topic name. New ad-hoc topics use hyphens between words and contain no whitespace; legacy names remain readable.");
+export const NewTopicName = TopicName.refine((name) => !/[\s\p{White_Space}]/u.test(name),
+  "new topic names cannot contain whitespace; use hyphens between words");
 export const BoardKey = z.string().min(1).max(LIMITS.boardKey);
 export const BoardBody = z.string().max(LIMITS.boardBody);
 export const SessionId = z.string().min(1).max(64);

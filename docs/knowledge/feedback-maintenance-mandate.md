@@ -24,3 +24,7 @@ circumvented. Uncertain publication and interrupted work require explicit reconc
 On 2026-11-02 the local operator additionally authorized updating/restarting this host's hub
 and agentd when new versions are released. This is a separate opt-in deployment policy, not
 permission for feedback workers to mutate live services. See [local release deployment](../LOCAL_RELEASE_DEPLOY.md).
+
+On 2026-11-02 the operator superseded that topic spelling with `kommutator-feedback`.
+Monitor the hyphenated topic; retain the spaced topic only as an archive for historical
+work and replay. New ad-hoc names use hyphens between words and contain no whitespace.

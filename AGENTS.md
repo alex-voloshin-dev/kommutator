@@ -38,3 +38,5 @@ Build first because process tests and workspace imports use `dist/`. For packagi
   hooks/MCP merely to inspect this repository. Never globally enable Claude inbound accept.
 - Keep edits scoped and avoid overwriting unrelated work. Report files changed, checks
   actually run, failures and remaining gates. Optional maintainer tooling is not a prerequisite.
+
+- New ad-hoc topic names use hyphens between words and no whitespace. The canonical feedback topic is `kommutator-feedback`; `kommutator feedback` is a historical archive only.

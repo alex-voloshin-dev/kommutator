@@ -98,7 +98,7 @@ dated checkpoint. MIT was selected for public preparation on 2026-10-29; see the
 
 ## Optional feedback monitoring
 
-Maintainers can run an independent, persistent observer for `kommutator feedback`.
+Maintainers can run an independent, persistent observer for `kommutator-feedback`.
 It records triage and sends FYI thread replies using an existing local Codex login;
 it does not make code changes. See [Feedback observer](FEEDBACK_OBSERVER.md) for
 installation, status, recovery and stop commands. Ordinary client and hub installations

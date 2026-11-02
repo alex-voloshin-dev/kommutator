@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BoardEntry, LIMITS, Message, Methods, Session } from "../src/schemas.js";
+import { BoardEntry, LIMITS, Message, Methods, Session, TopicName, NewTopicName } from "../src/schemas.js";
 
 describe("Session", () => {
   it("rejects names and hosts that cannot be addressed", () => {
@@ -122,5 +122,16 @@ describe("session update defaults", () => {
       .toEqual({ op: "update", session: { id: "s1", status_line: "Busy" } });
     expect(Session.parse({ host: "host", name: "agent", vendor: "other" }))
       .toMatchObject({ state: "active", incarnation: 0, wake: "on", capability: "none" });
+  });
+});
+
+
+describe("new topic naming", () => {
+  it("uses hyphens without breaking legacy records", () => {
+    expect(NewTopicName.parse("kommutator-feedback")).toBe("kommutator-feedback");
+    for (const name of ["a b", "a\tb", "a\nb", "a\u00a0b", "a\u0085b"]) {
+      expect(NewTopicName.safeParse(name).success).toBe(false);
+      expect(TopicName.safeParse(name).success).toBe(true);
+    }
   });
 });

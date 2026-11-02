@@ -1,7 +1,7 @@
 {
   "name": "kommutator-monorepo",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "kommutator \u2014 self-hosted cross-vendor message hub for coding-agent sessions",
   "packageManager": "pnpm@10.18.0",
   "engines": {
@@ -18,7 +18,8 @@
     "test:hub-helper": "node --test scripts/hub.test.mjs",
     "test:feedback-observer": "node --test scripts/feedback-observer.test.mjs scripts/feedback-observer-process.test.mjs",
     "test:feedback-maintainer": "node --test scripts/feedback-maintainer.test.mjs",
-    "test:local-release-deploy": "node --test scripts/local-release-deploy.test.mjs"
+    "test:local-release-deploy": "node --test scripts/local-release-deploy.test.mjs",
+    "test:feedback-topic-migration": "node --test scripts/feedback-topic-migration.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

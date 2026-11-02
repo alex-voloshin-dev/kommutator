@@ -121,3 +121,6 @@ Before session tools, call `setup_status`. If unconfigured, call `setup_start` a
 user to open the returned private local form. Never request the hub key in chat or tool
 arguments. Existing config is reused. Trust the plugin hooks normally and start a fresh
 session if project context is unavailable; never guess a project from the plugin cache.
+
+For new ad-hoc topics, separate words with hyphens and never use spaces or other whitespace.
+Use `kommutator-feedback` for kommutator reports; the old spaced topic is an archive.

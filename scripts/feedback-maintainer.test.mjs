@@ -11,11 +11,11 @@ async function fixture(t) {
   const dir = await mkdtemp(join(tmpdir(), 'kom-maintainer-'));
   const observerDb = join(dir, 'observer.db'), source = new Journal(observerDb, 'test');
   source.set('session', { handle: 'observer@test' });
-  const policy = { repository: 'alex-voloshin-dev/kommutator', topic: 'kommutator feedback', observerDb, acceptAfter: '2026-01-01T00:00:00Z', includeIds: [], model: 'test', effort: 'medium', skillsRoot: '/trusted/skills' };
+  const policy = { repository: 'alex-voloshin-dev/kommutator', topic: 'kommutator-feedback', observerDb, acceptAfter: '2026-01-01T00:00:00Z', includeIds: [], model: 'test', effort: 'medium', skillsRoot: '/trusted/skills' };
   const queue = new MaintainerQueue(join(dir, 'maintainer.db'), policy);
   t.after(async () => { source.close(); queue.close(); await rm(dir, { recursive: true, force: true }); });
   const add = (overrides = {}) => {
-    const id = randomUUID(), message = { from: 'reporter@test', to: ['topic:kommutator feedback'], hops: 0, body: 'Doctor reports missing hook.', created_at: '2026-11-01T00:00:00Z', ...overrides };
+    const id = randomUUID(), message = { from: 'reporter@test', to: ['topic:kommutator-feedback'], hops: 0, body: 'Doctor reports missing hook.', created_at: '2026-11-01T00:00:00Z', ...overrides };
     source.save({ id, seq: source.jobs().length + 1, stage: 'done', message, sanitizedMessage: { from: message.from, subject: '', body: message.body }, analysis: { category: 'bug' } }); return id;
   };
   return { dir, source, policy, queue, add };

@@ -170,3 +170,11 @@ this exact contract; they never infer compatibility from the legacy `0.0.0` vers
 membership). Flags describe mutations in this call, not the original replay. `topic.list`
 discovery returns the same name/kind records as joined listing; it does not expose members
 or board contents, grant membership, or reveal another project's topic.
+
+## Ad-hoc topic names
+
+New topic creation via `topic.join` rejects all whitespace, including tabs/newlines and
+Unicode whitespace. Separate words with `-`, for example `kommutator-feedback`. The
+`NewTopicName` schema expresses creation validation. General `TopicName` remains compatible
+with existing legacy records: joining, reading or leaving an existing spaced topic remains
+possible for history and replay. No automatic topic renaming is performed.

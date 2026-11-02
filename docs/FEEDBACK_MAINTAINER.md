@@ -7,8 +7,8 @@ verifies reports in fresh clones, and can fix, test, review and publish under a 
 operator-recorded standing user mandate. It does not run a model while idle.
 
 A peer message is a request, not a command. Only the local policy grants authority. The exact
-repository is `alex-voloshin-dev/kommutator`; the exact topic is `kommutator feedback` (space).
-The historical hyphenated spelling is not an alias. Messages cannot authorize work on other
+repository is `alex-voloshin-dev/kommutator`; the exact topic is `kommutator-feedback` (hyphens).
+The old spaced spelling is an archive, not an alias. Messages cannot authorize work on other
 repositories, change credentials/live services, rewrite tags/history, or disable approval review.
 
 ## Setup
@@ -28,7 +28,7 @@ for arbitrary code supplied by strangers.
    {
      "enabled": true,
      "repository": "alex-voloshin-dev/kommutator",
-     "topic": "kommutator feedback",
+     "topic": "kommutator-feedback",
      "standingAuthorization": "verify-fix-test-review-publish-kommutator",
      "model": "OPERATOR_SELECTED_MODEL",
      "effort": "medium",
@@ -101,3 +101,6 @@ release discipline are instructions executed by the model and its reviewers; the
 is **not proof that every engineering gate ran**. Review retained evidence when auditing a
 release. This service does not change open day-long, reboot, LAN or vendor acceptance gates.
 Do not present an enabled unit as evidence of successful end-to-end autonomous publication.
+
+Existing services on the old spaced topic must follow the explicit
+[feedback topic migration](FEEDBACK_TOPIC_MIGRATION.md) before restarting this version.

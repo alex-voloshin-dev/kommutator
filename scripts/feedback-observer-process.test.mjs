@@ -12,7 +12,7 @@ import { openDatabase } from '../packages/hub/dist/db.js';
 import { HubLink } from '../packages/agentd/dist/index.js';
 
 const entry = fileURLToPath(new URL('./feedback-observer.mjs', import.meta.url));
-const topic = 'kommutator feedback';
+const topic = 'kommutator-feedback';
 const key = 'synthetic-process-fixture-key-not-a-real-credential';
 async function eventually(check, description, timeout = 12_000) {
   const deadline = Date.now() + timeout;

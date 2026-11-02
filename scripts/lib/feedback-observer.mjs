@@ -6,6 +6,10 @@ import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { Methods, Results } from '../../packages/protocol/dist/index.js';
 
+export const FEEDBACK_TOPIC = 'kommutator-feedback';
+export const LEGACY_FEEDBACK_TOPIC = 'kommutator feedback';
+export const observerIdentity = (config, topic) => createHash('sha256').update(JSON.stringify([config.hub, config.host, topic])).digest('hex');
+
 export const ANALYSIS_SCHEMA = {
   type: 'object', additionalProperties: false,
   properties: { category: { type: 'string', enum: ['bug', 'suggestion', 'question', 'acknowledgement', 'other'] },
@@ -41,7 +45,7 @@ export function ignored(message, session, topic) {
 }
 
 export class Journal {
-  constructor(path, identity) {
+  constructor(path, identity, { allowMigration = false } = {}) {
     this.db = new DatabaseSync(path);
     this.db.exec('PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;');
     const version = this.db.prepare('PRAGMA user_version').get().user_version;
@@ -49,6 +53,7 @@ export class Journal {
     this.db.exec(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, seq INTEGER NOT NULL, data TEXT NOT NULL);
       PRAGMA user_version=1;`);
+    if (!allowMigration && this.get('topic_migration_ready') === false) { this.db.close(); throw new Error('feedback topic migration incomplete'); }
     if (this.get('identity') && this.get('identity') !== identity) { this.db.close(); throw new Error('observer state belongs to different configuration'); }
     this.set('identity', identity);
   }
@@ -176,6 +181,10 @@ export class FeedbackObserver {
     const { session } = await this.rpc('session.upsert', registration);
     this.journal.set('session', session); this.journal.set('registration', null);
     await this.rpc('topic.join', { session_id: session.id, name: this.topic });
+    if (this.journal.get('retained_host') && session.status_line !== `Monitoring ${this.topic}`) {
+      const updated = await this.rpc('session.upsert', { op: 'update', session: { id: session.id, status_line: `Monitoring ${this.topic}` } });
+      this.journal.set('session', updated.session);
+    }
     this.ready = true;
     this.log('feedback observer connected');
     await this.tick();
@@ -224,7 +233,9 @@ export class FeedbackObserver {
         const result = await this.rpc('message.read', { session_id: session.id, id: job.id });
         job.message = result.message; this.journal.save(job);
       }
-      if (ignored(job.message, session, this.topic)) { job.stage = 'ignored'; this.journal.save(job); return; }
+      const topic = job.topic ?? this.topic;
+      if (topic !== this.topic && !(topic === LEGACY_FEEDBACK_TOPIC && this.journal.get('topic_migration')?.legacyJobIds.includes(job.id))) throw new Error('unapproved legacy job');
+      if (ignored(job.message, session, topic)) { job.stage = 'ignored'; this.journal.save(job); return; }
       if (!job.analysis) {
         if (job.attempts >= 3) { job.stage = 'failed'; this.journal.save(job); return; }
         if (this.now() < (this.journal.get('last_model_at') ?? 0) + this.cooldownMs) return;
@@ -244,16 +255,16 @@ export class FeedbackObserver {
       if (job.analysis.category === 'acknowledgement') { job.stage = 'ignored'; this.journal.save(job); return; }
       const boardKey = `feedback-observer/${job.id}`;
       if (!job.boardDone) {
-        const { entries } = await this.rpc('board.get', { session_id: session.id, topic: this.topic, key: boardKey });
+        const { entries } = await this.rpc('board.get', { session_id: session.id, topic, key: boardKey });
         if (entries.some(entry => entry.protected)) throw new Error('protected board entry');
-        await this.rpc('board.put', { session_id: session.id, topic: this.topic, key: boardKey,
+        await this.rpc('board.put', { session_id: session.id, topic, key: boardKey,
           body: `Source: ${job.id}\nReporter: ${redact(job.message.from, this.key)}\nCategory: ${job.analysis.category}\nPriority: ${job.analysis.priority}\nStatus: triaged; not independently verified\n\n${job.analysis.summary}`,
           op_id: job.boardOp });
         job.boardDone = true; this.journal.save(job);
       }
       if (job.analysis.reply.trim()) {
         await this.rpc('message.send', { session_id: session.id, idempotency_key: job.replyKey,
-          message: { from: '', to: [`topic:${this.topic}`], kind: 'topic', priority: 'fyi',
+          message: { from: '', to: [`topic:${topic}`], kind: 'topic', priority: 'fyi',
             subject: 'Feedback triage', body: `${job.analysis.reply}\n\n[Automated feedback triage; not independently verified.]`, reply_to: job.id } });
       }
       job.stage = 'done'; this.journal.save(job);
@@ -282,17 +293,20 @@ export class FeedbackObserver {
         const key = `maintainer-report:${report.id}`;
         const saved = this.journal.get(key) ?? { boardOp: randomUUID(), replyKey: randomUUID(), boardDone: false, done: false };
         if (saved.done) continue;
+        const topic = saved.topic ?? report.topic ?? this.topic;
+        if (topic !== this.topic && !(topic === LEGACY_FEEDBACK_TOPIC && this.journal.get('topic_migration')?.legacyJobIds.includes(report.source))) throw new Error('unapproved legacy report');
+        saved.topic = topic;
         this.journal.set(key, saved);
         const boardKey = `feedback-maintainer/${report.id}`;
         const body = `Source: ${report.source}\nStatus: ${report.status}\n\n${redact(report.summary, this.key)}`;
         if (!saved.boardDone) {
-          const { entries } = await this.rpc('board.get', { session_id: session.id, topic: this.topic, key: boardKey });
+          const { entries } = await this.rpc('board.get', { session_id: session.id, topic, key: boardKey });
           if (entries.some(entry => entry.protected)) throw new Error('protected maintainer entry');
-          await this.rpc('board.put', { session_id: session.id, topic: this.topic, key: boardKey, body, op_id: saved.boardOp });
+          await this.rpc('board.put', { session_id: session.id, topic, key: boardKey, body, op_id: saved.boardOp });
           saved.boardDone = true; this.journal.set(key, saved);
         }
         await this.rpc('message.send', { session_id: session.id, idempotency_key: saved.replyKey,
-          message: { from: '', to: [`topic:${this.topic}`], kind: 'topic', priority: 'fyi',
+          message: { from: '', to: [`topic:${topic}`], kind: 'topic', priority: 'fyi',
             subject: `Feedback maintainer: ${report.status}`, body, reply_to: report.source } });
         saved.done = true; this.journal.set(key, saved);
       } catch { failed = true; this.journal.set('last_report_error', 'maintainer report retained after publication failure'); }

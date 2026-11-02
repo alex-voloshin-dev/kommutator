@@ -1,4 +1,4 @@
-import type { Methods } from "@kommutator/protocol";
+import { NewTopicName, type Methods } from "@kommutator/protocol";
 import type { z } from "zod";
 import { errors, requireSession, RpcFault, transaction, type HubContext, type HubPeer } from "./context.js";
 
@@ -12,6 +12,10 @@ export function joinTopic(ctx: HubContext, peer: HubPeer, params: z.output<typeo
   const result = transaction(ctx, () => {
     requireSession(ctx, peer, params.session_id);
     requireAdHoc(params.name);
+    const existing = ctx.db.prepare("SELECT id FROM topics WHERE name = ?").get(params.name);
+    if (!existing && !NewTopicName.safeParse(params.name).success) {
+      throw new RpcFault(errors.invalidParams, "new topic names cannot contain whitespace; use hyphens between words");
+    }
     const created = ctx.db.prepare("INSERT OR IGNORE INTO topics(name, kind) VALUES (?, 'adhoc')").run(params.name).changes > 0;
     const joined = ctx.db.prepare(`INSERT OR IGNORE INTO memberships(session_id, topic_id)
       SELECT ?, id FROM topics WHERE name = ?`).run(params.session_id, params.name).changes > 0;

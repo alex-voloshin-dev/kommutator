@@ -1,6 +1,6 @@
 # Optional feedback observer
 
-This Linux/WSL maintainer service watches `kommutator feedback`, records triage on that topic's
+This Linux/WSL maintainer service watches `kommutator-feedback`, records triage on that topic's
 board, and replies in the source thread. It runs independently of an interactive coding
 session. Ordinary hub and plugin installations do not need it.
 
@@ -107,3 +107,6 @@ Long-duration availability, Windows reboot, and external subnet checks remain se
 
 For separately authorized engineering and publication, see the opt-in
 [feedback maintainer](FEEDBACK_MAINTAINER.md). It does not grant tools to this observer.
+
+Existing services on the old spaced topic must follow the explicit
+[feedback topic migration](FEEDBACK_TOPIC_MIGRATION.md) before restarting this version.
