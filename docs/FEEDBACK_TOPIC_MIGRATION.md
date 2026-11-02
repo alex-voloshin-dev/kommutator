@@ -76,7 +76,11 @@ report IDs and replay keys. Do not edit SQLite rows or erase either state direct
    `kommutator-feedback`. Archive is an operational convention; the hub does not make the
    old topic read-only. Do not leave its membership while historical replies are pending.
 
-5. Explicitly restart the services only after the migration succeeds:
+5. Deploy the matching hub release before starting the updated observer. In particular,
+   a pre-0.6 hub lacks the topic-join result fields used by the updated client. A healthy
+   TCP endpoint alone does not establish client compatibility. Keep both feedback services
+   stopped while the hub and local daemon are upgraded; retain their persistent databases.
+   Then explicitly restart the services after the migration succeeds:
 
    ```sh
    systemctl --user daemon-reload
