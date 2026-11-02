@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { spawn } from "node:child_process";
+import { createServer } from "node:net";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -25,6 +26,48 @@ async function hook(input: string | undefined, args: string[] = []) {
 }
 
 describe("production entrypoints", () => {
+  it("allows root Codex diagnostics against a legacy daemon but rejects forks before IPC", async () => {
+    const home = await mkdtemp(join(tmpdir(), "kom-codex-status-")); dirs.push(home);
+    const calls: { method: string; params?: unknown }[] = [];
+    const daemon = createServer(socket => {
+      let buffer = "";
+      socket.on("data", chunk => {
+        buffer += String(chunk);
+        let end: number;
+        while ((end = buffer.indexOf("\n")) >= 0) {
+          const request = JSON.parse(buffer.slice(0, end));
+          buffer = buffer.slice(end + 1);
+          calls.push({ method: request.method, params: request.params });
+          socket.write(JSON.stringify({ jsonrpc: "2.0", id: request.id,
+            result: request.method === "daemon.status" ? { daemon: { version: "0.0.0" } } : { bound: false },
+          }) + "\n");
+        }
+      });
+    });
+    const transport = new StdioClientTransport({ command: process.execPath, args: [entry, "mcp"],
+      env: { KOM_HOME: home, KOM_PLUGIN_PROFILE: "codex" }, stderr: "pipe" });
+    const client = new Client({ name: "codex-mcp-client", version: "0.164.0" });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        daemon.once("error", reject);
+        daemon.listen(join(home, "agentd.sock"), resolve);
+      });
+      await client.connect(transport);
+      expect((await client.callTool({ name: "status", arguments: {} })).isError).toBe(true);
+      expect((await client.callTool({ name: "status", arguments: {},
+        _meta: { sessionId: "root", threadId: "fork" } })).isError).toBe(true);
+      expect(calls).toEqual([]);
+      const result = await client.callTool({ name: "status", arguments: {},
+        _meta: { sessionId: "root", threadId: "root" } });
+      expect(result.isError).not.toBe(true);
+      expect(result.content).toEqual([{ type: "text", text: JSON.stringify({ daemon: { version: "0.0.0" } }) }]);
+      expect(calls.map(call => call.method)).toEqual(["ipc.hello", "daemon.status"]);
+      expect(calls[0]?.params).toMatchObject({ client: "cli" });
+    } finally {
+      await client.close();
+      await new Promise<void>(resolve => daemon.close(() => resolve()));
+    }
+  });
   it("empty stdin with no daemon exits silently under the 200ms total budget", async () => {
     const result = await hook("");
     expect(result).toMatchObject({ code: 0, stdout: "" });

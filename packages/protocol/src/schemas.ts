@@ -201,7 +201,7 @@ export const Methods = {
   /** Ad-hoc topics only: `project:*` membership is derived from project_key, `global` is implicit. */
   "topic.join": z.object({ session_id: SessionId, name: TopicName.refine((n) => !n.startsWith("project:") && n !== "global", "only ad-hoc topics can be joined") }),
   "topic.leave": z.object({ session_id: SessionId, name: TopicName }),
-  "topic.list": z.object({ session_id: SessionId }),
+  "topic.list": z.object({ session_id: SessionId, discover: z.boolean().optional() }),
   "board.get": z.object({ session_id: SessionId, topic: TopicName, key: BoardKey.optional() }),
   "board.put": z.object({
     session_id: SessionId,

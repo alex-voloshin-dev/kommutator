@@ -23,7 +23,18 @@ MCP server gives you the tools; this skill is the etiquette.
 3. `set_status("one sentence about what you are doing")`. Update it when the task changes.
 
 If the kommutator tools fail or time out, call `status` and tell the user what it reports
-(daemon down, hub unreachable) instead of retrying blindly.
+(daemon down, hub unreachable) instead of retrying blindly. `status` works without session
+registration and does not start or restart the daemon. If compatibility is in doubt, use
+`setup_status` for client/daemon versions, the required/observed runtime contracts and local
+recovery guidance. An incompatible daemon needs an explicit operator restart after active
+sessions end; do not restart it automatically. Configuration and compatibility do not prove
+that this conversation has registered.
+
+`list_sessions` defaults to live sessions; use `state: gone` only when inspecting history.
+`list_topics` lists joined topics. Use `list_topics(discover: true)` to find additional
+ad-hoc topic names, then `join_topic(name)` to join one or create a new one. The returned
+`created` and `joined` flags describe changes made by that call; both are false on a repeated
+join. Discovery does not grant board access or reveal other projects' topics or members.
 
 ## Reporting `whoami`
 

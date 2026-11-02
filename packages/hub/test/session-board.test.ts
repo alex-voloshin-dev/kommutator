@@ -324,6 +324,19 @@ describe("session presence and visibility", () => {
     expect(listSessions(ctx, peer, { session_id: author.id }).sessions).toEqual([author, reviewer]);
   });
 
+  it("excludes gone sessions by default and keeps explicit history under membership checks", () => {
+    const author = register();
+    const ended = register({ name: "ended", role: "reviewer" });
+    const unknown = register({ name: "unknown", state: "unknown" });
+    const idle = register({ name: "idle", state: "idle" });
+    goneSession(ctx, peer, { session_id: ended.id, incarnation: ended.incarnation });
+    expect(listSessions(ctx, peer, { session_id: author.id }).sessions).toEqual([author, idle, unknown]);
+    expect(listSessions(ctx, peer, { session_id: author.id, state: "gone", role: "reviewer" }).sessions).toEqual([{ ...ended, state: "gone" }]);
+    expect(() => listSessions(ctx, peer, { session_id: author.id, state: "gone", topic: "project:private" })).toThrowError(expect.objectContaining({ code: errors.unauthorized }));
+    ctx.db.prepare("DELETE FROM memberships WHERE session_id = ?").run(ended.id);
+    expect(listSessions(ctx, peer, { session_id: author.id, state: "gone" }).sessions).toEqual([]);
+  });
+
   it("refuses all scoped calls made through a different host", () => {
     const session = register();
     const other = otherPeer();
@@ -346,8 +359,8 @@ describe("topic membership", () => {
   it("joins and leaves an ad-hoc topic idempotently", () => {
     const session = register();
     const params = { session_id: session.id, name: "release planning" };
-    expect(joinTopic(ctx, peer, params)).toEqual({ ok: true });
-    joinTopic(ctx, peer, params);
+    expect(Results["topic.join"].parse(joinTopic(ctx, peer, params))).toEqual({ ok: true, created: true, joined: true });
+    expect(joinTopic(ctx, peer, params)).toEqual({ ok: true, created: false, joined: false });
     expect(listTopics(ctx, peer, { session_id: session.id }).topics)
       .toContainEqual({ name: params.name, kind: "adhoc" });
     expect(getBoard(ctx, peer, { session_id: session.id, topic: params.name })).toEqual({ entries: [] });
@@ -356,6 +369,27 @@ describe("topic membership", () => {
     expect(() => getBoard(ctx, peer, { session_id: session.id, topic: params.name }))
       .toThrowError(expect.objectContaining({ code: errors.unauthorized }));
     expect(observed.map((event) => event.type)).toEqual(["session.registered", "topic.join", "topic.leave"]);
+  });
+
+  it("discovers only ad-hoc names without joining or revealing other projects and boards", () => {
+    const author = register();
+    const outsider = register({ name: "outsider", project_key: "private-project" });
+    joinTopic(ctx, peer, { session_id: outsider.id, name: "shared-planning" });
+    putBoard(ctx, peer, { session_id: outsider.id, topic: "shared-planning", key: "private", body: "secret board", op_id: "private-board-op" });
+    const joined = listTopics(ctx, peer, { session_id: author.id });
+    expect(joined.topics).not.toContainEqual({ name: "shared-planning", kind: "adhoc" });
+    expect(listTopics(ctx, peer, { session_id: author.id, discover: false })).toEqual(joined);
+    const discovered = Results["topic.list"].parse(listTopics(ctx, peer, { session_id: author.id, discover: true }));
+    expect(discovered.topics).toEqual([
+      { name: "global", kind: "global" }, { name: "project:one", kind: "project" },
+      { name: "shared-planning", kind: "adhoc" },
+    ]);
+    expect(listTopics(ctx, peer, { session_id: author.id })).toEqual(joined);
+    expect(() => getBoard(ctx, peer, { session_id: author.id, topic: "shared-planning" })).toThrowError(expect.objectContaining({ code: errors.unauthorized }));
+    expect(() => listTopics(ctx, otherPeer(), { session_id: author.id, discover: true })).toThrowError(expect.objectContaining({ code: errors.unauthorized }));
+    expect(joinTopic(ctx, peer, { session_id: author.id, name: "shared-planning" })).toEqual({ ok: true, created: false, joined: true });
+    expect(listTopics(ctx, peer, { session_id: author.id, discover: true })).toEqual(discovered);
+    expect(getBoard(ctx, peer, { session_id: author.id, topic: "shared-planning" }).entries[0]?.body).toBe("secret board");
   });
 
   it("refuses joins and leaves for implicit topics and keeps the other project's board private", () => {

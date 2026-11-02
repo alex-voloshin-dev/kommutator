@@ -94,13 +94,13 @@ registration and rename. One live session per handle; a clashing name gets a `-<
 | `session.gone` | `session_id, incarnation` — ignored when older than the current incarnation | agentd → hub | hook `SessionEnd` |
 | `deliveries.resync` | `acked: { session_id → highest seq acted on }` — hub re-emits `deliver` for unread rows above each mark; sent after every (re)connect | agentd → hub | — |
 | `session.heartbeat` | `session_id, state` | agentd → hub | hook `PostToolUse` |
-| `session.list` | `session_id, topic?, role?, state?` — only sessions sharing a topic with the caller | agentd → hub | `list_sessions` |
+| `session.list` | `session_id, topic?, role?, state?` — defaults to non-gone sessions; explicit `state: gone` lists history; only sessions sharing a topic with the caller | agentd → hub | `list_sessions` |
 | `message.send` | `session_id, message, idempotency_key` — key is an agentd-chosen UUID; a repeat returns the existing message. Hub result: `{ id, deliveries, replayed }`. The shim's `send` tool returns `send.local`: that result as `{ status: "sent", … }` once acknowledged, or `{ status: "queued", idempotency_key, outbox_depth }` while the hub is unreachable — not a failure, not to be retried | agentd → hub | `send` |
 | `inbox.list` | `session_id, since_seq, unread_only?, waking_only?, limit?`. Result: `{ headers: MessageHeader[], cursor, more }` — every header has the message `id` plus `seq`, `from`, `kind`, `subject?`, `preview` (first line, ≤ 200 code points), `thread_id`, `state`, `wake` (the hub's decision). Hooks use `unread_only` (oldest unread, no cursor); the Stop-time poll adds `waking_only` | agentd → hub | `inbox` |
 | `message.read` | `session_id, id` (marks the delivery read). Result: `{ message: StoredMessage, state }` | agentd → hub | `read` |
 | `receipt.mark` | `session_id, ids[] (≤ 200), state` | agentd → hub | `ack` |
 | `topic.join` / `topic.leave` | `session_id, name` — ad-hoc topics only; `project:*` and `global` are refused by the schema | agentd → hub | same names |
-| `topic.list` | `session_id` | agentd → hub | `list_topics` |
+| `topic.list` | `session_id, discover?` — defaults to joined topics; true adds ad-hoc names/kinds only | agentd → hub | `list_topics` |
 | `board.get` | `session_id, topic, key?` | agentd → hub | `board_get` |
 | `board.put` | `session_id, topic, key, body, if_version?, protected?, op_id` — author derived from `session_id`; `if_version` required for an existing key, checked in the handler's transaction; `op_id` is an agentd-chosen UUID stored on the created version, so a replay returns that version (`replayed: true`) instead of a conflict | agentd → hub | `board_put` |
 | `board.history` | `session_id, topic, key, before_version?, limit?` (1–10, default 10). Newest first; result `{ entries, more, next_before_version }`. Pass the returned exclusive version cursor while `more` is true | agentd → hub | `board_history` |
@@ -151,8 +151,13 @@ not that a model consumed context or that a desktop window supports native wake.
 ## Plugin-local setup (2026-10-28)
 
 The stdio MCP entrypoint additionally exposes argument-free `setup_status` and `setup_start`.
-They do not forward to the hub or select a session. Results contain a configuration boolean
-and, only when needed, an expiring private loopback form URL. Hub credentials never appear
+They do not forward to the hub or select a session. `setup_status` returns `configured`;
+when configured it also returns `daemon` (stopped/compatible/incompatible/unavailable),
+`client_version`, `expected_runtime_contract`, nullable `daemon_version` and
+`daemon_runtime_contract`, and `recovery` when action is needed. `setup_start` returns
+configuration state and, only when needed, an expiring private loopback form URL.
+MCP `status` calls `daemon.status` through a separate CLI-only read-only IPC connection;
+it does not need session registration and never starts or restarts the daemon. Hub credentials never appear
 in MCP parameters/results. Plugin root identity and project association require explicit
 vendor selection, exact Codex call metadata and a matching private hook cwd observation;
 missing/ambiguous context is an error. The hub/IPC wire schemas are unchanged.
@@ -160,3 +165,8 @@ missing/ambiguous context is an error. The hub/IPC wire schemas are unchanged.
 `daemon.status` reports `runtime_contract: 3` for plugin compatibility preflight. This is
 additive for existing CLI clients. Plugin MCP/hook clients refuse an active daemon missing
 this exact contract; they never infer compatibility from the legacy `0.0.0` version.
+
+`topic.join` results include `ok: true`, `created` (new topic) and `joined` (new
+membership). Flags describe mutations in this call, not the original replay. `topic.list`
+discovery returns the same name/kind records as joined listing; it does not expose members
+or board contents, grant membership, or reveal another project's topic.

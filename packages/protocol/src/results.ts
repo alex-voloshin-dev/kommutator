@@ -13,7 +13,7 @@ export const Results = {
   "session.heartbeat": Ok,
   "session.gone": Ok,
   "session.list": z.object({ sessions: z.array(RegisteredSession) }),
-  "topic.join": Ok,
+  "topic.join": Ok.extend({ created: z.boolean(), joined: z.boolean() }),
   "topic.leave": Ok,
   "topic.list": z.object({ topics: z.array(z.object({ name: TopicName, kind: z.enum(["global", "project", "adhoc"]) })) }),
   "receipt.mark": Ok,

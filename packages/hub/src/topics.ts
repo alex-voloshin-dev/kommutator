@@ -9,15 +9,16 @@ function requireAdHoc(name: string): void {
 }
 
 export function joinTopic(ctx: HubContext, peer: HubPeer, params: z.output<typeof Methods["topic.join"]>) {
-  const changed = transaction(ctx, () => {
+  const result = transaction(ctx, () => {
     requireSession(ctx, peer, params.session_id);
     requireAdHoc(params.name);
-    ctx.db.prepare("INSERT OR IGNORE INTO topics(name, kind) VALUES (?, 'adhoc')").run(params.name);
-    return ctx.db.prepare(`INSERT OR IGNORE INTO memberships(session_id, topic_id)
+    const created = ctx.db.prepare("INSERT OR IGNORE INTO topics(name, kind) VALUES (?, 'adhoc')").run(params.name).changes > 0;
+    const joined = ctx.db.prepare(`INSERT OR IGNORE INTO memberships(session_id, topic_id)
       SELECT ?, id FROM topics WHERE name = ?`).run(params.session_id, params.name).changes > 0;
+    return { created, joined };
   });
-  if (changed) ctx.events.publish("topic.join", { session_id: params.session_id, topic: params.name });
-  return { ok: true as const };
+  if (result.joined) ctx.events.publish("topic.join", { session_id: params.session_id, topic: params.name });
+  return { ok: true as const, ...result };
 }
 
 export function leaveTopic(ctx: HubContext, peer: HubPeer, params: z.output<typeof Methods["topic.leave"]>) {
@@ -34,7 +35,8 @@ export function leaveTopic(ctx: HubContext, peer: HubPeer, params: z.output<type
 export function listTopics(ctx: HubContext, peer: HubPeer, params: z.output<typeof Methods["topic.list"]>) {
   requireSession(ctx, peer, params.session_id);
   const topics = ctx.db.prepare(`SELECT t.name, t.kind FROM topics t
-    JOIN memberships m ON m.topic_id = t.id WHERE m.session_id = ? ORDER BY t.name`)
-    .all(params.session_id) as Array<{ name: string; kind: "global" | "project" | "adhoc" }>;
+    WHERE EXISTS (SELECT 1 FROM memberships m WHERE m.topic_id = t.id AND m.session_id = ?)
+      OR (? = 1 AND t.kind = 'adhoc') ORDER BY t.name`)
+    .all(params.session_id, params.discover === true ? 1 : 0) as Array<{ name: string; kind: "global" | "project" | "adhoc" }>;
   return { topics };
 }

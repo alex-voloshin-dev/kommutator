@@ -514,7 +514,7 @@ describe("durable replay and recovery", () => {
     const pendingLifecycle = core.registry.outbox().find((entry) => entry.method === "session.upsert");
     expect(pendingLifecycle).toBeDefined();
     await transport.reconnect();
-    const sessions = Results["session.list"].parse(await core.request(observer.peer, "session.list", {})).sessions;
+    const sessions = Results["session.list"].parse(await core.request(observer.peer, "session.list", { state: "gone" })).sessions;
     const ended = sessions.find((session) => session.id === first.session?.id);
     expect(ended?.incarnation).toBe(1);
     expect(ended?.state).toBe("gone");

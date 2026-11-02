@@ -192,7 +192,7 @@ export function listSessions(ctx: HubContext, peer: HubPeer, params: z.output<ty
       SELECT 1 FROM memberships own JOIN memberships other ON own.topic_id = other.topic_id
       JOIN topics t ON t.id = own.topic_id
       WHERE own.session_id = ? AND other.session_id = s.id AND (? IS NULL OR t.name = ?)
-    ) AND (? IS NULL OR s.role = ?) AND (? IS NULL OR s.state = ?)
+    ) AND (? IS NULL OR s.role = ?) AND ((? IS NULL AND s.state != 'gone') OR s.state = ?)
     ORDER BY s.handle, s.id`)
     .all(params.session_id, params.topic ?? null, params.topic ?? null, params.role ?? null,
       params.role ?? null, params.state ?? null, params.state ?? null) as unknown as SessionRow[];

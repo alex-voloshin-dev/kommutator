@@ -6,14 +6,14 @@ import type { RpcClient } from "../src/ipc-client.js";
 
 const close: (() => Promise<void>)[] = [];
 afterEach(async () => { for (const callback of close.splice(0)) await callback(); });
-async function setup(fail = false) {
+async function setup(fail = false, diagnostics?: RpcClient) {
   const calls: { method: string; params: Record<string, unknown> | undefined }[] = [];
   const rpc: RpcClient = { close() {}, async call(method, params) {
     calls.push({ method, params });
     if (fail) throw new Error("binding is ambiguous");
     return { method, session: { handle: "author@mac" }, status: "queued" };
   } };
-  const server = createMcpServer(rpc);
+  const server = createMcpServer(rpc, diagnostics);
   const client = new Client({ name: "claude-code", version: "test" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
@@ -32,6 +32,33 @@ describe("MCP tool surface", () => {
     expect(tools.find((tool) => tool.name === "ack")?.inputSchema.properties?.ids).toMatchObject({ type: "array", minItems: 1, maxItems: 200 });
     expect(tools.find((tool) => tool.name === "set_status")?.inputSchema.properties?.wake).not.toHaveProperty("default");
     expect(tools.find((tool) => tool.name === "send")?.description).toContain("do not send it again");
+  });
+
+  it("status bypasses failing session registration through a separate diagnostic client", async () => {
+    const methods: string[] = [];
+    const { client, calls } = await setup(true, { close() {}, async call(method) { methods.push(method); return { runtime_contract: 2 }; } });
+    const result = await client.callTool({ name: "status", arguments: {} });
+    expect(result.isError).not.toBe(true);
+    expect(result.content).toEqual([{ type: "text", text: '{"runtime_contract":2}' }]);
+    expect(calls).toEqual([]);
+    expect(methods).toEqual(["daemon.status"]);
+    expect((await client.callTool({ name: "whoami", arguments: {} })).isError).toBe(true);
+    expect(methods).toEqual(["daemon.status"]);
+  });
+
+  it("forwards discovery and explicit history options without accepting caller identity", async () => {
+    const { client, calls } = await setup();
+    await client.callTool({ name: "list_topics", arguments: { discover: true } });
+    await client.callTool({ name: "list_sessions", arguments: { state: "gone" } });
+    expect(calls).toEqual([
+      { method: "topic.list", params: { discover: true } },
+      { method: "session.list", params: { state: "gone" } },
+    ]);
+    expect((await client.callTool({ name: "list_topics", arguments: { discover: "yes" } })).isError).toBe(true);
+    await client.callTool({ name: "list_topics", arguments: { session_id: "other" } });
+    // The SDK strips unknown arguments before the handler; caller identity never reaches IPC.
+    expect(calls).toHaveLength(3);
+    expect(calls[2]).toEqual({ method: "topic.list", params: {} });
   });
 
   it("normalizes an address and never exposes caller identity or replay keys", async () => {

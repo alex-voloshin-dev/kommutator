@@ -1,4 +1,4 @@
-import { pluginDaemonStatus } from "./plugin-daemon.js";
+import { pluginDaemonDiagnostics } from "./plugin-daemon.js";
 import { createServer, type Server } from "node:http";
 import { randomBytes } from "node:crypto";
 import { loadConfig, pathsFor, Config } from "@kommutator/agentd";
@@ -12,8 +12,8 @@ export class PrivateSetup {
   private url: string | undefined;
   private starting: Promise<{ configured: boolean; url?: string }> | undefined;
   private timer: NodeJS.Timeout | undefined;
-  async status(): Promise<{ configured: boolean; daemon?: string }> {
-    try { await loadConfig(); return { configured: true, daemon: await pluginDaemonStatus() }; } catch { return { configured: false }; }
+  async status() {
+    try { await loadConfig(); return { configured: true, ...await pluginDaemonDiagnostics() }; } catch { return { configured: false }; }
   }
   close(): void { clearTimeout(this.timer); this.server?.closeAllConnections(); this.server?.close(); this.server = undefined; this.url = undefined; }
   async start(): Promise<{ configured: boolean; url?: string }> {

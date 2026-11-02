@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { createServer, type Server } from "node:net";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { pluginDaemonStatus, requirePluginDaemon } from "../src/plugin-daemon.js";
+import { pluginDaemonDiagnostics, pluginDaemonStatus, requirePluginDaemon } from "../src/plugin-daemon.js";
+import { PrivateSetup } from "../src/setup.js";
+import { RELEASE_VERSION } from "@kommutator/protocol";
 let home: string;
 let server: Server | undefined;
 const oldHome = process.env.KOM_HOME;
@@ -49,4 +51,26 @@ it("waits with status probes for a reconnect and never retries a session operati
 it("bounds readiness waiting without disabling compatible offline queued sends", async () => {
   await daemon({ runtime_contract: 3, hub: { connected: false } });
   expect(await pluginDaemonStatus(false, 100, 25)).toBe("compatible");
+});
+
+it("setup reports observed and required versions with actionable recovery without changing the daemon", async () => {
+  await writeFile(join(home, "config.json"), JSON.stringify({ host: "fixture", hub: "http://127.0.0.1:8787", key: "private-fixture-credential" }));
+  const calls = await daemon({ runtime_contract: 2, daemon: { version: "0.4.0" }, key: "private-fixture-credential", sessions: [{ token: "vendor-secret" }] });
+  const result = await new PrivateSetup().status();
+  expect(result).toMatchObject({ configured: true, daemon: "incompatible", client_version: RELEASE_VERSION, expected_runtime_contract: 3, daemon_version: "0.4.0", daemon_runtime_contract: 2 });
+  expect(JSON.stringify(result)).toContain("bin/manage daemon restart");
+  expect(JSON.stringify(result)).toContain("After ending active sessions");
+  expect(JSON.stringify(result)).not.toMatch(/private-fixture-credential|vendor-secret/);
+  expect(calls).toEqual(["ipc.hello", "daemon.status"]);
+});
+it("reports unknown legacy fields and filters malformed version metadata", async () => {
+  await daemon({ daemon: { version: "secret not a version" }, runtime_contract: "secret" });
+  expect(await pluginDaemonDiagnostics()).toMatchObject({ daemon: "incompatible", daemon_version: null, daemon_runtime_contract: null });
+});
+it("reports stopped diagnostics without startup and compatible runtime metadata without recovery", async () => {
+  expect(await pluginDaemonDiagnostics()).toMatchObject({ daemon: "stopped", daemon_version: null, daemon_runtime_contract: null, recovery: expect.stringContaining("No daemon was started") });
+  await daemon({ runtime_contract: 3, daemon: { version: "0.5.0" } });
+  const result = await pluginDaemonDiagnostics();
+  expect(result).toMatchObject({ daemon: "compatible", daemon_version: "0.5.0", daemon_runtime_contract: 3 });
+  expect(result).not.toHaveProperty("recovery");
 });

@@ -194,7 +194,16 @@ session's `project_key` and `global` is implicit, so a session cannot join anoth
 project's topic and then read its board. M1 negative test: `join("project:other")` is
 refused, and `board.get` on that topic still fails.
 
-Visibility is strictly by membership, **enforced on the hub**: every session-scoped method
+`topic.list` defaults to joined topics. Explicit `discover: true` additionally lists
+ad-hoc topic names and kinds across the hub; it never exposes unjoined project topics,
+members or board contents and never grants membership. Ad-hoc names are discoverable
+coordination labels, not private data. `topic.join` creates a missing ad-hoc topic and
+returns `created` (topic inserted) and `joined` (membership inserted) alongside `ok`.
+These flags describe this call, so a repeated join returns both false.
+`session.list` excludes `gone` by default while retaining active, idle and unknown
+sessions; explicit `state: gone` requests visible history under the same membership checks.
+
+Session and board visibility is strictly by membership, **enforced on the hub**: every session-scoped method
 carries `session_id` (§7), agentd fills it from the IPC connection the call came in on
 (bound to one shim process at `hello`), and the hub checks that session's membership in the
 topic before reading or writing a board or listing sessions. A board author is the calling
@@ -998,6 +1007,18 @@ The shared runtime is copied with checksum verification into a private, content-
 runtimes and active daemons are never replaced or restarted by plugin installation. Config,
 IPC, state and logs retain the existing private shared locations. Public distribution still
 requires a project license decision; platform exports are not vendor acceptance evidence.
+
+Diagnostics recovery does not require session registration: MCP `status` uses a separate
+CLI-only, read-only IPC connection with no daemon startup. It can inspect an incompatible
+running daemon without resolving vendor identity or replaying a hook. Session tools still
+require the original exact identity and membership checks. `setup_status` preserves its
+configuration and daemon-state fields and adds client release, expected runtime contract,
+observed daemon release/contract (null when absent or invalid), and fixed recovery guidance
+for an incompatible, stopped or unavailable daemon. Version fields accept only bounded
+version identifiers; arbitrary daemon fields/errors and credentials are never echoed.
+Neither diagnostic restarts a daemon or establishes registration. Incompatibility recovery
+requires the operator to end active sessions and explicitly run the installed plugin's
+`bin/manage daemon restart`; then resume the client with its trusted SessionStart hooks.
 
 MCP always initializes, including before configuration. `setup_status` reports configuration
 validity and shared daemon compatibility; `setup_start` returns a five-minute loopback browser form. The key

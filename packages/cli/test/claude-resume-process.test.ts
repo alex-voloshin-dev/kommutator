@@ -122,6 +122,10 @@ it("a running MCP resolves resumed hook identity despite its stale launch ID, th
     const contexts = join(f.home, "contexts");
     const generations = await Promise.all((await readdir(contexts, { withFileTypes: true })).filter(entry => entry.isDirectory()).map(entry => readdir(join(contexts, entry.name))));
     expect(endReply.error, JSON.stringify({ endedIn, generations, reply: endReply.text })).toBe(true);
+    const status = await f.call("status");
+    expect(status.error, status.text).toBe(false);
+    expect(JSON.parse(status.text)).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
+    expect((await f.call("whoami")).error).toBe(true);
     expect(JSON.parse((await f.call("setup_status")).text)).toMatchObject({ configured: true });
   } finally { await f.close(); }
 }, 20_000);
