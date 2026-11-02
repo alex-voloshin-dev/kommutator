@@ -82,7 +82,16 @@ it("a running MCP resolves resumed hook identity despite its stale launch ID, th
   try {
     const pid = f.transport.pid;
     expect(JSON.parse((await f.call("setup_status")).text)).toMatchObject({ configured: true });
-    expect((await f.call("whoami")).error).toBe(true);
+    const unregistered = await f.call("whoami");
+    expect(unregistered.error).toBe(true);
+    expect(unregistered.text).toContain("Run /exit, then run claude --resume from a terminal in the same project and select this conversation");
+    expect(unregistered.text).toContain("Trust the updated plugin hooks so SessionStart can register it");
+    expect(unregistered.text).toContain("/reload-plugins alone is insufficient");
+    expect(unregistered.text).toContain("setup_status configuration and daemon compatibility do not prove session registration");
+    // Loading MCP mid-session and submitting a prompt cannot replace SessionStart authority.
+    await f.hook("resumed-b", "UserPromptSubmit");
+    expect(await f.call("whoami")).toEqual(unregistered);
+    expect(f.db.prepare("SELECT COUNT(*) AS count FROM sessions").get()).toEqual({ count: 0 });
     await f.hook("resumed-b");
     const b = await f.whoami();
     expect(b.vendor_session_id).toBe("resumed-b");

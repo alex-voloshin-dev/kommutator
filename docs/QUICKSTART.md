@@ -79,6 +79,11 @@ plugin setup. The hub must already allow that computer's subnet; see [LAN setup]
 /plugin install kommutator@kommutator
 ```
 
+If you installed the plugin during this conversation, run `/exit`, then run
+`claude --resume` in a terminal in the same project and select this conversation.
+Trust the updated plugin hooks so `SessionStart` can register it. `/reload-plugins`
+alone is insufficient, and submitting another prompt does not create the registration.
+
 **Codex CLI** — run these in the Linux/WSL terminal:
 
 ```sh
@@ -114,6 +119,7 @@ After saving, start another fresh session so its hooks capture the project. Tell
 
 Success means `whoami` returns your handle, `status` reports the hub connected, and your session
 appears in the hub dashboard. Two clients on one computer reuse the same private configuration.
+`setup_status` configuration and daemon compatibility do not prove session registration.
 Codex receives messages when hooks run; it cannot wake an idle thread. Claude native wake needs
 additional **per-session** consent described in [advanced installation](INSTALL.md).
 

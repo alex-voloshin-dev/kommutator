@@ -56,6 +56,13 @@ socket and token. `UserPromptSubmit` and `PostToolUse` inject oldest unread head
 `stop_hook_active` re-entry never blocks. PostToolUse does not reset the Stop guard.
 `SessionEnd` queues the session end.
 
+If the plugin was installed during a conversation, run `/exit`, then run `claude --resume`
+in a terminal in the same project and select that conversation (retain `--plugin-dir` for
+this manual integration). Trust the updated plugin hooks so `SessionStart` can register it.
+`/reload-plugins` alone is insufficient: `UserPromptSubmit` consumes an existing registration
+and cannot create one. `setup_status` configuration and daemon compatibility do not prove
+session registration; verify with `whoami` after resuming.
+
 Each invocation has a total process deadline below the 200 ms budget, including stdin.
 Missing daemon: spawn detached and return empty output immediately. Malformed/empty input,
 slow IPC and unavailable hub fail open. Header output is capped by `packHeaders` to five

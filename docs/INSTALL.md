@@ -94,8 +94,13 @@ Start a fresh independent session. Call `setup_status`; if unconfigured, call `s
 and open its loopback browser form. Enter the hub URL, host alias and shared key **in that
 private form**, never in chat. Existing private config is reused. Do not submit the key as
 an MCP argument. Both vendors share configuration and daemon state outside plugin caches.
-The first authenticated session call needs a matching hook project observation; start fresh
-if setup occurred after the initial hooks, then call `whoami` and inspect the dashboard.
+The first authenticated session call needs a matching hook project observation. For Claude,
+if installation or setup happened during the conversation, run `/exit`, then run
+`claude --resume` in a terminal in the same project and select this conversation. Trust the
+updated plugin hooks so `SessionStart` can register it. `/reload-plugins` alone is insufficient,
+and submitting another prompt does not create the registration. Then call `whoami` and inspect
+the dashboard. `setup_status` configuration and daemon compatibility do not prove session
+registration. For Codex, start a fresh independent session if setup occurred after its initial hooks.
 
 Back up vendor settings before removing old manual `kom hook` / `kom mcp` entries if setup
 reports a conflict. Do not run manual and bundled hooks together or bypass trust checks.
@@ -131,6 +136,8 @@ codex plugin add kommutator@kommutator --json
 ```
 
 Restart the session and approve changed hooks through the vendor's normal trust workflow.
+For Claude, run `/exit`, then `claude --resume` in a terminal in the same project and select
+the conversation; `/reload-plugins` alone does not replace its `SessionStart` registration.
 The saved hub URL/key remain in private client configuration. Check `setup_status`, then
 `whoami` and `list_sessions`; a successful MCP initialization alone does not prove the
 configured session can register. If a real manual MCP server or hook remains, the migration

@@ -103,7 +103,7 @@ export async function activeClaudeRegistration(ownerPid: number, legacyId?: stri
     try { await readFile(join(directory, `${generation}.ended`)); throw new Error("ended"); }
     catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
     return { hello: value.hello, generation: `${birth}:${generation}`, birth };
-  } catch { throw new Error("Claude root registration unavailable or expired. Trust the updated plugin hooks and resume the conversation again; setup_status checks connection configuration only."); }
+  } catch { throw new Error("Claude root registration unavailable or expired. Run /exit, then run claude --resume from a terminal in the same project and select this conversation. Trust the updated plugin hooks so SessionStart can register it. /reload-plugins alone is insufficient; setup_status configuration and daemon compatibility do not prove session registration."); }
 }
 export async function forgetClaudeRegistration(id: string, ownerPid: number, observed?: ActiveClaudeRegistration): Promise<void> {
   // SessionEnd must retire exactly its captured generation, never a later A → B → A.

@@ -1150,6 +1150,12 @@ matching SessionEnd writes a generation-specific tombstone. Directory creation f
 fallback even if publication is interrupted. A missing directory permits only the exact
 legacy launch-ID/owner lookup; empty, malformed or ended current state fails explicitly.
 
+Installing a plugin mid-conversation does not supply missing SessionStart authority.
+UserPromptSubmit only consumes an existing registration. Recovery guidance directs the user
+to `/exit`, then `claude --resume` in the same project, select the conversation and trust
+the updated hooks so SessionStart can register it. `/reload-plugins` alone is insufficient;
+setup_status configuration and daemon compatibility do not prove session registration.
+
 Each MCP call resolves this registration and uses a fresh immutable IPC client when its
 generation changes, including A → B → A. It revalidates after asynchronous preflight and
 registration, before dispatch and before returning results. Calls already dispatched remain
