@@ -42,3 +42,29 @@ credentials/network, successful oneshot completion, the new daemon surviving ser
 and verified live version/health remain coordinator-owned operational acceptance. A fake
 Docker test does not establish these facts. Windows reboot, physical-subnet and day-long
 acceptance remain separate.
+
+## Round 3: private umask and preactivation image acceptance
+
+The coordinator's live attempt found that the updater's private umask produced source files
+with mode 0600. Docker COPY retained those permissions under root ownership, preventing the
+non-root container from reading its entrypoint. The earlier fake Docker suite did not expose
+this defect; its pass was not evidence of a deployable image.
+
+QA added two regression cases after the engineer's correction:
+
+- A real local Git repository is cloned by a child process with umask 0077. The test observes
+  0600 regular files and 0700 executables, obtains actual tab/NUL-delimited Git stage records,
+  and verifies normalization to 0644/0755. The private attempt parent remains 0700, Git
+  metadata and untracked dependency content retain their modes, and a tracked symlink is
+  rejected without changing the outside target's mode.
+- A failed isolated non-root image smoke prevents backup, hub activation and daemon restart.
+  The fake command boundary verifies no published host ports, bind mounts or real key/data
+  paths, while retaining read-only execution, no external network and dropped capabilities.
+  The successful-order test now requires image smoke between image build and backup.
+
+The first focused run had three fixture failures because mocked Git records were empty;
+fixtures were updated to supply the tracked package.json record expected by the new boundary.
+No production assertion was weakened and QA edited no implementation source.
+Final `pnpm test:local-release-deploy`: **16 passed, zero failures**. Syntax and diff checks
+passed. Actual image startup, service activation and daemon survival still require the
+coordinator's live validation; these test results do not claim that validation passed.

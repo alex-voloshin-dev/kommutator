@@ -33,3 +33,19 @@ process/regression coverage and records its own executed checks separately.
 No live Docker/daemon change, service installation, commit or publication was performed by the
 implementation agent. The coordinator owns actual deployment evidence. Reboot, physical LAN
 subnet, day-long use and vendor registration/wake remain separate acceptance gates.
+
+
+## Live qualification correction — round 3
+
+The coordinating deployment exposed an EACCES startup failure: the private service's 0077
+umask produced tracked source files with 0600/0700 modes, and Docker COPY retained those
+modes as root-owned runtime files. Unit fakes and a root build-stage smoke did not establish
+non-root execution. The coordinator restored the previously healthy image of the same
+release; this was not a database/schema downgrade.
+
+The correction normalizes only Git-indexed regular source files and their parent directories,
+keeping the attempt parent private and rejecting symbolic links/gitlinks. A preactivation
+image smoke now executes the actual container start and healthcheck modules under production
+UID/GID, read-only root, dropped capabilities and no-new-privileges. It uses only synthetic
+credentials and tmpfs data with no host-port publication. Failed smoke prevents production
+backup/activation. QA and coordinator record the final corrected acceptance separately.

@@ -64,3 +64,9 @@ Keep retained clones while their daemon is running; the daemon's code and depend
 there. Do not restore a backup or downgrade a schema automatically. Port publication remains
 127.0.0.1:8787; existing Windows LAN ingress is unaffected. Actual Windows reboot, physical
 subnet and day-long usage remain separate acceptance gates.
+
+
+Tracked source modes are normalized to Git's regular/executable modes inside the private
+attempt directory before Docker COPY. The built image must pass actual non-root startup and
+healthcheck with a synthetic key and isolated tmpfs database before any production downtime.
+This catches runtime permission failures that a root build-stage import cannot detect.

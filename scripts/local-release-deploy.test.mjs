@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, rm, chmod } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm, chmod, stat, symlink } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { compareVersions, chooseRelease, assetsReady, checksReady, updateOnce, saveCheckpoint, readCheckpoint, loadDeployPolicy, run, validateCompose, validateContainer, deployRelease, REPOSITORY } from './lib/local-release-deploy.mjs';
+import { compareVersions, chooseRelease, assetsReady, checksReady, updateOnce, saveCheckpoint, readCheckpoint, loadDeployPolicy, run, validateCompose, validateContainer, deployRelease, normalizeTrackedSource, REPOSITORY } from './lib/local-release-deploy.mjs';
 const sha = 'a'.repeat(40);
 const release = { tag_name: 'v0.4.0', draft: false, published_at: '2026-11-01', prerelease: true, assets: ['linux-x64.tar.gz', 'linux-x64.tar.gz.sha256', 'claude-linux-x64.zip', 'claude-linux-x64.zip.sha256'].map(suffix => ({ name: `kommutator-v0.4.0-${suffix}`, size: 1, state: 'uploaded' })) };
 const checks = ['Release checks', 'Secret scan'].map(workflowName => ({ workflowName, databaseId: 1, headSha: sha, status: 'completed', conclusion: 'success' }));
@@ -68,6 +68,7 @@ test('staged deployment builds before backups/activation, verifies exact version
     const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
     if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.18.0' })); }
     if (step === 'commit') return sha;
+    if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
     if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
     if (step === 'compose') return JSON.stringify(compose);
     if (step === 'existing' || step === 'current') return 'a'.repeat(64);
@@ -78,6 +79,7 @@ test('staged deployment builds before backups/activation, verifies exact version
     return '';
   };
   const result = await deployRelease(release, sha, directory, execute, paths); assert.equal(result.runtimeContract, 3);
+  assert.ok(order.indexOf('image') < order.indexOf('smoke-image')); assert.ok(order.indexOf('smoke-image') < order.indexOf('backup-hub'));
   assert.ok(order.indexOf('image') < order.indexOf('backup-hub')); assert.ok(order.indexOf('backup-hub') < order.indexOf('activate-hub')); assert.ok(order.indexOf('activate-hub') < order.indexOf('restart-agentd'));
   const backup = new DatabaseSync(join(directory, 'agentd-before.db'), { readOnly: true }); assert.equal(backup.prepare('SELECT value FROM proof').get().value, 'preserved'); backup.close();
 });
@@ -155,6 +157,7 @@ test('a newer actual service blocks downgrade before image creation or downtime'
       const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
       if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.18.0' })); }
       if (step === 'commit') return sha;
+    if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
       if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
       if (step === 'compose') return JSON.stringify(compose);
       if (step === 'existing') return 'a'.repeat(64);
@@ -174,4 +177,65 @@ test('structured command output excludes stderr warnings while private logs reta
   assert.deepEqual(JSON.parse(output), { version: '0.4.0' });
   const captured = await readFile(log, 'utf8');
   assert.match(captured, /harmless diagnostic warning/); assert.match(captured, /0\.4\.0/);
+});
+
+test('private-umask clone source modes become image-readable without exposing parent or git metadata', async t => {
+  const directory = await temp(t), source = join(directory, 'source'), attempt = join(directory, 'attempt'), clone = join(attempt, 'repo');
+  await mkdir(source, { mode: 0o700 }); await mkdir(attempt, { mode: 0o700 });
+  await mkdir(join(source, 'docker'), { mode: 0o700 });
+  await writeFile(join(source, 'docker/start.mjs'), 'export const fixture = true;\n', { mode: 0o600 });
+  await writeFile(join(source, 'run.sh'), '#!/bin/sh\nexit 0\n', { mode: 0o700 });
+  await run('git', ['init', source]); await run('git', ['add', '.'], { cwd: source });
+  await run('git', ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', '-c', 'commit.gpgsign=false', 'commit', '-m', 'fixture'], { cwd: source });
+  await run(process.execPath, ['-e', `process.umask(0o077);const r=require('node:child_process').spawnSync('git',['clone','--no-local',${JSON.stringify(source)},${JSON.stringify(clone)}],{stdio:'inherit'});process.exit(r.status??1)`]);
+  const mode = async path => (await stat(path)).mode & 0o777;
+  assert.equal(await mode(join(clone, 'docker/start.mjs')), 0o600);
+  assert.equal(await mode(join(clone, 'run.sh')), 0o700);
+  const gitMode = await mode(join(clone, '.git'));
+  await mkdir(join(clone, 'node_modules'), { mode: 0o700 });
+  await writeFile(join(clone, 'node_modules/private'), 'not source', { mode: 0o600 });
+  const records = await run('git', ['ls-files', '--stage', '-z'], { cwd: clone });
+  await normalizeTrackedSource(clone, records);
+  assert.equal(await mode(clone), 0o755);
+  assert.equal(await mode(join(clone, 'docker')), 0o755);
+  assert.equal(await mode(join(clone, 'docker/start.mjs')), 0o644);
+  assert.equal(await mode(join(clone, 'run.sh')), 0o755);
+  assert.equal(await mode(attempt), 0o700);
+  assert.equal(await mode(join(clone, '.git')), gitMode);
+  assert.equal(await mode(join(clone, 'node_modules/private')), 0o600);
+  const outside = join(directory, 'outside'); await writeFile(outside, 'private', { mode: 0o600 });
+  await symlink(outside, join(clone, 'linked'));
+  await assert.rejects(normalizeTrackedSource(clone, `120000 ${sha} 0\tlinked\0`));
+  assert.equal(await mode(outside), 0o600);
+});
+
+test('failed isolated image smoke prevents backups and any live activation', async t => {
+  const directory = await temp(t), paths = { data: join(directory, 'real-data'), key: join(directory, 'real-key'), daemon: join(directory, 'daemon') };
+  const { compose, container } = fixtures(paths), order = [];
+  const execute = async (cmd, args, opts) => {
+    const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
+    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.18.0' })); }
+    if (step === 'commit') return sha;
+    if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
+    if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
+    if (step === 'compose') return JSON.stringify(compose);
+    if (step === 'existing') return 'a'.repeat(64);
+    if (step === 'inspect') return JSON.stringify([container]);
+    if (step === 'preflight-agentd') return JSON.stringify({ daemon: { version: '0.3.0' } });
+    if (step === 'preflight-hub') return JSON.stringify({ version: '0.3.0' });
+    if (step === 'smoke-image') {
+      assert.equal(cmd, 'docker'); assert.equal(args[0], 'run');
+      assert.ok(args.includes('--rm')); assert.ok(args.includes('--read-only'));
+      assert.equal(args[args.indexOf('--network') + 1], 'none');
+      assert.equal(args[args.indexOf('--user') + 1], `${process.getuid()}:${process.getgid()}`);
+      assert.equal(args[args.indexOf('--cap-drop') + 1], 'ALL');
+      assert.ok(!args.includes('-p') && !args.includes('--publish') && !args.includes('-v') && !args.includes('--mount'));
+      assert.ok(!args.some(arg => arg.includes(paths.key) || arg.includes(paths.data)));
+      throw new Error('non-root image startup failed');
+    }
+    return '';
+  };
+  await assert.rejects(deployRelease(release, sha, directory, execute, paths), /startup failed/);
+  assert.ok(order.indexOf('image') < order.indexOf('smoke-image'));
+  for (const forbidden of ['backup-hub', 'activate-hub', 'restart-agentd']) assert.ok(!order.includes(forbidden));
 });

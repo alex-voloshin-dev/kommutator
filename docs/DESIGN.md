@@ -1221,3 +1221,11 @@ because newer schemas may be incompatible with older binaries. Source clones, de
 logs and backups are retained. No client profile, session registration, secret or active
 contributor checkout is rewritten. Restarting agentd preserves its durable state but cannot
 create a Claude registration when the vendor's SessionStart hook has never run.
+
+The private updater's 0077 umask must not become root-owned 0600/0700 application files in
+Docker COPY layers. Only validated tracked regular source files and their directories are
+normalized to Git's 0644/0755 modes, inside a still-private attempt parent; symlinks/gitlinks
+are rejected. After image build and before any production downtime, an isolated container
+runs the actual entrypoint and healthcheck as the production non-root UID/GID with the same
+read-only/capability restrictions, a synthetic key, tmpfs database and no published ports.
+A passing root-owned build-stage import is not sufficient evidence of runtime readability.

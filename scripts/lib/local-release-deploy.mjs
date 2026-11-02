@@ -1,7 +1,7 @@
 // Trusted, opt-in local deployment only. Feedback bodies never enter this program.
 import { spawn } from 'node:child_process';
-import { mkdir, readFile, writeFile, rename, lstat, realpath, open } from 'node:fs/promises';
-import { join, sep } from 'node:path';
+import { mkdir, readFile, writeFile, rename, lstat, realpath, open, chmod } from 'node:fs/promises';
+import { join, sep, dirname, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
@@ -116,6 +116,63 @@ export async function discover(execute = run) {
   const releases = JSON.parse(await execute('gh', ['api', `repos/${REPOSITORY}/releases?per_page=100`]));
   return releases;
 }
+// Git's executable bit is authoritative; the private attempt parent remains 0700.
+export async function normalizeTrackedSource(clone, records) {
+  const entries = records.split('\0').filter(Boolean).map(record => {
+    const match = /^(100644|100755) [a-f0-9]{40,64} 0\t(.+)$/.exec(record);
+    if (!match || isAbsolute(match[2]) || match[2].split('/').some(part => !part || part === '.' || part === '..' || part === '.git')) throw new Error('unsupported tracked source entry');
+    return { path: join(clone, match[2]), mode: match[1] === '100755' ? 0o755 : 0o644 };
+  });
+  if (!entries.length) throw new Error('empty tracked source');
+  const directories = new Set([clone]);
+  for (const entry of entries) {
+    const file = await lstat(entry.path);
+    if (!file.isFile() || file.isSymbolicLink()) throw new Error('tracked source is not a regular file');
+    for (let directory = dirname(entry.path); directory !== clone; directory = dirname(directory)) {
+      if (!directory.startsWith(clone + sep)) throw new Error('source escaped clone');
+      directories.add(directory);
+    }
+  }
+  for (const directory of directories) {
+    const info = await lstat(directory);
+    if (!info.isDirectory() || info.isSymbolicLink()) throw new Error('source parent is not a regular directory');
+  }
+  for (const directory of directories) await chmod(directory, 0o755);
+  for (const entry of entries) await chmod(entry.path, entry.mode);
+}
+
+const imageSmoke = `
+import {writeFile,readFile} from 'node:fs/promises';
+import {spawn,spawnSync} from 'node:child_process';
+const deadline=setTimeout(()=>process.exit(1),30000);
+const expected=process.argv[1];
+if(JSON.parse(await readFile('/app/package.json','utf8')).version!==expected)throw Error('Image version mismatch');
+const key='isolated-image-smoke-key-not-a-real-credential';
+await writeFile('/tmp/kom-smoke.key',key,{mode:0o600});
+const env={...process.env,KOM_KEY_FILE:'/tmp/kom-smoke.key',KOM_HUB_DB:'/data/smoke.db',KOM_HUB_PORT:'8787',KOM_HUB_BIND:'127.0.0.1'};
+const child=spawn(process.execPath,['/app/container/start.mjs'],{env,stdio:'inherit'});
+const exited=new Promise(resolve=>{child.once('error',()=>resolve(-1));child.once('exit',code=>resolve(code));});
+let healthy=false;
+try {
+ for(let i=0;i<50;i++){
+  if(child.exitCode!==null)break;
+  try{const response=await fetch('http://127.0.0.1:8787/api/snapshot',{headers:{authorization:'Bearer '+key},signal:AbortSignal.timeout(500)});healthy=response.ok;await response.body?.cancel();if(healthy)break;}catch{}
+  await new Promise(resolve=>setTimeout(resolve,100));
+ }
+ if(!healthy)throw Error('Non-root image startup failed');
+ const check=spawnSync(process.execPath,['/app/container/healthcheck.mjs'],{env,stdio:'inherit',timeout:5000});
+ if(check.status!==0)throw Error('Image healthcheck failed');
+} finally { child.kill('SIGTERM'); }
+if(await exited!==0)throw Error('Image shutdown failed');
+clearTimeout(deadline);
+console.log('Non-root isolated image smoke passed');
+`;
+export function imageSmokeArguments(image, version, uid = process.getuid(), gid = process.getgid()) {
+  return ['run', '--rm', '--init', '--network', 'none', '--read-only', '--user', `${uid}:${gid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true',
+    '--tmpfs', `/data:rw,nosuid,noexec,uid=${uid},gid=${gid},mode=700`, '--tmpfs', '/tmp:rw,nosuid,noexec,mode=1777', image,
+    'node', '--input-type=module', '-e', imageSmoke, version];
+}
+
 export async function deployRelease(release, commit, directory, execute = run, paths = defaultPaths()) {
   const version = release.tag_name.slice(1), clone = join(directory, 'repo');
   const env = { KOM_UID: String(process.getuid()), KOM_GID: String(process.getgid()), KOM_KEY_FILE: paths.key, KOM_DATA_DIR: paths.data, KOM_PUBLISH_HOST: '127.0.0.1', KOM_PUBLISH_PORT: '8787', KOM_HOME: paths.daemon,
@@ -123,6 +180,7 @@ export async function deployRelease(release, commit, directory, execute = run, p
   const step = (name, command, args, options = {}) => execute(command, args, { cwd: clone, env, log: join(directory, `${name}.log`), ...options });
   await step('clone', 'git', ['clone', '--depth', '1', '--branch', release.tag_name, '--', `https://github.com/${REPOSITORY}.git`, clone], { cwd: directory });
   if ((await step('commit', 'git', ['rev-parse', 'HEAD'])).trim() !== commit) throw new Error('release tag moved during preparation');
+  await normalizeTrackedSource(clone, await step('source-modes', 'git', ['ls-files', '--stage', '-z']));
   const pkg = JSON.parse(await readFile(join(clone, 'package.json'), 'utf8'));
   if (pkg.version !== version || pkg.packageManager !== 'pnpm@10.18.0') throw new Error('release source identity mismatch');
   await step('install', 'pnpm', ['install', '--frozen-lockfile']);
@@ -141,6 +199,7 @@ export async function deployRelease(release, commit, directory, execute = run, p
   const previousHub = JSON.parse(await step('preflight-hub', 'docker', [...compose, 'exec', '-T', 'hub', 'node', '-e', 'console.log(JSON.stringify({version:require("/app/package.json").version}))']));
   if (compareVersions(previousDaemon.daemon?.version, version) > 0 || compareVersions(previousHub.version, version) > 0) throw new Error('refusing to downgrade a running service');
   await step('image', 'docker', [...compose, 'build', 'hub']);
+  await step('smoke-image', 'docker', imageSmokeArguments(image, version), { timeout: 60_000 });
   await step('backup-hub', 'docker', [...compose, 'exec', '-T', 'hub', 'node', '/app/container/backup.mjs', `/data/pre-release-${version}-${Date.now()}.db`]);
   const daemonDb = new DatabaseSync(join(paths.daemon, 'state.db'), { readOnly: true });
   try { daemonDb.exec(`VACUUM INTO '${join(directory, 'agentd-before.db').replaceAll("'", "''")}'`); } finally { daemonDb.close(); }

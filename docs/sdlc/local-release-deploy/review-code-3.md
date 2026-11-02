@@ -1,7 +1,7 @@
 ---
 type: review
 target: local-release-deploy
-iteration: 2
+iteration: 3
 verdict: approve
 findings: []
 ---
@@ -32,3 +32,23 @@ stderr warnings. All 14 updater tests passed. The implementation engineer ran or
 typecheck and 393 workspace tests, and the observer recovery regression passed. Source Gitleaks
 and comparison against local credential values found no secrets. The workflow gate is proceed;
 actual service execution is recorded separately in deployment.md.
+
+## Round 3 — private clone Docker permissions
+
+The first actual oneshot run failed: umask 0077 produced private tracked source modes that
+Docker COPY preserved as root-owned unreadable runtime files. The new hub failed with
+EACCES before startup. The coordinator restored the already verified image of the same
+0.4.0 version; no database rollback or downgrade occurred. This attempt was not counted as
+successful deployment, and automatic retry remained blocked.
+
+The updater now normalizes only validated Git-tracked regular files and directories to
+Git's 644/755 modes beneath the private attempt parent. Symlinks/gitlinks/traversal are
+rejected; secrets, Git metadata and untracked directories stay private. The newly built
+image must start its actual entrypoint and pass its healthcheck as the deployment UID/GID
+with read-only root, dropped capabilities, no network exposure and synthetic tmpfs data/key
+before any backup or production activation. A real Docker negative control rejected the
+previously broken image with EACCES without touching the live hub.
+
+Independent code/security review approved. QA passed all 16 updater tests, including a real
+umask-0077 clone, private-parent preservation and smoke-failure-before-activation. The final
+workflow gate is proceed. Actual corrected deployment remains separate operational evidence.
