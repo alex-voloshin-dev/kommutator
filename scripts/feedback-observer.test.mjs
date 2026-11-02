@@ -205,3 +205,15 @@ test('optional report failures cannot stop heartbeat and new inbox capture', asy
   assert.ok(f.journal.get('last_poll'));
   assert.match(f.journal.get('last_report_error'), /ingestion continues/);
 });
+
+
+test('successful capture clears only its recovered transport error', async t => {
+  const f = await fixture(t), request = f.observer.link.request;
+  f.observer.link.request = async () => { throw new Error('temporary connection failure'); };
+  await f.observer.tick();
+  assert.equal(f.journal.get('last_error'), 'hub request failed; pending work retained');
+  f.observer.link.request = request;
+  await f.observer.tick(); assert.equal(f.journal.get('last_error'), null);
+  f.journal.set('last_error', 'analysis unavailable; inspect failed job count or retry later');
+  await f.observer.tick(); assert.match(f.journal.get('last_error'), /analysis unavailable/);
+});

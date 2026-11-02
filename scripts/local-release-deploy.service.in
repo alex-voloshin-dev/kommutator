@@ -1,0 +1,15 @@
+[Unit]
+Description=Apply qualified kommutator releases to the local hub and agentd
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=@REPO@
+ExecStart=@NODE@ @REPO@/scripts/local-release-deploy.mjs run
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+TimeoutStartSec=1h
+TimeoutStopSec=20
+# The CLI starts the persistent agentd outside its own process group. Do not kill it
+# when this short-lived updater exits. No root user or privilege bypass is needed.
+KillMode=process

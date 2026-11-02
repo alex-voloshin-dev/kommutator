@@ -20,3 +20,7 @@ Keep the observer tool-disabled. Separate engineering workers use fresh clones a
 workspace-write automatic approval review. A sandbox permission error should request normal
 review when required; actual automatic-review denial blocks the job and must never be
 circumvented. Uncertain publication and interrupted work require explicit reconciliation.
+
+On 2026-11-02 the local operator additionally authorized updating/restarting this host's hub
+and agentd when new versions are released. This is a separate opt-in deployment policy, not
+permission for feedback workers to mutate live services. See [local release deployment](../LOCAL_RELEASE_DEPLOY.md).

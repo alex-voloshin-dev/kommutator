@@ -103,3 +103,10 @@ It records triage and sends FYI thread replies using an existing local Codex log
 it does not make code changes. See [Feedback observer](FEEDBACK_OBSERVER.md) for
 installation, status, recovery and stop commands. Ordinary client and hub installations
 do not require this service.
+
+## Optional release deployment
+
+A plugin update does not replace the shared running agentd. Operators who explicitly
+authorize automatic local hub and daemon upgrades can enable the separate
+[release deployment timer](LOCAL_RELEASE_DEPLOY.md). It preserves the default key/data
+paths and loopback port, waits for qualified releases, and blocks uncertain failures.

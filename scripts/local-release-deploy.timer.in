@@ -1,0 +1,11 @@
+[Unit]
+Description=Check for qualified kommutator releases
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=kommutator-release-deploy.service
+
+[Install]
+WantedBy=timers.target

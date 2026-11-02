@@ -202,6 +202,7 @@ export class FeedbackObserver {
         if (!result.more) break;
       }
       this.journal.set('last_poll', new Date(this.now()).toISOString());
+      if (this.journal.get('last_error') === 'hub request failed; pending work retained') this.journal.set('last_error', null);
     } catch {
       this.journal.set('last_error', 'hub request failed; pending work retained');
     } finally { this.capturing = false; }

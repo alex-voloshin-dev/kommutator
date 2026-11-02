@@ -39,3 +39,6 @@ retain historical snapshots. [Knowledge notes](knowledge/MOC.md) preserve decisi
 
 Optional host-side feedback triage and autonomous maintenance are described in
 [the maintainer runbook](FEEDBACK_MAINTAINER.md); neither is a client installation prerequisite.
+
+A separately authorized [local release updater](LOCAL_RELEASE_DEPLOY.md) can apply qualified
+releases to an existing default hub and agentd; it remains opt-in operator infrastructure.

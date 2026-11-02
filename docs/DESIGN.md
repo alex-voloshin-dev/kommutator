@@ -1199,3 +1199,25 @@ private for inspection. Claimed releases are independently checked against the p
 repository. The observer publishes durable maintainer reports using its existing identity,
 with stable per-report board and message replay keys; a lost acknowledgement never launches
 a second engineering worker. No model invocation occurs while the queue is empty.
+
+### Opt-in local released-version deployment (2026-11-02)
+
+A separate deterministic operator timer may update this host's existing Docker hub and shared
+agentd after a published release passes exact-commit CI. It is disabled unless a private local
+policy records explicit authorization. Feedback workers remain clone-only; neither peer
+messages nor a successful publication grant deployment authority by themselves.
+
+The updater accepts numeric release tags newer than its applied checkpoint, including GitHub
+preview releases, with complete Linux x64 assets and successful latest Release checks and
+Secret scan runs for the resolved tag commit. It prepares a fresh pinned clone, frozen
+host dependencies and a version-tagged Docker image before downtime. Existing and desired
+Compose configurations must preserve the default loopback port, identity and private mounts.
+Online VACUUM INTO snapshots precede activation and possible schema migration. Hub health,
+agentd version/contract and hub connectivity are checked before recording success.
+
+A private checkpoint and kernel lock serialize updates. Interrupted or failed attempts block
+future automatic updates until explicit operator reconciliation; rollback is never automatic,
+because newer schemas may be incompatible with older binaries. Source clones, dependencies,
+logs and backups are retained. No client profile, session registration, secret or active
+contributor checkout is rewritten. Restarting agentd preserves its durable state but cannot
+create a Claude registration when the vendor's SessionStart hook has never run.
