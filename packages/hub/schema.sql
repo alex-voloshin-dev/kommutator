@@ -1,6 +1,6 @@
 -- kommutator hub schema (DESIGN.md §11). SQLite, WAL mode.
 -- Applied only to an empty database; db.ts stamps PRAGMA user_version = SCHEMA_VERSION after
--- this file runs and refuses databases with any other version (no migrations before M1).
+-- this file runs; db.ts separately handles the supported additive schema 5 to 6 migration.
 
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
@@ -9,6 +9,13 @@ CREATE TABLE IF NOT EXISTS hosts (
   name            TEXT PRIMARY KEY,
   agentd_version  TEXT,
   last_seen_at    TEXT
+);
+
+-- Explicit operator cleanup retains only replay fences, never deleted payloads.
+CREATE TABLE IF NOT EXISTS retired_operations (
+  kind TEXT NOT NULL CHECK (kind IN ('registration', 'message', 'board', 'cleanup')),
+  operation_key TEXT NOT NULL,
+  PRIMARY KEY (kind, operation_key)
 );
 
 CREATE TABLE IF NOT EXISTS sessions (

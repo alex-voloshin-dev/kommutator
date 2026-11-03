@@ -48,16 +48,28 @@ Logs and status never require opening the SQLite files.
 ## Dashboard
 
 Open the configured hub URL and authenticate with any username and the hub key as password.
-The dashboard is read-only. It shows all live sessions plus the latest 100 ended sessions,
-their recorded state and wake policy. Search sessions by handle/project/status and narrow
-by state or wake; filter the live feed by event type. A filter with no matches is different
-from an empty hub.
+The dashboard is read-only. Its overview summarizes current sessions, represented hosts,
+topics and the recent delivery window. Session cards show names, roles, hosts, projects
+and status; technical identity and wake details are expandable. Ended sessions are hidden
+by default; Include ended reveals the latest 100. Search by name, handle, role, host,
+project or status and filter by state/wake. Selecting gone also enables ended history.
+
+Topics show actual current/total subscriber counts. Expand one to see subscribed sessions;
+include ended subscribers when needed. Counts include older ended members even when their
+identities fall outside the retained session window, and that omission is labelled.
+Membership-only changes are refreshed periodically. Search/filter deliveries by content
+or receipt state, and activity by event type. No matches differs from an empty hub.
 
 Last update is the last successful snapshot fetch. During an outage the last snapshot
 remains visible as stale; it is not current service state. Reconnection refreshes it.
+Pause updates freezes visible data and discards incoming activity; Refresh now fetches one
+snapshot while staying paused. Resume updates fetches fresh data and resumes live activity.
 The feed retains the latest 200 events since the page connected; it is not a durable audit
 log. Marked read means a header was shown, a body was served, or an explicit ack occurred;
 it does not prove that the requested work was completed.
+
+For an explicitly reviewed removal of synthetic records, use the separate
+[test-data cleanup procedure](CLEANUP_TEST_DATA.md). General retention/prune remains disabled.
 
 ## Step 7 day-long acceptance
 

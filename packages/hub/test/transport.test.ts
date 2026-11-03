@@ -165,11 +165,22 @@ describe("hub WebSocket and authenticated SSE integration", () => {
       const ended = new Date(Date.parse(started) + index * 1000).toISOString();
       insert.run(`gone-${index}`, "reused@laptop", "reused", "gone", "off", `reg-gone-${index}`, started, ended, ended);
     }
+    hub.db.prepare("INSERT INTO topics(name,kind) VALUES ('shared-topic','adhoc'), ('empty-topic','adhoc')").run();
+    hub.db.prepare("INSERT INTO memberships(session_id,topic_id) SELECT s.id,t.id FROM sessions s CROSS JOIN topics t WHERE t.name='shared-topic'").run();
     const response = await fetch(`${hub.base}/api/snapshot`, { headers: { authorization: `Bearer ${KEY}` } });
     expect(response.status).toBe(200);
+    const snapshot: unknown = await response.json();
+    const { topics } = z.object({topics:z.array(z.object({name:z.string(),current_members:z.number(),total_members:z.number(),hidden_ended_members:z.number(),members:z.array(z.string())}))}).parse(snapshot);
+    const shared = topics.find(topic=>topic.name==='shared-topic');
+    expect(shared).toMatchObject({current_members:101,total_members:203,hidden_ended_members:2});
+    expect(shared?.members).toHaveLength(201);
+    expect(shared?.members).toContain('live-0');expect(shared?.members).toContain('gone-101');
+    expect(shared?.members).not.toContain('gone-0');expect(shared?.members).not.toContain('gone-1');
+    expect(topics.find(topic=>topic.name==='empty-topic')).toMatchObject({current_members:0,total_members:0,hidden_ended_members:0,members:[]});
+    expect(hub.db.prepare('SELECT count(*) AS n FROM memberships').get()?.n).toBe(203);
     const { sessions } = z.object({ sessions: z.array(z.object({
       id: z.string(), state: z.string(), wake: z.string(), ended_at: z.string().nullable(),
-    })) }).parse(await response.json());
+    })) }).parse(snapshot);
     expect(sessions.filter(session => session.ended_at === null)).toHaveLength(101);
     expect(sessions.filter(session => session.ended_at !== null)).toHaveLength(100);
     expect(sessions.map(session => session.id)).not.toContain("gone-0");

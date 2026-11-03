@@ -1,7 +1,7 @@
 import { Methods, PROTOCOL_VERSION, RegisteredSession as RegisteredSessionSchema, TopicName, type Session } from "@kommutator/protocol";
 import type { z } from "zod";
 import {
-  errors, requireHost, requireMembership, requireSession, RpcFault, transaction,
+  errors, rejectRetiredOperation, requireHost, requireMembership, requireSession, RpcFault, transaction,
   type HubContext, type HubPeer, type SessionRow,
 } from "./context.js";
 
@@ -143,6 +143,7 @@ export function upsertSession(ctx: HubContext, peer: HubPeer, params: UpsertPara
     throw new RpcFault(errors.unauthorized, "session host does not match connection");
   }
   const result = transaction(ctx, () => {
+    if (params.op !== "update") rejectRetiredOperation(ctx, "registration", params.reg_id);
     switch (params.op) {
       case "register": return registerSession(ctx, peer, params);
       case "update": return updateSession(ctx, peer, params);

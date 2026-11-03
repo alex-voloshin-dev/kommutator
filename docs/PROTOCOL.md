@@ -178,3 +178,11 @@ Unicode whitespace. Separate words with `-`, for example `kommutator-feedback`. 
 `NewTopicName` schema expresses creation validation. General `TopicName` remains compatible
 with existing legacy records: joining, reading or leaving an existing spaced topic remains
 possible for history and replay. No automatic topic renaming is performed.
+
+## Operator-retired replay keys
+
+The schema-6 hub retains content-free tombstones for explicitly removed test registration,
+message and board-operation keys. A retry with a retired key returns conflict (`-32009`)
+instead of creating new data. Normal authentication/identity checks still apply. No cleanup
+RPC or writable dashboard route is exposed; the exact-manifest cleanup is an offline operator
+command. Existing messages, delivery sequence counters and unrelated replay keys are retained.

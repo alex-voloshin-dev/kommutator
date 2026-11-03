@@ -12,6 +12,7 @@ import {
 import type { z } from "zod";
 import {
   errors,
+  rejectRetiredOperation,
   requireMembership,
   requireSession,
   RpcFault,
@@ -150,6 +151,7 @@ export function sendMessage(
   const targets = parseTargets(params.message);
   const committed = transaction(ctx, () => {
     const sender = requireSession(ctx, peer, params.session_id);
+    rejectRetiredOperation(ctx, "message", params.idempotency_key);
     const previous = ctx.db.prepare("SELECT * FROM messages WHERE idempotency_key = ?")
       .get(params.idempotency_key) as MessageRow | undefined;
     if (previous) {
