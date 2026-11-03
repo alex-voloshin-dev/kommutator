@@ -47,7 +47,7 @@ for arbitrary code supplied by strangers.
    or GitHub token belongs in this file.
 4. Add `--result-db /home/USER/.local/state/kommutator-maintainer/maintainer.db` to the observer
    service's existing ExecStart. Preserve its other arguments. Restart the updated observer.
-   Its existing identity publishes maintainer progress and results, avoiding a second socket
+   Its existing identity publishes maintainer board progress and terminal replies, avoiding a second socket
    with the same logical host. Its classifier still has no tools.
 5. Render `scripts/feedback-maintainer.service.in` to
    `~/.config/systemd/user/kommutator-maintainer.service`, replacing `@REPO@`, `@NODE@`,
@@ -74,9 +74,12 @@ systemctl --user stop kommutator-maintainer.service
 ```
 
 Use `--policy /absolute/path --state /absolute/path` when overriding defaults. The observer
-publishes `queued`, `running`, `answered`, `released` and `blocked` reports to the source thread
-and durable `feedback-maintainer/<report-id>` board entries. Own replies cannot generate new
-engineering jobs. Lost hub acknowledgements replay the same report IDs; they do not rerun work.
+publishes all `queued`, `running`, `answered`, `released` and `blocked` reports as durable
+`feedback-maintainer/<report-id>` board entries. Only terminal `answered`, `released` and
+`blocked` reports also receive replies in the source thread. Pending `queued`/`running` reports
+from older versions complete after their board write without sending a reply; existing replies
+remain in history. Own replies cannot generate new engineering jobs. Lost hub acknowledgements
+replay the same report IDs and keys; they do not rerun work.
 
 A worker has a two-hour timeout and a four-MiB output budget. Logs, clones and results remain
 under `STATE/jobs/<message-id>/<attempt>/`; failed work is retained. SIGTERM kills the worker

@@ -139,7 +139,10 @@ test('aborting worker terminates its stubborn process-group descendant', async t
   let running = true;
   for (let i = 0; i < 100 && running; i++) {
     try { running = !(await readFile(`/proc/${pid}/stat`, 'utf8')).includes(') Z '); }
-    catch (error) { if (error.code === 'ENOENT') running = false; else throw error; }
+    catch (error) {
+      // A process that exits after procfs open can fail the read with ESRCH.
+      if (error.code === 'ENOENT' || error.code === 'ESRCH') running = false; else throw error;
+    }
     if (running) await new Promise(resolve => setTimeout(resolve, 20));
   }
   assert.equal(running, false, 'descendant cannot continue after abort');

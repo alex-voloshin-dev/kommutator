@@ -1,7 +1,7 @@
 {
   "name": "kommutator",
   "description": "Cross-vendor messaging, topics and shared boards for coding-agent sessions (kommutator)",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": {
     "name": "alex-voloshin-dev"
   },

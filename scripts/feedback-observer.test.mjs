@@ -170,21 +170,73 @@ test('runner accepts only the qualified fail-closed Code Mode advisory', async t
   await assert.rejects(run(advisory, 'item.completed', 'command_execution'), /analysis failed/);
 });
 
-test('maintainer reports reuse durable replay keys after lost message acknowledgement', async t => {
+async function maintainerReportFixture(t, status) {
   const { MaintainerQueue } = await import('./lib/feedback-maintainer.mjs');
-  const f = await fixture(t);
+  const f = await fixture(t, async () => ({ ...analysis, reply: '' }));
   const source = await f.send('A real diagnostic issue.');
   const resultDb = join(f.directory, 'maintainer.db');
   const queue = new MaintainerQueue(resultDb, { repository: 'test', topic: 'kommutator-feedback', observerDb: join(f.directory, 'observer.db') });
   t.after(() => queue.close());
-  queue.transition({ id: source.id, attempt: 1 }, 'answered', 'Verified and explained.');
+  queue.transition({ id: source.id, attempt: 1 }, status, 'Verified and explained.');
+  const report = JSON.parse(queue.db.prepare('SELECT data FROM reports').get().data);
   f.observer.resultDb = resultDb;
-  f.lose('message.send');
-  await f.observer.publishMaintainerReports();
-  await f.observer.publishMaintainerReports();
-  await f.observer.publishMaintainerReports();
-  assert.equal(f.replies().filter(row => row.body.includes('Verified and explained.')).length, 1);
-});
+  return { f, report, resultDb, key: `maintainer-report:${report.id}`, boardKey: `feedback-maintainer/${report.id}` };
+}
+
+for (const status of ['queued', 'running', 'answered', 'released', 'blocked']) {
+  test(`maintainer ${status} report preserves board/reply replay through restart`, async t => {
+    const { f, report, resultDb, key, boardKey } = await maintainerReportFixture(t, status);
+    const terminal = ['answered', 'released', 'blocked'].includes(status);
+    f.lose('board.put');
+    await f.observer.publishMaintainerReports();
+    const pending = f.journal.get(key);
+    assert.equal(pending.done, false);
+    assert.equal(pending.boardDone, false);
+    assert.equal(f.replies().length, 0);
+    await f.restart(); f.observer.resultDb = resultDb;
+    if (terminal) f.lose('message.send');
+    await f.observer.publishMaintainerReports();
+    assert.equal(f.journal.get(key).boardDone, true);
+    assert.equal(f.journal.get(key).done, !terminal);
+    await f.restart(); f.observer.resultDb = resultDb;
+    await f.observer.publishMaintainerReports();
+    await f.observer.publishMaintainerReports();
+    assert.deepEqual(f.journal.get(key), { ...pending, boardDone: true, done: true });
+    const board = f.db.prepare('SELECT * FROM board_entries WHERE key=?').get(boardKey);
+    assert.match(board.body, new RegExp(`Status: ${status}`));
+    assert.equal(f.db.prepare('SELECT count(*) AS n FROM board_versions WHERE key=?').get(boardKey).n, 1);
+    const replies = f.db.prepare('SELECT * FROM messages WHERE from_session=?').all(f.journal.get('session').id);
+    assert.equal(replies.length, terminal ? 1 : 0);
+    if (terminal) {
+      assert.equal(replies[0].reply_to, report.source);
+      assert.equal(replies[0].subject, `Feedback maintainer: ${status}`);
+      assert.equal(replies[0].priority, 'fyi');
+      assert.equal(replies[0].body, board.body);
+    }
+    assert.equal(f.journal.get('last_report_error'), null);
+  });
+}
+
+for (const status of ['queued', 'running']) {
+  for (const boardDone of [false, true]) {
+    test(`persisted ${status} report with boardDone=${boardDone} completes without a topic reply`, async t => {
+      const { f, resultDb, key, boardKey } = await maintainerReportFixture(t, status);
+      const saved = { boardOp: randomUUID(), replyKey: randomUUID(), boardDone, done: false };
+      if (boardDone) {
+        await f.observer.rpc('board.put', { session_id: f.journal.get('session').id,
+          topic: 'kommutator-feedback', key: boardKey, body: `Status: ${status}`, op_id: saved.boardOp });
+      }
+      f.journal.set(key, saved);
+      await f.restart(); f.observer.resultDb = resultDb;
+      await f.observer.publishMaintainerReports();
+      await f.observer.publishMaintainerReports();
+      assert.deepEqual(f.journal.get(key), { ...saved, topic: 'kommutator-feedback', boardDone: true, done: true });
+      assert.equal(f.db.prepare('SELECT count(*) AS n FROM board_versions WHERE key=?').get(boardKey).n, 1);
+      assert.equal(f.replies().length, 0);
+      assert.equal(f.journal.get('last_report_error'), null);
+    });
+  }
+}
 
 test('observer backfills exact-key-redacted input for optional maintainer', async t => {
   const f = await fixture(t);

@@ -1224,8 +1224,13 @@ blocked and are never retried automatically. Operator reconciliation records a d
 only an explicit retry after inspection creates another attempt. Failed work and logs remain
 private for inspection. Claimed releases are independently checked against the policy's fixed
 repository. The observer publishes durable maintainer reports using its existing identity,
-with stable per-report board and message replay keys; a lost acknowledgement never launches
-a second engineering worker. No model invocation occurs while the queue is empty.
+with stable per-report board and message replay keys. All five states receive durable board
+entries; only terminal `answered`, `released` and `blocked` reports receive source-thread topic
+replies. `queued` and `running` publication completes after the board acknowledgement, including
+older pending reports with saved replay keys or an already acknowledged board write. Existing
+replies are not removed. Lost board or terminal-reply acknowledgements retain the original
+replay keys; a lost acknowledgement never launches a second engineering worker. No model
+invocation occurs while the queue is empty.
 
 ### Opt-in local released-version deployment (2026-11-02)
 

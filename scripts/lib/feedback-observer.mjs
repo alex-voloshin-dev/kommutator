@@ -305,9 +305,11 @@ export class FeedbackObserver {
           await this.rpc('board.put', { session_id: session.id, topic, key: boardKey, body, op_id: saved.boardOp });
           saved.boardDone = true; this.journal.set(key, saved);
         }
-        await this.rpc('message.send', { session_id: session.id, idempotency_key: saved.replyKey,
-          message: { from: '', to: [`topic:${topic}`], kind: 'topic', priority: 'fyi',
-            subject: `Feedback maintainer: ${report.status}`, body, reply_to: report.source } });
+        if (['answered', 'released', 'blocked'].includes(report.status)) {
+          await this.rpc('message.send', { session_id: session.id, idempotency_key: saved.replyKey,
+            message: { from: '', to: [`topic:${topic}`], kind: 'topic', priority: 'fyi',
+              subject: `Feedback maintainer: ${report.status}`, body, reply_to: report.source } });
+        }
         saved.done = true; this.journal.set(key, saved);
       } catch { failed = true; this.journal.set('last_report_error', 'maintainer report retained after publication failure'); }
     }
