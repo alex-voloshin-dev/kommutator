@@ -3,250 +3,348 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>kommutator</title>
+<title>kommutator · Hub overview</title>
 <style>
-  :root { color-scheme: light dark; font: 14px/1.4 system-ui, sans-serif; }
-  body { margin: 0; padding: 16px; max-width: 1100px; }
-  h1 { font-size: 18px; margin: 0 0 12px; }
-  h2 { font-size: 15px; margin: 20px 0 8px; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #8884; vertical-align: top; }
-  th small { font-weight: normal; opacity: .7; }
-  .feed p { margin: 4px 0; font-family: ui-monospace, monospace; font-size: 12px; overflow-wrap: anywhere; }
-  td { overflow-wrap: anywhere; }
-  .filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 12px 0; }
-  .filters label { display: grid; gap: 4px; }
-  input, select, button { font: inherit; padding: 6px; }
-  .table-scroll { overflow-x: auto; }
+  :root { color-scheme: light dark; font: 15px/1.5 system-ui, sans-serif; --bg:#f3f5f8; --surface:#fff; --text:#182337; --muted:#526078; --border:#cbd3df; --control-border:#7a879b; --accent:#2453b8; --soft:#e9effc; --good:#126044; --warning:#845300; --radius:12px; --space:16px; }
+  @media(prefers-color-scheme:dark) { :root { --bg:#111722; --surface:#1b2433; --text:#e8edf5; --muted:#b4bfd1; --border:#526078; --accent:#9ebdff; --soft:#263754; --good:#8bd5b3; --warning:#f2c571; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); }
+  a { color:var(--accent); text-underline-offset:3px; }
+  button, input, select { font:inherit; color:inherit; }
+  button, input, select, summary { touch-action:manipulation; }
+  :focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+  button, input, select { border:1px solid var(--control-border); border-radius:6px; background:var(--surface); padding:8px 11px; min-height:42px; }
+  input[type=checkbox] { min-height:0; accent-color:var(--accent); width:17px; height:17px; }
+  button { cursor:pointer; font-weight:600; }
+  button:hover { background:var(--soft); }
+  button[aria-disabled="true"] { opacity:.65; cursor:wait; }
+  input, select { max-width:100%; min-width:0; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .skip { position:absolute; top:-80px; padding:12px; background:var(--surface); z-index:1; }
+  .skip:focus { top:8px; }
+  .shell { max-width:1320px; margin:auto; padding:28px clamp(16px,4vw,40px) 60px; }
+  header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap; }
+  h1,h2,h3,p { margin-top:0; }
+  h1 { font-size:28px; letter-spacing:-.04em; line-height:1.2; margin-bottom:7px; }
+  h2 { font-size:21px; letter-spacing:-.025em; margin-bottom:4px; }
+  h3 { font-size:16px; line-height:1.4; margin-bottom:4px; overflow-wrap:anywhere; }
+  .eyebrow { text-transform:uppercase; letter-spacing:.1em; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:7px; }
+  .muted, .hint, .summary { color:var(--muted); }
+  .hint, .summary { font-size:13px; }
+  .hint { margin:0 0 12px; }
+  .summary { margin:12px 0; }
+  .header-status { max-width:540px; }
+  #connection { font-weight:600; margin-bottom:4px; }
+  .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+  nav { display:flex; flex-wrap:wrap; gap:6px 20px; margin:22px 0 28px; padding:12px 0; border-block:1px solid var(--border); }
+  nav a { text-decoration:none; font-weight:600; padding:3px 0; }
+  nav a:hover { text-decoration:underline; }
+  section { margin-top:32px; scroll-margin-top:16px; }
+  .section-heading { display:flex; gap:12px; align-items:baseline; justify-content:space-between; flex-wrap:wrap; }
+  .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+  .metric, .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:var(--space); min-width:0; }
+  .metric strong { display:block; font-size:30px; line-height:1.2; margin:5px 0; letter-spacing:-.04em; }
+  .metric span { color:var(--muted); font-size:13px; }
+  .filters { display:flex; flex-wrap:wrap; align-items:end; gap:10px 14px; background:var(--surface); padding:14px; border:1px solid var(--border); border-radius:var(--radius); margin-top:16px; }
+  .filters label { display:grid; gap:5px; font-size:13px; font-weight:600; min-width:0; }
+  .filters .search { flex:1 1 240px; }
+  .filters .check { display:flex; align-items:center; min-height:42px; gap:8px; }
+  .cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .badge { display:inline-block; border:1px solid var(--border); border-radius:30px; padding:2px 8px; font-size:12px; white-space:nowrap; color:var(--muted); }
+  .badge.active, .badge.read { color:var(--good); }
+  .badge.idle, .badge.unread { color:var(--warning); }
+  .identity, .status-line, .preview, .member { overflow-wrap:anywhere; }
+  .identity { color:var(--muted); font-size:13px; margin:5px 0 10px; }
+  .status-line { margin:10px 0 0; }
+  .project { font-size:13px; overflow-wrap:anywhere; }
+  .project-label { color:var(--muted); }
+  details { margin-top:12px; }
+  summary { cursor:pointer; font-size:13px; color:var(--accent); width:fit-content; max-width:100%; overflow-wrap:anywhere; }
+  .topic-card { margin:0; }
+  .topic-card > summary { width:100%; color:var(--text); font-size:16px; font-weight:600; }
+  .topic-meta { display:block; font-size:13px; font-weight:400; color:var(--muted); margin:6px 0 0; }
+  .members { list-style:none; margin:12px 0 0; padding:0; }
+  .member { border-top:1px solid var(--border); padding:10px 0; }
+  .member strong { font-size:14px; }
+  .member p { margin:3px 0 0; color:var(--muted); font-size:12px; }
+  dl { display:grid; grid-template-columns:max-content minmax(0,1fr); gap:4px 14px; font-size:12px; margin:12px 0 0; }
+  dt { color:var(--muted); }
+  dd { margin:0; overflow-wrap:anywhere; }
+  .delivery-list, .activity-list { display:grid; gap:10px; }
+  .delivery .route { font-size:13px; overflow-wrap:anywhere; margin-bottom:9px; }
+  .delivery .preview { font-size:14px; margin:7px 0 0; white-space:pre-wrap; }
+  time { font-size:12px; color:var(--muted); }
+  .activity { border-left:3px solid var(--border); padding:12px 16px; background:var(--surface); border-radius:0 8px 8px 0; overflow-wrap:anywhere; }
+  .activity p { margin:4px 0 0; }
+  .activity details { margin-top:6px; }
+  pre { white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.5 ui-monospace,monospace; margin-bottom:0; }
+  .empty { grid-column:1/-1; padding:24px 16px; border:1px dashed var(--border); border-radius:var(--radius); color:var(--muted); text-align:center; }
+  .notice { background:var(--soft); border-radius:8px; padding:10px 14px; font-size:13px; }
+  [hidden] { display:none!important; }
+  @media(max-width:760px) { .cards { grid-template-columns:1fr; } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .shell { padding-top:20px; } }
+  @media(max-width:420px) { .filters > label:not(.check) { flex:1 1 100%; } .card-head { flex-wrap:wrap; } dl { grid-template-columns:1fr; gap:2px; } dd { margin-bottom:6px; } .metric strong { font-size:25px; } }
 </style>
 </head>
 <body>
-<h1>kommutator — read-only</h1>
-<p id="connection" role="status">Loading snapshot; connecting to live updates…</p>
-<p>Last successful snapshot: <time id="last-update">Not yet</time></p>
-<p id="snapshot-error" role="status" hidden></p>
-<h2 id="sessions-heading">Sessions</h2>
-<p id="session-retention">All live sessions and up to 100 most recently ended sessions. Older ended sessions are not shown.</p>
-<div class="filters" aria-label="Session filters">
-  <label for="session-search">Search sessions (handle, vendor, project, status)
-    <input id="session-search" type="search" placeholder="Search sessions">
-  </label>
-  <label for="session-state">State
-    <select id="session-state"><option value="">All states</option><option>active</option><option>idle</option><option>gone</option><option>unknown</option></select>
-  </label>
-  <label for="session-wake">Wake
-    <select id="session-wake"><option value="">All wake settings</option><option>on</option><option>off</option></select>
-  </label>
-  <button id="clear-session-filters" type="button">Clear session filters</button>
+<a class="skip" href="#main">Skip to dashboard</a>
+<div class="shell">
+<header>
+  <div><p class="eyebrow">Agent collaboration hub</p><h1>kommutator</h1><p class="muted">Your sessions, conversations and shared topics. <span class="badge">Read only</span></p></div>
+  <div class="header-status"><p id="connection">Loading snapshot; connecting to live updates…</p><p class="hint">Last successful snapshot: <time id="last-update">Not yet</time></p><div class="actions"><button id="refresh" type="button">Refresh now</button><button id="pause" type="button" aria-pressed="false">Pause updates</button></div></div>
+</header>
+<nav aria-label="Dashboard sections"><a href="#overview">Overview</a><a href="#sessions-section">Sessions</a><a href="#topics-section">Topics</a><a href="#deliveries-section">Deliveries</a><a href="#activity-section">Activity</a></nav>
+<main id="main" tabindex="-1">
+<p id="snapshot-error" class="notice" hidden></p>
+<p id="announcements" class="sr-only" role="status" aria-atomic="true"></p>
+<p id="focus-notice" class="hint" role="status"></p>
+<section id="overview" aria-labelledby="overview-heading"><h2 id="overview-heading">At a glance</h2><p id="overview-summary" class="hint">Current sessions are registrations that have not ended, not a claim of human presence.</p><div class="metrics"><div class="metric"><span>Current sessions</span><strong id="metric-sessions">—</strong><span id="metric-states">Waiting for data</span></div><div class="metric"><span>Hosts with current sessions</span><strong id="metric-hosts">—</strong><span>Represented in this snapshot</span></div><div class="metric"><span>Topics</span><strong id="metric-topics">—</strong><span>Project, shared and global</span></div><div class="metric"><span>Recent deliveries</span><strong id="metric-deliveries">—</strong><span>Up to 200 recipient deliveries</span></div></div></section>
+<section id="sessions-section" aria-labelledby="sessions-heading"><div class="section-heading"><h2 id="sessions-heading" tabindex="-1">Sessions</h2><span class="hint">Find who is working on what</span></div><p id="session-retention" class="hint">All current sessions and up to 100 most recently ended sessions. Older ended sessions are not shown.</p><div class="filters" aria-label="Session filters"><label class="search" for="session-search">Search sessions<input id="session-search" type="search" placeholder="Name, role, host, project or status"></label><label for="session-state">State<select id="session-state"><option value="">All states</option><option>active</option><option>idle</option><option>gone</option><option>unknown</option></select></label><label for="session-wake">Wake<select id="session-wake"><option value="">All settings</option><option>on</option><option>off</option></select></label><label class="check" for="session-ended"><input id="session-ended" type="checkbox">Include ended</label><button id="clear-session-filters" type="button">Clear filters</button></div><p id="session-summary" class="summary">Loading sessions…</p><div id="sessions" class="cards" aria-describedby="session-retention session-summary"></div></section>
+<section id="topics-section" aria-labelledby="topics-heading"><div class="section-heading"><h2 id="topics-heading" tabindex="-1">Topics</h2><span class="hint">Open a topic to see its subscribers</span></div><p class="hint">Memberships come from the hub. Ended subscriptions are retained as history.</p><div class="filters" aria-label="Topic filters"><label class="search" for="topic-search">Search topics<input id="topic-search" type="search" placeholder="Topic name"></label><label for="topic-kind">Kind<select id="topic-kind"><option value="">All kinds</option><option value="adhoc">Shared</option><option value="project">Project</option><option value="global">Global</option></select></label><label class="check" for="topic-ended"><input id="topic-ended" type="checkbox">Include ended subscribers</label><button id="clear-topic-filters" type="button">Clear filters</button></div><p id="topic-summary" class="summary">Loading topics…</p><div id="topics" class="cards" aria-describedby="topic-summary"></div></section>
+<section id="deliveries-section" aria-labelledby="deliveries-heading"><div class="section-heading"><h2 id="deliveries-heading" tabindex="-1">Recent deliveries</h2><span class="hint">Latest 200 recipient deliveries</span></div><p class="hint">One message can have several deliveries. “Marked read” records a receipt; it does not prove the agent handled the request.</p><div class="filters" aria-label="Delivery filters"><label class="search" for="delivery-search">Search deliveries<input id="delivery-search" type="search" placeholder="Sender, recipient, subject or preview"></label><label for="delivery-state">Receipt<select id="delivery-state"><option value="">All receipts</option><option value="unread">Pending receipt</option><option value="read">Marked read</option></select></label><button id="clear-delivery-filters" type="button">Clear filters</button></div><p id="delivery-summary" class="summary">Loading deliveries…</p><div id="deliveries" class="delivery-list" aria-describedby="delivery-summary"></div></section>
+<section id="activity-section" aria-labelledby="activity-heading"><div class="section-heading"><h2 id="activity-heading" tabindex="-1">Live activity</h2><span class="hint">Latest 200 events since connection</span></div><p class="hint">Missed events are not replayed. Reconnecting refreshes the snapshot; events arriving while updates are paused are discarded.</p><div class="filters"><label for="feed-type">Event type<select id="feed-type"><option value="">All event types</option><option value="session.registered">Session registered</option><option value="session.updated">Session updated</option><option value="session.gone">Session ended</option><option value="message.sent">Message sent</option><option value="delivery.created">Delivery created</option><option value="delivery.read">Receipt recorded</option><option value="board.put">Board updated</option></select></label></div><p id="feed-summary" class="summary">Waiting for live connection.</p><div id="feed" class="activity-list"></div></section>
+</main>
 </div>
-<p id="session-summary" role="status">Loading sessions…</p>
-<div class="table-scroll"><table id="sessions" aria-labelledby="sessions-heading" aria-describedby="session-retention session-summary"><thead><tr><th scope="col">handle</th><th scope="col">vendor</th><th scope="col">project</th><th scope="col">state</th><th scope="col">wake</th><th scope="col">status</th></tr></thead><tbody></tbody></table></div>
-<h2 id="deliveries-heading">Deliveries</h2>
-<p>Latest 200 deliveries.</p>
-<p id="delivery-summary" role="status">Loading deliveries…</p>
-<!-- "marked read" is the receipt state `read`, a bookkeeping fact: the header was in a hook's
-     accepted output, the body was served to read(id), or the agent called ack(). It does
-     not mean the body was read or the request handled (DESIGN.md §5). -->
-<div class="table-scroll"><table id="deliveries" aria-labelledby="deliveries-heading" aria-describedby="delivery-summary"><thead><tr><th scope="col">#seq</th><th scope="col">to</th><th scope="col">from</th><th scope="col">subject / preview</th><th scope="col" title="Bookkeeping only: the header was in a hook's accepted output, the body was served to read(id), or the agent called ack(). Not proof the agent saw or handled it.">marked read <small>(?)</small></th></tr></thead><tbody></tbody></table></div>
-<h2>Feed</h2>
-<p>Latest 200 live events since this page connected. Reconnecting refreshes the tables; missed feed events are not replayed.</p>
-<div class="filters"><label for="feed-type">Event type
-  <select id="feed-type"><option value="">All event types</option><option>session.registered</option><option>session.updated</option><option>session.gone</option><option>message.sent</option><option>delivery.created</option><option>delivery.read</option><option>board.put</option></select>
-</label></div>
-<p id="feed-summary" role="status">Waiting for live connection.</p>
-<div class="feed" id="feed"></div>
 <script>
-const sessions = document.querySelector('#sessions tbody');
-const deliveries = document.querySelector('#deliveries tbody');
-const feed = document.querySelector('#feed');
-const connection = document.querySelector('#connection');
-const snapshotError = document.querySelector('#snapshot-error');
-const lastUpdate = document.querySelector('#last-update');
-const sessionSummary = document.querySelector('#session-summary');
-const deliverySummary = document.querySelector('#delivery-summary');
-const feedSummary = document.querySelector('#feed-summary');
-const sessionSearch = document.querySelector('#session-search');
-const sessionState = document.querySelector('#session-state');
-const sessionWake = document.querySelector('#session-wake');
-const feedType = document.querySelector('#feed-type');
-const eventTypes = [
-  'session.registered', 'session.updated', 'session.gone', 'message.sent',
-  'delivery.created', 'delivery.read', 'board.put',
-];
-let refreshing = false;
-let refreshTimer = null;
-let dirty = false;
-let snapshot = null;
-let snapshotFailed = false;
-let needsSync = true;
-let streamState = 'connecting';
+const $ = selector => document.querySelector(selector);
+const sessions = $('#sessions'), deliveries = $('#deliveries'), topics = $('#topics'), feed = $('#feed');
+const connection = $('#connection'), snapshotError = $('#snapshot-error'), lastUpdate = $('#last-update');
+const sessionSummary = $('#session-summary'), deliverySummary = $('#delivery-summary'), topicSummary = $('#topic-summary'), feedSummary = $('#feed-summary');
+const sessionSearch = $('#session-search'), sessionState = $('#session-state'), sessionWake = $('#session-wake'), sessionEnded = $('#session-ended');
+const topicSearch = $('#topic-search'), topicKind = $('#topic-kind'), topicEnded = $('#topic-ended');
+const deliverySearch = $('#delivery-search'), deliveryState = $('#delivery-state'), feedType = $('#feed-type');
+const refreshButton = $('#refresh'), pauseButton = $('#pause');
+const eventTypes = ['session.registered','session.updated','session.gone','message.sent','delivery.created','delivery.read','board.put'];
+let refreshing = false, refreshTimer = null, dirty = false, snapshot = null, snapshotFailed = false, needsSync = true, streamState = 'connecting';
+let paused = false, pauseGeneration = 0, manualRequested = false, feedSerial = 0, lastAnnouncementState = '';
 const feedEvents = [];
-
-function isRecord(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+const openDetails = new Map();
+const renderKeys = new Map();
+function announce(value) { const target = $('#announcements'); if (target.textContent !== value) target.textContent = value; }
+function filtered(render, summary) { render(); announce(summary.textContent); }
+function isRecord(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
+function text(value) { return typeof value === 'string' || typeof value === 'number' ? String(value) : ''; }
+function current(row) { return row.ended_at == null && row.state !== 'gone'; }
+function node(tag, value = '', className = '') { const el = document.createElement(tag); if (value !== '') el.textContent = text(value); if (className) el.className = className; return el; }
+function field(tag, name, value, className = '') { const el = node(tag, value, className); el.setAttribute('data-field', name); return el; }
+function append(parent, ...children) { for (const child of children) parent.appendChild(child); return parent; }
+function badge(value) { return field('span', 'state', value, 'badge ' + (['active','idle','gone','unknown','read','unread'].includes(value) ? value : '')); }
+function time(value) { const el = node('time', text(value) ? new Date(value).toLocaleString() : 'Time unavailable'); if (text(value)) { el.dateTime = value; el.title = value; } return el; }
+function details(key, label) { const el = node('details'); el.id = key; const summary = node('summary', label); summary.id = key + '-toggle'; el.appendChild(summary); return el; }
+function pair(list, label, value, fieldName) { list.appendChild(node('dt', label)); list.appendChild(fieldName ? field('dd', fieldName, value || 'Not set') : node('dd', value || 'Not set')); }
+function replaceList(container, rows, heading, emptyText, signature) {
+  const key = JSON.stringify([signature,emptyText]);
+  if (renderKeys.get(container) === key) return;
+  renderKeys.set(container, key);
+  for (const item of container.querySelectorAll('details')) openDetails.set(item.id, item.open);
+  const focused = container.contains(document.activeElement) ? document.activeElement.id : null;
+  container.replaceChildren(...(rows.length ? rows : [node('p', emptyText, 'empty')]));
+  for (const item of container.querySelectorAll('details')) item.open = openDetails.get(item.id) ?? false;
+  if (focused) {
+    const target = document.getElementById(focused);
+    if (target) target.focus({ preventScroll:true });
+    else { $(heading).focus({ preventScroll:true }); $('#focus-notice').textContent = 'The focused item is no longer displayed. Focus moved to the section heading.'; }
+  }
+  // Disclosure history follows the retained data windows rather than growing forever.
+  if (openDetails.size > 2000) for (const key of openDetails.keys()) if (!document.getElementById(key)) openDetails.delete(key);
 }
-
-function cellText(value) {
-  return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+function staleSuffix() { return paused ? ' Updates paused; data may be stale.' : snapshotFailed || needsSync || streamState !== 'connected' ? ' Last successful snapshot; data may be stale.' : ''; }
+function unavailable(summary, label) { summary.textContent = snapshotFailed ? label + ' unavailable until a snapshot succeeds.' : 'Loading ' + label.toLowerCase() + '…'; }
+function sessionCard(row) {
+  const card = node('article', '', 'card');
+  const title = field('h3', 'name', row.name || row.handle);
+  append(card, append(node('div','','card-head'), title, badge(row.state || 'unknown')));
+  const identity = node('p','','identity'); append(identity, field('span','role',row.role || 'No role set'), node('span',' · '), field('span','host',row.host || 'Unknown host'));
+  append(card, identity, append(node('p','','project'), node('span','Project · ','project-label'), field('span','project',row.project_key || 'No project')));
+  card.appendChild(field('p','status',row.status_line || 'No status shared', 'status-line'));
+  const more = details('session-' + encodeURIComponent(row.id), 'Session details'); const facts = node('dl');
+  pair(facts,'Handle',row.handle,'handle'); pair(facts,'Vendor',row.vendor,'vendor'); pair(facts,'Wake',row.wake,'wake'); pair(facts,'Capability',row.capability); pair(facts,'Session ID',row.id); pair(facts,'Vendor session ID',row.vendor_session_id); pair(facts,'Working directory',row.cwd); pair(facts,'Last seen',row.last_seen_at);
+  more.appendChild(facts); card.appendChild(more); return card;
 }
-
-function renderRows(table, rows, values) {
-  const rendered = rows.map(row => {
-    const tr = document.createElement('tr');
-    for (const value of values(row)) {
-      const td = document.createElement('td');
-      td.textContent = cellText(value);
-      tr.appendChild(td);
-    }
-    return tr;
-  });
-  table.replaceChildren(...rendered);
-}
-
-function staleSuffix() {
-  return snapshotFailed || needsSync || streamState !== 'connected'
-    ? ' Last successful snapshot; data may be stale.' : '';
-}
-
 function renderSessions() {
-  if (snapshot === null) {
-    sessionSummary.textContent = snapshotFailed ? 'Sessions unavailable until a snapshot succeeds.' : 'Loading sessions…';
-    return;
-  }
+  if (snapshot === null) { unavailable(sessionSummary,'Sessions'); return; }
   const query = sessionSearch.value.trim().toLowerCase();
-  const rows = snapshot.sessions.filter(row =>
-    (!sessionState.value || row.state === sessionState.value)
-    && (!sessionWake.value || row.wake === sessionWake.value)
-    && (!query || [row.handle, row.vendor, row.project_key, row.status_line]
-      .some(value => cellText(value).toLowerCase().includes(query))));
-  renderRows(sessions, rows, row => [row.handle, row.vendor, row.project_key, row.state, row.wake, row.status_line]);
-  sessionSummary.textContent = (snapshot.sessions.length === 0 ? 'No sessions in this snapshot.'
-    : rows.length === 0 ? 'No sessions match these filters.'
-    : `Showing ${rows.length} of ${snapshot.sessions.length} sessions.`) + staleSuffix();
+  const rows = snapshot.sessions.filter(row => (sessionEnded.checked || current(row)) && (!sessionState.value || row.state === sessionState.value) && (!sessionWake.value || row.wake === sessionWake.value) && (!query || [row.handle,row.name,row.role,row.host,row.vendor,row.project_key,row.status_line].some(value => text(value).toLowerCase().includes(query))))
+    .sort((a,b) => Number(current(b)) - Number(current(a)) || text(a.handle).localeCompare(text(b.handle)) || a.id.localeCompare(b.id));
+  const summary = snapshot.sessions.length === 0 ? 'No sessions in this snapshot.' : rows.length === 0 ? 'No sessions match these filters.' : `Showing ${rows.length} of ${snapshot.sessions.length} retained sessions.`;
+  sessionSummary.textContent = summary + staleSuffix();
+  replaceList(sessions, rows.map(sessionCard), '#sessions-heading', summary, JSON.stringify(rows));
 }
-
-function renderDeliveries() {
-  if (snapshot === null) {
-    deliverySummary.textContent = snapshotFailed ? 'Deliveries unavailable until a snapshot succeeds.' : 'Loading deliveries…';
-    return;
+function topicCard(topic, sessionMap) {
+  const card = details('topic-' + topic.id, topic.name); card.className = 'card topic-card';
+  const kind = {adhoc:'Shared',project:'Project',global:'Global'}[topic.kind];
+  card.firstElementChild.appendChild(node('span',`${kind} · ${topic.current_members} current · ${topic.total_members} total subscribers`,'topic-meta'));
+  const members = topic.members.map(id => sessionMap.get(id)).filter(row => topicEnded.checked || current(row)).sort((a,b) => Number(current(b)) - Number(current(a)) || a.handle.localeCompare(b.handle));
+  const list = node('ul','','members');
+  for (const member of members) {
+    const li = node('li','','member'); append(li, node('strong',member.handle), node('span',' · '), badge(member.state || 'unknown'), node('p',`${member.role || 'No role set'} · ${member.host || 'Unknown host'} · ${member.vendor || 'Unknown vendor'}`)); list.appendChild(li);
   }
-  renderRows(deliveries, snapshot.deliveries,
-    row => [row.seq, row.recipient, row.sender, row.subject || row.preview, row.state === 'read' ? 'yes' : 'no']);
-  deliverySummary.textContent = (snapshot.deliveries.length === 0 ? 'No deliveries in this snapshot.'
-    : `Showing ${snapshot.deliveries.length} recent deliveries.`) + staleSuffix();
+  card.appendChild(list);
+  if (!members.length) card.appendChild(node('p',topic.total_members === 0 ? 'No subscribers yet.' : topicEnded.checked ? 'No subscribers in the retained session window.' : 'No current subscribers. Include ended subscribers to inspect retained history.','hint'));
+  if (topicEnded.checked && topic.hidden_ended_members > 0) card.appendChild(node('p',`${topic.hidden_ended_members} older ended subscribers are outside the retained 100-session history window.`,'hint'));
+  return card;
 }
-
+function renderTopics() {
+  if (snapshot === null) { unavailable(topicSummary,'Topics'); return; }
+  const query = topicSearch.value.trim().toLowerCase();
+  const rows = snapshot.topics.filter(topic => (!topicKind.value || topic.kind === topicKind.value) && (!query || topic.name.toLowerCase().includes(query)));
+  const summary = !snapshot.topics.length ? 'No topics in this snapshot.' : !rows.length ? 'No topics match these filters.' : `Showing ${rows.length} of ${snapshot.topics.length} topics.`;
+  topicSummary.textContent = summary + staleSuffix();
+  const sessionMap = new Map(snapshot.sessions.map(row => [row.id,row]));
+  replaceList(topics, rows.map(row => topicCard(row,sessionMap)), '#topics-heading', summary, JSON.stringify([rows,snapshot.sessions,topicEnded.checked]));
+}
+function deliveryCard(row) {
+  const card = node('article','','card delivery');
+  const header = node('div','','card-head'); append(header,time(row.updated_at),field('span','receipt',row.state === 'read' ? 'Marked read' : 'Pending receipt','badge '+(row.state === 'read' ? 'read':'unread'))); card.appendChild(header);
+  const route = node('p','','route'); append(route,field('strong','sender',row.sender),node('span',' → '),field('span','recipient',row.recipient)); card.appendChild(route);
+  card.appendChild(field('h3','subject',row.subject || 'Message'));
+  card.appendChild(field('p','preview',row.preview,'preview'));
+  card.appendChild(field('p','seq',`Recipient sequence ${text(row.seq)}`,'hint'));
+  return card;
+}
+function renderDeliveries() {
+  if (snapshot === null) { unavailable(deliverySummary,'Deliveries'); return; }
+  const query = deliverySearch.value.trim().toLowerCase();
+  const rows = snapshot.deliveries.filter(row => (!deliveryState.value || row.state === deliveryState.value) && (!query || [row.sender,row.recipient,row.subject,row.preview].some(value => text(value).toLowerCase().includes(query))));
+  const summary = !snapshot.deliveries.length ? 'No deliveries in this snapshot.' : !rows.length ? 'No deliveries match these filters.' : `Showing ${rows.length} of ${snapshot.deliveries.length} recent deliveries.`;
+  deliverySummary.textContent = summary + staleSuffix();
+  replaceList(deliveries,rows.map(deliveryCard),'#deliveries-heading',summary,JSON.stringify(rows));
+}
+const labels = {'session.registered':'Session registered','session.updated':'Session updated','session.gone':'Session ended','message.sent':'Message sent','delivery.created':'Delivery created','delivery.read':'Receipt recorded','board.put':'Board updated'};
+function safeEventData(type, data) {
+  // The event stream can carry full bodies. The dashboard keeps only display metadata.
+  const pick = (value, keys) => Object.fromEntries(keys.filter(key => value[key] !== undefined).map(key => [key,value[key]]));
+  if (isRecord(data.session)) return {session:pick(data.session,['id','handle','state','status_line'])};
+  if (isRecord(data.message)) return {message:pick(data.message,['id','from','to','kind','subject'])};
+  if (isRecord(data.entry)) return {entry:pick(data.entry,['topic','key','version','author'])};
+  return pick(data,['session_id','message_id','id','seq','state','incarnation']);
+}
+function sessionLabel(id) { return snapshot?.sessions.find(row => row.id === id)?.handle || text(id); }
+function eventSummary(type,data) {
+  const session = isRecord(data.session) ? data.session : {}, message = isRecord(data.message) ? data.message : {}, entry = isRecord(data.entry) ? data.entry : {};
+  if (type.startsWith('session.')) return text(session.handle) || sessionLabel(data.session_id) || 'Session state changed';
+  if (type === 'message.sent') return [text(message.from),text(message.subject)].filter(Boolean).join(' · ') || 'A new message was sent';
+  if (type === 'board.put') return [text(entry.topic),text(entry.key)].filter(Boolean).join(' · ') || 'Shared board changed';
+  return text(data.session_id) ? `Recipient ${sessionLabel(data.session_id)}` : type === 'delivery.read' ? 'A recipient recorded a read receipt' : 'A message reached a recipient mailbox';
+}
 function renderFeed() {
-  const visible = feedEvents.filter(event => !feedType.value || event.type === feedType.value);
-  feed.replaceChildren(...visible.map(event => {
-    const line = document.createElement('p');
-    line.textContent = event.text;
-    return line;
-  }));
-  feedSummary.textContent = feedEvents.length === 0
-    ? (streamState === 'connected' ? 'No live events received yet.' : 'No live events received; waiting for connection.')
-    : visible.length === 0 ? 'No events match this event type.'
-    : `Showing ${visible.length} of ${feedEvents.length} retained live events.`;
+  const visible = feedEvents.filter(event => !feedType.value || event.type === feedType.value).slice().reverse();
+  const summary = feedEvents.length === 0 ? (streamState === 'connected' ? 'No live events received yet.' : 'No live events received; waiting for connection.') : visible.length === 0 ? 'No events match this event type.' : `Showing ${visible.length} of ${feedEvents.length} retained live events.`;
+  feedSummary.textContent = summary + (paused ? ' Updates paused; incoming events are discarded.' : '');
+  const rows = visible.map(event => {
+    const row = node('article','','activity'); append(row, time(event.at),node('p',labels[event.type]),node('p',event.summary));
+    const more = details('event-'+event.key,'Event details'); more.appendChild(node('pre',event.detail)); row.appendChild(more); return row;
+  });
+  replaceList(feed,rows,'#activity-heading',summary,JSON.stringify(visible));
 }
-
+function renderOverview() {
+  if (snapshot === null) return;
+  const live = snapshot.sessions.filter(current);
+  $('#metric-sessions').textContent = String(live.length);
+  $('#metric-states').textContent = `${live.filter(row=>row.state==='active').length} active · ${live.filter(row=>row.state==='idle').length} idle`;
+  $('#metric-hosts').textContent = String(new Set(live.map(row=>row.host).filter(Boolean)).size);
+  $('#metric-topics').textContent = String(snapshot.topics.length);
+  $('#metric-deliveries').textContent = String(snapshot.deliveries.length);
+  $('#overview-summary').textContent = 'Current sessions are registrations that have not ended, not a claim of human presence.' + staleSuffix();
+}
 function renderStatus() {
-  if (streamState === 'disconnected') connection.textContent = 'Disconnected — reload this page to reconnect.';
+  if (paused) connection.textContent = 'Updates paused — data may be stale. Resume to catch up.';
+  else if (streamState === 'disconnected') connection.textContent = 'Disconnected — reload this page to reconnect.';
   else if (streamState === 'reconnecting') connection.textContent = 'Reconnecting — live updates unavailable.';
-  else if (snapshotFailed) connection.textContent = snapshot === null
-    ? 'Snapshot unavailable; retrying.' : 'Stale data — snapshot unavailable; retrying.';
+  else if (snapshotFailed) connection.textContent = snapshot === null ? 'Snapshot unavailable; retrying.' : 'Stale data — snapshot unavailable; retrying.';
   else if (streamState === 'connecting') connection.textContent = 'Connecting to live updates…';
   else if (needsSync) connection.textContent = snapshot === null ? 'Loading snapshot…' : 'Refreshing snapshot…';
-  else connection.textContent = 'connected';
-  renderSessions();
-  renderDeliveries();
-  renderFeed();
+  else connection.textContent = 'Connected · Live updates';
+  // aria-disabled keeps the keyboard focus on Refresh while its request runs.
+  refreshButton.setAttribute('aria-disabled',String(refreshing));
+  const announcement = paused ? 'Updates paused; data may be stale.' : streamState === 'disconnected' ? 'Disconnected. Reload to reconnect.' : streamState === 'reconnecting' ? 'Reconnecting; data may be stale.' : snapshotFailed ? 'Snapshot unavailable; data may be stale.' : snapshot === null ? 'Loading dashboard.' : streamState === 'connected' ? 'Dashboard connected.' : 'Connecting to live updates.';
+  if (announcement !== lastAnnouncementState) { lastAnnouncementState = announcement; announce(announcement); }
+  renderOverview(); renderSessions(); renderTopics(); renderDeliveries(); renderFeed();
 }
-
-function requestSnapshot() {
-  dirty = true;
-  needsSync = true;
+function requestSnapshot(manual = false) {
+  if (paused && !manual) return;
+  manualRequested ||= manual;
+  dirty = true; needsSync = true;
   renderStatus();
-  if (!refreshing && refreshTimer === null) refreshTimer = setTimeout(refreshSnapshot, 0);
+  if (!refreshing && refreshTimer === null) refreshTimer = setTimeout(refreshSnapshot,0);
 }
-
+function validSnapshot(value) {
+  if (!isRecord(value) || !Array.isArray(value.sessions) || !Array.isArray(value.deliveries) || !Array.isArray(value.topics)) return false;
+  if (!value.sessions.every(row=>isRecord(row) && typeof row.id==='string' && typeof row.handle==='string') || !value.deliveries.every(isRecord)) return false;
+  const ids = new Set(value.sessions.map(row=>row.id));
+  if (ids.size !== value.sessions.length) return false;
+  return value.topics.every(topic => isRecord(topic) && Number.isSafeInteger(topic.id) && typeof topic.name==='string' && ['adhoc','project','global'].includes(topic.kind)
+    && Number.isSafeInteger(topic.total_members) && topic.total_members>=0 && Number.isSafeInteger(topic.current_members) && topic.current_members>=0 && topic.current_members<=topic.total_members
+    && Number.isSafeInteger(topic.hidden_ended_members) && topic.hidden_ended_members>=0 && Array.isArray(topic.members) && topic.members.every(id=>typeof id==='string' && ids.has(id))
+    && new Set(topic.members).size===topic.members.length && topic.members.length+topic.hidden_ended_members===topic.total_members);
+}
 async function refreshSnapshot() {
   refreshTimer = null;
-  refreshing = true;
-  dirty = false;
+  const manual = manualRequested; manualRequested = false;
+  if (paused && !manual) { dirty=false; return; }
+  refreshing = true; dirty = false; renderStatus();
+  const generation = pauseGeneration;
   let failed = false;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const timeout = setTimeout(()=>controller.abort(),10000);
   try {
-    const response = await fetch('/api/snapshot', {
-      credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
-    });
+    const response = await fetch('/api/snapshot',{credentials:'same-origin',cache:'no-store',signal:controller.signal});
     if (!response.ok) throw new Error('Snapshot request failed');
     const value = await response.json();
-    if (!isRecord(value) || !Array.isArray(value.sessions) || !Array.isArray(value.deliveries)
-      || !value.sessions.every(isRecord) || !value.deliveries.every(isRecord)) {
-      throw new Error('Invalid snapshot');
+    if (!validSnapshot(value)) throw new Error('Invalid snapshot');
+    // A response started before Pause must not change visible data after Pause.
+    if (generation === pauseGeneration && (!paused || manual)) {
+      snapshot = value; snapshotFailed = false; needsSync = dirty;
+      const updatedAt = new Date(); lastUpdate.dateTime = updatedAt.toISOString(); lastUpdate.title = lastUpdate.dateTime; lastUpdate.textContent = updatedAt.toLocaleString();
+      snapshotError.hidden = true; snapshotError.textContent = '';
     }
-    snapshot = value;
-    snapshotFailed = false;
-    needsSync = dirty;
-    lastUpdate.textContent = new Date().toISOString();
-    lastUpdate.dateTime = lastUpdate.textContent;
-    snapshotError.hidden = true;
-    snapshotError.textContent = '';
   } catch {
-    failed = true;
-    snapshotFailed = true;
-    snapshotError.textContent = snapshot === null ? 'Snapshot unavailable; retrying.'
-      : 'Snapshot unavailable; retrying. The tables retain the last successful snapshot.';
-    snapshotError.hidden = false;
+    if (generation === pauseGeneration && (!paused || manual)) {
+      failed = true; snapshotFailed = true;
+      snapshotError.textContent = paused ? 'Snapshot unavailable. Updates are paused; use Refresh now to retry.' : snapshot === null ? 'Snapshot unavailable; retrying.' : 'Snapshot unavailable; retrying. The dashboard retains the last successful snapshot.';
+      snapshotError.hidden = false;
+    }
   } finally {
-    clearTimeout(timeout);
-    refreshing = false;
-    renderStatus();
-    // Changes received during a fetch need a subsequent snapshot, even after SSE opens.
-    if (failed || dirty) refreshTimer = setTimeout(refreshSnapshot, failed ? 3000 : 0);
+    clearTimeout(timeout); refreshing = false; renderStatus();
+    if (manual && generation === pauseGeneration) announce(failed ? snapshotError.textContent : 'Snapshot refreshed.' + (paused ? ' Updates remain paused.' : ''));
+    if ((!paused && (failed || dirty)) || manualRequested) refreshTimer = setTimeout(refreshSnapshot,failed ? 3000 : 0);
   }
 }
-
-function appendEvent(type, raw) {
-  let event;
-  try { event = JSON.parse(raw); } catch { return; }
-  if (!isRecord(event) || event.type !== type || typeof event.at !== 'string' || !isRecord(event.data)) return;
-  const data = Array.from(JSON.stringify(event.data));
-  const detail = data.length > 1000 ? data.slice(0, 999).join('') + '…' : data.join('');
-  feedEvents.push({ type, text: `${event.at} ${type} ${detail}` });
-  if (feedEvents.length > 200) feedEvents.shift();
+function appendEvent(type,raw) {
+  if (paused) return;
+  let event; try { event=JSON.parse(raw); } catch { return; }
+  if (!isRecord(event) || event.type!==type || typeof event.at!=='string' || !isRecord(event.data)) return;
+  const data = safeEventData(type,event.data);
+  const chars = Array.from(JSON.stringify(data));
+  const detail = chars.length>1000 ? chars.slice(0,999).join('')+'…' : chars.join('');
+  feedEvents.push({type,key:++feedSerial,at:event.at,summary:Array.from(eventSummary(type,data)).slice(0,240).join(''),detail});
+  if (feedEvents.length>200) feedEvents.shift();
   renderFeed();
 }
-
-sessionSearch.addEventListener('input', renderSessions);
-sessionState.addEventListener('change', renderSessions);
-sessionWake.addEventListener('change', renderSessions);
-document.querySelector('#clear-session-filters').addEventListener('click', () => {
-  sessionSearch.value = '';
-  sessionState.value = '';
-  sessionWake.value = '';
-  renderSessions();
+sessionSearch.addEventListener('input',()=>filtered(renderSessions,sessionSummary));
+sessionState.addEventListener('change',()=>{if(sessionState.value==='gone')sessionEnded.checked=true;filtered(renderSessions,sessionSummary);});
+sessionWake.addEventListener('change',()=>filtered(renderSessions,sessionSummary));
+sessionEnded.addEventListener('change',()=>{if(!sessionEnded.checked && sessionState.value==='gone')sessionState.value='';filtered(renderSessions,sessionSummary);});
+$('#clear-session-filters').addEventListener('click',()=>{sessionSearch.value='';sessionState.value='';sessionWake.value='';sessionEnded.checked=false;filtered(renderSessions,sessionSummary);});
+topicSearch.addEventListener('input',()=>filtered(renderTopics,topicSummary)); topicKind.addEventListener('change',()=>filtered(renderTopics,topicSummary)); topicEnded.addEventListener('change',()=>filtered(renderTopics,topicSummary));
+$('#clear-topic-filters').addEventListener('click',()=>{topicSearch.value='';topicKind.value='';topicEnded.checked=false;filtered(renderTopics,topicSummary);});
+deliverySearch.addEventListener('input',()=>filtered(renderDeliveries,deliverySummary)); deliveryState.addEventListener('change',()=>filtered(renderDeliveries,deliverySummary));
+$('#clear-delivery-filters').addEventListener('click',()=>{deliverySearch.value='';deliveryState.value='';filtered(renderDeliveries,deliverySummary);});
+feedType.addEventListener('change',()=>filtered(renderFeed,feedSummary));
+refreshButton.addEventListener('click',()=>{if(refreshing)return;announce('Refreshing dashboard.');requestSnapshot(true);});
+pauseButton.addEventListener('click',()=>{
+  paused=!paused; pauseGeneration++;
+  pauseButton.textContent=paused?'Resume updates':'Pause updates'; pauseButton.setAttribute('aria-pressed',String(paused));
+  if(paused){if(refreshTimer!==null)clearTimeout(refreshTimer);refreshTimer=null;dirty=false;manualRequested=false;renderStatus();}
+  else requestSnapshot();
 });
-feedType.addEventListener('change', renderFeed);
-
 // HTTP Basic credentials stay in the browser; no key is placed in URLs or storage.
 const events = new EventSource('/api/events');
-events.addEventListener('open', () => {
-  streamState = 'connected';
-  requestSnapshot();
-});
-events.addEventListener('error', () => {
-  streamState = events.readyState === 2 ? 'disconnected' : 'reconnecting';
-  needsSync = true;
-  renderStatus();
-});
-for (const type of eventTypes) {
-  events.addEventListener(type, event => {
-    appendEvent(type, event.data);
-    if (type !== 'board.put') requestSnapshot();
-  });
-}
+events.addEventListener('open',()=>{streamState='connected';requestSnapshot();renderStatus();});
+events.addEventListener('error',()=>{streamState=events.readyState===2?'disconnected':'reconnecting';needsSync=true;renderStatus();});
+for(const type of eventTypes)events.addEventListener(type,event=>{appendEvent(type,event.data);if(type!=='board.put')requestSnapshot();});
+// Topic joins/leaves do not emit activity events. Polling keeps memberships current.
+setInterval(()=>requestSnapshot(),15000);
 requestSnapshot();
 </script>
 </body>

@@ -648,7 +648,7 @@ board_versions  (topic_id, key, version, body, author, author_session, protected
 **Schema version.** `openDatabase` stamps `PRAGMA user_version = SCHEMA_VERSION` on a fresh
 file and refuses any file whose version differs, instead of running `CREATE TABLE IF NOT
 EXISTS` over an older shape and returning a database that lacks the new columns and
-constraints. There are no migrations before M1: on a mismatch, back the file up
+constraints. Schema 5 upgrades additively to schema 6; other mismatches are rejected. On an unsupported mismatch, back the file up
 (`kom hub backup`), move it away, and let the hub create a new one. The error message says
 exactly that.
 
@@ -1296,3 +1296,33 @@ in observer state. Existing maintainer paths or publication metadata reject stan
 partial installations use joint migration. A missing marker with an incomplete runtime fence
 is never adopted by a different mode. Both backup contents and their directory entries are
 synced before the durable marker is written.
+
+### Dashboard readability, membership and explicit test cleanup (2026-11-03)
+
+The authenticated dashboard remains read-only. It separates overview, current sessions,
+topics/subscribers, recipient deliveries and live activity. Current sessions are not a claim
+of human presence; ended-session history remains bounded. Topic membership comes from the
+membership table, not project/name inference, and total/current counts disclose any omitted
+older ended subscribers. Receipt labels remain "marked read", never task completion.
+Pause freezes visible snapshots/activity, explicit Refresh can update once while paused,
+and Resume fetches a current snapshot. Activity remains bounded and gaps are not replayed.
+Snapshot polling also observes topic changes that do not emit existing SSE events. All
+untrusted content is rendered as text, and data stays visibly stale during recovery.
+
+The user's test-data removal request authorizes a scoped operator cleanup, not automatic
+retention. The private manifest names exact reviewed synthetic records; substring, age or
+ended-state matching alone never selects rows. Dry-run validates relationship closure and
+fingerprints affected records. Apply requires a stopped hub, the exact fingerprint, a
+private `VACUUM INTO` backup and repeated validation inside the deletion transaction.
+Only ended selected sessions may be removed; retained message/thread/authorship/board
+references and protected board data prevent unsafe deletion. Retained delivery counters
+are never renumbered. Real sessions that authored a synthetic message remain intact.
+
+Schema 6 adds content-free retired-operation keys and supports one transactional additive
+upgrade from schema 5. Other mismatches still fail closed. Registration, message and board
+replay handlers reject retired keys permanently rather than recreating deleted test data.
+The cleanup receipt is committed atomically with deletion; reruns refuse newly recreated
+selected entities. This is not a time-based replay horizon, and general prune stays disabled.
+Independent client caches, observer journals and private backups are not silently rewritten.
+Completed synthetic observer jobs are checked before their hub sources are removed. See
+[the scoped cleanup contract](sdlc/dashboard-usability/cleanup-design.md).

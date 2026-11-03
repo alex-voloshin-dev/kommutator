@@ -1,0 +1,19 @@
+{
+  "fixture": "Synthetic browser-only snapshot/SSE server",
+  "checks": [
+    "Current sessions shown; ended hidden by default",
+    "Search, empty results and gone/ended filters",
+    "Actual topic subscriber identities and hidden-history counts",
+    "Refresh retains focused disclosure and expanded state",
+    "Pause freezes data; one-shot refresh stays paused; Resume catches up",
+    "Failed snapshot retains data and refresh recovers",
+    "Untrusted markup remains literal text",
+    "Membership-only changes refresh without an SSE event",
+    "Readable live activity omits full bodies",
+    "320px mobile layout has no document horizontal overflow",
+    "Reflow at 200%-equivalent CSS viewport",
+    "No browser runtime errors"
+  ],
+  "requests": 11,
+  "errors": []
+}

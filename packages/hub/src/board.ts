@@ -1,7 +1,7 @@
 import type { BoardEntry, Methods, Results } from "@kommutator/protocol";
 import type { z } from "zod";
 import {
-  errors, requireMembership, requireSession, RpcFault, transaction, type HubContext, type HubPeer,
+  errors, rejectRetiredOperation, requireMembership, requireSession, RpcFault, transaction, type HubContext, type HubPeer,
 } from "./context.js";
 
 interface BoardRow {
@@ -38,6 +38,7 @@ export function putBoard(
   const result = transaction(ctx, () => {
     const session = requireSession(ctx, peer, params.session_id);
     const topicId = requireMembership(ctx, session.id, params.topic);
+    rejectRetiredOperation(ctx, "board", params.op_id);
     const replay = ctx.db.prepare(`SELECT topic_id, key, body, version, author, author_session, protected, created_at AS updated_at
       FROM board_versions WHERE op_id = ?`).get(params.op_id) as BoardReplayRow | undefined;
     if (replay) {

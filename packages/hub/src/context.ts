@@ -12,6 +12,12 @@ export class RpcFault extends Error {
 
 export const errors = { invalidParams: -32602, unauthorized: -32001, notFound: -32004, conflict: -32009, pending: -32010 } as const;
 
+export function rejectRetiredOperation(ctx: HubContext, kind: "registration" | "message" | "board", key: string): void {
+  if (ctx.db.prepare("SELECT 1 FROM retired_operations WHERE kind = ? AND operation_key = ?").get(kind, key)) {
+    throw new RpcFault(errors.conflict, "operation was permanently removed by operator cleanup");
+  }
+}
+
 /** One authenticated host connection. Only hello may set its host. */
 export interface HubPeer { host?: string }
 

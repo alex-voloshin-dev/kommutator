@@ -11,11 +11,32 @@ export function createApi(runtime: HubRuntime) {
       if (req.url === "/api/snapshot") {
         const db = runtime.context.db;
         // Keep every live session visible without turning the dashboard into an unbounded archive.
-        const sessions = db.prepare(`SELECT * FROM sessions WHERE ended_at IS NULL
+        const retainedSessions = `SELECT * FROM sessions WHERE ended_at IS NULL
           UNION ALL SELECT * FROM (
             SELECT * FROM sessions WHERE ended_at IS NOT NULL ORDER BY ended_at DESC, id DESC LIMIT 100
-          ) ORDER BY handle, id`).all();
+          ) ORDER BY handle, id`;
+        const sessions = db.prepare(retainedSessions).all();
         const hosts = db.prepare("SELECT * FROM hosts ORDER BY name").all();
+        // Counts include historical members; displayed identities follow the same retention
+        // window as sessions. Resolve all memberships in one query, not one per topic.
+        const members = new Map<number, string[]>();
+        for (const row of db.prepare(`WITH retained AS (${retainedSessions})
+          SELECT m.topic_id, m.session_id FROM memberships m JOIN retained s ON s.id = m.session_id
+          ORDER BY m.topic_id, m.session_id`).all()) {
+          if (typeof row.session_id !== "string" || typeof row.topic_id !== "number") continue;
+          const list = members.get(row.topic_id) ?? [];
+          list.push(row.session_id);
+          members.set(row.topic_id, list);
+        }
+        const topics = db.prepare(`SELECT t.id, t.name, t.kind, t.project_key,
+          COUNT(s.id) AS total_members,
+          COALESCE(SUM(CASE WHEN s.id IS NOT NULL AND s.ended_at IS NULL THEN 1 ELSE 0 END), 0) AS current_members
+          FROM topics t LEFT JOIN memberships m ON m.topic_id = t.id
+          LEFT JOIN sessions s ON s.id = m.session_id
+          GROUP BY t.id ORDER BY t.name`).all().map(topic => {
+          const ids = members.get(Number(topic.id)) ?? [];
+          return { ...topic, members: ids, hidden_ended_members: Number(topic.total_members) - ids.length };
+        });
         const deliveries = db.prepare(`SELECT d.message_id AS id, d.session_id, d.seq, d.state, d.wake, d.updated_at,
           s.handle AS recipient, COALESCE(NULLIF(m.from_handle, ''), a.handle) AS sender, m.kind, m.priority, m.subject, m.body
           FROM deliveries d JOIN sessions s ON s.id = d.session_id
@@ -23,7 +44,7 @@ export function createApi(runtime: HubRuntime) {
           ORDER BY d.updated_at DESC, d.session_id, d.seq DESC LIMIT 200`).all()
           .map(({ body, ...delivery }) => ({ ...delivery, preview: makePreview(typeof body === "string" ? body : "") }));
         res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
-        res.end(JSON.stringify({ protocol_version: PROTOCOL_VERSION, hosts, sessions, deliveries }));
+        res.end(JSON.stringify({ protocol_version: PROTOCOL_VERSION, hosts, sessions, topics, deliveries }));
         return true;
       }
       if (req.url !== "/api/events") return false;
