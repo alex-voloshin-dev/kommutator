@@ -39,6 +39,13 @@ Export integrity, clean-environment Claude/Codex plugin setup and synthetic cros
 messaging/recovery checks also passed. Review round 2 approved the standalone migration
 correction; the develop gate returned `proceed`.
 
+The exact final export separately passed clean-environment smoke and the complete E2E
+suite. Two additional E2E attempts failed at existing hook-dependent checks (Claude
+SessionEnd, then Codex context availability); the final isolated attempt passed. The
+existing fail-open hook deadlines remain a timing-sensitive boundary. This change does
+not alter that lifecycle code or relax its assertions, and the failed attempts are not
+counted as passes.
+
 Source and full-history secret scans found no leaks; comparison against actual local
 credentials found no matches in source or the final exported artifact. The artifact scanner's
 two findings are verified SHA-256 values for the public `path-key` dependency license.
