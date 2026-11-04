@@ -1,2 +1,2 @@
 // Generated from root package.json by pnpm version:sync.
-export const RELEASE_VERSION = "0.8.1";
+export const RELEASE_VERSION = "0.8.2";
