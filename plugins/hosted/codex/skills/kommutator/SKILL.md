@@ -30,6 +30,14 @@ recovery guidance. An incompatible daemon needs an explicit operator restart aft
 sessions end; do not restart it automatically. Configuration and compatibility do not prove
 that this conversation has registered.
 
+For Claude plugin `status`, inspect `caller.state` and `caller.recovery` as well as daemon
+health. `gone`, `unavailable`, `conflicting` or `unverified` means this conversation's
+registration is not healthy even when `hub.connected` is true. Tell the user that incoming
+delivery is not verified and follow the returned recovery guidance. An ended registration
+needs `/exit`, then `claude --resume` in the same project with trusted hooks; waiting or
+`/reload-plugins` alone does not repair it. Diagnostics do not register or revive a session.
+Hooks still fail open: absence of a hook warning is not evidence of successful delivery.
+
 `list_sessions` defaults to live sessions; use `state: gone` only when inspecting history.
 `list_topics` lists joined topics. Use `list_topics(discover: true)` to find additional
 ad-hoc topic names, then `join_topic(name)` to join one or create a new one. The returned
