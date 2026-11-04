@@ -573,3 +573,31 @@ and kommutator-feedback/agentic-forge-feedback membership. Feedback services act
 No production test records were created. Historical missing deliveries were not backfilled.
 See docs/sdlc/topic-offline-delivery/deployment.md. Vendor resume, day-long, Windows reboot
 and physical allowed/denied-subnet gates remain open.
+
+## 2026-11-04: remaining reliability investigation (baseline db2493f / 0.9.1)
+
+Read-only inspection of private daemon log records, independently re-read by the parent
+agent, yielded the following sanitized fields. The historical daemon version was 0.8.1.
+
+| UTC | Event | Session | Vendor | PID | Reason | Cause |
+| --- | --- | --- | --- | --- | --- | --- |
+| 00:43:15.968 | session.gone | dd56f08c-e1fa-47c4-a8dd-d26353206538 | codex | 589518 | liveness | process-exited |
+| 00:44:14.319 | session.heartbeat-failed | ac2786f9-9568-4cbf-9c00-10e2e09c6560 | claude-code | 2454907 | hub-unavailable | not recorded |
+| 00:47:54.413 | session.heartbeat-failed | ac2786f9-9568-4cbf-9c00-10e2e09c6560 | claude-code | 2454907 | hub-unavailable | not recorded |
+
+Source: ~/.kommutator/agentd.log, exact timestamps above; raw logs remain private.
+This proves what the daemon logged, not independent OS liveness or why the shim exited.
+The heartbeat events identify a different registration and do not prove false retirement.
+The original Claude incident's retirement cause remains unresolved. No exact-root vendor
+shutdown correlation was established.
+
+During this investigation `claude --version` returned 2.1.318 (Claude Code). This local
+observation does not demonstrate Monitor execution; official documentation supports the
+interface, while an actual vendor Monitor trial remains open.
+
+An isolated in-memory probe loaded the retained deployed 0.9.1 agentd bundle with synthetic
+config, disconnected fake transport, processStart returning undefined and processExists
+returning true. A Codex shim hello created an active record with no birth; sweep changed
+it to gone/liveness and logged cause missing-process-owner. No production state was used
+or mutated. This reproduces a separate uncertainty-handling defect; it does not explain
+the historical process-exited event above.
