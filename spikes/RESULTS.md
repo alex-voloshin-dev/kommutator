@@ -601,3 +601,19 @@ returning true. A Codex shim hello created an active record with no birth; sweep
 it to gone/liveness and logged cause missing-process-owner. No production state was used
 or mutated. This reproduces a separate uncertainty-handling defect; it does not explain
 the historical process-exited event above.
+
+## Session delivery reliability: diagnostic storage stall (2026-11-04)
+
+A 0.10.0 candidate based on 633e85b failed one GitHub Claude B→A→B process case: the final
+whoami returned A. A separate CI run passed; the exact cause of that event is unproven.
+A controlled Node 24 subprocess preload then stalled only mkdir calls for the private
+hook-observations directory. Before the fix, a control SessionStart created its authority
+journal (one record, 145.5 ms); the diagnostic-stall case exited zero in 176.7 ms with no
+journal. The permanent resume regression independently retained launch-a instead of
+resumed-b under the same diagnostic-only stall. No user runtime state was used.
+
+The final 0.10.0 implementation serializes observation writes in the background and never
+awaits them before authority/delivery. The unchanged entrypoint timer bounds final flushing.
+The three-case resume process file then passed, including stalled-diagnostic SessionStart
+and SessionEnd. This proves the isolated optional-I/O defect and its regression fix, not
+the exact cause of the historical shim exit or the intermittent CI event.

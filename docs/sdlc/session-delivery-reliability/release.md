@@ -22,7 +22,7 @@ produce no stdout and consume no model turns by themselves.
 
 Codex caller diagnostics now distinguish a healthy hub from an unavailable registration.
 Unknown process birth defers registration without changing existing state. Hub transport
-failures and local daemon shutdown have distinct bounded IPC errors. Hooks retain the
+failures and local daemon shutdown have distinct bounded IPC errors. Optional diagnostic storage never blocks authority or delivery. Hooks retain the
 fail-open deadline while recording limited private diagnostic evidence; absent evidence
 is not success.
 
@@ -34,7 +34,7 @@ No automatic vendor monitor configuration is installed.
 ## Validation
 
 Independent correctness, security, external review and QA approved. The ordered workspace
-build/typecheck/test passed 487 tests, including real subprocess checks for stalled IPC,
+build/typecheck/test passed 488 tests, including real subprocess checks for stalled IPC,
 hook output followed by failed acknowledgement, and watch silence without daemon startup.
 Release qualification and deployment results are recorded in the deployment artifact.
 

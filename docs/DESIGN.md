@@ -850,7 +850,9 @@ Diagnostics use fixed messages, never arbitrary transport text or a promise that
 unpersisted command is queued. Callers must not retry already dispatched mutations blindly.
 
 Hook observations are private, bounded diagnostic evidence, not identity authority or delivery
-receipts. They contain only a fixed event/outcome, timestamp and hashed root discriminator.
+receipts. Observation writes are serialized in the background; conversation authority and
+delivery never await them. Only the final best-effort flush waits, under the existing
+entrypoint deadline. They contain only a fixed event/outcome, timestamp and hashed root discriminator.
 An interrupted attempt or missing observation is unknown. Failures before output keep stdout
 empty and exit zero; the existing 140ms entrypoint deadline and 200ms vendor budget remain.
 Explicit diagnostics expose observations; no failure generates an unsolicited agent turn.

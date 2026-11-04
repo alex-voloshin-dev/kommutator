@@ -48,3 +48,42 @@ SessionStart lifecycle test failed with an IPC timeout. Archive packaging was co
 but this does not establish causation. Its complete three-test file then passed in
 isolation, without source/test changes or increased timeouts. Full release qualification
 was restarted without concurrent packaging; its final result is recorded in deployment.
+
+The first GitHub push run for 633e85b failed the existing Claude B→A→B resume process
+case: final `whoami` returned A's ID. The independent pull-request run of the same change
+passed. Publication was held; this intermittent identity result was investigated instead
+of treating a passing rerun as sufficient. Follow-up diagnostics and regression evidence
+are recorded below after the investigation.
+
+## Round 3: diagnostic I/O and conversation authority
+
+Independent inspection found two awaited diagnostic writes before Claude SessionStart
+published its generation. A controlled built-process probe stalled only diagnostic-directory
+creation, leaving identity storage operational. The control published one generation;
+the stalled run exited successfully within 200ms but published none. This establishes a
+critical-path defect, without proving the precise latency experienced in GitHub CI.
+
+Added a permanent process regression in `packages/cli/test/claude-resume-process.test.ts`.
+A child-only preload makes `mkdir` for `hook-observations` never resolve. Before the fix,
+the new test failed with expected `resumed-b`, received `launch-a`, despite passing the
+unchanged 200ms assertion (`/tmp/kom-qa-stall-before.log`). The implementation now queues
+observation writes in order without awaiting them before identity or delivery work, and
+flushes best-effort evidence afterward under the existing entrypoint deadline.
+
+After rebuilding, all three resume-process tests passed, including resumed authority and
+SessionEnd invalidation while diagnostic storage remained stalled
+(`/tmp/kom-qa-stall-after.log`). The fixture also records sanitized synthetic generation
+and observation evidence for future failures. No timeout was increased or assertion weakened.
+
+Final ordered round-3 checks all exited 0:
+
+| Command | Local evidence |
+| --- | --- |
+| `pnpm -r build` | `/tmp/kom-qa-round3-build.log` |
+| `pnpm -r typecheck` | `/tmp/kom-qa-round3-types.log` |
+| `pnpm -r test` | `/tmp/kom-qa-round3-tests.log` |
+
+The final suite passed **488 tests**: protocol 34, hub 174, agentd 99, CLI 181.
+QA made no production edits and did not rerun remote CI or change user runtime state.
+Release packaging and remote CI remain the maintainer's next gates; the live-acceptance
+limitations above remain open.

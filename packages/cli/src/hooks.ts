@@ -60,7 +60,14 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [])
   let root: string | undefined;
   let outcome: HookOutcome = "invalid-input";
   let outputWritten = false;
-  await recordHookObservation(rawEvent, "attempted");
+  // Diagnostic filesystem latency must not precede conversation authority or delivery.
+  // Serialize best-effort writes so a late attempt cannot overwrite the final outcome.
+  let observations = Promise.resolve();
+  const observe = (value: HookOutcome) => {
+    const observedRoot = root;
+    observations = observations.then(() => recordHookObservation(rawEvent, value, observedRoot));
+  };
+  observe("attempted");
   try {
     const vendor = args.length === 0 ? undefined : args.length === 2 && args[0] === "--vendor" && args[1] === "codex" ? "codex" : null;
     if (vendor === null) return;
@@ -68,7 +75,7 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [])
     const payload = Payload.parse(await readInput());
     root = payload.session_id;
     outcome = "identity-unavailable";
-    await recordHookObservation(rawEvent, "attempted", root);
+    observe("attempted");
     let hello = hookHello(payload, process.env, vendor);
     if (process.env.KOM_PLUGIN_PROFILE) {
       let observed: ActiveClaudeRegistration | undefined;
@@ -99,5 +106,10 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [])
     if (code === "ENOENT" || code === "ECONNREFUSED") {
       try { if (!process.env.KOM_PLUGIN_PROFILE) spawnDaemon(); } catch { /* Hooks fail open, including daemon startup failure. */ }
     }
-  } finally { client?.close(); await recordHookObservation(rawEvent, outcome, root); }
+  } finally {
+    client?.close();
+    observe(outcome);
+    // The unchanged entrypoint deadline may interrupt this flush; missing evidence is unknown.
+    await observations;
+  }
 }
