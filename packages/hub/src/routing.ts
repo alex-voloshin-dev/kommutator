@@ -122,7 +122,10 @@ function resolveRecipients(ctx: HubContext, sender: SessionRow, targets: Address
         rows = ctx.db.prepare(visible).all(sender.id) as unknown as SessionRow[];
         break;
     }
-    for (const row of rows) recipients.set(row.id, row);
+    for (const row of rows) {
+      if (target.kind === "topic" && row.id === sender.id) continue;
+      recipients.set(row.id, row);
+    }
   }
   return [...recipients.values()];
 }
@@ -170,6 +173,10 @@ export function sendMessage(
       if (!parent) throw new RpcFault(errors.notFound, "reply parent is not accessible");
     }
     const recipients = resolveRecipients(ctx, sender, targets);
+    if (parent && targets.some(target => target.kind === "session" && formatAddress(target) === parent.from_handle)
+      && !recipients.some(recipient => recipient.handle === parent.from_handle && recipient.id === parent.from_session)) {
+      throw new RpcFault(errors.conflict, "reply author handle no longer belongs to the original session");
+    }
     const id = ctx.newId();
     const message = StoredMessage.parse({
       ...params.message,

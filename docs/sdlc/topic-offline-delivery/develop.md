@@ -31,3 +31,11 @@ The initial full run had three CLI process timing failures; all five tests in th
 files passed in isolation, then the full ordered build/typecheck/test run passed. This is
 synthetic evidence, not a live vendor resume observation. Release/deployment evidence and
 final counts are recorded separately. Existing day-long, reboot and subnet gates remain.
+
+## Concurrent release integration
+
+The maintainer published 0.9.0 while this change was being verified. Its sender-exclusion
+and feedback-triage changes were merged without production conflicts; test expectations
+and contract wording were adjusted. The combined 0.9.1 workspace passed build, typecheck
+and all 462 tests. The intermediate 0.8.2 release is documented as superseded and must
+not be used to downgrade 0.9.0.

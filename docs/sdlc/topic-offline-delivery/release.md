@@ -2,14 +2,14 @@
 type: release
 feature: topic-offline-delivery
 status: approved
-version: 0.8.2
+version: 0.9.1
 changelog:
   - "Fixed: retain topic messages for existing subscribers while their session is gone."
   - "Fixed: recover pending deliveries after reincarnation on the existing hub connection."
 breaking: []
 ---
 
-# v0.8.2
+# v0.9.1
 
 Topic subscriptions now survive session absence. Messages sent while an existing member
 is gone are retained unread and recovered after reincarnation. The hub does not push to
@@ -25,11 +25,12 @@ Update both hub and daemon. No database schema or runtime contract change is req
 ## Validation
 
 Correctness/integration, security and external review approved the fix; independent QA
-added SQLite persistence coverage. Workspace build/typecheck passed and 456 cases passed
+added SQLite persistence coverage. Workspace build/typecheck passed and 462 cases passed
 across full and final targeted runs. Initial CLI process timing failures passed isolated
-and subsequent full runs. The full Linux x64 release:check passed, including 456 workspace tests, release-script
+and subsequent full runs. The full Linux x64 release:check passed, including 462 workspace tests, release-script
 tests, export verification, clean-environment startup and synthetic client E2E. Deployment
 is tracked separately.
+The combined release preserves the independently published 0.9.0 feedback-noise changes.
 Source and known-local-secret scans passed. The export scanner flagged only two runtime
 checksum manifests; their values were verified against the actual payload hashes.
 

@@ -496,7 +496,7 @@ describe("durable replay and recovery", () => {
     if (sent.status !== "sent") throw new Error("send did not commit");
     expect(sent.deliveries[recipient.session.id]).toBe("unread");
     await clock.advance(0);
-    expect(attempts.filter(attempt => attempt.id === sent.id)).toHaveLength(1); // Sender only.
+    expect(attempts.filter(attempt => attempt.id === sent.id)).toHaveLength(0); // No topic self delivery or gone wake.
     expect(core.registry.pending(recipient.session.id)).toEqual([]);
     const connection = transport.peer;
     const originalRequest = transport.request.bind(transport);
@@ -521,7 +521,7 @@ describe("durable replay and recovery", () => {
     const inbox = Results["inbox.list"].parse(await core.request(revived.peer, "inbox.list", { unread_only: true }));
     expect(inbox.headers).toMatchObject([{ id: sent.id, seq: 1, state: "unread" }]);
     await clock.advance(0);
-    expect(attempts.filter(attempt => attempt.id === sent.id)).toHaveLength(2);
+    expect(attempts.filter(attempt => attempt.id === sent.id)).toHaveLength(1);
     expect(Results["inbox.list"].parse(await core.request(revived.peer, "inbox.list", { unread_only: true })).headers).toHaveLength(1);
   });
 

@@ -169,6 +169,8 @@ export const Methods = {
     role: Ident.optional(),
     state: SessionState.optional(),
   }),
+  // Replies to a historical author handle must still resolve to that author session.
+  // Topic expansion excludes the sender; explicit self addressing still delivers.
   "message.send": z.object({
     session_id: SessionId,
     message: Message,
@@ -195,6 +197,7 @@ export const Methods = {
     /** Per session id, the highest seq agentd has already acted on (0 if none). */
     acked: z.record(SessionId, z.number().int().nonnegative()),
   }),
+  // Authors may read stored messages without a delivery; only actual deliveries get receipts.
   "message.read": z.object({ session_id: SessionId, id: MessageId }),
   "receipt.mark": z.object({
     session_id: SessionId,
