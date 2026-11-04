@@ -142,6 +142,13 @@ The local socket protects the OS user boundary, not mutually hostile processes o
 
 ## Addressing
 
+Topic targets include existing subscribers even when their sessions are `gone`/ended.
+The send transaction records their deliveries and sequences without a live notification;
+reincarnation followed by resync exposes the unread backlog. Direct handles, roles and
+`all` remain live-only. Recipient authorization is fixed at send time: later joins do
+not grant old messages, and later leaves do not revoke existing deliveries. No historical
+backfill is inferred for messages omitted by older hubs. Wire schemas are unchanged.
+
 ```
 author@laptop            one session (name@host; host is the short name from config.json)
 @role:executor           every session with that role

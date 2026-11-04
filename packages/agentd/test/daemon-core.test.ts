@@ -458,6 +458,73 @@ describe("daemon identity and IPC authorization", () => {
 });
 
 describe("durable replay and recovery", () => {
+  it.each(["on", "off"] as const)("flushes queued wake %s before reincarnation resync caches delivery decisions", async (wake) => {
+    const { core, transport, clock, attempts } = await fixture();
+    const sender = await hook(core, "sender", { ppid: 77 });
+    const recipient = await hook(core, "recipient");
+    if (!recipient.session) throw new Error("missing recipient");
+    transport.dropDeliver = true;
+    const sent = await send(core, sender.peer, "topic:global", "recover with final wake policy");
+    if (sent.status !== "sent") throw new Error("send did not commit");
+    transport.dropDeliver = false;
+    const management = await cli(core);
+    await core.request(management, "session.dnd", { session: recipient.session.id, wake: "off" });
+    await core.request(recipient.peer, "session.gone", {});
+    await core.flush();
+    // Keep the host connection but suspend flushing while local recovery and DND
+    // changes queue. This models a reconnect backlog without calling synchronize.
+    transport.connected = false;
+    await hook(core, "recipient", { owner_generation: 1 });
+    await core.request(management, "session.dnd", { session: recipient.session.id, wake });
+    const before = transport.calls.length;
+    transport.connected = true;
+    await core.flush();
+    const calls = transport.calls.slice(before);
+    expect(calls.map(call => call.method)).toEqual(["session.upsert", "session.upsert", "deliveries.resync"]);
+    expect(core.registry.pending(recipient.session.id)).toMatchObject([{ message: { id: sent.id }, wake: wake === "on" }]);
+    await clock.advance(0);
+    expect(attempts.some(attempt => attempt.id === sent.id)).toBe(wake === "on");
+  });
+
+  it.each([false, true])("recovers gone topic deliveries on the same connection (resync failure: %s)", async (failResync) => {
+    const { core, transport, clock, attempts } = await fixture();
+    const sender = await hook(core, "sender", { ppid: 77 });
+    const recipient = await hook(core, "recipient");
+    if (!recipient.session) throw new Error("missing recipient");
+    await core.request(recipient.peer, "session.gone", {});
+    const sent = await send(core, sender.peer, "topic:global", "retained while gone");
+    if (sent.status !== "sent") throw new Error("send did not commit");
+    expect(sent.deliveries[recipient.session.id]).toBe("unread");
+    await clock.advance(0);
+    expect(attempts.filter(attempt => attempt.id === sent.id)).toHaveLength(1); // Sender only.
+    expect(core.registry.pending(recipient.session.id)).toEqual([]);
+    const connection = transport.peer;
+    const originalRequest = transport.request.bind(transport);
+    let failed = false;
+    transport.request = async (method, params) => {
+      if (failResync && !failed && method === "deliveries.resync") {
+        failed = true;
+        throw new RpcError(-32603, "injected resync failure");
+      }
+      return originalRequest(method, params);
+    };
+    const revived = await hook(core, "recipient", { owner_generation: 1 });
+    expect(revived.session).toMatchObject({ id: recipient.session.id, incarnation: 1, state: "active" });
+    expect(transport.peer).toBe(connection);
+    expect(core.registry.outbox()).toEqual([]);
+    if (failResync) {
+      expect(core.lastError).toContain("delivery resync after reincarnation failed");
+      expect(core.registry.pending(recipient.session.id)).toEqual([]);
+      await transport.reconnect();
+    }
+    expect(core.registry.pending(recipient.session.id).map(delivery => delivery.message.id)).toEqual([sent.id]);
+    const inbox = Results["inbox.list"].parse(await core.request(revived.peer, "inbox.list", { unread_only: true }));
+    expect(inbox.headers).toMatchObject([{ id: sent.id, seq: 1, state: "unread" }]);
+    await clock.advance(0);
+    expect(attempts.filter(attempt => attempt.id === sent.id)).toHaveLength(2);
+    expect(Results["inbox.list"].parse(await core.request(revived.peer, "inbox.list", { unread_only: true })).headers).toHaveLength(1);
+  });
+
   it("replays first-ever offline registrations, send and SessionEnd in dependency order", async () => {
     const { core, transport } = await fixture({ online: false });
     const a = await hook(core, "a");

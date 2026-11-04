@@ -542,6 +542,7 @@ export class DaemonCore {
   }
   private async flushQueue(): Promise<void> {
     if (!this.transport.connected) return;
+    const resyncAfterFlush = new Set<string>();
     for (;;) {
       let progressed = false;
       const blocked = new Set<string>();
@@ -589,6 +590,7 @@ export class DaemonCore {
           });
           if (entry.method === "session.upsert" && ["register", "reincarnate"].includes(String(ObjectParams.parse(params)["op"]))) {
             const current = this.registry.get(record.key);
+            if (ObjectParams.parse(params)["op"] === "reincarnate") resyncAfterFlush.add(record.key);
             // Retirement cancels timers. Re-arm retained work only after the final
             // lifecycle ACK, including recovery after the old delivery already drained.
             if (current && current.session.state !== "gone" && current.session.wake === "on" &&
@@ -607,6 +609,19 @@ export class DaemonCore {
         }
       }
       if (!progressed || !this.transport.connected) break;
+    }
+    // Flush queued policy updates first: a temporary hub DND value must not become
+    // the immutable local wake decision for a newly received delivery.
+    for (const key of resyncAfterFlush) {
+      const current = this.registry.get(key);
+      if (!current?.session.id || current.session.state === "gone" ||
+        this.registry.outbox().some(entry => entry.local_key === key && entry.method === "session.upsert")) continue;
+      try {
+        await this.transport.request("deliveries.resync", { acked: { [current.session.id]: current.acked } });
+      } catch {
+        // Lifecycle ACKs are already committed; reconnect retries resync.
+        this.report("delivery resync after reincarnation failed; reconnect will retry");
+      }
     }
     // Outcomes are only a response cache for current calls, not a second durable outbox.
     while (this.outcomes.size > 256) { const key = this.outcomes.keys().next().value; if (key === undefined) break; this.outcomes.delete(key); }

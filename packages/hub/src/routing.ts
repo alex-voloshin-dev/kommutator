@@ -113,8 +113,9 @@ function resolveRecipients(ctx: HubContext, sender: SessionRow, targets: Address
         break;
       case "topic": {
         const topicId = requireMembership(ctx, sender.id, target.topic);
-        rows = ctx.db.prepare(`${visible} AND EXISTS (SELECT 1 FROM memberships m WHERE m.session_id = s.id AND m.topic_id = ?)`)
-          .all(sender.id, topicId) as unknown as SessionRow[];
+        // A subscription survives absence; authorization is captured at send time.
+        rows = ctx.db.prepare(`SELECT s.* FROM sessions s JOIN memberships m ON m.session_id = s.id WHERE m.topic_id = ?`)
+          .all(topicId) as unknown as SessionRow[];
         break;
       }
       case "all":
@@ -213,6 +214,7 @@ export function sendMessage(
       ctx.events.publish("delivery.created", {
         message_id: committed.message.id, session_id: recipient.id, seq: recipient.next_seq, wake,
       });
+      if (recipient.ended_at !== null || recipient.state === "gone") continue;
       ctx.events.publish("deliver", {
         host: recipient.host,
         notification: {

@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Message, Methods, Notifications, packHeaders, Results, type StoredMessage } from "@kommutator/protocol";
@@ -7,6 +9,8 @@ import { errors, RpcFault, type HubContext } from "../src/context.js";
 import { HubEvents, type HubEvent } from "../src/events.js";
 import { listInbox, markReceipt, readMessage, resyncDeliveries } from "../src/inbox.js";
 import { getStoredMessage, sendMessage, shouldWake } from "../src/routing.js";
+import { upsertSession } from "../src/sessions.js";
+import { joinTopic, leaveTopic } from "../src/topics.js";
 
 const schema = readFileSync(new URL("../schema.sql", import.meta.url), "utf8");
 const NOW = "2026-10-25T12:00:00.000Z";
@@ -17,6 +21,7 @@ describe("message routing and inbox", () => {
   let ctx: HubContext;
   let events: HubEvent[];
   let counter: number;
+  let snapshotDirectory: string | undefined;
 
   beforeEach(() => {
     db = new DatabaseSync(":memory:");
@@ -38,7 +43,11 @@ describe("message routing and inbox", () => {
     db.prepare("INSERT INTO topics(name, kind) VALUES ('project:private', 'project')").run();
     db.prepare("INSERT INTO memberships(session_id, topic_id) SELECT 'c', id FROM topics WHERE name = 'project:private'").run();
   });
-  afterEach(() => db.close());
+  afterEach(() => {
+    db.close();
+    if (snapshotDirectory) rmSync(snapshotDirectory, { recursive: true, force: true });
+    snapshotDirectory = undefined;
+  });
 
   function params(to: string[], changes: Partial<z.input<typeof Message>> = {}, sender = "a", key = `send-key-${counter + 1}`) {
     return Methods["message.send"].parse({
@@ -97,9 +106,82 @@ describe("message routing and inbox", () => {
   it("requires membership for topic addressing despite a shared global topic", () => {
     expect(() => sendMessage(ctx, peer, params(["topic:project:private"], { kind: "topic" }))).toThrow("topic membership required");
     const result = sendMessage(ctx, peer, params(["topic:global", "all"], { kind: "broadcast" }));
-    expect(Object.keys(result.deliveries).sort()).toEqual(["a", "b", "c"]);
+    expect(Object.keys(result.deliveries).sort()).toEqual(["a", "b", "c", "gone"]);
     expect(events.filter((event) => event.type === "deliver").map((event) => (event.data as { notification: { wake: boolean } }).notification.wake))
       .toEqual([false, false, false]);
+  });
+
+  it("retains topic deliveries while gone and resyncs them after reincarnation without marking read", () => {
+    const original = params(["topic:global", "@role:executor"], { kind: "request" });
+    const sent = sendMessage(ctx, peer, original);
+    expect(sent.deliveries["gone"]).toBe("unread");
+    expect(events.filter(event => event.type === "deliver").some(event =>
+      (event.data as { notification: { session_id: string } }).notification.session_id === "gone")).toBe(false);
+    expect(() => resyncDeliveries(ctx, peer, { acked: { gone: 0 } })).toThrow("session is gone");
+    const restored = upsertSession(ctx, peer, Methods["session.upsert"].parse({
+      op: "reincarnate", reg_id: "revive-gone", session: { id: "gone", host: "laptop", name: "gone", vendor: "claude-code" },
+    }));
+    expect(restored.session.incarnation).toBe(1);
+    const before = db.prepare("SELECT * FROM deliveries WHERE session_id = 'gone'").all();
+    expect(resyncDeliveries(ctx, peer, { acked: { gone: 0 } })).toEqual({ replayed: 1 });
+    expect(events.at(-1)).toMatchObject({ type: "deliver", data: { notification: { session_id: "gone", seq: 1, wake: true } } });
+    expect(inbox("gone", { unread_only: true }).headers).toMatchObject([{ id: sent.id, seq: 1, state: "unread" }]);
+    expect(sendMessage(ctx, peer, original)).toMatchObject({ id: sent.id, replayed: true });
+    expect(db.prepare("SELECT * FROM deliveries WHERE session_id = 'gone'").all()).toEqual(before);
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'gone'").get()).toEqual({ next_seq: 2 });
+    db.prepare("UPDATE sessions SET wake = 'off' WHERE id = 'gone'").run();
+    resyncDeliveries(ctx, peer, { acked: { gone: 0 } });
+    expect(events.at(-1)).toMatchObject({ data: { notification: { wake: false } } });
+    readMessage(ctx, peer, { session_id: "gone", id: sent.id });
+    expect(resyncDeliveries(ctx, peer, { acked: { gone: 0 } })).toEqual({ replayed: 0 });
+  });
+
+  it("captures membership at send time without granting history to later subscribers", () => {
+    for (const session_id of ["a", "b"]) joinTopic(ctx, peer, { session_id, name: "offline-feedback" });
+    const first = sendMessage(ctx, peer, params(["topic:offline-feedback"], { kind: "topic" }));
+    leaveTopic(ctx, peer, { session_id: "b", name: "offline-feedback" });
+    const second = sendMessage(ctx, peer, params(["topic:offline-feedback"], { kind: "topic" }));
+    joinTopic(ctx, peer, { session_id: "b", name: "offline-feedback" });
+    joinTopic(ctx, { host: "server" }, { session_id: "c", name: "offline-feedback" });
+    expect(inbox("b").headers.map(header => header.id)).toEqual([first.id]);
+    expect(inbox("c").headers).toEqual([]);
+    expect(() => readMessage(ctx, peer, { session_id: "b", id: second.id })).toThrow("not in this session's inbox");
+    const third = sendMessage(ctx, peer, params(["topic:offline-feedback"], { kind: "topic" }));
+    expect(inbox("b").headers.map(header => header.id)).toEqual([first.id, third.id]);
+    expect(inbox("c").headers.map(header => header.id)).toEqual([third.id]);
+  });
+
+  it("persists absent subscribers' topic mail across database reopen without waking or granting later members history", () => {
+    joinTopic(ctx, peer, { session_id: "a", name: "durable-feedback" });
+    db.prepare("INSERT INTO memberships(session_id, topic_id) SELECT 'gone', id FROM topics WHERE name = 'durable-feedback'").run();
+    const original = params(["topic:durable-feedback"], { kind: "topic" });
+    const sent = sendMessage(ctx, peer, original);
+    expect(sent.deliveries).toEqual({ a: "unread", gone: "unread" });
+    expect(events.filter(event => event.type === "deliver")).toHaveLength(1);
+
+    snapshotDirectory = mkdtempSync(join(tmpdir(), "kom-topic-recovery-"));
+    const snapshot = join(snapshotDirectory, "hub.db");
+    db.prepare("VACUUM INTO ?").run(snapshot);
+    db.close();
+    db = new DatabaseSync(snapshot);
+    ctx = { ...ctx, db };
+    joinTopic(ctx, peer, { session_id: "b", name: "durable-feedback" });
+    upsertSession(ctx, peer, Methods["session.upsert"].parse({
+      op: "reincarnate", reg_id: "durable-revive", session: { id: "gone", host: "laptop", name: "gone", vendor: "claude-code" },
+    }));
+    events.length = 0;
+    expect(resyncDeliveries(ctx, peer, { acked: { gone: 0 } })).toEqual({ replayed: 1 });
+    expect(events).toMatchObject([{ type: "deliver", data: { notification: { session_id: "gone", seq: 1, wake: false } } }]);
+    expect(inbox("gone", { unread_only: true }).headers).toMatchObject([{ id: sent.id, state: "unread", wake: false }]);
+    expect(inbox("b").headers).toEqual([]);
+    expect(() => readMessage(ctx, peer, { session_id: "b", id: sent.id })).toThrow("not in this session's inbox");
+    expect(sendMessage(ctx, peer, original)).toMatchObject({ id: sent.id, replayed: true, deliveries: { a: "unread", gone: "unread" } });
+    expect(inbox("gone").headers).toHaveLength(1);
+  });
+
+  it("keeps all and role addressing live-only even when a gone session retains membership", () => {
+    expect(Object.keys(sendMessage(ctx, peer, params(["all"])).deliveries).sort()).toEqual(["a", "b", "c"]);
+    expect(Object.keys(sendMessage(ctx, peer, params(["@role:executor"])).deliveries).sort()).toEqual(["b", "c"]);
   });
 
   it("rejects malformed addresses and a caller from the wrong host", () => {

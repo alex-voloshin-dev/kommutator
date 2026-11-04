@@ -837,6 +837,31 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### Topic deliveries during session absence (2026-11-04)
+
+Topic addressing snapshots all current members in the send transaction, including
+`gone`/ended sessions. Each receives its ordinary immutable delivery and sequence;
+absence does not cancel a subscription. Direct handles, role addressing and `all`
+continue to resolve only live sessions. Mixed targets de-duplicate by session ID.
+A sender must still belong to every addressed topic. Leaving before a send excludes
+that member; joining later never grants earlier messages. Leaving after a send does
+not revoke a delivery already authorized at send time.
+
+The hub stores the usual wake decision but emits no immediate `deliver` notification
+to an ended/gone recipient. A successful final reincarnation ACK triggers agentd resync
+on the existing connection after queued policy updates have drained, as reconnect already
+does. This prevents a temporary DND value from becoming a cached delivery decision.
+A failed resync is reported, does
+not undo/fail the committed lifecycle, and is retried on the next reconnect; inbox polling
+can already read the retained hub rows. Retained messages remain unread
+until an actual receipt. Current DND still suppresses wake on resync. Topic-kind traffic
+never wakes; a topic-addressed DM/request retains its existing kind-based wake rule.
+
+This is prospective: older messages omitted by previous versions have no recipient
+snapshot proving historical membership and are not automatically backfilled. No schema
+or wire shape changes are needed. Memberships and unread deliveries remain durable;
+retention/pruning is still deferred, so long-ended subscribers can accumulate messages.
+
 Implementation decisions for steps 1–2 (2026-10-25):
 
 - Preserve every `register`/`reincarnate` result in `session_registrations`, including its
