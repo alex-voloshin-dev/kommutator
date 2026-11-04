@@ -524,3 +524,35 @@ This does not establish interactive hook activation/trust on the reporting host,
 actual Work UI, macOS/ARM execution, reboot/logon, physical subnet filtering or day-long use.
 The hyphenated feedback topic was not inspected or aliased. Canonical maintenance remains
 `kommutator feedback` (space); no live topic operations were performed.
+
+## Published 0.9.0 feedback noise verification — 2026-11-03
+
+Release [v0.9.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.9.0)
+points to `f622e5976710d952857683643361c4044748c2e7`. On Linux x64, Node 24.22.1 and
+pnpm 10.18.0, the final full release gate passed build, typecheck, 454 workspace tests,
+114 release-script tests, dependency audit, export integrity/licenses, clean-PATH MCP smoke
+and synthetic messaging/recovery E2E. Independent code/security review and QA approved.
+
+The first full gate exposed a stale migration-test expectation, corrected while retaining
+legacy topic reply replay. The second passed every preceding gate but failed initial E2E
+daemon startup. The same export passed E2E alone and the third full gate passed without
+production changes or relaxed assertions. That startup failure has no established root
+cause; synthetic success does not prove day-long startup reliability.
+
+Both public archives and checksum files downloaded anonymously and matched the qualified
+local bytes and catalog pins. Real Claude Code 2.1.318 and Codex CLI 0.166.0 installed 0.9.0
+from the public marketplace into separate empty temporary profiles. Both installed MCP
+servers initialized as 0.9.0, listed tools, returned unconfigured setup status and served
+private loopback setup pages. Codex's installed launcher downloaded its checksum-pinned
+runtime. No live hub, daemon, credentials or existing client profile was changed.
+
+The exact staged source and all 36 commits through the release passed Gitleaks. Two export
+findings were public path-key license inventory hashes, verified by recomputing the file
+SHA-256 values. Hosted [release checks](https://github.com/alex-voloshin-dev/kommutator/actions/runs/41750679976)
+and [secret scan](https://github.com/alex-voloshin-dev/kommutator/actions/runs/41750679973)
+completed successfully for the release commit; both tag-triggered runs also succeeded.
+
+Live model triage quality, interactive vendor conversations, actual Work UI/native wake,
+macOS/ARM execution, reboot/logon, physical subnet filtering and day-long use remain open.
+New sender topic copies are absent from inbox history but readable by ID; historical unread
+copies remain unchanged. No live hub messages were sent by this maintenance worker.
