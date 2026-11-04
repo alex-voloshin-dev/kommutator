@@ -21,13 +21,22 @@ export class ClaudePluginClient implements RpcClient {
       this.pinned?.client.close();
       this.pinned = { generation: observed.generation, client: this.options.shim(observed.hello) };
     }
-    const client = this.pinned.client;
+    let client = this.pinned.client;
     try { await client.call("whoami"); }
     catch (error) {
       if (!(error instanceof IpcError) || error.code !== -32020) throw error;
       await this.unchanged(observed.generation);
       const registration = this.options.hook(observed.hello);
       try { await registration.call("whoami"); } finally { registration.close(); }
+      await this.unchanged(observed.generation);
+      // Retirement fences existing peers. Successful hook recovery needs a new shim,
+      // even when the current conversation generation itself did not change.
+      if (this.pinned?.client === client) {
+        client.close();
+        this.pinned = { generation: observed.generation, client: this.options.shim(observed.hello) };
+      }
+      if (this.pinned?.generation !== observed.generation) throw new IpcError("Claude conversation changed during recovery; call again for the current conversation", -32020);
+      client = this.pinned.client;
     }
     await this.unchanged(observed.generation);
     const result = await client.call(method, params);

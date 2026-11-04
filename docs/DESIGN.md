@@ -1326,3 +1326,39 @@ selected entities. This is not a time-based replay horizon, and general prune st
 Independent client caches, observer journals and private backups are not silently rewritten.
 Completed synthetic observer jobs are checked before their hub sources are removed. See
 [the scoped cleanup contract](sdlc/dashboard-usability/cleanup-design.md).
+
+### Claude liveness uncertainty and ended-generation recovery
+
+A failed process-birth probe is not proof of process exit. Startup and periodic sweeps
+retain the registration when `ps` cannot establish birth and the OS existence check does
+not prove `ESRCH`; permission and probe failures are unknown. Only positive exit or
+changed process birth retires an owner. Adapter failure with a still-existing process
+is a delivery/liveness uncertainty, not authority to end the conversation.
+
+Local schema 3 records retirement reason (`liveness`, `session-end`, `superseded`). A
+fresh hook registration may reincarnate a liveness-retired Claude owner at the same
+positive current generation only with matching process birth, conversation and project.
+Old bound peers remain invalid; recovery does not reassign an in-flight request. A persisted
+local lifecycle epoch advances synchronously on retirement, launch replacement and generation
+change. Sweep and delivery completions recheck it, including before the hub acknowledges
+reincarnation. An old delivery cannot mark new-lifecycle work acted or set its cooldown;
+a coalesced wake is rescheduled for the current lifecycle after the old run drains.
+The final successful register/reincarnate ACK also schedules retained waking work when
+wake is enabled, so canceled cooldown timers and runs that drained while gone cannot
+strand the mailbox. Pending newer lifecycle operations defer this scheduling; the existing
+single-run guard prevents concurrent native attempts. Explicit
+end, supersession and legacy gone records of unknown cause retain the generation fence.
+Those cases require `/exit`, then `claude --resume` and a genuine SessionStart. Waiting
+alone cannot repair them. Schema 1/2 migrations preserve all existing data; absent reason
+stays unknown. Older daemons refuse schema 3. Client runtime contract remains 3 because
+binding facts and existing IPC calls are unchanged; the daemon must be restarted to upgrade.
+
+Lifecycle and heartbeat diagnostics include bounded session/owner identifiers and a fixed
+reason or error category, never arbitrary transport error text, tokens or endpoint paths.
+Read-only `daemon.status` may receive an exact Claude caller selector from the plugin's
+private current registration. It reports unavailable/gone/conflicting/unverified caller
+state separately from global transport health, and degrades the reported health for that
+caller without registering, reincarnating or changing receipts. Missing caller context
+must be shown as unavailable; global healthy transport does not prove a working mailbox.
+Hooks keep empty failure stdout and their deadline: persistent health/status diagnostics,
+not an unsolicited hook-generated agent turn, expose failure.
