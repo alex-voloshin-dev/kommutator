@@ -137,7 +137,9 @@ Use `kommutator-feedback` for kommutator reports; the old spaced topic is an arc
 ### Explicit topic observation
 
 When the user requests ongoing observation, an existing local session can opt into
-`bin/launch manage watch --session <exact-hub-session-id> --topic kommutator-feedback`.
+`bin/manage watch --session <exact-hub-session-id> --topic kommutator-feedback`
+for a bundled plugin, or `bin/launch manage watch` with those same arguments for the
+hosted Codex plugin. The hosted launcher requires the `manage` mode.
 Use the actual verified installed plugin path, not a guessed cache version. Obtain the
 session ID from whoami and verify its existing membership first. This read-only command
 does not register, join, start a daemon or mark receipts. It emits bounded untrusted JSON
