@@ -94,7 +94,7 @@ export class HubLink implements HubTransport {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(new OfflineError("hub request timed out; command remains queued"));
+        reject(new OfflineError("hub request timed out"));
         ws.terminate();
       }, this.timeoutMs);
       this.pending.set(id, { resolve, reject, timer });

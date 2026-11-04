@@ -1,3 +1,4 @@
+import { readHookObservations } from "../src/hook-observations.js";
 import { expect, it } from "vitest";
 import { spawn } from "node:child_process";
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
@@ -41,17 +42,18 @@ async function fixture() {
     if (!text) throw new Error("missing tool reply");
     return { error: reply.isError === true, text };
   }
+  const hookEvidence: unknown[] = [];
   return {
-    home, cwd, db, transport, call,
+    home, cwd, db, transport, call, hookEvidence,
     async whoami() {
       const reply = await call("whoami");
       expect(reply.error, reply.text).toBe(false);
       return Identity.parse(JSON.parse(reply.text) as unknown).session;
     },
-    async hook(id: string, event = "SessionStart") {
+    async hook(id: string, event = "SessionStart", preload?: string) {
       // Both children have this real test process as owner. MCP retains launch-a forever.
       const started = performance.now();
-      const child = spawn(process.execPath, [entry, "hook", event], { cwd, env, stdio: ["pipe", "pipe", "pipe"] });
+      const child = spawn(process.execPath, [...(preload ? ["--import", preload] : []), entry, "hook", event], { cwd, env, stdio: ["pipe", "pipe", "pipe"] });
       let stdout = "";
       child.stdout.on("data", chunk => { stdout += String(chunk); });
       child.stderr.resume();
@@ -59,7 +61,24 @@ async function fixture() {
       child.stdin.end(JSON.stringify({ session_id: id, cwd, permission_mode: "default" }));
       expect(await done).toBe(0);
       expect(stdout).toBe("");
-      return performance.now() - started;
+      const elapsed = performance.now() - started;
+      const observations = await readHookObservations(undefined, home);
+      const authority: unknown[] = [];
+      try {
+        for (const directory of await readdir(join(home, "contexts"), { withFileTypes: true })) {
+          if (!directory.isDirectory()) continue;
+          const path = join(home, "contexts", directory.name);
+          for (const name of await readdir(path)) {
+            if (!name.endsWith(".json")) continue;
+            const record = JSON.parse(await readFile(join(path, name), "utf8"));
+            authority.push({ generation: record.generation, root: record.hello?.vendor_session_id });
+          }
+        }
+      } catch { /* Absent/partial authority is itself diagnostic evidence. */ }
+      const evidence = { id, event, elapsed, observations, authority };
+      hookEvidence.push(evidence);
+      if (process.env.KOM_TEST_HOOK_EVIDENCE) console.error(JSON.stringify(evidence));
+      return elapsed;
     },
     async close() {
       await client.close();
@@ -111,7 +130,7 @@ it("a running MCP resolves resumed hook identity despite its stale launch ID, th
     expect((await f.whoami()).id).toBe(a.id);
     await f.hook("resumed-b");
     const back = await f.whoami();
-    expect(back.id).toBe(b.id);
+    expect(back.id, JSON.stringify(f.hookEvidence)).toBe(b.id);
     expect(back.incarnation).toBeGreaterThan(b.incarnation);
     expect(back.status_line).toBe("B status");
     expect(back.role).toBe("reviewer");
@@ -153,6 +172,29 @@ it("malformed or missing active authority cannot fall back to a fenced launch re
     finally { await rename(directory + ".hidden", directory); }
     expect((await f.whoami()).vendor_session_id).toBe("launch-a");
     await rm(path);
+    expect((await f.call("whoami")).error).toBe(true);
+  } finally { await f.close(); }
+}, 15_000);
+
+it("publishes resumed authority and ends it even when diagnostic storage never completes", async () => {
+  const f = await fixture();
+  try {
+    await f.hook("launch-a");
+    expect((await f.whoami()).vendor_session_id).toBe("launch-a");
+    const preload = join(f.home, "stall-observations.mjs");
+    await writeFile(preload, `
+      import fs from "node:fs/promises";
+      import { syncBuiltinESMExports } from "node:module";
+      const mkdir = fs.mkdir;
+      fs.mkdir = function(path, ...args) {
+        if (String(path).endsWith("/hook-observations")) return new Promise(() => {});
+        return mkdir.call(this, path, ...args);
+      };
+      syncBuiltinESMExports();
+    `);
+    expect(await f.hook("resumed-b", "SessionStart", preload)).toBeLessThan(200);
+    expect((await f.whoami()).vendor_session_id).toBe("resumed-b");
+    expect(await f.hook("resumed-b", "SessionEnd", preload)).toBeLessThan(200);
     expect((await f.call("whoami")).error).toBe(true);
   } finally { await f.close(); }
 }, 15_000);

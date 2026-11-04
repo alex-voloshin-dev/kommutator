@@ -2,7 +2,7 @@ import { createServer, connect, type Server, type Socket } from "node:net";
 import { chmod, lstat, open, readFile, unlink } from "node:fs/promises";
 import * as z from "zod";
 import { MAX_FRAME_BYTES } from "@kommutator/protocol";
-import { RpcError } from "./errors.js";
+import { OfflineError, RpcError } from "./errors.js";
 import type { IpcPeer } from "./core.js";
 
 const Request = z.object({ jsonrpc: z.literal("2.0"), id: z.union([z.number().int(), z.string().max(100)]).nullable().optional(), method: z.string(), params: z.unknown().optional() });
@@ -105,8 +105,8 @@ export async function startIpc(options: {
             if (!notification) reply({ jsonrpc: "2.0", id, result });
           } catch (error) {
             if (!notification) reply({ jsonrpc: "2.0", id, error: {
-              code: error instanceof RpcError ? error.code : error instanceof z.ZodError ? -32602 : -32000,
-              message: error instanceof RpcError ? error.message : error instanceof z.ZodError ? "invalid method parameters" : "daemon request failed",
+              code: error instanceof RpcError ? error.code : error instanceof OfflineError ? -32030 : error instanceof z.ZodError ? -32602 : -32000,
+              message: error instanceof RpcError ? error.message : error instanceof OfflineError ? "Hub unavailable or request timed out; inspect status before retrying a mutation." : error instanceof z.ZodError ? "invalid method parameters" : "daemon request failed",
             } });
           }
         });

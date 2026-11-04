@@ -837,6 +837,46 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### Session delivery diagnostics and explicit topic watch (2026-11-04)
+
+Codex shim registration requires an observed process birth. An unavailable birth defers
+registration without creating or reviving a record; it is not evidence of process exit.
+Read-only caller status accepts validated Codex root metadata and the actual shim PID/birth,
+never cwd or inherited root IDs. Missing ownership remains unverified. Status never binds,
+registers, starts a daemon, changes membership or advances receipts.
+
+Local IPC distinguishes hub unavailability (-32030) from daemon shutdown (-32031).
+Diagnostics use fixed messages, never arbitrary transport text or a promise that an
+unpersisted command is queued. Callers must not retry already dispatched mutations blindly.
+
+Hook observations are private, bounded diagnostic evidence, not identity authority or delivery
+receipts. Observation writes are serialized in the background; conversation authority and
+delivery never await them. Only the final best-effort flush waits, under the existing
+entrypoint deadline. They contain only a fixed event/outcome, timestamp and hashed root discriminator.
+An interrupted attempt or missing observation is unknown. Failures before output keep stdout
+empty and exit zero; the existing 140ms entrypoint deadline and 200ms vendor budget remain.
+Explicit diagnostics expose observations; no failure generates an unsolicited agent turn.
+
+`kom watch --session <hub-session-id> --topic <name>` explicitly opts into topic events.
+The management caller must select an existing exact local session; it never registers,
+joins, starts a daemon or follows a reused handle. The hub verifies host ownership and
+current membership, filters immutable authorized deliveries by exact topic, and reads the
+page/highwater in one transaction. Watch includes read headers: hook display is not handling.
+Without `--since-seq`, the initial poll captures the current highwater and emits no backlog.
+An explicit cursor replays later eligible headers. DND or gone pauses without advancing it;
+FYI and hops above three are skipped while advancing the cursor. Agentd rechecks lifecycle
+and DND after transport awaits. Leaving the topic terminates authorization. A locally
+paused watch performs no hub query and cannot detect a membership change until its next
+active poll; it emits no content and preserves the cursor meanwhile.
+
+Only eligible messages produce bounded JSON lines, labelled untrusted peer content. Empty
+polls and transient outages produce no stdout; state changes use stderr. Output is not a read
+receipt, acknowledgement, native wake or proof of vendor processing. Cursor advancement follows
+successful output; restart with the last emitted sequence can repeat skipped ranges. There is
+no cursor file or exactly-once guarantee. This opt-in process is distinct from ordinary topic
+no-wake policy; automatic vendor monitor installation remains deferred.
+
+
 ### Topic deliveries during session absence (2026-11-04)
 
 Topic addressing snapshots current members other than the sender in the send transaction, including

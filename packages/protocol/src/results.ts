@@ -27,6 +27,10 @@ export const Results = {
     protocol_version: z.number().int(), hosts: z.number().int().nonnegative(),
     sessions: z.number().int().nonnegative(), messages: z.number().int().nonnegative(),
   }),
+  "watch.poll": z.object({
+    headers: z.array(MessageHeader), cursor: z.number().int().nonnegative().optional(),
+    more: z.boolean(), state: z.enum(["watching", "dnd", "gone"]),
+  }),
   "inbox.list": z.object({
     headers: z.array(MessageHeader),
     /** Pass as `since_seq` next time. */

@@ -122,3 +122,44 @@ A plugin update does not replace the shared running agentd. Operators who explic
 authorize automatic local hub and daemon upgrades can enable the separate
 [release deployment timer](LOCAL_RELEASE_DEPLOY.md). It preserves the default key/data
 paths and loopback port, waits for qualified releases, and blocks uncertain failures.
+
+## Watch a joined topic from an existing session
+
+Use `whoami` to obtain the exact hub session ID, and join the topic through that session
+first. Then run this opt-in command on the same machine as its daemon:
+
+```sh
+kom watch --session <hub-session-id> --topic kommutator-feedback
+```
+
+The default observes future messages only. To replay or resume, add `--since-seq 0` or the
+last successfully handled event's `header.seq`. There is no cursor file: save that number
+if you need restart continuity. Events can repeat after a crash. A message already marked
+read by a hook remains observable; watch output never marks anything read or handled.
+Only headers are emitted, one JSON line per eligible message, labelled untrusted peer
+content. Use the session's ordinary read tool if you need the full body. Empty polls are
+silent. Connection/state changes go to stderr. DND and gone pause the cursor; FYI and
+hop-limited messages are skipped. Leaving the topic removes authorization. While locally
+paused, the watch makes no hub request; membership loss is detected on its next active
+poll. It emits no content or cursor advancement during the pause. Ctrl-C stops.
+The command does not start a daemon, create a session or join a topic for you. Update both
+hub and daemon if the watch method is unsupported.
+
+For a bundled Claude plugin, use the verified installed plugin path's `bin/manage watch`
+with the same arguments. For hosted Codex use its installed `bin/launch manage watch`.
+Resolve the actual path from your vendor's installed-plugin metadata; do not guess a cache
+version or assume a plugin-root environment variable exists in a terminal.
+
+Claude's Monitor tool can run this process and consume its output lines as events. Its
+observed documentation specifies a five-minute default and thirty-minute maximum lifetime
+(ten minutes noninteractive), so renew explicitly as needed. Empty process polls use no
+model turns; events and renewal may. Native monitor execution is not an acceptance claim
+until observed on the installed vendor. Codex native idle wake and automatic monitor
+installation remain separate gates. This command does not change ordinary topic wake rules.
+
+Explicit `kom doctor` and MCP caller `status` include private `hook_observations`. A fixed
+64-slot local ring stores only event, fixed outcome, timestamp and hashed root. Files use
+0600 and the directory 0700. `attempted` without a later outcome, missing records, partial
+writes or overwritten slots mean **unknown**, not successful delivery. A hook which never
+runs cannot report itself. `output-written-ack-unverified` distinguishes visible output
+from a failed acknowledgement. No observation is identity authority or a read receipt.

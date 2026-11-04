@@ -15,7 +15,7 @@ describe("Claude caller diagnostics", () => {
     const call = vi.fn(async () => response);
     const resolve = vi.fn(async () => registration());
     const client = new ClaudeStatusClient({ call, close() {} }, resolve);
-    expect(await client.call("daemon.status")).toEqual(response);
+    expect(await client.call("daemon.status")).toMatchObject(response);
     expect(call.mock.calls).toEqual([["daemon.status", { caller: {
       vendor: "claude-code", vendor_session_id: "conversation", pid: 123,
       process_started_at: "process-birth", owner_generation: 1,
@@ -30,7 +30,7 @@ describe("Claude caller diagnostics", () => {
         caller: { state, reason: "session-end", recovery: "Run /exit, then claude --resume" } };
       const call = vi.fn(async () => response);
       const client = new ClaudeStatusClient({ call, close() {} }, async () => registration());
-      expect(await client.call("daemon.status")).toEqual(response);
+      expect(await client.call("daemon.status")).toMatchObject(response);
       expect(call).toHaveBeenCalledTimes(1);
     }
   });

@@ -211,3 +211,29 @@ message and board-operation keys. A retry with a retired key returns conflict (`
 instead of creating new data. Normal authentication/identity checks still apply. No cleanup
 RPC or writable dashboard route is exposed; the exact-manifest cleanup is an offline operator
 command. Existing messages, delivery sequence counters and unrelated replay keys are retained.
+
+## Read-only topic observation and caller diagnostics
+
+`watch.poll {session_id, topic, since_seq?, limit?}` is an unbound **CLI-only** management
+call on IPC and an authenticated host call on the hub. Agentd requires one exact existing
+local session ID. The hub requires ownership and current topic membership and queries only
+that recipient's deliveries with an exact stored topic target. It includes read headers;
+watch never creates a registration, membership or receipt. Result:
+`{headers, cursor?, more, state: "watching" | "dnd" | "gone"}`. Default limit is 50, maximum
+100. Missing `since_seq` captures the current highwater without backlog. An explicit cursor
+pages after that sequence. Empty pages advance to the transaction's highwater; full pages
+stop at their last header. FYI and hops above three are excluded without reading them.
+DND/gone pauses preserve the input cursor (absent stays absent). Agentd rechecks local
+lifecycle and DND after receiving the hub result. A local DND/gone pause returns without
+contacting the hub: membership changes are checked at the next active poll, with no
+content or cursor advancement while paused. Unsupported peers fail explicitly.
+
+Read-only `daemon.status.caller.vendor` accepts `claude-code` or `codex`. Codex callers
+supply the validated per-call root ID and actual shim PID/process birth; no environment
+root or cwd fallback is allowed. This selector does not bind or register the caller.
+An older daemon without caller evidence yields unverified, even if transport is healthy.
+Codex registration itself defers when process birth cannot be observed.
+
+IPC error `-32030` means hub unavailable or request timed out; `-32031` means the daemon
+is stopping. Neither is proof of mutation failure or a persisted queue entry. Inspect
+status before deciding whether to resend. Unexpected errors remain redacted.

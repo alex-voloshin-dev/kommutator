@@ -1139,3 +1139,108 @@ describe("Recovered lifecycle pending wake scheduling", () => {
     expect(core.registry.pending(receiver.session?.id ?? "")).toHaveLength(0);
   });
 });
+
+describe("delivery reliability diagnostics and explicit watch", () => {
+  it("defers Codex ownership with missing birth without retiring or mutating an existing root", async () => {
+    let birth: string | undefined;
+    const { core, transport } = await fixture({ birth: async () => birth, exists: () => true, alive: false });
+    const hello = { client: "shim", protocol_version: 1, vendor: "codex", vendor_session_id: "root-one", pid: 77, cwd: "/shared" };
+    await expect(core.request(core.peer(), "ipc.hello", hello)).rejects.toThrow("ownership unavailable");
+    expect(core.registry.all()).toEqual([]);
+    birth = "birth";
+    await core.request(core.peer(), "ipc.hello", hello);
+    const before = core.registry.all();
+    const count = transport.calls.length;
+    birth = undefined;
+    await expect(core.request(core.peer(), "ipc.hello", hello)).rejects.toThrow("ownership unavailable");
+    await core.sweep();
+    expect(core.registry.all()).toEqual(before);
+    expect(transport.calls.slice(count).filter(call => call.method === "session.upsert" || call.method === "session.gone")).toEqual([]);
+  });
+
+  it.each(["missing", "throwing"])("preserves an ended Codex root when its birth probe is %s", async mode => {
+    let uncertain = false;
+    const { core, transport } = await fixture({ birth: async () => {
+      if (!uncertain) return "birth";
+      if (mode === "throwing") throw new Error("private process-probe details");
+      return undefined;
+    } });
+    const hello = { client: "shim", protocol_version: 1, vendor: "codex", vendor_session_id: "ended-root", pid: 77, cwd: "/shared" };
+    const peer = core.peer();
+    await core.request(peer, "ipc.hello", hello);
+    await core.request(peer, "session.gone");
+    const before = structuredClone(core.registry.all());
+    const calls = transport.calls.length;
+    uncertain = true;
+    await expect(core.request(core.peer(), "ipc.hello", hello)).rejects.toThrow("Codex process ownership unavailable");
+    expect(core.registry.all()).toEqual(before);
+    expect(transport.calls.slice(calls)).toEqual([]);
+    uncertain = false;
+    await core.request(core.peer(), "ipc.hello", hello);
+    expect(core.registry.all()[0]?.session.state).not.toBe("gone");
+    expect(core.registry.all()[0]?.session.id).toBe(before[0]?.session.id);
+  });
+
+  it("reports exact Codex roots sharing a shim without registration or global-health substitution", async () => {
+    const { core } = await fixture();
+    const first = core.peer(), second = core.peer(), cli = core.peer();
+    for (const [peer, id] of [[first, "first"], [second, "second"]] as const) {
+      await core.request(peer, "ipc.hello", { client: "shim", protocol_version: 1, vendor: "codex", vendor_session_id: id, pid: 77, cwd: "/same" });
+    }
+    await core.request(first, "session.gone");
+    await core.request(cli, "ipc.hello", { client: "cli", protocol_version: 1, pid: 88 });
+    const before = core.registry.all();
+    for (const [id, state] of [["first", "gone"], ["second", "active"], ["absent", "unavailable"]]) {
+      expect(await core.request(cli, "daemon.status", { caller: { vendor: "codex", vendor_session_id: id, pid: 77, process_started_at: "birth" } })).toMatchObject({ caller: { state } });
+    }
+    expect(core.registry.all()).toEqual(before);
+  });
+
+  it("authorizes exact local watch and suppresses a response after DND or lifecycle changes", async () => {
+    const { core, transport } = await fixture();
+    const { peer, session } = await hook(core, "watch-owner");
+    const cli = core.peer();
+    await core.request(cli, "ipc.hello", { client: "cli", protocol_version: 1, pid: 88 });
+    await core.request(peer, "topic.join", { name: "test-feedback" });
+    const params = { session_id: session!.id, topic: "test-feedback", since_seq: 0 };
+    await expect(core.request(peer, "watch.poll", params)).rejects.toThrow();
+    await expect(core.request(cli, "watch.poll", { ...params, session_id: "remote-session" })).rejects.toThrow("exact existing local");
+    const before = core.registry.all();
+    expect(await core.request(cli, "watch.poll", params)).toMatchObject({ state: "watching", headers: [] });
+    expect(core.registry.all()).toEqual(before);
+    transport.afterRequest = async method => {
+      if (method === "watch.poll") {
+        const record = core.registry.all()[0]!;
+        record.session.wake = "off";
+        core.registry.save(record);
+      }
+    };
+    expect(await core.request(cli, "watch.poll", params)).toEqual({ state: "dnd", headers: [], cursor: 0, more: false });
+    const record = core.registry.all()[0]!;
+    record.session.wake = "on"; core.registry.save(record);
+    transport.afterRequest = async method => {
+      if (method === "watch.poll") { const current = core.registry.all()[0]!; current.lifecycleEpoch = (current.lifecycleEpoch ?? 0) + 1; core.registry.save(current); }
+    };
+    expect(await core.request(cli, "watch.poll", params)).toEqual({ state: "gone", headers: [], cursor: 0, more: false });
+  });
+});
+
+describe("watch authorization after a pause", () => {
+  it("rejects revoked membership when DND ends without emitting paused deliveries", async () => {
+    const { core, transport } = await fixture();
+    const { peer, session } = await hook(core, "paused-watch");
+    const manager = await cli(core);
+    await core.request(peer, "topic.join", { name: "private-feedback" });
+    const params = { session_id: session!.id, topic: "private-feedback", since_seq: 0 };
+    const record = core.registry.byId(session!.id)!;
+    record.session.wake = "off";
+    core.registry.save(record);
+    await core.request(peer, "topic.leave", { name: "private-feedback" });
+    const calls = transport.calls.length;
+    expect(await core.request(manager, "watch.poll", params)).toEqual({ state: "dnd", headers: [], cursor: 0, more: false });
+    expect(transport.calls).toHaveLength(calls);
+    record.session.wake = "on";
+    core.registry.save(record);
+    await expect(core.request(manager, "watch.poll", params)).rejects.toThrow();
+  });
+});

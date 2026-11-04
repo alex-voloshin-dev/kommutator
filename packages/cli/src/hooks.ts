@@ -1,3 +1,4 @@
+import { recordHookObservation, type HookOutcome } from "./hook-observations.js";
 import { pluginDaemonStatus } from "./plugin-daemon.js";
 import { pluginConflicts } from "./plugin-conflicts.js";
 import { savePluginContext, saveClaudeRegistration, forgetClaudeRegistration, activeClaudeRegistration, type ActiveClaudeRegistration } from "./plugin-context.js";
@@ -56,11 +57,25 @@ async function readInput(): Promise<unknown> {
 /** The entrypoint owns the hard wall-clock deadline, including stdin and module loading. */
 export async function runHook(rawEvent: string | undefined, args: string[] = []): Promise<void> {
   let client: IpcClient | undefined;
+  let root: string | undefined;
+  let outcome: HookOutcome = "invalid-input";
+  let outputWritten = false;
+  // Diagnostic filesystem latency must not precede conversation authority or delivery.
+  // Serialize best-effort writes so a late attempt cannot overwrite the final outcome.
+  let observations = Promise.resolve();
+  const observe = (value: HookOutcome) => {
+    const observedRoot = root;
+    observations = observations.then(() => recordHookObservation(rawEvent, value, observedRoot));
+  };
+  observe("attempted");
   try {
     const vendor = args.length === 0 ? undefined : args.length === 2 && args[0] === "--vendor" && args[1] === "codex" ? "codex" : null;
     if (vendor === null) return;
     const event = HookEvent.parse(rawEvent);
     const payload = Payload.parse(await readInput());
+    root = payload.session_id;
+    outcome = "identity-unavailable";
+    observe("attempted");
     let hello = hookHello(payload, process.env, vendor);
     if (process.env.KOM_PLUGIN_PROFILE) {
       let observed: ActiveClaudeRegistration | undefined;
@@ -74,17 +89,27 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [])
         hello = { ...hello, owner_generation: active.hello.owner_generation };
         if (event === "SessionEnd") await forgetClaudeRegistration(payload.session_id, process.ppid, active);
       }
-      if ((await pluginConflicts(process.env.KOM_PLUGIN_PROFILE, payload.cwd)).length) return;
-      if (await pluginDaemonStatus(false, 35) !== "compatible") return;
+      if ((await pluginConflicts(process.env.KOM_PLUGIN_PROFILE, payload.cwd)).length) { outcome = "conflict"; return; }
+      if (await pluginDaemonStatus(false, 35) !== "compatible") { outcome = "daemon-incompatible"; return; }
     }
+    outcome = "failed";
     client = new IpcClient({ hello: () => hello, lazyStart: false, timeoutMs: 90 });
     await handleHook(event, payload, client, (output) => new Promise((resolve, reject) => {
-      process.stdout.write(output, (error) => error ? reject(error) : resolve());
+      process.stdout.write(output, (error) => { if (error) reject(error); else { outputWritten = true; resolve(); } });
     }));
+    outcome = "success";
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+    if (outputWritten) outcome = "output-written-ack-unverified";
+    else if (code === -32030) outcome = "hub-unavailable";
+    else if (code === "ENOENT" || code === "ECONNREFUSED") outcome = "ipc-unavailable";
     if (code === "ENOENT" || code === "ECONNREFUSED") {
       try { if (!process.env.KOM_PLUGIN_PROFILE) spawnDaemon(); } catch { /* Hooks fail open, including daemon startup failure. */ }
     }
-  } finally { client?.close(); }
+  } finally {
+    client?.close();
+    observe(outcome);
+    // The unchanged entrypoint deadline may interrupt this flush; missing evidence is unknown.
+    await observations;
+  }
 }

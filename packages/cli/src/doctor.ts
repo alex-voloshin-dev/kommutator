@@ -1,3 +1,4 @@
+import { readHookObservations } from "./hook-observations.js";
 import { access, readFile, stat } from "node:fs/promises";
 import { constants } from "node:fs";
 import { execFile } from "node:child_process";
@@ -231,7 +232,7 @@ export async function runDoctor(options: DoctorOptions = {}, probes: Probes = {}
     finally { clearTimeout(timer); controller.abort(); }
   });
   const results = await Promise.all(checks);
-  return { ok: !results.some((result) => result.state === "fail"), complete: results.every((result) => result.state === "pass"), checks: results };
+  return { hook_observations: await readHookObservations(undefined, options.home), ok: !results.some((result) => result.state === "fail"), complete: results.every((result) => result.state === "pass"), checks: results };
 }
 
 export async function readStatus(options: Pick<DoctorOptions, "home" | "timeoutMs"> = {}, createClient?: () => RpcClient): Promise<unknown> {
