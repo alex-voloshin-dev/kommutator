@@ -617,3 +617,15 @@ awaits them before authority/delivery. The unchanged entrypoint timer bounds fin
 The three-case resume process file then passed, including stalled-diagnostic SessionStart
 and SessionEnd. This proves the isolated optional-I/O defect and its regression fix, not
 the exact cause of the historical shim exit or the intermittent CI event.
+
+## 0.10.0 local activation and live topic watch (2026-11-04)
+
+Tagged 9700b2796e77becd1f5aef3147c5411c6cfd1184 passed full release qualification and
+GitHub checks. The authorized updater activated hub and daemon 0.10.0 with SQLite backups;
+Docker was healthy, transport connected and outbox empty. The developer's existing session
+ID and subscriptions survived. An installed Codex 0.10.0 CLI watch tailed feedback silently
+for 12 seconds, then a separate explicit replay returned 12 ordered already-read headers
+without changing the recipient's delivery rows. No test messages/registrations were added.
+This verifies CLI observation, not native vendor Monitor. Existing live MCP client code
+remained 0.9.1 until vendor reconnect; installed Claude/Codex plugins are 0.10.0. See
+`docs/sdlc/session-delivery-reliability/deployment.md` for evidence limits and remaining gates.
