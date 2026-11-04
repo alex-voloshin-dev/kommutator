@@ -556,3 +556,20 @@ Live model triage quality, interactive vendor conversations, actual Work UI/nati
 macOS/ARM execution, reboot/logon, physical subnet filtering and day-long use remain open.
 New sender topic copies are absent from inbox history but readable by ID; historical unread
 copies remain unchanged. No live hub messages were sent by this maintenance worker.
+
+## 2026-11-04: topic absence recovery, deployed 0.9.1
+
+Release commit eabd81e0f2f6528031688a1673d6c1c3eac1ea45 preserves 0.9.0 sender exclusion
+and adds send-time deliveries for gone topic subscribers. Synthetic hub/daemon tests cover
+membership boundaries, no immediate absent-session push, same-connection reincarnation,
+queued DND ordering, unread receipts, replay and SQLite snapshot/reopen persistence.
+The combined workspace passed 462 tests; full release CI and anonymous asset verification
+passed. One local exported-client restart check failed transiently, then passed unchanged
+in isolation and CI; this does not establish its historical cause.
+
+Observed local activation at 2026-11-04T01:16:29Z: hub image release-0.9.1 healthy; agentd
+0.9.1 contract 3 connected/healthy with empty outbox; developer session retained identity
+and kommutator-feedback/agentic-forge-feedback membership. Feedback services active.
+No production test records were created. Historical missing deliveries were not backfilled.
+See docs/sdlc/topic-offline-delivery/deployment.md. Vendor resume, day-long, Windows reboot
+and physical allowed/denied-subnet gates remain open.
