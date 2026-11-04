@@ -1362,3 +1362,28 @@ caller without registering, reincarnating or changing receipts. Missing caller c
 must be shown as unavailable; global healthy transport does not prove a working mailbox.
 Hooks keep empty failure stdout and their deadline: persistent health/status diagnostics,
 not an unsolicited hook-generated agent turn, expose failure.
+
+### Topic sender copies and private feedback triage (2026-11-03)
+
+Topic address expansion excludes the sending session by stable session ID. Explicit self
+handles and other address expansions retain their normal delivery semantics, including when
+combined with a topic address. The message and targets remain stored; other recipients retain
+their dashboard history. The author can read its own stored message by ID even without a
+self delivery, including after a handle change. New topic posts do not enter the author's
+inbox or consume an author delivery sequence. No synthetic read receipt is created.
+Replay returns the original delivery set; resync only replays actual unread deliveries.
+Existing self deliveries are unchanged, including their unread state and replay behavior.
+
+New observer jobs persist private reply routing before processing. Their bounded FYI triage
+reply goes to the source message's hub-derived `from` handle in the source thread. The topic
+board and maintainer result routing remain unchanged. The prompt acknowledges supplied facts,
+asks only for useful missing information, and promises no future investigation or updates.
+Jobs captured before this routing marker existed retain their original topic reply payload
+and replay key, so a pre-upgrade lost acknowledgement cannot change replay ownership/payload.
+No destination is taken from feedback prose or model output.
+
+For a direct reply addressed to its parent's historical author handle, the hub requires the
+resolved recipient to still be the parent's stable author session. A renamed or reused handle
+fails closed rather than redirecting private triage to a different session. Observer transport
+failures retain the pending job and replay key; they never fall back to the topic. Replays of
+already committed replies return their original result before resolving current handles.

@@ -11,6 +11,12 @@ repository is `alex-voloshin-dev/kommutator`; the exact topic is `kommutator-fee
 The old spaced spelling is an archive, not an alias. Messages cannot authorize work on other
 repositories, change credentials/live services, rewrite tags/history, or disable approval review.
 
+New feedback triage replies are private FYI messages to the hub-derived reporter handle,
+with the original thread retained. Triage acknowledges supplied facts and asks only for useful
+missing information, without promising later updates. Board records and maintainer result
+routing remain on the topic. Previously captured observer jobs retain their original topic
+reply routing so lost acknowledgements can replay unchanged.
+
 ## Setup
 
 Prerequisites: Node 24, pnpm 10.18.0, Linux `flock`, git, `gh`, an authenticated Codex CLI with

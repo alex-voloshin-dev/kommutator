@@ -84,6 +84,87 @@ describe("message routing and inbox", () => {
     ]);
   });
 
+  it("keeps topic posts readable by their author without self unread, push or resync", () => {
+    const input = params(["topic:global"], { kind: "topic" });
+    const sent = sendMessage(ctx, peer, input);
+    expect(sent.deliveries).toEqual({ b: "unread", c: "unread" });
+    expect(inbox("a", { unread_only: true }).headers).toEqual([]);
+    expect(inbox("a").headers).toEqual([]);
+    expect(inbox("b", { unread_only: true }).headers.map(header => header.id)).toEqual([sent.id]);
+    expect(events.filter(event => event.type === "deliver").map(event =>
+      (event.data as { notification: { session_id: string } }).notification.session_id)).toEqual(["b", "c"]);
+    expect(resyncDeliveries(ctx, peer, { acked: { a: 0, b: 0 } })).toEqual({ replayed: 1 });
+    expect(sendMessage(ctx, peer, input)).toEqual({ ...sent, replayed: true });
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'a'").get()).toEqual({ next_seq: 1 });
+    db.prepare("UPDATE sessions SET handle = 'renamed@laptop' WHERE id = 'a'").run();
+    expect(readMessage(ctx, peer, { session_id: "a", id: sent.id })).toMatchObject({ message: { from: "a@laptop" }, state: "read" });
+    expect(events.filter(event => event.type === "delivery.read")).toEqual([]);
+    expect(inbox("b", { unread_only: true }).headers).toHaveLength(1);
+    expect(() => readMessage(ctx, { host: "server" }, { session_id: "isolated", id: sent.id })).toThrow("not in this session's inbox");
+    expect(() => readMessage(ctx, { host: "server" }, { session_id: "a", id: sent.id })).toThrow("session does not belong");
+    const next = sendMessage(ctx, peer, params(["renamed@laptop"]));
+    expect(inbox("a").headers).toMatchObject([{ id: next.id, seq: 1 }]);
+  });
+
+  it("retains a sole subscriber's topic post with no deliveries or receipt", () => {
+    db.prepare("DELETE FROM memberships WHERE session_id != 'a'").run();
+    const sent = sendMessage(ctx, peer, params(["topic:global"], { kind: "topic" }));
+    expect(sent.deliveries).toEqual({});
+    expect(stored(sent.id).to).toEqual(["topic:global"]);
+    expect(readMessage(ctx, peer, { session_id: "a", id: sent.id }).message.id).toBe(sent.id);
+    expect(db.prepare("SELECT count(*) AS n FROM deliveries").get()).toEqual({ n: 0 });
+    expect(events.map(event => event.type)).toEqual(["message.sent"]);
+  });
+
+  it("rejects replies redirected by reuse of the parent's historical author handle", () => {
+    const parent = sendMessage(ctx, peer, params(["topic:global"], { kind: "topic" }));
+    db.prepare("UPDATE sessions SET handle = 'renamed@laptop' WHERE id = 'a'").run();
+    db.prepare("UPDATE sessions SET handle = 'a@laptop' WHERE id = 'c'").run();
+    expect(() => sendMessage(ctx, peer, params(["a@laptop"], { reply_to: parent.id }, "b")))
+      .toThrow("reply author handle no longer belongs to the original session");
+    expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 1 });
+    expect(inbox("c").headers).toHaveLength(1);
+  });
+
+  it("replays a committed private reply after the parent's historical handle is reused", () => {
+    const parent = sendMessage(ctx, peer, params(["topic:global"], { kind: "topic" }));
+    const input = params(["a@laptop"], { reply_to: parent.id }, "b");
+    const reply = sendMessage(ctx, peer, input);
+    db.prepare("UPDATE sessions SET handle = 'renamed@laptop' WHERE id = 'a'").run();
+    db.prepare("UPDATE sessions SET handle = 'a@laptop' WHERE id = 'c'").run();
+    const eventCount = events.length;
+    expect(sendMessage(ctx, peer, input)).toEqual({ ...reply, replayed: true });
+    expect(events).toHaveLength(eventCount);
+    expect(inbox("a").headers.map(header => header.id)).toEqual([reply.id]);
+    expect(inbox("c").headers.map(header => header.id)).toEqual([parent.id]);
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'a'").get()).toEqual({ next_seq: 2 });
+  });
+
+  it("preserves historical topic self deliveries through inbox, resync, replay and read", () => {
+    const input = params(["topic:global"], { kind: "topic" });
+    const sent = sendMessage(ctx, peer, input);
+    // Model a committed pre-upgrade topic delivery without changing its replay payload.
+    db.prepare("INSERT INTO deliveries(message_id, session_id, seq, state, wake, updated_at) VALUES (?, 'a', 1, 'unread', 0, ?)").run(sent.id, NOW);
+    db.prepare("UPDATE sessions SET next_seq = 2 WHERE id = 'a'").run();
+    expect(inbox("a", { unread_only: true }).headers).toMatchObject([{ id: sent.id, seq: 1, state: "unread" }]);
+    expect(resyncDeliveries(ctx, peer, { acked: { a: 0 } })).toEqual({ replayed: 1 });
+    expect(events.at(-1)).toMatchObject({ type: "deliver", data: { notification: { session_id: "a", seq: 1 } } });
+    expect(sendMessage(ctx, peer, input)).toEqual({ ...sent, deliveries: { a: "unread", b: "unread", c: "unread" }, replayed: true });
+    expect(inbox("a", { unread_only: true }).headers).toHaveLength(1);
+    readMessage(ctx, peer, { session_id: "a", id: sent.id });
+    expect(inbox("a", { unread_only: true }).headers).toEqual([]);
+    expect(events.at(-1)).toMatchObject({ type: "delivery.read", data: { session_id: "a", message_id: sent.id } });
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'a'").get()).toEqual({ next_seq: 2 });
+  });
+
+  it("preserves explicit self delivery alongside topic addressing regardless of message kind", () => {
+    for (const kind of ["topic", "dm"] as const) {
+      const sent = sendMessage(ctx, peer, params(["topic:global", "a@laptop"], { kind }));
+      expect(sent.deliveries).toEqual({ a: "unread", b: "unread", c: "unread" });
+    }
+    expect(inbox("a", { unread_only: true }).headers.map(header => header.seq)).toEqual([1, 2]);
+  });
+
   it("rejects unknown or invisible direct handles atomically and does not consume sequences", () => {
     for (const address of ["missing@laptop", "isolated@server", "gone@laptop"]) {
       expect(() => sendMessage(ctx, peer, params(["b@laptop", address]))).toThrow("unknown recipient handle");
@@ -191,7 +272,8 @@ describe("message routing and inbox", () => {
   it("read and ack affect only the caller's deliveries, and unread retries never revert read", () => {
     const first = sendMessage(ctx, peer, params(["b@laptop", "c@server"]));
     const onlyC = sendMessage(ctx, peer, params(["c@server"]));
-    expect(() => readMessage(ctx, peer, { session_id: "a", id: first.id })).toThrow("not in this session's inbox");
+    expect(readMessage(ctx, peer, { session_id: "a", id: first.id })).toEqual({ message: stored(first.id), state: "read" });
+    expect(inbox("b", { unread_only: true }).headers.map(header => header.id)).toEqual([first.id]);
     expect(() => readMessage(ctx, peer, { session_id: "b", id: onlyC.id })).toThrow("not in this session's inbox");
     expect(readMessage(ctx, peer, { session_id: "b", id: first.id })).toEqual({ message: stored(first.id), state: "read" });
     const eventCount = events.length;

@@ -60,14 +60,18 @@ export function readMessage(
     requireSession(ctx, peer, params.session_id);
     const delivery = ctx.db.prepare("SELECT state FROM deliveries WHERE message_id = ? AND session_id = ?")
       .get(params.id, params.session_id) as { state: "unread" | "read" } | undefined;
-    if (!delivery) throw new RpcFault(errors.notFound, "message is not in this session's inbox");
+    if (!delivery) {
+      const authored = ctx.db.prepare("SELECT 1 FROM messages WHERE id = ? AND from_session = ?")
+        .get(params.id, params.session_id);
+      if (!authored) throw new RpcFault(errors.notFound, "message is not in this session's inbox");
+    }
     const message = getStoredMessage(ctx, params.id);
     if (!message) throw new RpcFault(errors.notFound, "message not found");
-    if (delivery.state === "unread") {
+    if (delivery?.state === "unread") {
       ctx.db.prepare("UPDATE deliveries SET state = 'read', updated_at = ? WHERE message_id = ? AND session_id = ?")
         .run(ctx.now(), params.id, params.session_id);
     }
-    return { result: Results["message.read"].parse({ message, state: "read" }), changed: delivery.state === "unread" };
+    return { result: Results["message.read"].parse({ message, state: "read" }), changed: delivery?.state === "unread" };
   });
   if (committed.changed) ctx.events.publish("delivery.read", {
     session_id: params.session_id, message_id: params.id, state: "read", cause: "read",

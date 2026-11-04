@@ -137,6 +137,12 @@ test('real hub retains old-parent authority and lost-ACK replay while new feedba
   const old = send(LEGACY_FEEDBACK_TOPIC);
   const journal = new Journal(f.policy.observerDb, observerIdentity(f.config, LEGACY_FEEDBACK_TOPIC));
   journal.db.exec('DELETE FROM jobs'); journal.set('session', session); journal.set('cursor', 0);
+  const captured = peer.request('inbox.list', { session_id: session.id, since_seq: 0, unread_only: false, limit: 200 });
+  journal.capture(captured.headers, captured.cursor);
+  const legacyJob = journal.jobs().find(job => job.id === old.id);
+  // Pre-upgrade captures have no private routing marker, including pending lost-ACK replies.
+  delete legacyJob.privateReply;
+  journal.save(legacyJob);
   const queue = new DatabaseSync(join(f.options.maintainerState, 'maintainer.db')); queue.exec('DELETE FROM jobs; DELETE FROM reports'); queue.close();
   let lost = true, clock = 1_000_000;
   const calls = [];
@@ -153,6 +159,8 @@ test('real hub retains old-parent authority and lost-ACK replay while new feedba
   const before = makeObserver(journal, LEGACY_FEEDBACK_TOPIC); before.ready = true; await before.tick();
   const pending = journal.jobs().find(job => job.id === old.id);
   assert.equal(pending.stage, 'analyzed'); assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0].message.to, [`topic:${LEGACY_FEEDBACK_TOPIC}`]);
+  assert.equal(calls[0].message.kind, 'topic');
   journal.close();
   await migrateFeedbackTopic({ ...f.options, capture: async (_, source) => {
     const result = peer.request('inbox.list', { session_id: session.id, since_seq: source.get('cursor'), unread_only: false, limit: 200 });
@@ -172,7 +180,8 @@ test('real hub retains old-parent authority and lost-ACK replay while new feedba
   assert.equal(migrated.jobs().find(job => job.id === fresh.id).stage, 'done');
   assert.equal(migrated.jobs().find(job => job.id === archived.id).stage, 'ignored');
   assert.equal(harness.db.prepare('SELECT count(*) AS n FROM messages WHERE from_session=?').get(session.id).n, 2);
-  assert.deepEqual(calls.at(-1).message.to, [`topic:${FEEDBACK_TOPIC}`]);
+  assert.deepEqual(calls.at(-1).message.to, [author.handle]);
+  assert.equal(calls.at(-1).message.kind, 'dm');
   assert.equal(calls.at(-1).message.reply_to, fresh.id);
   assert.notEqual(calls.at(-1).idempotency_key, calls[0].idempotency_key);
 });
