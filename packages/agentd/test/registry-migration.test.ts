@@ -29,3 +29,24 @@ it("upgrades schema 1 without losing identity, pending replay or delivery record
     reopened.close();
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
+
+
+it("upgrades schema 2 conservatively and persists retirement reasons through reopen", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "kom-state-reason-"));
+  const path = join(directory, "state.db");
+  try {
+    const old = new Registry(path);
+    old.save({ key: "claude-code:old", session: Session.parse({ id: "old-session", host: "host", name: "old", vendor: "claude-code", state: "gone" }), ownerGeneration: 1, pid: 123, processStartedAt: "birth", acked: 4, stopBlocked: false });
+    old.db.exec("PRAGMA user_version = 2"); old.close();
+    const upgraded = new Registry(path);
+    const record = upgraded.get("claude-code:old");
+    if (!record) throw new Error("missing migrated record");
+    expect(record.goneReason).toBeUndefined();
+    expect(record).toMatchObject({ ownerGeneration: 1, acked: 4, session: { state: "gone" } });
+    record.goneReason = "session-end"; upgraded.save(record); upgraded.close();
+    const reopened = new Registry(path);
+    expect(reopened.get("claude-code:old")?.goneReason).toBe("session-end");
+    expect(reopened.db.prepare("PRAGMA user_version").get()).toMatchObject({ user_version: 3 });
+    reopened.close();
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});

@@ -7,7 +7,8 @@ import { PROTOCOL_VERSION, RegisteredSession, Results } from "@kommutator/protoc
 import { z } from "zod";
 import { createMcpServer } from "../src/mcp.js";
 import { handleHook } from "../src/hooks.js";
-import type { RpcClient } from "../src/ipc-client.js";
+import { IpcError, type Hello, type RpcClient } from "../src/ipc-client.js";
+import { ClaudePluginClient } from "../src/claude.js";
 
 const cleanup: (() => Promise<void> | void)[] = [];
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close(); });
@@ -78,4 +79,54 @@ describe("MCP and hooks against production daemon and hub conformance handlers",
     expect(outputs).toHaveLength(4);
     expect(JSON.parse(outputs[3]!).decision).toBe("block");
   });
+});
+
+
+it("recovers a retired ClaudePluginClient through real daemon and hub handlers without changing identity or replaying sends", async () => {
+  const hub = createConformanceHarness(); cleanup.push(() => hub.close());
+  const connection = hub.connect("mac");
+  const methods: string[] = [];
+  const transport: HubTransport = {
+    connected: true, start() {}, async close() { connection.disconnect(); },
+    async request(method, params) { methods.push(method); return connection.request(method, params); },
+  };
+  let birth: string | undefined = "birth";
+  const core = new DaemonCore({ config: { hub: "http://127.0.0.1:8787", key: "test-key-with-16-characters", host: "mac" },
+    dbPath: ":memory:", transport, processStart: async () => birth, processExists: () => false,
+    adapters: [{ vendor: "claude-code", capability: "hook", isAlive: async () => true, deliver: async () => ({ outcome: "inbox" }) }] });
+  cleanup.push(() => core.close()); await core.start();
+  const hello: Hello = { client: "hook", protocol_version: PROTOCOL_VERSION, pid: 8001, ppid: 8000,
+    cwd: "/same/project", vendor: "claude-code", vendor_session_id: "recover-composed", owner_generation: 1 };
+  const first = core.peer(); await core.request(first, "ipc.hello", hello);
+  await core.request(first, "session.upsert", { op: "update", session: { role: "reviewer" } });
+  const before = z.object({ session: RegisteredSession, topics: z.array(z.unknown()) }).parse(await core.request(first, "whoami"));
+  let shims = 0;
+  const makeClient = (binding: Hello): RpcClient => {
+    const peer = core.peer();
+    let bound = false;
+    return { close() {}, async call(method, params = {}) {
+      try {
+        if (!bound) { await core.request(peer, "ipc.hello", binding); bound = true; }
+        return await core.request(peer, method, params);
+      } catch (error) {
+        if (error instanceof Error && "code" in error && typeof error.code === "number") throw new IpcError(error.message, error.code);
+        throw error;
+      }
+    } };
+  };
+  const client = new ClaudePluginClient({ resolve: async () => ({ hello, birth: "birth", generation: "birth:1" }),
+    prepare: async () => {}, hook: makeClient,
+    shim: observed => { shims++; return makeClient({ ...observed, client: "shim", pid: 8002 }); } });
+  cleanup.push(() => client.close());
+  await client.call("whoami");
+  birth = undefined; await core.sweep(); birth = "birth";
+  const sent = Results["send.local"].parse(await client.call("message.send", { message: { to: [before.session.handle], body: "exactly once after recovery" } }));
+  const after = z.object({ session: RegisteredSession, topics: z.array(z.unknown()) }).parse(await client.call("whoami"));
+  expect(after.session).toMatchObject({ id: before.session.id, role: "reviewer", incarnation: before.session.incarnation + 1 });
+  expect(after.topics).toEqual(before.topics);
+  expect(shims).toBe(2);
+  expect(methods.filter(method => method === "message.send")).toHaveLength(1);
+  expect(Results["inbox.list"].parse(await client.call("inbox.list", { unread_only: true })).headers.map(header => header.id)).toEqual([sent.id]);
+  expect(methods).not.toContain("receipt.mark");
+  await expect(core.request(first, "whoami")).rejects.toThrow("ended");
 });

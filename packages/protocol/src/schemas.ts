@@ -246,3 +246,14 @@ export const Notifications = {
 
 /** Maximum size of one JSON-RPC frame on either hop, in bytes. */
 export const MAX_FRAME_BYTES = 1_048_576;
+
+/** Read-only local diagnostics selector; never grants a session binding. */
+export const DaemonStatusParams = z.object({
+  caller: z.object({
+    vendor: z.literal("claude-code"),
+    vendor_session_id: z.string().min(1).max(200),
+    pid: z.number().int().positive(),
+    process_started_at: z.string().min(1).max(200),
+    owner_generation: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
+  }).strict().optional(),
+}).strict();

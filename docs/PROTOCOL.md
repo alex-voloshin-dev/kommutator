@@ -56,6 +56,13 @@ native endpoint are downgraded to hook delivery; the shared socket is never used
 traffic while ambiguous. `hello` (agentd → hub) identifies the host only.
 The shared daemon runtime contract is 3; plugin clients reject earlier daemons and request
 an explicit local restart rather than using unsafe old binding behavior.
+Local state schema 3 persists `goneReason` without changing hub records or the runtime
+contract. A current positive-generation hook can revive only a liveness-retired matching
+owner. Explicit SessionEnd, superseded and legacy unknown retirements require a newer
+SessionStart or proven replacement process. Unavailable process probes do not establish
+exit; only definite exit or changed birth retires a record. Lifecycle/heartbeat logs include
+session identity and bounded reason/code categories, never arbitrary error payloads.
+
 
 Codex/local Work uses MCP tool-call `_meta.sessionId` and `_meta.threadId` for root
 identity. They must be valid, equal IDs; missing/conflicting identity and fork calls fail
@@ -116,8 +123,8 @@ Local IPC helpers are not forwarded verbatim to the hub:
 | `whoami` | Returns `{ session, topics }` after registration; missing/ambiguous binding is an error |
 | `hook.poll` | `{ event, stop_hook_active? }` → `{ headers, cursor, more, block, session }`; Stop uses current wake policy and its one-shot latch |
 | `hook.ack` | `{ ids }` → queued read receipts for headers already flushed to stdout |
-| `daemon.status` / `status` | Local daemon/queue health and hub reachability; excludes vendor credentials |
-| `daemon.diagnostics` | CLI-only read-only checks of live registered Claude socket presence and Codex shim liveness/observed hook polls; returns `claude_sessions` and `codex_sessions` (`id`, `shim_alive`, `hook_events`), never socket paths or tokens |
+| `daemon.status` / `status` | Local daemon/queue health and hub reachability; optional CLI-only `caller` selector adds read-only exact-owner registration health; excludes vendor credentials |
+| `daemon.diagnostics` | CLI-only read-only checks of live registered Claude socket presence and Codex shim liveness/observed hook polls; returns `claude_sessions` and `codex_sessions` (`id`, `shim_alive` as true/false/null for alive/dead/unverified, `hook_events`), never socket paths or tokens |
 | `daemon.shutdown` | CLI-only graceful shutdown |
 | `session.dnd` | CLI-only `{ wake, session? }`; target local ID/handle or all live local sessions |
 | `human.send` | CLI-only `{ message }`; human origin requires the CLI's stdin TTY, otherwise agent origin and no force wake |
@@ -156,8 +163,18 @@ when configured it also returns `daemon` (stopped/compatible/incompatible/unavai
 `client_version`, `expected_runtime_contract`, nullable `daemon_version` and
 `daemon_runtime_contract`, and `recovery` when action is needed. `setup_start` returns
 configuration state and, only when needed, an expiring private loopback form URL.
-MCP `status` calls `daemon.status` through a separate CLI-only read-only IPC connection;
-it does not need session registration and never starts or restarts the daemon. Hub credentials never appear
+MCP `status` calls `daemon.status` through a separate CLI-only read-only IPC connection.
+Claude plugins attach a `DaemonStatusParams.caller` selector from the current private
+registration: `{ vendor: "claude-code", vendor_session_id, pid, process_started_at,
+owner_generation? }`. The daemon verifies current process birth and re-reads the exact
+owner/generation after the probe; it never binds or revives the selected session. The
+optional result `caller` contains `state` (`active`, `gone`, `unavailable`, `conflicting`,
+`unverified`), an exact `session_id` when matched, `reason` for gone records and actionable
+`recovery` for non-active states. Non-active caller health is degraded even when global
+transport is healthy. Missing private registration is explicitly unavailable, and older
+daemons without caller diagnostics are unverified. Neither path treats transport health
+as proof of a working mailbox.
+It does not need session registration and never starts or restarts the daemon. Hub credentials never appear
 in MCP parameters/results. Plugin root identity and project association require explicit
 vendor selection, exact Codex call metadata and a matching private hook cwd observation;
 missing/ambiguous context is an error. The hub/IPC wire schemas are unchanged.

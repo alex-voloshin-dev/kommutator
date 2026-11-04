@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer } from "../src/mcp.js";
+import { ClaudeStatusClient } from "../src/claude-status.js";
 import type { RpcClient } from "../src/ipc-client.js";
 
 const close: (() => Promise<void>)[] = [];
@@ -44,6 +45,22 @@ describe("MCP tool surface", () => {
     expect(methods).toEqual(["daemon.status"]);
     expect((await client.callTool({ name: "whoami", arguments: {} })).isError).toBe(true);
     expect(methods).toEqual(["daemon.status"]);
+  });
+
+  it("returns caller failure through MCP status without registering or acknowledging messages", async () => {
+    const methods: string[] = [];
+    const diagnostic: RpcClient = { close() {}, async call(method) {
+      methods.push(method);
+      return { health: { state: "healthy", issues: [] }, hub: { connected: true }, outbox_depth: 0 };
+    } };
+    const status = new ClaudeStatusClient(diagnostic, async () => { throw new Error("registration unavailable"); });
+    const { client, calls } = await setup(true, status);
+    const result = await client.callTool({ name: "status", arguments: {} });
+    expect(result.isError).not.toBe(true);
+    expect(result.content).toEqual([{ type: "text", text: expect.stringContaining('"caller":{"state":"unavailable"') }]);
+    expect(result.content).toEqual([{ type: "text", text: expect.stringContaining('"state":"degraded"') }]);
+    expect(methods).toEqual(["daemon.status"]);
+    expect(calls).toEqual([]);
   });
 
   it("forwards discovery and explicit history options without accepting caller identity", async () => {

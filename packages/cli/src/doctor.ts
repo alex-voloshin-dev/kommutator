@@ -29,7 +29,7 @@ interface Probes {
 const object = z.record(z.string(), z.unknown());
 const events = ["SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd"];
 const Diagnostics = z.object({ claude_sessions: z.array(z.object({ id: z.string(), endpoint_configured: z.boolean(), socket_present: z.boolean().nullable() })),
-  codex_sessions: z.array(z.object({ id: z.string(), shim_alive: z.boolean(), hook_events: z.array(z.enum(["UserPromptSubmit", "PostToolUse", "Stop"])) })).optional(),
+  codex_sessions: z.array(z.object({ id: z.string(), shim_alive: z.boolean().nullable(), hook_events: z.array(z.enum(["UserPromptSubmit", "PostToolUse", "Stop"])) })).optional(),
 });
 const Snapshot = z.object({ protocol_version: z.number(), hosts: z.array(z.unknown()), sessions: z.array(z.unknown()), deliveries: z.array(z.unknown()) });
 function parsedConfig(value: unknown) {
@@ -199,7 +199,8 @@ export async function runDoctor(options: DoctorOptions = {}, probes: Probes = {}
     if (!diagnostics?.codex_sessions) return check("runtime.codex", "unknown", "Codex runtime diagnostics are unavailable; start or update the daemon.");
     const sessions = diagnostics.codex_sessions;
     if (!sessions.length) return check("runtime.codex", "not_configured", "No live Codex root registered through MCP metadata.", "If Codex is intended, start a local root with the MCP server enabled and call whoami.");
-    if (sessions.some((session) => !session.shim_alive)) return check("runtime.codex", "fail", "A registered Codex root has no live matching shim process.", "Restart the affected root or wait for daemon lifecycle cleanup.");
+    if (sessions.some((session) => session.shim_alive === false)) return check("runtime.codex", "fail", "A registered Codex root has no live matching shim process.", "Restart the affected root or wait for daemon lifecycle cleanup.");
+    if (sessions.some((session) => session.shim_alive === null)) return check("runtime.codex", "unknown", "A registered Codex root's shim liveness could not be verified; this does not prove the process exited.", "Retry diagnostics and inspect daemon lifecycle logs; do not restart a session solely because a probe was inconclusive.");
     if (sessions.some((session) => !session.hook_events.includes("Stop") || !session.hook_events.includes("PostToolUse"))) return check("runtime.codex", "warning", "Codex identities and shim liveness verified; PostToolUse and Stop polls have not both been observed for every root since daemon start.", "Review hook trust and feature overrides, then exercise a tool and finish a turn.");
     return check("runtime.codex", "pass", `${sessions.length} Codex root(s) have live shims and observed PostToolUse/Stop polls; this does not prove header consumption, native wake or desktop UI support.`);
   });

@@ -4,6 +4,7 @@ import { pluginConflicts } from "./plugin-conflicts.js";
 import { PrivateSetup } from "./setup.js";
 import { pluginContext, activeClaudeRegistration } from "./plugin-context.js";
 import { ClaudePluginClient } from "./claude.js";
+import { ClaudeStatusClient } from "./claude-status.js";
 import { codexSessionId } from "./codex.js";
 import { loadConfig } from "@kommutator/agentd";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -49,7 +50,7 @@ export function createMcpServer(client: ClientSource, diagnosticsClient?: Client
   tool("board_put", "Write a board entry. Read first and use if_version to update; on conflict re-read and merge. Change protected entries only when the user asks in this session.", Methods["board.put"].omit({ session_id: true, op_id: true }).strict(), "board.put");
   tool("board_history", `Read board history, newest first; page using next_before_version. ${peerNotice}`, Methods["board.history"].omit({ session_id: true }).strict(), "board.history");
   tool("set_status", "Update your short status, role, name or wake policy.", Session.pick({ status_line: true, role: true, name: true, wake: true }).partial().extend({ wake: Session.shape.wake.removeDefault().optional() }).strict(), "session.upsert", (args) => ({ op: "update", session: args }));
-  tool("status", "Daemon and hub health, local sessions and outbox depth, even without session registration. Does not start or restart the daemon. Queued messages are retried by the daemon; do not send duplicates.", empty, "daemon.status");
+  tool("status", "Daemon and hub health, local sessions and outbox depth, even without session registration. Claude plugin status also checks the current caller registration; a healthy hub alone does not prove session delivery. Does not start, restart or register a session. Queued messages are retried by the daemon; do not send duplicates.", empty, "daemon.status");
   return server;
 }
 
@@ -57,6 +58,8 @@ export async function runMcp(): Promise<void> {
   let server: McpServer;
   const setup = new PrivateSetup();
   const diagnosticsClient = new IpcClient({ hello: cliHello, lazyStart: false });
+  const claudeDiagnostics = new ClaudeStatusClient(diagnosticsClient,
+    () => activeClaudeRegistration(claudeOwnerPid(), process.env.CLAUDE_CODE_SESSION_ID));
   const profile = process.env.KOM_PLUGIN_PROFILE;
   let projectCwd: string | undefined;
   const client = new IpcClient({ lazyStart: true, hello: () => ({ ...shimHello(server.server.getClientVersion()), ...(projectCwd ? { cwd: projectCwd } : {}) }) });
@@ -99,6 +102,7 @@ export async function runMcp(): Promise<void> {
       throw new Error("Unsupported or conflicting client identity");
     }
     if (isCodexClient(info)) codexSessionId(meta); // Diagnostics must not admit fork MCP calls.
+    if (profile === "claude-code") return claudeDiagnostics;
     return diagnosticsClient;
   });
   const pluginClients = new Map<string, IpcClient>();

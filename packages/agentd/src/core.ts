@@ -1,4 +1,4 @@
-import { RELEASE_VERSION } from "@kommutator/protocol";
+import { RELEASE_VERSION, DaemonStatusParams } from "@kommutator/protocol";
 import { randomUUID, createHash } from "node:crypto";
 import { basename } from "node:path";
 import { stat } from "node:fs/promises";
@@ -12,7 +12,7 @@ import { resolveBinding } from "./binding.js";
 import type { DaemonConfig } from "./config.js";
 import { OfflineError, RpcError } from "./errors.js";
 import type { HubTransport } from "./hub-link.js";
-import { Registry, processStart, type LocalRecord, type Delivery, type OutboxEntry } from "./registry.js";
+import { Registry, processStart, processExists, type GoneReason, type LocalRecord, type Delivery, type OutboxEntry } from "./registry.js";
 import { realClock, WakeScheduler, type Clock } from "./wake.js";
 import { Projects } from "./project.js";
 
@@ -25,6 +25,7 @@ export interface CoreOptions {
   adapters?: Adapter[];
   clock?: Clock;
   processStart?: (pid: number) => Promise<string | undefined>;
+  processExists?: (pid: number) => boolean | undefined;
   isAlive?: (record: LocalRecord) => Promise<boolean>;
   onError?: (message: string) => void;
   onShutdown?: () => void;
@@ -73,7 +74,8 @@ export class DaemonCore {
   async start(): Promise<void> {
     for (const record of this.registry.all()) {
       if (record.session.state === "gone") continue;
-      if (!await this.alive(record)) { this.markGone(record); continue; }
+      const probe = await this.probeLiveness(record);
+      if (probe.alive === false) { this.markGone(record, "liveness", probe.reason); continue; }
       if (record.session.id && !this.registrationPending(record.key)) this.queueReincarnate(record);
     }
     this.transport.start(async () => { await this.synchronize(); }, (method, params) => {
@@ -97,11 +99,34 @@ export class DaemonCore {
   }
 
   private adapter(record: LocalRecord): Adapter { return this.adapters.get(record.session.vendor) ?? genericAdapter; }
-  private async alive(record: LocalRecord): Promise<boolean> {
-    if (this.options.isAlive) return this.options.isAlive(record);
-    if (!record.pid || !record.processStartedAt) return false;
-    if (await (this.options.processStart ?? processStart)(record.pid) !== record.processStartedAt) return false;
-    return this.adapter(record).isAlive(record);
+  private diagnostic(event: string, record: LocalRecord, reason: string, cause?: string): void {
+    this.report(JSON.stringify({ event, session_id: record.session.id, vendor: record.session.vendor,
+      vendor_session_id: record.session.vendor_session_id, pid: record.pid,
+      owner_generation: record.ownerGeneration, reason, ...(cause ? { cause } : {}) }));
+  }
+  private errorCategory(error: unknown): string {
+    if (error instanceof RpcError) return `rpc:${error.code}`;
+    if (error instanceof OfflineError) return "hub-unavailable";
+    return "transport-or-probe-error";
+  }
+  private async alive(record: LocalRecord): Promise<boolean | undefined> { return (await this.probeLiveness(record)).alive; }
+  private async probeLiveness(record: LocalRecord): Promise<{ alive: boolean | undefined; reason: string }> {
+    if (this.options.isAlive) return { alive: await this.options.isAlive(record), reason: "injected-liveness-probe" };
+    if (!record.pid || !record.processStartedAt) return { alive: false, reason: "missing-process-owner" };
+    let birth: string | undefined;
+    try { birth = await (this.options.processStart ?? processStart)(record.pid); }
+    catch { /* Unknown probe outcome is not proof of exit. */ }
+    if (birth === undefined) {
+      if ((this.options.processExists ?? processExists)(record.pid) === false) return { alive: false, reason: "process-exited" };
+      this.diagnostic("session.liveness-unverified", record, "process-birth-unavailable");
+      return { alive: undefined, reason: "process-birth-unavailable" };
+    }
+    if (birth !== record.processStartedAt) return { alive: false, reason: "process-birth-changed" };
+    try { if (await this.adapter(record).isAlive(record)) return { alive: true, reason: "verified-owner" }; }
+    catch { /* Adapter unavailability alone cannot retire an OS process. */ }
+    if ((this.options.processExists ?? processExists)(record.pid) === false) return { alive: false, reason: "process-exited" };
+    this.diagnostic("session.liveness-unverified", record, "adapter-unavailable");
+    return { alive: undefined, reason: "adapter-unavailable" };
   }
   private registrationPending(key: string): boolean {
     return this.registry.outbox().some((entry) => entry.local_key === key && entry.method === "session.upsert" &&
@@ -110,7 +135,9 @@ export class DaemonCore {
   private queueReincarnate(record: LocalRecord): void {
     this.registry.enqueue(record.key, "session.upsert", { op: "reincarnate", session: record.session, reg_id: randomUUID() }, this.clock.now());
   }
-  private markGone(record: LocalRecord): void {
+  private markGone(record: LocalRecord, reason: GoneReason, cause?: string): void {
+    record.goneReason = reason;
+    record.lifecycleEpoch = (record.lifecycleEpoch ?? 0) + 1;
     this.codexHookEvents.delete(record.key);
     this.wake.cancel(record.key);
     for (const peer of this.peers) if (peer.key === record.key) peer.ended = true;
@@ -126,18 +153,19 @@ export class DaemonCore {
         ...(lifecycle ? { after_reg_id: lifecycle["reg_id"] } : {}),
       }, this.clock.now());
     });
+    this.diagnostic("session.gone", record, reason, cause);
   }
 
   async sweep(): Promise<void> {
     for (const record of this.registry.all()) {
       if (record.session.state === "gone") continue;
-      const alive = await this.alive(record);
+      const probe = await this.probeLiveness(record);
       const current = this.registry.get(record.key);
-      if (!current || current.session.state === "gone" || current.pid !== record.pid || current.processStartedAt !== record.processStartedAt || current.ownerGeneration !== record.ownerGeneration) continue;
-      if (!alive) this.markGone(current);
+      if (!current || current.session.state === "gone" || current.pid !== record.pid || current.processStartedAt !== record.processStartedAt || current.ownerGeneration !== record.ownerGeneration || current.lifecycleEpoch !== record.lifecycleEpoch) continue;
+      if (probe.alive === false) this.markGone(current, "liveness", probe.reason);
       else if (this.transport.connected && current.session.id) {
         try { await this.transport.request("session.heartbeat", { session_id: current.session.id, state: current.session.state }); }
-        catch { this.report("session heartbeat failed"); }
+        catch (error) { this.diagnostic("session.heartbeat-failed", current, this.errorCategory(error)); }
       }
     }
     await this.flush();
@@ -164,14 +192,16 @@ export class DaemonCore {
       const owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
       const latestGeneration = Math.max(0, ...owned.map(record => record.ownerGeneration ?? 0));
       const generation = hello.owner_generation ?? 0;
-      if (generation < latestGeneration || (generation === latestGeneration && generation > 0 && owned.some(record => record.ownerGeneration === generation && (record.session.vendor_session_id !== vendorId || record.session.state === "gone")))) {
-        throw new RpcError(-32020, "stale or conflicting Claude conversation generation; wait for its current hook");
+      if (generation < latestGeneration || (generation === latestGeneration && owned.some(record =>
+        (record.ownerGeneration ?? 0) === generation && ((generation > 0 && record.session.vendor_session_id !== vendorId) ||
+          (record.session.vendor_session_id === vendorId && record.session.state === "gone" && (generation === 0 || record.goneReason !== "liveness")))))) {
+        throw new RpcError(-32020, "stale or conflicting Claude conversation generation; use /exit, then claude --resume with trusted hooks");
       }
       if (generation > latestGeneration) for (const prior of owned) {
         if (prior.session.state === "gone") continue;
         this.wake.cancel(prior.key);
         // A repeated SessionStart refreshes its fence without ending the same conversation.
-        if (prior.session.vendor_session_id !== vendorId) this.markGone(prior);
+        if (prior.session.vendor_session_id !== vendorId) this.markGone(prior, "superseded");
       }
       const candidates = this.registry.all().filter(record => record.session.vendor === vendor && record.session.vendor_session_id === vendorId);
       const sameOwner = candidates.filter(record => record.pid === pid && record.processStartedAt === birth);
@@ -210,6 +240,9 @@ export class DaemonCore {
       (birth !== undefined && record.processStartedAt !== undefined && birth !== record.processStartedAt) ||
       (hello.endpoint !== undefined && record.endpoint !== undefined && hello.endpoint !== record.endpoint)
     ));
+    if (launchChanged || (hello.owner_generation !== undefined && hello.owner_generation !== record.ownerGeneration)) {
+      record.lifecycleEpoch = (record.lifecycleEpoch ?? 0) + 1;
+    }
     if (wasGone || launchChanged) {
       this.codexHookEvents.delete(key);
       delete record.pid;
@@ -239,6 +272,7 @@ export class DaemonCore {
       other.session.vendor_session_id === vendorId && other.endpoint === record.endpoint) : [];
     record.session.capability = vendor === "claude-code" ? (endpointPeers.length ? "hook" : claudeCapability(record)) : this.adapter(record).capability;
     record.session.state = "active";
+    delete record.goneReason;
     this.registry.transaction(() => {
       this.registry.save(record);
       for (const other of endpointPeers) {
@@ -340,7 +374,12 @@ export class DaemonCore {
       return record?.session.id ? { bound: true, session: record.session } : { bound: Boolean(record), pending: true };
     }
     if (!peer.hello) throw new RpcError(-32020, "ipc.hello is required before requests");
-    if (method === "daemon.status" || method === "status") return this.status();
+    if (method === "daemon.status" || method === "status") {
+      const parsed = DaemonStatusParams.safeParse(value);
+      if (!parsed.success) throw new RpcError(-32602, "invalid daemon.status parameters");
+      if (parsed.data.caller) this.requireCli(peer);
+      return this.statusForCaller(parsed.data.caller);
+    }
     if (method === "daemon.diagnostics") {
       this.requireCli(peer);
       const sessions = await Promise.all(this.registry.all()
@@ -357,7 +396,7 @@ export class DaemonCore {
         }));
       const codex = await Promise.all(this.registry.all()
         .filter((record) => record.session.vendor === "codex" && record.session.id && record.session.state !== "gone")
-        .map(async (record) => ({ id: record.session.id, shim_alive: await this.alive(record), hook_events: [...(this.codexHookEvents.get(record.key) ?? [])] })));
+        .map(async (record) => ({ id: record.session.id, shim_alive: (await this.alive(record)) ?? null, hook_events: [...(this.codexHookEvents.get(record.key) ?? [])] })));
       return { claude_sessions: sessions, codex_sessions: codex };
     }
     if (method === "daemon.shutdown") {
@@ -430,7 +469,7 @@ export class DaemonCore {
       return result;
     }
     if (method === "session.gone") {
-      this.markGone(record);
+      this.markGone(record, "session-end");
       void this.flush();
       return { ok: true };
     }
@@ -548,6 +587,15 @@ export class DaemonCore {
             }
             this.registry.remove(entry.id);
           });
+          if (entry.method === "session.upsert" && ["register", "reincarnate"].includes(String(ObjectParams.parse(params)["op"]))) {
+            const current = this.registry.get(record.key);
+            // Retirement cancels timers. Re-arm retained work only after the final
+            // lifecycle ACK, including recovery after the old delivery already drained.
+            if (current && current.session.state !== "gone" && current.session.wake === "on" &&
+              !this.registrationPending(current.key) && this.registry.pending(current.session.id ?? "").some(delivery => delivery.wake)) {
+              this.wake.schedule(current.key, current.lastWake);
+            }
+          }
           this.outcomes.set(entry.id, { result });
           progressed = true;
         } catch (error) {
@@ -584,16 +632,26 @@ export class DaemonCore {
   private async deliverPending(key: string): Promise<void> {
     const active = this.deliveryRuns.get(key);
     if (active) return active;
+    const epoch = this.registry.get(key)?.lifecycleEpoch ?? 0;
     const run = this.performDelivery(key);
     this.deliveryRuns.set(key, run);
-    try { await run; } finally { this.deliveryRuns.delete(key); }
+    try { await run; } finally {
+      this.deliveryRuns.delete(key);
+      const current = this.registry.get(key);
+      // A wake arriving during an old lifecycle's pending delivery joins that run.
+      // Once it drains, give the current lifecycle its own attempt without parallel sends.
+      if (!this.closed && current && (current.lifecycleEpoch ?? 0) !== epoch && current.session.state !== "gone" &&
+        current.session.wake === "on" && this.registry.pending(current.session.id ?? "").some(delivery => delivery.wake)) {
+        this.wake.schedule(key, current.lastWake);
+      }
+    }
   }
   private async performDelivery(key: string): Promise<void> {
     let record = this.registry.get(key);
     if (!record?.session.id || record.session.state === "gone" || record.session.wake === "off" || !this.transport.connected) return;
     if (record.lastWake !== undefined && this.clock.now() < record.lastWake + this.wake.cooldown) { this.wake.schedule(key, record.lastWake); return; }
-    const expected = { pid: record.pid, birth: record.processStartedAt, generation: record.ownerGeneration };
-    const sameGeneration = (current: LocalRecord | undefined): current is LocalRecord => Boolean(current && current.session.state !== "gone" && current.pid === expected.pid && current.processStartedAt === expected.birth && current.ownerGeneration === expected.generation);
+    const expected = { pid: record.pid, birth: record.processStartedAt, generation: record.ownerGeneration, epoch: record.lifecycleEpoch };
+    const sameGeneration = (current: LocalRecord | undefined): current is LocalRecord => Boolean(current && current.session.state !== "gone" && current.pid === expected.pid && current.processStartedAt === expected.birth && current.ownerGeneration === expected.generation && current.lifecycleEpoch === expected.epoch);
     const pending = this.registry.pending(record.session.id).filter((delivery) => delivery.wake);
     if (!pending.length) return;
     const unread = new Set<string>();
@@ -628,6 +686,37 @@ export class DaemonCore {
     if (result.outcome === "accepted") await this.write(record, "receipt.mark", { ids: [selected.message.id], state: "read" });
     const remaining = this.registry.pending(record.session.id ?? "").some((delivery) => delivery.wake);
     if (remaining) this.wake.schedule(key, record.lastWake);
+  }
+
+  private async statusForCaller(caller: z.infer<typeof DaemonStatusParams>["caller"]) {
+    if (!caller) return this.status();
+    let recovery = "Use /exit, then claude --resume with trusted hooks; waiting alone cannot repair an ended registration.";
+    let birth: string | undefined;
+    try { birth = await (this.options.processStart ?? processStart)(caller.pid); } catch { /* Report unverified. */ }
+    const status = this.status();
+    const records = this.registry.all().filter(record => record.session.vendor === caller.vendor &&
+      record.pid === caller.pid && record.processStartedAt === caller.process_started_at);
+    const matching = records.filter(record => record.session.vendor_session_id === caller.vendor_session_id &&
+      record.ownerGeneration === caller.owner_generation);
+    let state: "active" | "gone" | "unavailable" | "conflicting" | "unverified" = "unavailable";
+    let record: LocalRecord | undefined;
+    if (birth === undefined) state = "unverified";
+    else if (birth !== caller.process_started_at || matching.length > 1 ||
+      records.some(item => (item.ownerGeneration ?? 0) > (caller.owner_generation ?? 0))) state = "conflicting";
+    else if (matching.length === 1) {
+      record = matching[0];
+      state = record?.session.state === "gone" ? "gone" : "active";
+    }
+    if (state === "unverified") recovery = "Retry status; process ownership could not be verified. Inspect local diagnostics if this persists.";
+    else if (state === "gone" && record?.goneReason === "liveness" && (record.ownerGeneration ?? 0) > 0) {
+      recovery = "The next current hook or whoami call can restore this liveness-retired registration after verifying process ownership.";
+    }
+    const issues = state === "active" ? status.health.issues : [...status.health.issues, `Caller registration is ${state}. ${recovery}`];
+    return { ...status, health: { state: issues.length ? "degraded" : "healthy", issues }, caller: {
+      state, ...(record?.session.id ? { session_id: record.session.id } : {}),
+      ...(state === "gone" ? { reason: record?.goneReason ?? "unknown" } : {}),
+      ...(state === "active" ? {} : { recovery }),
+    } };
   }
 
   status() {

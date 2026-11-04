@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { activeClaudeRegistration, saveClaudeRegistration, forgetClaudeRegistration } from "../src/plugin-context.js";
 import { ClaudePluginClient } from "../src/claude.js";
-import type { Hello, RpcClient } from "../src/ipc-client.js";
+import { IpcError, type Hello, type RpcClient } from "../src/ipc-client.js";
 let home: string;
 const oldHome = process.env.KOM_HOME;
 beforeEach(async () => { home = await mkdtemp(join(tmpdir(), "kom-resume-")); process.env.KOM_HOME = home; });
@@ -84,4 +84,60 @@ it("a delayed SessionEnd tombstones only its captured generation after A to B to
   const latest = await activeClaudeRegistration(process.pid);
   await forgetClaudeRegistration("A", process.pid, first);
   expect((await activeClaudeRegistration(process.pid)).generation).toBe(latest.generation);
+});
+
+it("opens a new shim after hook recovery rather than reusing the retired peer", async () => {
+  await saveClaudeRegistration(hello("A"));
+  const calls: string[] = [];
+  let shims = 0;
+  const client = new ClaudePluginClient({
+    resolve: () => activeClaudeRegistration(process.pid, "A"), prepare: async () => {},
+    shim() {
+      const id = ++shims;
+      return { close() { calls.push(`close:${id}`); }, async call(method) {
+        calls.push(`shim:${id}:${method}`);
+        if (id === 1) throw new IpcError("session ended", -32020);
+        return { sent: true };
+      } };
+    },
+    hook() { return { close() { calls.push("hook:close"); }, async call(method) { calls.push(`hook:${method}`); return {}; } }; },
+  });
+  expect(await client.call("message.send", { message: { body: "once" } })).toEqual({ sent: true });
+  expect(calls).toEqual(["shim:1:whoami", "hook:whoami", "hook:close", "close:1", "shim:2:message.send"]);
+  client.close();
+});
+
+it("does not dispatch a mutation if hook recovery overlaps a conversation switch", async () => {
+  await saveClaudeRegistration(hello("A"));
+  const calls: string[] = [];
+  const client = new ClaudePluginClient({
+    resolve: () => activeClaudeRegistration(process.pid, "A"), prepare: async () => {},
+    shim() { return { close() {}, async call(method) { calls.push(method); throw new IpcError("session ended", -32020); } }; },
+    hook() { return { close() {}, async call() { await saveClaudeRegistration(hello("B")); return {}; } }; },
+  });
+  await expect(client.call("message.send")).rejects.toThrow("conversation changed");
+  expect(calls).toEqual(["whoami"]);
+  client.close();
+});
+
+it("does not retry a mutation that fails ambiguously after successful retired-peer recovery", async () => {
+  await saveClaudeRegistration(hello("A"));
+  const calls: string[] = [];
+  let shims = 0;
+  const ambiguous = new IpcError("connection lost after write", -32020);
+  const client = new ClaudePluginClient({
+    resolve: () => activeClaudeRegistration(process.pid, "A"), prepare: async () => {},
+    shim() {
+      const id = ++shims;
+      return { close() {}, async call(method) {
+        calls.push(`shim:${id}:${method}`);
+        if (id === 1) throw new IpcError("session ended", -32020);
+        throw ambiguous;
+      } };
+    },
+    hook() { return { close() {}, async call(method) { calls.push(`hook:${method}`); return {}; } }; },
+  });
+  await expect(client.call("message.send", { message: { body: "at most once" } })).rejects.toBe(ambiguous);
+  expect(calls).toEqual(["shim:1:whoami", "hook:whoami", "shim:2:message.send"]);
+  client.close();
 });

@@ -72,7 +72,7 @@ class FakeTransport implements HubTransport {
 const cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close(); });
 
-async function fixture(options: { online?: boolean; dbPath?: string; clock?: ManualClock; hub?: ReturnType<typeof createConformanceHarness>; birth?: (pid: number) => Promise<string | undefined>; alive?: boolean } = {}) {
+async function fixture(options: { online?: boolean; dbPath?: string; clock?: ManualClock; hub?: ReturnType<typeof createConformanceHarness>; birth?: (pid: number) => Promise<string | undefined>; alive?: boolean; exists?: (pid: number) => boolean | undefined } = {}) {
   const hub = options.hub ?? createConformanceHarness();
   if (!options.hub) cleanup.push(async () => hub.close());
   const transport = new FakeTransport(hub);
@@ -82,7 +82,7 @@ async function fixture(options: { online?: boolean; dbPath?: string; clock?: Man
     if (wake) attempts.push({ id: message.id, at: clock.time });
     return wake ? { outcome: "written" } : { outcome: "inbox" };
   } };
-  const core = new DaemonCore({ config, dbPath: options.dbPath ?? ":memory:", transport, clock, adapters: [adapter], processStart: options.birth ?? (async () => "birth"), ...(options.alive === undefined ? { isAlive: async () => true } : {} ) });
+  const core = new DaemonCore({ config, dbPath: options.dbPath ?? ":memory:", transport, clock, adapters: [adapter], processStart: options.birth ?? (async () => "birth"), ...(options.exists ? { processExists: options.exists } : {}), ...(options.alive === undefined ? { isAlive: async () => true } : {} ) });
   let closed = false;
   const close = async () => { if (!closed) { closed = true; await core.close(); } };
   cleanup.push(close);
@@ -426,7 +426,7 @@ describe("daemon identity and IPC authorization", () => {
     const peer = core.peer();
     const revived = HelloReply.parse(await core.request(peer, "ipc.hello", {
       client: "hook", protocol_version: PROTOCOL_VERSION, pid: 1000, ppid: 55,
-      vendor: "claude-code", vendor_session_id: "same", cwd: "/repo",
+      vendor: "claude-code", vendor_session_id: "same", cwd: "/repo", owner_generation: 1,
     }));
     const record = core.registry.get("claude-code:same");
     expect(revived.session?.incarnation).toBe(1);
@@ -488,7 +488,7 @@ describe("durable replay and recovery", () => {
     const { core, transport } = await fixture({ online: false });
     const first = await hook(core, "a");
     await core.request(first.peer, "session.gone", {});
-    const revived = await hook(core, "a");
+    const revived = await hook(core, "a", { owner_generation: 1 });
     expect(revived.session).toBeUndefined();
     const operations = core.registry.outbox().filter((entry) => entry.method === "session.upsert").map((entry) => z.object({ op: z.string() }).parse(JSON.parse(entry.params)).op);
     expect(operations).toEqual(["register", "reincarnate"]);
@@ -502,10 +502,10 @@ describe("durable replay and recovery", () => {
   it("resolves gone against the preceding pending reincarnation, including a lost lifecycle ACK", async () => {
     const { core, transport } = await fixture();
     const first = await hook(core, "a");
-    const observer = await hook(core, "observer");
+    const observer = await hook(core, "observer", { ppid: 77 });
     transport.disconnect();
     await core.request(first.peer, "session.gone", {});
-    const revived = await hook(core, "a");
+    const revived = await hook(core, "a", { owner_generation: 1 });
     await core.request(revived.peer, "session.gone", {});
     const pendingGone = core.registry.outbox().filter((entry) => entry.method === "session.gone").at(-1);
     expect(pendingGone && z.object({ after_reg_id: z.string() }).parse(JSON.parse(pendingGone.params)).after_reg_id).toBeDefined();
@@ -527,9 +527,9 @@ describe("durable replay and recovery", () => {
     const first = await hook(core, "a");
     transport.disconnect();
     await core.request(first.peer, "session.gone", {});
-    const second = await hook(core, "a");
+    const second = await hook(core, "a", { owner_generation: 1 });
     await core.request(second.peer, "session.gone", {});
-    const third = await hook(core, "a");
+    const third = await hook(core, "a", { owner_generation: 2 });
     await transport.reconnect();
     const identity = Identity.parse(await core.request(third.peer, "whoami"));
     expect(identity.session.incarnation).toBe(2);
@@ -842,5 +842,233 @@ describe("Claude conversation generation fencing", () => {
     const second = await fixture({ dbPath, hub: first.hub });
     await expect(hook(second.core, "resume-a", { owner_generation: 1 })).rejects.toThrow("stale or conflicting");
     expect((await hook(second.core, "resume-b", { owner_generation: 2 })).session?.state).toBe("active");
+  });
+});
+
+
+describe("Claude liveness recovery and diagnostics", () => {
+  it("retains the mailbox across unavailable birth probes and adapter failures without a new incarnation", async () => {
+    let birth: string | undefined = "birth";
+    const { core, adapter } = await fixture({ alive: true, birth: async () => birth, exists: () => true });
+    const first = await hook(core, "uncertain", { owner_generation: 1 });
+    birth = undefined;
+    await core.sweep();
+    expect(core.registry.byId(first.session?.id ?? "")?.session.state).toBe("active");
+    expect(core.lastError).toContain("process-birth-unavailable");
+    birth = "birth";
+    adapter.isAlive = async () => false;
+    await core.sweep();
+    expect(core.registry.byId(first.session?.id ?? "")?.session.incarnation).toBe(first.session?.incarnation);
+    expect(core.registry.byId(first.session?.id ?? "")?.session.state).toBe("active");
+    adapter.isAlive = async () => { throw new Error("secret must not be logged"); };
+    await core.sweep();
+    expect(core.lastError).toContain("adapter-unavailable");
+    expect(core.lastError).not.toContain("secret");
+  });
+
+  it("recovers a proven liveness retirement through a fresh same-generation hook while old peers stay fenced", async () => {
+    let birth: string | undefined = "birth";
+    const { core } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
+    const first = await hook(core, "recover", { owner_generation: 1 });
+    birth = undefined;
+    await core.sweep();
+    expect(core.registry.byId(first.session?.id ?? "")?.goneReason).toBe("liveness");
+    expect(core.lastError).toContain('"event":"session.gone"');
+    birth = "birth";
+    const revived = await hook(core, "recover", { owner_generation: 1 });
+    expect(revived.session?.id).toBe(first.session?.id);
+    expect(revived.session?.incarnation).toBe((first.session?.incarnation ?? 0) + 1);
+    expect(core.registry.byId(first.session?.id ?? "")?.goneReason).toBeUndefined();
+    await expect(core.request(first.peer, "whoami")).rejects.toThrow("ended");
+    await expect(core.request(revived.peer, "whoami")).resolves.toMatchObject({ session: { id: first.session?.id } });
+  });
+
+  it("does not recover an explicit end or a legacy unknown gone record at the same generation", async () => {
+    const { core } = await fixture();
+    const ended = await hook(core, "explicit-end", { owner_generation: 1 });
+    await core.request(ended.peer, "session.gone");
+    expect(core.registry.byId(ended.session?.id ?? "")?.goneReason).toBe("session-end");
+    await expect(hook(core, "explicit-end", { owner_generation: 1 })).rejects.toThrow("/exit, then claude --resume");
+    const legacy = core.registry.byId(ended.session?.id ?? "");
+    if (!legacy) throw new Error("missing fixture");
+    delete legacy.goneReason; core.registry.save(legacy);
+    await expect(hook(core, "explicit-end", { owner_generation: 1 })).rejects.toThrow("/exit, then claude --resume");
+    const resumed = await hook(core, "explicit-end", { owner_generation: 2 });
+    expect(resumed.session?.id).toBe(ended.session?.id);
+  });
+
+  it("reports exact gone caller health without registering or exposing private fields", async () => {
+    const { core, transport } = await fixture();
+    const first = await hook(core, "diagnostic", { owner_generation: 1, token: "private-token" });
+    await core.request(first.peer, "session.gone");
+    const caller = { vendor: "claude-code", vendor_session_id: "diagnostic", pid: 55, process_started_at: "birth", owner_generation: 1 };
+    const operator = await cli(core);
+    const before = core.registry.all(); const pending = core.registry.outbox(); const calls = transport.calls.length;
+    const result = await core.request(operator, "daemon.status", { caller });
+    expect(result).toMatchObject({ health: { state: "degraded" }, caller: { state: "gone", reason: "session-end", session_id: first.session?.id } });
+    expect(JSON.stringify(result)).not.toContain("private-token");
+    expect(core.registry.all()).toEqual(before); expect(core.registry.outbox()).toEqual(pending); expect(transport.calls).toHaveLength(calls);
+    expect(await core.request(operator, "daemon.status", { caller: { ...caller, pid: 77 } })).toMatchObject({ caller: { state: "unavailable" } });
+    expect(await core.request(operator, "daemon.status", { caller: { ...caller, process_started_at: "reused" } })).toMatchObject({ caller: { state: "conflicting" } });
+    await expect(core.request(operator, "daemon.status", { caller: { ...caller, pid: -1 } })).rejects.toThrow("invalid daemon.status");
+    await expect(core.request(first.peer, "daemon.status", { caller })).rejects.toThrow();
+  });
+
+  it("identifies heartbeat failures by session and safe category without raw transport error text", async () => {
+    const { core, transport } = await fixture();
+    const first = await hook(core, "heartbeat", { owner_generation: 1 });
+    transport.afterRequest = async method => { if (method === "session.heartbeat") throw new RpcError(-32004, "secret-token body"); };
+    await core.sweep();
+    expect(core.lastError).toContain(first.session?.id);
+    expect(core.lastError).toContain("session.heartbeat-failed");
+    expect(core.lastError).toContain("rpc:-32004");
+    expect(core.lastError).not.toContain("secret-token");
+    expect(core.registry.byId(first.session?.id ?? "")?.session.state).toBe("active");
+  });
+});
+
+describe("Claude recovery QA boundaries", () => {
+  it("keeps an owner active when both process probes are unknown or birth probing throws", async () => {
+    let uncertain = false;
+    const { core } = await fixture({ alive: true, exists: () => undefined,
+      birth: async () => { if (uncertain) throw new Error("ps denied private details"); return "birth"; } });
+    const first = await hook(core, "unknown-probes", { owner_generation: 1 });
+    uncertain = true;
+    await core.sweep();
+    expect(core.registry.byId(first.session?.id ?? "")?.session).toMatchObject({ state: "active", incarnation: first.session?.incarnation });
+    expect(core.lastError).toContain("process-birth-unavailable");
+    expect(core.lastError).not.toContain("private details");
+  });
+
+  it("rechecks caller registration after an asynchronous birth probe overlaps SessionEnd", async () => {
+    let release: ((birth: string) => void) | undefined;
+    let delay = false;
+    const { core } = await fixture({ birth: async () => { if (!delay) return "birth"; delay = false; return new Promise<string>(resolve => { release = resolve; }); } });
+    const first = await hook(core, "status-race", { owner_generation: 1 });
+    const operator = await cli(core);
+    delay = true;
+    const pending = core.request(operator, "daemon.status", { caller: {
+      vendor: "claude-code", vendor_session_id: "status-race", pid: 55,
+      process_started_at: "birth", owner_generation: 1,
+    } });
+    await core.request(first.peer, "session.gone");
+    if (!release) throw new Error("status never probed the owner");
+    release("birth");
+    expect(await pending).toMatchObject({ health: { state: "degraded" }, caller: { state: "gone", reason: "session-end" } });
+  });
+
+  it("preserves unread hub messages and membership across liveness recovery without implicit receipts", async () => {
+    let birth: string | undefined = "birth";
+    const { core, transport } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
+    const recipient = await hook(core, "recipient-recovery", { owner_generation: 1 });
+    const sender = await hook(core, "sender-recovery", { owner_generation: 1, ppid: 77 });
+    const identity = Identity.parse(await core.request(recipient.peer, "whoami"));
+    const sent = await send(core, sender.peer, `${identity.session.name}@${identity.session.host}`, "retained unread message");
+    if (sent.status !== "sent") throw new Error("online fixture did not send");
+    birth = undefined;
+    await core.sweep();
+    birth = "birth";
+    const revived = await hook(core, "recipient-recovery", { owner_generation: 1 });
+    expect(revived.session?.id).toBe(recipient.session?.id);
+    expect(Identity.parse(await core.request(revived.peer, "whoami")).topics).toEqual(identity.topics);
+    expect(await core.request(revived.peer, "inbox.list", { unread_only: true })).toMatchObject({ headers: [expect.objectContaining({ id: sent.id, preview: "retained unread message", state: "unread" })] });
+    expect(transport.calls.filter(call => call.method === "receipt.mark")).toEqual([]);
+  });
+});
+
+describe("Same-generation retirement lifecycle fence", () => {
+  it.each(["written", "accepted"] as const)("rejects an old %s native completion and reschedules its coalesced wake after recovery", async outcome => {
+    let birth: string | undefined = "birth";
+    const { core, adapter, clock, transport } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
+    const sender = await hook(core, "epoch-sender", { ppid: 77 });
+    const receiver = await hook(core, "epoch-receiver", { owner_generation: 1 });
+    let enter: () => void = () => {}, release: () => void = () => {};
+    const entered = new Promise<void>(resolve => { enter = resolve; });
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let attempts = 0;
+    adapter.deliver = async () => { attempts++; if (attempts === 1) { enter(); await held; } return { outcome }; };
+    await send(core, sender.peer, receiver.session?.handle ?? "missing");
+    await clock.advance(0); await entered;
+    const before = core.registry.byId(receiver.session?.id ?? "");
+    birth = undefined; await core.sweep();
+    birth = "birth";
+    const revived = await hook(core, "epoch-receiver", { owner_generation: 1 });
+    expect(revived.session?.id).toBe(receiver.session?.id);
+    expect(core.registry.byId(receiver.session?.id ?? "")?.lifecycleEpoch).toBeGreaterThan(before?.lifecycleEpoch ?? 0);
+    await clock.advance(0); // The recovery wake must join, never parallel the old native call.
+    expect(attempts).toBe(1);
+    release(); for (let i = 0; i < 80; i++) await Promise.resolve();
+    const current = core.registry.byId(receiver.session?.id ?? "");
+    expect(current?.acked).toBe(0);
+    expect(current?.lastWake).toBeUndefined();
+    expect(core.registry.pending(receiver.session?.id ?? "")).toHaveLength(1);
+    expect(attempts).toBe(1);
+    expect(transport.calls.filter(call => call.method === "receipt.mark")).toHaveLength(0);
+    await clock.advance(0);
+    for (let i = 0; i < 80; i++) await Promise.resolve();
+    expect(attempts).toBe(2);
+    expect(core.registry.byId(receiver.session?.id ?? "")?.acked).toBe(1);
+    expect(transport.calls.filter(call => call.method === "receipt.mark")).toHaveLength(outcome === "accepted" ? 1 : 0);
+  });
+
+  it("does not let an old liveness probe retire a same-generation recovery", async () => {
+    let birth: string | undefined = "birth";
+    let pause = false;
+    let enter: () => void = () => {}, release: () => void = () => {};
+    const entered = new Promise<void>(resolve => { enter = resolve; });
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const { core } = await fixture({ alive: true, exists: () => false, birth: async () => {
+      if (pause) { pause = false; enter(); await held; return undefined; }
+      return birth;
+    } });
+    const original = await hook(core, "epoch-sweep", { owner_generation: 1 });
+    pause = true; const delayed = core.sweep(); await entered;
+    birth = undefined; await core.sweep();
+    birth = "birth"; await hook(core, "epoch-sweep", { owner_generation: 1 });
+    release(); await delayed;
+    expect(core.registry.byId(original.session?.id ?? "")?.session.state).toBe("active");
+  });
+});
+
+describe("Recovered lifecycle pending wake scheduling", () => {
+  it.each(["on", "off"] as const)("resumes a canceled cooldown wake after recovery with wake %s", async wake => {
+    let birth: string | undefined = "birth";
+    const { core, clock, attempts } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
+    const sender = await hook(core, "cooldown-sender", { ppid: 77 });
+    const receiver = await hook(core, "cooldown-receiver", { owner_generation: 1 });
+    await send(core, sender.peer, receiver.session?.handle ?? "missing", "first");
+    await clock.advance(0); for (let i = 0; i < 80; i++) await Promise.resolve();
+    expect(attempts).toHaveLength(1);
+    await send(core, sender.peer, receiver.session?.handle ?? "missing", "second");
+    await clock.advance(1);
+    expect(attempts).toHaveLength(1);
+    if (wake === "off") await core.request(receiver.peer, "session.upsert", { op: "update", session: { wake } });
+    birth = undefined; await core.sweep();
+    birth = "birth"; await hook(core, "cooldown-receiver", { owner_generation: 1 });
+    await clock.advance(30_000); for (let i = 0; i < 80; i++) await Promise.resolve();
+    expect(attempts).toHaveLength(wake === "on" ? 2 : 1);
+    expect(core.registry.pending(receiver.session?.id ?? "")).toHaveLength(wake === "on" ? 0 : 1);
+  });
+
+  it("reschedules retained work when the old run drains before recovery", async () => {
+    let birth: string | undefined = "birth";
+    const { core, adapter, clock } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
+    const sender = await hook(core, "drain-sender", { ppid: 77 });
+    const receiver = await hook(core, "drain-receiver", { owner_generation: 1 });
+    let enter: () => void = () => {}, release: () => void = () => {};
+    const entered = new Promise<void>(resolve => { enter = resolve; });
+    const held = new Promise<void>(resolve => { release = resolve; });
+    let attempts = 0;
+    adapter.deliver = async () => { attempts++; if (attempts === 1) { enter(); await held; } return { outcome: "written" }; };
+    await send(core, sender.peer, receiver.session?.handle ?? "missing");
+    await clock.advance(0); await entered;
+    birth = undefined; await core.sweep();
+    release(); for (let i = 0; i < 80; i++) await Promise.resolve();
+    expect(core.registry.byId(receiver.session?.id ?? "")?.acked).toBe(0);
+    expect(core.registry.byId(receiver.session?.id ?? "")?.lastWake).toBeUndefined();
+    birth = "birth"; await hook(core, "drain-receiver", { owner_generation: 1 });
+    await clock.advance(0); for (let i = 0; i < 80; i++) await Promise.resolve();
+    expect(attempts).toBe(2);
+    expect(core.registry.pending(receiver.session?.id ?? "")).toHaveLength(0);
   });
 });

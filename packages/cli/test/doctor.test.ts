@@ -227,6 +227,7 @@ describe("read-only doctor", () => {
     for (const [sessions, state] of [
       [[], "not_configured"],
       [[{ id: "root", shim_alive: false, hook_events: [] }], "fail"],
+      [[{ id: "root", shim_alive: null, hook_events: [] }], "unknown"],
       [[{ id: "root", shim_alive: true, hook_events: [] }], "warning"],
       [[{ id: "root", shim_alive: true, hook_events: ["PostToolUse", "Stop"] }], "pass"],
     ] as const) {
@@ -234,6 +235,24 @@ describe("read-only doctor", () => {
       const result = await runDoctor(f.options, { ...f.probes, client: () => client });
       expect(result.checks.find((entry) => entry.id === "runtime.codex")?.state).toBe(state);
     }
+  });
+
+  it("preserves valid Claude and IPC diagnostics when a Codex liveness probe is inconclusive", async () => {
+    const f = await fixture();
+    const client = { call: vi.fn(async () => ({
+      claude_sessions: [{ id: "claude-root", endpoint_configured: true, socket_present: true }],
+      codex_sessions: [{ id: "codex-root", shim_alive: null, hook_events: ["PostToolUse", "Stop"] }],
+    })), close: vi.fn() };
+    const result = await runDoctor(f.options, { ...f.probes, client: () => client });
+    expect(result.ok).toBe(true);
+    expect(result.complete).toBe(false);
+    expect(result.checks.find((entry) => entry.id === "ipc")?.state).toBe("pass");
+    expect(result.checks.find((entry) => entry.id === "sockets.claude")?.state).toBe("pass");
+    expect(result.checks.find((entry) => entry.id === "runtime.codex")).toMatchObject({
+      state: "unknown", summary: expect.stringContaining("does not prove the process exited"),
+    });
+    expect(client.call).toHaveBeenCalledExactlyOnceWith("daemon.diagnostics");
+    expect(client.close).toHaveBeenCalledOnce();
   });
 
   it("recognizes absolute exec-form kom and built CLI paths and identifies missing executables", async () => {
