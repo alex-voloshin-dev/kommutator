@@ -1,3 +1,4 @@
+import { readHookObservations } from "./hook-observations.js";
 import * as z from "zod";
 import { DaemonStatusParams } from "@kommutator/protocol";
 import type { ActiveClaudeRegistration } from "./plugin-context.js";
@@ -38,8 +39,9 @@ export class ClaudeStatusClient implements RpcClient {
       } catch { problem = { state: "unavailable", recovery }; }
       if (!problem && !result.caller) problem = { state: "unverified", recovery: "This daemon did not verify the caller registration. Update the local daemon, then call status again." };
     }
-    if (!problem) return result;
-    return { ...result, caller: problem, health: { ...result.health, state: "degraded",
+    const hook_observations = observed?.hello.vendor_session_id ? await readHookObservations(observed.hello.vendor_session_id) : [];
+    if (!problem) return { ...result, hook_observations };
+    return { ...result, hook_observations, caller: problem, health: { ...result.health, state: "degraded",
       issues: [...result.health.issues, `Caller registration ${problem.state}; session delivery is not verified.`] } };
   }
 

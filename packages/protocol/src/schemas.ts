@@ -178,6 +178,11 @@ export const Methods = {
      *  message on a repeat (DESIGN.md §8). */
     idempotency_key: z.string().min(8).max(64),
   }),
+  "watch.poll": z.object({
+    session_id: SessionId, topic: TopicName,
+    since_seq: z.number().int().nonnegative().optional(),
+    limit: z.number().int().positive().max(100).default(50),
+  }).strict(),
   "inbox.list": z.object({
     session_id: SessionId,
     since_seq: z.number().int().nonnegative().default(0),
@@ -253,7 +258,7 @@ export const MAX_FRAME_BYTES = 1_048_576;
 /** Read-only local diagnostics selector; never grants a session binding. */
 export const DaemonStatusParams = z.object({
   caller: z.object({
-    vendor: z.literal("claude-code"),
+    vendor: z.enum(["claude-code", "codex"]),
     vendor_session_id: z.string().min(1).max(200),
     pid: z.number().int().positive(),
     process_started_at: z.string().min(1).max(200),

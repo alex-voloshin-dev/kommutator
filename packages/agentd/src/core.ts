@@ -10,7 +10,7 @@ import { genericAdapter } from "./adapters/generic.js";
 import type { Adapter } from "./adapters/types.js";
 import { resolveBinding } from "./binding.js";
 import type { DaemonConfig } from "./config.js";
-import { OfflineError, RpcError } from "./errors.js";
+import { DaemonStoppingError, OfflineError, RpcError } from "./errors.js";
 import type { HubTransport } from "./hub-link.js";
 import { Registry, processStart, processExists, type GoneReason, type LocalRecord, type Delivery, type OutboxEntry } from "./registry.js";
 import { realClock, WakeScheduler, type Clock } from "./wake.js";
@@ -184,7 +184,9 @@ export class DaemonCore {
     const vendorId = human ? `human:${createHash("sha256").update(hello.cwd ?? "").digest("hex").slice(0, 24)}` : hello.vendor_session_id;
     let key = vendorId ? `${vendor}:${vendorId}` : `shim:${hello.pid}`;
     const pid = hello.client === "hook" ? hello.ppid : hello.pid;
-    const birth = pid ? await (this.options.processStart ?? processStart)(pid) : undefined;
+    let birth: string | undefined;
+    try { birth = pid ? await (this.options.processStart ?? processStart)(pid) : undefined; } catch { /* Missing process evidence cannot establish ownership. */ }
+    if (vendor === "codex" && (!pid || !birth)) throw new RpcError(-32020, "Codex process ownership unavailable; retry after the process probe recovers.");
     const project = hello.cwd ? await this.projects.key(hello.cwd, this.options.project ?? hello.project_key) : undefined;
     let existing = this.registry.get(key);
     if (vendor === "claude-code") {
@@ -338,7 +340,7 @@ export class DaemonCore {
   }
 
   async request(peer: IpcPeer, method: string, value: unknown = {}): Promise<unknown> {
-    if (this.closed) throw new OfflineError("daemon is stopping");
+    if (this.closed) throw new DaemonStoppingError();
     if (method === "ipc.hello") {
       if (peer.hello) throw new RpcError(-32600, "ipc.hello may only be sent once per connection");
       const parsed = Methods["ipc.hello"].safeParse(value);
@@ -379,6 +381,23 @@ export class DaemonCore {
       if (!parsed.success) throw new RpcError(-32602, "invalid daemon.status parameters");
       if (parsed.data.caller) this.requireCli(peer);
       return this.statusForCaller(parsed.data.caller);
+    }
+    if (method === "watch.poll") {
+      this.requireCli(peer);
+      const params = Methods["watch.poll"].parse(value);
+      const records = this.registry.all().filter(record => record.session.id === params.session_id);
+      const record = records.length === 1 ? records[0] : undefined;
+      if (!record) throw new RpcError(-32020, "Watch requires an exact existing local session ID");
+      const paused = (current: LocalRecord) => current.session.state === "gone" ? "gone" : current.session.wake === "off" ? "dnd" : undefined;
+      const empty = (state: "gone" | "dnd") => ({ headers: [], more: false, state, ...(params.since_seq === undefined ? {} : { cursor: params.since_seq }) });
+      const before = paused(record);
+      if (before) return empty(before);
+      const epoch = record.lifecycleEpoch;
+      const result = Results["watch.poll"].parse(await this.transport.request("watch.poll", params));
+      const current = this.registry.get(record.key);
+      if (!current || current.session.id !== params.session_id || current.lifecycleEpoch !== epoch) return empty("gone");
+      const after = paused(current);
+      return after ? empty(after) : result;
     }
     if (method === "daemon.diagnostics") {
       this.requireCli(peer);
@@ -705,7 +724,7 @@ export class DaemonCore {
 
   private async statusForCaller(caller: z.infer<typeof DaemonStatusParams>["caller"]) {
     if (!caller) return this.status();
-    let recovery = "Use /exit, then claude --resume with trusted hooks; waiting alone cannot repair an ended registration.";
+    let recovery = caller.vendor === "codex" ? "Reconnect the current Codex root MCP shim, then call whoami; status does not register a session." : "Use /exit, then claude --resume with trusted hooks; waiting alone cannot repair an ended registration.";
     let birth: string | undefined;
     try { birth = await (this.options.processStart ?? processStart)(caller.pid); } catch { /* Report unverified. */ }
     const status = this.status();

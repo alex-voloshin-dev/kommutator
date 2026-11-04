@@ -129,3 +129,32 @@ export function resyncDeliveries(
   for (const notification of notifications) ctx.events.publish("deliver", { host, notification });
   return { replayed: notifications.length };
 }
+
+/** An independent observation cursor: never reads bodies or changes receipts. */
+export function watchTopic(ctx: HubContext, peer: HubPeer,
+  params: z.output<(typeof Methods)["watch.poll"]>): z.output<(typeof Results)["watch.poll"]> {
+  return transaction(ctx, () => {
+    const session = requireSession(ctx, peer, params.session_id, true);
+    const member = ctx.db.prepare(`SELECT 1 FROM memberships x JOIN topics t ON t.id = x.topic_id
+      WHERE x.session_id = ? AND t.name = ?`).get(params.session_id, params.topic);
+    if (!member) throw new RpcFault(errors.unauthorized, "watch requires current topic membership");
+    const paused = session.state === "gone" ? "gone" : session.wake === "off" ? "dnd" : undefined;
+    if (paused) return { headers: [], more: false, state: paused, ...(params.since_seq === undefined ? {} : { cursor: params.since_seq }) };
+    const highwater = (ctx.db.prepare("SELECT COALESCE(MAX(seq), 0) AS seq FROM deliveries WHERE session_id = ?")
+      .get(params.session_id) as { seq: number }).seq;
+    if (params.since_seq === undefined) return { headers: [], cursor: highwater, more: false, state: "watching" };
+    const rows = ctx.db.prepare(`SELECT m.id, d.seq, COALESCE(NULLIF(m.from_handle, ''), s.handle) AS sender_handle,
+      m.kind, m.priority, m.subject, m.body, m.thread_id, m.created_at, d.state, d.wake
+      FROM deliveries d JOIN messages m ON m.id = d.message_id JOIN sessions s ON s.id = m.from_session
+      WHERE d.session_id = ? AND d.seq > ? AND d.seq <= ? AND m.priority != 'fyi' AND m.hops <= 3
+      AND EXISTS (SELECT 1 FROM message_targets t WHERE t.message_id = m.id AND t.target_type = 'topic' AND t.target_id = ?)
+      ORDER BY d.seq LIMIT ?`).all(params.session_id, params.since_seq, highwater, params.topic, params.limit + 1) as unknown as HeaderRow[];
+    const headers = rows.slice(0, params.limit).map(row => MessageHeader.parse({
+      id: row.id, seq: row.seq, from: row.sender_handle, kind: row.kind, priority: row.priority,
+      ...(row.subject === null ? {} : { subject: row.subject }), preview: makePreview(row.body),
+      thread_id: row.thread_id, created_at: row.created_at, state: row.state, wake: row.wake === 1,
+    }));
+    const more = rows.length > params.limit;
+    return { headers, cursor: more ? headers.at(-1)!.seq : Math.max(highwater, params.since_seq), more, state: "watching" };
+  });
+}

@@ -72,6 +72,14 @@ export async function runCommands(): Promise<void> {
         const input = z.object({ hub: z.string().optional(), key: z.string().optional(), host: z.string().optional(), hooks: z.boolean().default(true), vendor: z.enum(["claude", "codex"]), "codex-hooks": z.string().optional(), "claude-settings": z.string().optional() }).parse(args);
         print(await initialize({ ...(input.hub ? { hub: input.hub } : {}), ...(input.key ? { key: input.key } : {}), ...(input.host ? { host: input.host } : {}), hooks: input.hooks, vendor: input.vendor, ...(input["codex-hooks"] ? { codexHooks: input["codex-hooks"] } : {}), ...(input["claude-settings"] ? { claudeSettings: input["claude-settings"] } : {}) }));
       } }),
+      watch: defineCommand({ meta: { description: "observe one joined topic without receipts or registration" }, args: {
+        session: { type: "string", required: true }, topic: { type: "string", required: true },
+        "since-seq": { type: "string", description: "resume after this sequence; default is future messages only" },
+      }, run: async ({ args }) => {
+        const input = z.object({ session: z.string(), topic: z.string(), "since-seq": z.coerce.number().int().nonnegative().optional() }).parse(args);
+        const { runWatch } = await import("./watch.js");
+        await runWatch({ session: input.session, topic: input.topic, ...(input["since-seq"] === undefined ? {} : { sinceSeq: input["since-seq"] }) });
+      } }),
       status: defineCommand({ run: async () => { print(await readStatus()); } }),
       dnd: defineCommand({ args: { mode: { type: "positional", required: true, description: "on | off" }, session: { type: "string" } }, run: async ({ args }) => {
         if (args.mode !== "on" && args.mode !== "off") throw new Error("dnd expects on or off");

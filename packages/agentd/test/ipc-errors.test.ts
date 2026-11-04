@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { z } from "zod";
 import { MAX_FRAME_BYTES } from "@kommutator/protocol";
 import { startIpc } from "../src/ipc.js";
-import { RpcError } from "../src/errors.js";
+import { RpcError, OfflineError, DaemonStoppingError } from "../src/errors.js";
 
 const Reply = z.object({ jsonrpc: z.literal("2.0"), id: z.union([z.number(), z.string(), z.null()]), result: z.unknown().optional(), error: z.object({ code: z.number(), message: z.string() }).optional() });
 const cleanup: (() => Promise<void> | void)[] = [];
@@ -86,4 +86,19 @@ describe("local IPC response and envelope boundaries", () => {
     expect(client.replies).toEqual([{ jsonrpc: "2.0", id: "barrier", result: { ok: true } }]);
     expect(calls).toEqual(["large", "throw", "status"]);
   });
+});
+
+it("keeps IPC usable through hub outage and distinguishes shutdown without exposing arbitrary errors", async () => {
+  const client = await fixture(async method => {
+    if (method === "offline") throw new OfflineError("secret-endpoint-token");
+    if (method === "stopping") throw new DaemonStoppingError();
+    if (method === "unexpected") throw new Error("secret-payload");
+    return { healthy: true };
+  });
+  for (const method of ["offline", "stopping", "unexpected", "status"]) client.send(method, method);
+  await client.until(4);
+  expect(client.replies.map(row => row.error?.code)).toEqual([-32030, -32031, -32000, undefined]);
+  expect(client.replies[3]?.result).toEqual({ healthy: true });
+  expect(client.frames.join("")).not.toContain("secret");
+  expect(client.frames.join("")).not.toContain("queued");
 });

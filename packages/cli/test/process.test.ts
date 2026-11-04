@@ -1,3 +1,4 @@
+import { readHookObservations } from "../src/hook-observations.js";
 import { afterEach, describe, expect, it } from "vitest";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
@@ -14,13 +15,13 @@ afterEach(async () => { for (const dir of dirs.splice(0)) await rm(dir, { recurs
 async function hook(input: string | undefined, args: string[] = []) {
   const home = await mkdtemp(join(tmpdir(), "kom-process-")); dirs.push(home);
   const start = performance.now();
-  return await new Promise<{ code: number | null; stdout: string; elapsed: number }>((resolve, reject) => {
+  return await new Promise<{ code: number | null; stdout: string; elapsed: number; home: string }>((resolve, reject) => {
     const child = spawn(process.execPath, [entry, "hook", "Stop", ...args], { env: { ...process.env, KOM_HOME: home }, stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "";
     child.stdout.on("data", (text) => { stdout += String(text); });
     child.stderr.resume();
     child.on("error", reject);
-    child.on("close", (code) => resolve({ code, stdout, elapsed: performance.now() - start }));
+    child.on("close", (code) => resolve({ code, stdout, elapsed: performance.now() - start, home }));
     if (input !== undefined) child.stdin.end(input);
   });
 }
@@ -60,7 +61,7 @@ describe("production entrypoints", () => {
       const result = await client.callTool({ name: "status", arguments: {},
         _meta: { sessionId: "root", threadId: "root" } });
       expect(result.isError).not.toBe(true);
-      expect(result.content).toEqual([{ type: "text", text: JSON.stringify({ daemon: { version: "0.0.0" } }) }]);
+      expect(JSON.parse((result.content as Array<{ text: string }>)[0]!.text)).toMatchObject({ daemon: { version: "0.0.0" }, caller: { state: "unverified" }, health: { state: "degraded" } });
       expect(calls.map(call => call.method)).toEqual(["ipc.hello", "daemon.status"]);
       expect(calls[0]?.params).toMatchObject({ client: "cli" });
     } finally {
@@ -96,4 +97,12 @@ describe("production entrypoints", () => {
       expect((await client.listTools()).tools).toHaveLength(16);
     } finally { await client.close(); }
   });
+});
+
+it("records interrupted stdin only as an attempted hook, without output or false success", async () => {
+  const result = await hook(undefined);
+  expect(result).toMatchObject({ code: 0, stdout: "" });
+  expect(result.elapsed).toBeLessThan(200);
+  const observations = await readHookObservations(undefined, result.home);
+  expect(observations).toMatchObject([{ event: "Stop", outcome: "attempted" }]);
 });
