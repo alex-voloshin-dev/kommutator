@@ -382,6 +382,19 @@ export class DaemonCore {
       if (parsed.data.caller) this.requireCli(peer);
       return this.statusForCaller(parsed.data.caller);
     }
+    if (method === "board.get" && peer.hello.client === "cli") {
+      const params = Methods["board.get"].strict().parse(value);
+      const records = this.registry.all().filter(record => record.session.id === params.session_id);
+      const record = records.length === 1 ? records[0] : undefined;
+      if (!record || record.session.state === "gone") throw new RpcError(-32020, "Board read requires an exact existing live local session ID");
+      const epoch = record.lifecycleEpoch;
+      const result = Results["board.get"].parse(await this.transport.request("board.get", params));
+      const current = this.registry.get(record.key);
+      if (!current || current.session.id !== params.session_id || current.session.state === "gone" || current.lifecycleEpoch !== epoch) {
+        throw new RpcError(-32020, "Board read session changed; select an existing live local session ID");
+      }
+      return result;
+    }
     if (method === "watch.poll") {
       this.requireCli(peer);
       const params = Methods["watch.poll"].parse(value);

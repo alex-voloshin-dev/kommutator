@@ -26,3 +26,19 @@ it.each([undefined, "claude-code", "codex"])("renders daemon help without intern
     expect(await readdir(home)).toEqual([]);
   } finally { await rm(home, { recursive: true, force: true }); }
 });
+
+it("renders board help and rejects missing selections without starting a daemon", async () => {
+  const home = await mkdtemp(join(tmpdir(), "kom-board-help-"));
+  try {
+    const env = { ...process.env, KOM_HOME: home, NODE_ENV: "production", CONSOLA_LEVEL: "3" };
+    for (const args of [["board", "--help"], ["board", "get", "--help"], ["board", "list", "--help"]]) {
+      const { stdout, stderr } = await execute(process.execPath, [entry, ...args], { env, timeout: 5000 });
+      expect(stdout).toContain(args.length === 2 ? "get" : "--session");
+      expect(stdout).not.toContain("dist/index.js");
+      expect(stderr).toBe("");
+    }
+    await expect(execute(process.execPath, [entry, "board", "get", "--topic", "global", "--key", "decisions"], { env, timeout: 5000 })).rejects.toThrow();
+    await expect(execute(process.execPath, [entry, "board", "list", "--session", "missing", "--topic", "global"], { env, timeout: 5000 })).rejects.toThrow();
+    expect(await readdir(home)).toEqual([]);
+  } finally { await rm(home, { recursive: true, force: true }); }
+});

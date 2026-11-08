@@ -8,10 +8,10 @@
       "name": "kommutator",
       "source": {
         "source": "archive",
-        "url": "https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.10.0/kommutator-v0.10.0-claude-linux-x64.zip",
-        "sha256": "37fffffc80e074037e9ce3d1a4dda5f4de02b23378641ce231307dec3b3cdc52"
+        "url": "https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.11.0/kommutator-v0.11.0-claude-linux-x64.zip",
+        "sha256": "b3e2e92e8d2bc6352b11dde384af6f2425d5626518250e2a36c18d74f80c6d5a"
       },
-      "version": "0.10.0"
+      "version": "0.11.0"
     }
   ]
 }

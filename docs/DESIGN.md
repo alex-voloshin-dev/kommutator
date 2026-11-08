@@ -837,6 +837,21 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### Explicit CLI board reads (2026-11-08)
+
+`kom board get --session <hub-session-id> --topic <name> --key <key>` reads one
+current entry; `kom board list --session <hub-session-id> --topic <name>` reads all
+current entries in key order. Both print the existing `board.get` JSON result
+`{ entries: [...] }`; a missing key or empty board returns an empty array.
+The CLI management connection supplies an exact existing live local session ID,
+never a handle, cwd or inherited vendor identity. Agentd validates the selection and
+forwards the existing `board.get`; the hub still checks host ownership and current
+topic membership. Agentd rejects a response if the selected session retires or its
+lifecycle changes while awaiting the hub. Shim/hook identity rules are unchanged.
+Reads do not start a daemon, register, join, write boards, wake agents or advance
+receipts. DND does not prevent an explicit read. Unavailable services and unauthorized
+reads fail; there is no offline queue. `board revert` remains deferred.
+
 ### Session delivery diagnostics and explicit topic watch (2026-11-04)
 
 Codex shim registration requires an observed process birth. An unavailable birth defers

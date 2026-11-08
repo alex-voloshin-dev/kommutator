@@ -5,6 +5,7 @@ import { IpcClient, cliHello, spawnDaemon } from "./ipc-client.js";
 import { initialize } from "./init.js";
 import { readStatus, runDoctor } from "./doctor.js";
 import { runLogs } from "./logs.js";
+import { boardCommand } from "./board.js";
 import * as z from "zod";
 
 const print = (value: unknown) => console.log(JSON.stringify(value, null, 2));
@@ -101,7 +102,7 @@ export async function runCommands(): Promise<void> {
         } }),
         prune: defineCommand({ run: notYet("hub prune (replay-safety contract required)") }),
       } }),
-      board: defineCommand({ run: notYet("board revert") }),
+      board: boardCommand,
       doctor: defineCommand({ meta: { description: "read-only diagnostics; never starts the daemon" }, args: {
         "timeout-ms": { type: "string", default: "1500", description: "per-check deadline, 50–10000 ms" },
         "claude-settings": { type: "string", description: "inspect this Claude settings file instead of defaults" },

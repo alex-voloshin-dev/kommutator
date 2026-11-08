@@ -213,6 +213,8 @@ export const Methods = {
   "topic.join": z.object({ session_id: SessionId, name: TopicName.refine((n) => !n.startsWith("project:") && n !== "global", "only ad-hoc topics can be joined") }),
   "topic.leave": z.object({ session_id: SessionId, name: TopicName }),
   "topic.list": z.object({ session_id: SessionId, discover: z.boolean().optional() }),
+  // CLI management may explicitly select an existing live local session; the hub still
+  // enforces host ownership and topic membership. Shims cannot supply session_id.
   "board.get": z.object({ session_id: SessionId, topic: TopicName, key: BoardKey.optional() }),
   "board.put": z.object({
     session_id: SessionId,

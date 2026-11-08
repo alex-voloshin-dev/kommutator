@@ -108,7 +108,7 @@ registration and rename. One live session per handle; a clashing name gets a `-<
 | `receipt.mark` | `session_id, ids[] (≤ 200), state` | agentd → hub | `ack` |
 | `topic.join` / `topic.leave` | `session_id, name` — ad-hoc topics only; `project:*` and `global` are refused by the schema | agentd → hub | same names |
 | `topic.list` | `session_id, discover?` — defaults to joined topics; true adds ad-hoc names/kinds only | agentd → hub | `list_topics` |
-| `board.get` | `session_id, topic, key?` | agentd → hub | `board_get` |
+| `board.get` | `session_id, topic, key?`; also CLI-only unbound IPC with an exact live local session ID; hub ownership/membership checks unchanged | CLI → agentd → hub; bound shim → agentd | `board_get`; `kom board get/list --session … --topic …` |
 | `board.put` | `session_id, topic, key, body, if_version?, protected?, op_id` — author derived from `session_id`; `if_version` required for an existing key, checked in the handler's transaction; `op_id` is an agentd-chosen UUID stored on the created version, so a replay returns that version (`replayed: true`) instead of a conflict | agentd → hub | `board_put` |
 | `board.history` | `session_id, topic, key, before_version?, limit?` (1–10, default 10). Newest first; result `{ entries, more, next_before_version }`. Pass the returned exclusive version cursor while `more` is true | agentd → hub | `board_history` |
 | `status` | — | shim → agentd, agentd → hub | `status` |

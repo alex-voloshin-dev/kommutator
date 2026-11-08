@@ -1140,6 +1140,63 @@ describe("Recovered lifecycle pending wake scheduling", () => {
   });
 });
 
+describe("explicit CLI board reads", () => {
+  it("reads only the selected session's joined boards without side effects, including in DND", async () => {
+    const { core, transport } = await fixture();
+    const { peer, session } = await hook(core, "board-owner");
+    const manager = await cli(core);
+    await core.request(peer, "topic.join", { name: "board-read-test" });
+    await core.request(peer, "board.put", { topic: "board-read-test", key: "decisions", body: "Read me" });
+    await core.request(manager, "session.dnd", { session: session!.id, wake: "off" });
+    const before = core.registry.all();
+    const outbox = core.registry.outbox().length;
+    transport.calls.length = 0;
+    const params = { session_id: session!.id, topic: "board-read-test" };
+    expect(await core.request(manager, "board.get", params)).toMatchObject({ entries: [{ key: "decisions", body: "Read me", version: 1 }] });
+    expect(await core.request(manager, "board.get", { ...params, key: "missing" })).toEqual({ entries: [] });
+    expect(core.registry.all()).toEqual(before);
+    expect(core.registry.outbox().length).toBe(outbox);
+    expect(transport.calls.map(call => call.method)).toEqual(["board.get", "board.get"]);
+    await core.request(peer, "topic.leave", { name: "board-read-test" });
+    await expect(core.request(manager, "board.get", params)).rejects.toThrow("membership");
+  });
+
+  it("rejects inferred, unknown, gone and forged identities without forwarding", async () => {
+    const { core, transport } = await fixture();
+    const { peer, session } = await hook(core, "board-owner");
+    const manager = await cli(core);
+    transport.calls.length = 0;
+    for (const params of [
+      { topic: "global" }, { session_id: "unknown", topic: "global" },
+      { session_id: session!.handle, topic: "global" }, { session_id: session!.id, topic: "global", body: "write" },
+    ]) await expect(core.request(manager, "board.get", params)).rejects.toThrow();
+    await expect(core.request(peer, "board.get", { session_id: session!.id, topic: "global" })).rejects.toThrow("identity");
+    const record = core.registry.all()[0]!;
+    record.session.state = "gone";
+    core.registry.save(record);
+    await expect(core.request(manager, "board.get", { session_id: session!.id, topic: "global" })).rejects.toThrow("live local session");
+    expect(transport.calls).toEqual([]);
+  });
+
+  it("fails on offline transport and discards a response after lifecycle changes", async () => {
+    const { core, transport } = await fixture();
+    const { session } = await hook(core, "board-owner");
+    const manager = await cli(core);
+    const params = { session_id: session!.id, topic: "global" };
+    transport.afterRequest = async method => {
+      if (method === "board.get") {
+        const record = core.registry.all()[0]!;
+        record.lifecycleEpoch = (record.lifecycleEpoch ?? 0) + 1;
+        core.registry.save(record);
+      }
+    };
+    await expect(core.request(manager, "board.get", params)).rejects.toThrow("session changed");
+    transport.disconnect();
+    await expect(core.request(manager, "board.get", params)).rejects.toBeInstanceOf(OfflineError);
+    expect(core.registry.outbox().length).toBe(0);
+  });
+});
+
 describe("delivery reliability diagnostics and explicit watch", () => {
   it("defers Codex ownership with missing birth without retiring or mutating an existing root", async () => {
     let birth: string | undefined;

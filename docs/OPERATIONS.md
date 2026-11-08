@@ -45,6 +45,22 @@ record on a replaced/truncated file is discarded; a record over 64 KiB is an exp
 error. Only regular files are accepted; symlinks are rejected. Stop it with Ctrl-C.
 Logs and status never require opening the SQLite files.
 
+## Read topic boards
+
+Select an exact live local session ID from `kom status` and a topic it already belongs to:
+
+```bash
+kom board get --session <hub-session-id> --topic kommutator-feedback --key decisions
+kom board list --session <hub-session-id> --topic kommutator-feedback
+```
+
+Both return JSON `{ "entries": [...] }` with current bodies and version metadata, ordered
+by key. A missing key or empty board returns an empty array. Membership is enforced by
+the hub. These commands never infer identity, register, join topics, start a daemon or
+mark messages read. An unavailable daemon/hub or unauthorized selection fails. After
+upgrading an older client/daemon, restart the daemon to load board CLI support.
+`kom board --help` lists the commands; `kom board revert` remains deferred.
+
 ## Dashboard
 
 Open the configured hub URL and authenticate with any username and the hub key as password.

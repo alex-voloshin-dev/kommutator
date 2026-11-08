@@ -1,7 +1,7 @@
 {
-  "version": "0.10.0",
+  "version": "0.11.0",
   "platform": "linux",
   "arch": "x64",
-  "url": "https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.10.0/kommutator-v0.10.0-linux-x64.tar.gz",
-  "sha256": "7854fbc794115c5ed2f0440e9f853d318fba125a2ec7d82641e87421461940bb"
+  "url": "https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.11.0/kommutator-v0.11.0-linux-x64.tar.gz",
+  "sha256": "7c60ecb0541f7dba800fcfc3fcac12d4b42138aa8a4f2217673081be83be998f"
 }
