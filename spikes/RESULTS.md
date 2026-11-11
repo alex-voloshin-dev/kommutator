@@ -670,3 +670,40 @@ cold-hook timing check measured226.86ms; the parallel exact-commit run and a sin
 rerun passed. All latest exact-candidate Release checks and Secret scan runs are green.
 These observations do not establish arbitrary-load latency, real-vendor wake, physical
 subnet access, reboot/logon or day-long reliability. Publication/deployment are separate.
+
+
+## 2026-11-11 — Published 0.12.0 and local Node26 cutover
+
+Release v0.12.0 points to frozen source `f948359aa48281b1994cccbe8556b1169fe82404`.
+The release assets were uploaded unchanged, then anonymously downloaded and matched the
+previously recorded tar/ZIP SHA256 values. Catalogs reached main only after publication.
+
+Native clean-profile installers succeeded with Claude Code2.1.322 and Codex CLI0.167.0.
+The installed launcher MCP probes reported0.12.0 and bundled Node26.13.0; tools/list,
+unconfigured setup_status, private loopback setup form and cross-origin rejection passed.
+These were direct protocol probes of native-installed plugins, not model conversations or
+live wake qualification. Codex warned that helper PATH aliases are unavailable under a
+/tmp CODEX_HOME; plugin installation and its launcher checks still succeeded.
+
+The production updater timer was stopped; the service drained/inactive, kernel lock free,
+and checkpoint idle0.11.0 before publication. A private retained Node26.13.0/pnpm12.18.0
+prefix passed an actual systemd environment check. The old service unit was backed up;
+only its working directory, executable and PATH changed. Explicit cutover selected the
+qualified version and source commit, verified downloaded assets, took both SQLite backups,
+activated the hub and restarted agentd. Both pre-upgrade backups passed PRAGMA quick_check.
+
+Observed after cutover: hub0.12.0 and daemon0.12.0 both run Node26.13.0; runtime contract3;
+hub connection true, health healthy, no reported issues. Production image
+`kommutator-hub:release-0.12.0` has image ID
+`sha256:22931a75502094fc1a7cccb05e1d779ee0e56615de346b9f2fa834581df23510`.
+It was rebuilt from the frozen source and independently smoke-tested before activation.
+The maintainer's existing Codex MCP0.11.0 reconnected with the same hub session ID and a new
+incarnation; this does not claim an in-place client plugin update. The normal updater
+oneshot completed successfully and the timer returned to active/waiting with checkpoint
+idle/applied0.12.0. Existing key, data and single-subnet ingress configuration were preserved.
+
+A real release announcement was persisted to kommutator-feedback as message
+`18026824-705f-4986-89a8-5116632732fc`, status sent, five recipient deliveries initially
+unread. This is live client-to-hub publication evidence, not recipient-read proof.
+No synthetic production messages or sessions were created. The previously listed
+physical-subnet, reboot/logon, endurance, other-platform and native-wake gates remain open.

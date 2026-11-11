@@ -45,3 +45,20 @@ R2 full release:check passed on Node26: 520 workspace tests, 134 script tests, a
 export smoke and synthetic E2E. Candidate catalogs pin tar SHA256
 `a188b13426cdd89cbc773f798555780c059c178f039e48f806f3a69705ef71bf` and Claude ZIP
 `4b0c3aefe3e01b3d0d620273ba4b9a51ec330f3bb671e66fc187e5d8b3e0914e`.
+
+
+## R3–R6 — Qualification, publication and deployment
+
+Completed for frozen candidate `f948359aa48281b1994cccbe8556b1169fe82404`.
+Fresh-checkout qualification, retained artifacts, Docker, actual hook timing, native vendor
+installation and installed-launcher setup checks passed; see dated spikes/RESULTS.md.
+The tag and retained archives were not rebuilt or moved after qualification.
+
+Release0.12.0 is published and the local hub/agentd both run0.12.0 on Node26.13.0, healthy
+and connected. Both pre-upgrade backups passed integrity checks. The normal updater unit
+and timer were verified after constrained cutover. The user feedback-topic announcement
+was sent once; delivery was recorded unread rather than claimed acknowledged.
+
+Source/plugin installation requirements changed; the active maintainer MCP client remains
+compatible0.11.0 until its normal plugin update/restart. No global vendor configuration was
+changed for clean-profile qualification. All previously open live/platform gates remain open.
