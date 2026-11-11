@@ -10,9 +10,10 @@ dependency updates. This branch is based on the reviewed feedback fixes in PR #5
 
 The current change retains Node 24 and matching Node 24 type declarations. It does not
 upgrade the host's global tools, change vendor installations, publish a release or restart
-live hub/daemon processes. A separate runtime-toolchain-refresh plan owns Node 26, pnpm 12 and their rollout.
-That local plan remains in review: the cutover updater needs an enforced expected
-version/commit constraint before the migration can proceed.
+live hub/daemon processes. The approved
+[runtime-toolchain-refresh plan](../runtime-toolchain-refresh/plan.md) owns Node 26, pnpm 12
+and their rollout as a separate phase. It requires implementing an enforced expected
+version/commit constraint before the cutover, with substitution-rejection tests.
 
 ## Implementation checkpoints
 
