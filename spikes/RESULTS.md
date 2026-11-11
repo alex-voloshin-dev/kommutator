@@ -629,3 +629,44 @@ without changing the recipient's delivery rows. No test messages/registrations w
 This verifies CLI observation, not native vendor Monitor. Existing live MCP client code
 remained 0.9.1 until vendor reconnect; installed Claude/Codex plugins are 0.10.0. See
 `docs/sdlc/session-delivery-reliability/deployment.md` for evidence limits and remaining gates.
+
+
+## 2026-11-11 — Node26 frozen candidate qualification
+
+Candidate `f948359aa48281b1994cccbe8556b1169fe82404` (0.12.0), Linux x64 WSL,
+Node26.13.0 / pnpm12.18.0. This evidence-only commit does not move the candidate or rebuild
+its archives. Fresh detached checkout/private HOME passed frozen install, ordered build,
+typecheck and 520 tests, then full release:check (520 tests, 134 script tests, audit, export
+smoke and synthetic cross-vendor E2E). Lockfile remained unchanged.
+
+Retained tar SHA256: `a188b13426cdd89cbc773f798555780c059c178f039e48f806f3a69705ef71bf`.
+Claude ZIP SHA256: `4b0c3aefe3e01b3d0d620273ba4b9a51ec330f3bb671e66fc187e5d8b3e0914e`.
+Both archives passed source-catalog/internal-payload verification, actual retained export
+smoke and E2E. Bundled Node bytes match the separately signature-verified Node distribution.
+Source secret scan was clean; two artifact matches were verified runtime checksum manifests.
+
+Docker candidate manifest-list digest:
+`sha256:00ea3634985fce27566da6f5f58b202c9f0c52c7e7d2895877e29c9901581f10`.
+Observed image Node26.13.0, application0.12.0 and project LICENSE. The existing disposable
+Docker smoke passed 18 checks: non-root/read-only/secret isolation, authenticated HTTP,
+two-host messaging/read receipt, online backup/no overwrite, recreation persistence,
+graceful exit, backup restore, crash restart and malformed/missing key rejection.
+No production container, key, database or LAN settings were changed for these checks.
+
+Actual retained-export fail-open hook timings (milliseconds, Claude/Codex): cold absent
+daemon138.76/122.56; malformed112.90/111.96; verified warm cache without daemon131.52/135.55;
+stalled stdin174.60/180.37. All eight exited0 with empty stdout/stderr under200ms.
+An initial Python polling-wait harness inflated one measurement; blocking EOF/wait with a
+separate watchdog corrected the harness. No runtime deadline/assertion was relaxed.
+
+A disposable systemd timer/worker demonstrated that timer stop leaves an active process
+holding flock, a competing invocation fails75, and Node26 can take the lock only after the
+Node24 worker drains. Initial fixture scheduling exceeded its deadline under systemd's
+normal timer accuracy; explicit100ms fixture accuracy made the intended race deterministic.
+This is generic cutover orchestration evidence, not an actual production update.
+
+An initial local hook-observation test failure passed isolated/full repeats. One GitHub
+cold-hook timing check measured226.86ms; the parallel exact-commit run and a single failed-job
+rerun passed. All latest exact-candidate Release checks and Secret scan runs are green.
+These observations do not establish arbitrary-load latency, real-vendor wake, physical
+subnet access, reboot/logon or day-long reliability. Publication/deployment are separate.
