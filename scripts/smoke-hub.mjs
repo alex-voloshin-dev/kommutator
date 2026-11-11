@@ -181,7 +181,7 @@ function verifyPersisted(data, sender, recipient, messageId) {
 }
 
 try {
-  assert.equal(process.versions.node.split(".")[0], "24", "Use Node 24, as declared in .nvmrc");
+  assert.equal(process.versions.node, "26.13.0", "Use Node 26.13.0, as declared in .nvmrc");
   await access(cli);
   const requireHub = createRequire(join(root, "packages", "hub", "package.json"));
   const WebSocket = requireHub("ws");

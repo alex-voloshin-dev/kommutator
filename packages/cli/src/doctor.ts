@@ -159,7 +159,7 @@ export async function runDoctor(options: DoctorOptions = {}, probes: Probes = {}
     if (platform !== "darwin") return check("path.gui", "unknown", "GUI application PATH inspection is only implemented for macOS.");
     const path = await (probes.guiPath?.() ?? launchdPath(timeoutMs));
     if (!path) return check("path.gui", "unknown", "launchd has no explicit readable PATH; a GUI application's inherited PATH is unknown.", "Verify kom from the target application's launch environment; shell PATH is separate evidence.");
-    return await executableOnPath(path, cwd) ? check("path.gui", "warning", "kom resolves on launchd's explicit PATH; its Node interpreter and the actual GUI app environment remain unverified.", "Ensure Node 24 and kom resolve in the target app environment; restart the app and verify MCP or hook startup.") : check("path.gui", "warning", "kom does not resolve on launchd's explicit PATH; the actual GUI app PATH remains unverified.", "Expose Node 24 and kom to the target application's launch environment and restart that app.");
+    return await executableOnPath(path, cwd) ? check("path.gui", "warning", "kom resolves on launchd's explicit PATH; its Node interpreter and the actual GUI app environment remain unverified.", "Ensure Node 26.13.0 and kom resolve in the target app environment; restart the app and verify MCP or hook startup.") : check("path.gui", "warning", "kom does not resolve on launchd's explicit PATH; the actual GUI app PATH remains unverified.", "Expose Node 26.13.0 and kom to the target application's launch environment and restart that app.");
   });
   const manualHooks = async (id: string, paths: string[], vendor: "claude" | "codex") => {
     const result = await hookWiring(id, paths, vendor);

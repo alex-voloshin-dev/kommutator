@@ -19,7 +19,7 @@ reply routing so lost acknowledgements can replay unchanged.
 
 ## Setup
 
-Prerequisites: Node 24, pnpm 10.34.9, Linux `flock`, git, `gh`, an authenticated Codex CLI with
+Prerequisites: Node 26.13.0, pnpm 12.18.0, Linux `flock`, git, `gh`, an authenticated Codex CLI with
 `exec --approve-for-me`, existing GitHub SSH/gh access, and installed agentic-forge develop/release
 skills. Use the operator's explicitly chosen model and reasoning effort; none is selected by
 this program. This is a trusted engineering service with release credentials, not a sandbox

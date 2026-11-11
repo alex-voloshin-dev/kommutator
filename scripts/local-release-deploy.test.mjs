@@ -1,13 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm, chmod, stat, symlink } from 'node:fs/promises';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { compareVersions, chooseRelease, assetsReady, checksReady, updateOnce, saveCheckpoint, readCheckpoint, loadDeployPolicy, run, validateCompose, validateContainer, deployRelease, normalizeTrackedSource, REPOSITORY } from './lib/local-release-deploy.mjs';
+import { compareVersions, chooseRelease, assetsReady, checksReady, updateOnce, saveCheckpoint, readCheckpoint, loadDeployPolicy, run, validateCompose, validateContainer, deployRelease, normalizeTrackedSource, REPOSITORY, cutoverConstraints } from './lib/local-release-deploy.mjs';
 const sha = 'a'.repeat(40);
+test('actual cutover CLI rejects malformed constraints before creating state or invoking tools', async t => {
+  const home = await temp(t);
+  const entry = fileURLToPath(new URL('./local-release-deploy.mjs', import.meta.url));
+  for (const args of [
+    ['cutover'],
+    ['cutover', '--expected-version', '0.4.0'],
+    ['_cutover', '--expected-commit', sha],
+    ['cutover', '--expected-version', '0.4.0', '--expected-version', '0.4.0'],
+    ['cutover', '--expected-version', '0.4.0', '--commit', sha],
+    ['cutover', '--expected-version', '0.4.0', '--expected-commit', sha, 'extra'],
+    ['run', '--expected-version', '0.4.0', '--expected-commit', sha],
+  ]) {
+    const result = spawnSync(process.execPath, [entry, ...args], { env: { ...process.env, HOME: home, PATH: '/nonexistent' }, encoding: 'utf8', timeout: 5000 });
+    assert.equal(result.error, undefined); assert.equal(result.status, 1);
+    assert.equal(result.stdout, ''); assert.match(result.stderr, /local release update unavailable/);
+    await assert.rejects(stat(join(home, '.local')), { code: 'ENOENT' });
+  }
+});
+test('actual cutover wrapper forwards reversed constraint order through flock to exact release lookup', async t => {
+  const home = await temp(t), bin = join(home, 'bin'), policyDir = join(home, '.config/kommutator-release-deploy');
+  await mkdir(bin); await mkdir(policyDir, { recursive: true, mode: 0o700 });
+  await writeFile(join(policyDir, 'policy.json'), JSON.stringify({ enabled: true, repository: REPOSITORY, authorization: 'deploy-released-hub-and-agentd', baselineVersion: '0.0.0' }), { mode: 0o600 });
+  const marker = join(home, 'lookup.json');
+  await writeFile(join(bin, 'gh'), `#!${process.execPath}\nrequire('node:fs').writeFileSync(${JSON.stringify(marker)},JSON.stringify(process.argv.slice(2)));process.stdout.write('{}');\n`, { mode: 0o700 });
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./local-release-deploy.mjs', import.meta.url)), 'cutover', '--expected-commit', sha, '--expected-version', '0.4.0'], { env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` }, encoding: 'utf8', timeout: 5000 });
+  assert.equal(result.error, undefined); assert.equal(result.status, 1); assert.equal(result.stdout, '');
+  assert.deepEqual(JSON.parse(await readFile(marker, 'utf8')), ['api', `repos/${REPOSITORY}/releases/tags/v0.4.0`]);
+  await assert.rejects(stat(join(home, '.local/state/kommutator-release-deploy/checkpoint.json')), { code: 'ENOENT' });
+});
 const release = { tag_name: 'v0.4.0', draft: false, published_at: '2026-11-01', prerelease: true, assets: ['linux-x64.tar.gz', 'linux-x64.tar.gz.sha256', 'claude-linux-x64.zip', 'claude-linux-x64.zip.sha256'].map(suffix => ({ name: `kommutator-v0.4.0-${suffix}`, size: 1, state: 'uploaded' })) };
 const checks = ['Release checks', 'Secret scan'].map(workflowName => ({ workflowName, databaseId: 1, headSha: sha, status: 'completed', conclusion: 'success' }));
 async function temp(t) { const p = await mkdtemp(join(tmpdir(), 'kom-deploy-test-')); t.after(() => rm(p, { recursive: true, force: true })); return p; }
@@ -66,7 +95,11 @@ test('staged deployment builds before backups/activation, verifies exact version
   const { compose, container } = fixtures(paths), order = [];
   const execute = async (cmd, args, opts) => {
     const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
-    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.34.9' })); }
+    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@12.18.0' })); }
+    if (step === 'runtime-node') return JSON.stringify({ version: '26.13.0', path: process.execPath });
+    if (step === 'runtime-pnpm') return '12.18.0';
+    if (step === 'verify-daemon-node') return process.execPath;
+    if (step === 'verify-hub-node') return '26.13.0';
     if (step === 'commit') return sha;
     if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
     if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
@@ -155,8 +188,12 @@ test('a newer actual service blocks downgrade before image creation or downtime'
     const { compose, container } = fixtures(paths), order = [];
     const execute = async (cmd, args, opts) => {
       const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
-      if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.34.9' })); }
-      if (step === 'commit') return sha;
+      if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@12.18.0' })); }
+      if (step === 'runtime-node') return JSON.stringify({ version: '26.13.0', path: process.execPath });
+    if (step === 'runtime-pnpm') return '12.18.0';
+    if (step === 'verify-daemon-node') return process.execPath;
+    if (step === 'verify-hub-node') return '26.13.0';
+    if (step === 'commit') return sha;
     if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
       if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
       if (step === 'compose') return JSON.stringify(compose);
@@ -214,7 +251,11 @@ test('failed isolated image smoke prevents backups and any live activation', asy
   const { compose, container } = fixtures(paths), order = [];
   const execute = async (cmd, args, opts) => {
     const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
-    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.34.9' })); }
+    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@12.18.0' })); }
+    if (step === 'runtime-node') return JSON.stringify({ version: '26.13.0', path: process.execPath });
+    if (step === 'runtime-pnpm') return '12.18.0';
+    if (step === 'verify-daemon-node') return process.execPath;
+    if (step === 'verify-hub-node') return '26.13.0';
     if (step === 'commit') return sha;
     if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
     if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
@@ -238,4 +279,61 @@ test('failed isolated image smoke prevents backups and any live activation', asy
   await assert.rejects(deployRelease(release, sha, directory, execute, paths), /startup failed/);
   assert.ok(order.indexOf('image') < order.indexOf('smoke-image'));
   for (const forbidden of ['backup-hub', 'activate-hub', 'restart-agentd']) assert.ok(!order.includes(forbidden));
+});
+
+
+test('cutover requires both exact constraints and rejects duplicates, unknown flags and ordinary-run constraints', async t => {
+  assert.deepEqual(cutoverConstraints(['--expected-version', '0.4.0', '--expected-commit', sha]), { version: '0.4.0', commit: sha });
+  for (const args of [[], ['--expected-version', '0.4.0'], ['--expected-version', '0.4.0', '--expected-version', '0.4.0'], ['--expected-version', '0.4.0', '--other', sha], ['--expected-version', 'v0.4.0', '--expected-commit', sha], ['--expected-version', '0.4.0', '--expected-commit', 'main']]) assert.throws(() => cutoverConstraints(args));
+  const state = await temp(t);
+  for (const options of [{ mode: 'cutover' }, { mode: 'cutover', expected: { version: '0.4.0' } }, { expected: { version: '0.4.0', commit: sha } }]) {
+    await assert.rejects(updateOnce({ state, policy: { baselineVersion: '0.3.0' }, execute: async () => assert.fail('must not discover'), ...options }));
+  }
+  await assert.rejects(readFile(join(state, 'checkpoint.json')), { code: 'ENOENT' });
+});
+test('cutover selects only requested published release even when a newer unrelated release exists', async t => {
+  const state = await temp(t); let deployed;
+  const execute = async (command, args) => {
+    if (command === 'gh' && args[0] === 'api') { assert.ok(args[1].endsWith('/releases/tags/v0.4.0')); return JSON.stringify(release); }
+    return discover(command, args);
+  };
+  const result = await updateOnce({ state, policy: { baselineVersion: '0.3.0' }, mode: 'cutover', expected: { version: '0.4.0', commit: sha }, execute,
+    deploy: async (selected, commit, directory, executor, paths, expected) => { deployed = { selected, commit, expected }; return {}; } });
+  assert.equal(deployed.selected.tag_name, 'v0.4.0'); assert.equal(deployed.commit, sha); assert.deepEqual(deployed.expected, { version: '0.4.0', commit: sha });
+  assert.equal(result.status, 'idle'); assert.deepEqual(result.cutover, deployed.expected);
+});
+test('cutover refuses missing, substituted, draft, incomplete, old or wrong-commit candidates before staging', async t => {
+  const parent = await temp(t);
+  const cases = [undefined, { ...release, tag_name: 'v0.5.0' }, { ...release, draft: true }, { ...release, assets: [] }, release];
+  for (let i = 0; i < cases.length; i++) {
+    const state = join(parent, String(i)); await mkdir(state);
+    const execute = async (command, args) => command === 'gh' && args[0] === 'api' ? JSON.stringify(cases[i] ?? null) : command === 'git' ? `${'b'.repeat(40)}\trefs/tags/v0.4.0\n` : JSON.stringify(checks);
+    await assert.rejects(updateOnce({ state, policy: { baselineVersion: '0.3.0' }, mode: 'cutover', expected: { version: '0.4.0', commit: sha }, execute, deploy: async () => assert.fail('must not deploy') }));
+    await assert.rejects(readFile(join(state, 'checkpoint.json')), { code: 'ENOENT' });
+  }
+  const state = join(parent, 'old'); await mkdir(state);
+  await assert.rejects(updateOnce({ state, policy: { baselineVersion: '0.4.0' }, mode: 'cutover', expected: { version: '0.4.0', commit: sha }, execute: async () => JSON.stringify(release), deploy: async () => assert.fail('must not deploy') }));
+});
+test('cutover fails closed when latest checks are incomplete and preserves interrupted-state fencing', async t => {
+  const state = await temp(t), expected = { version: '0.4.0', commit: sha };
+  const execute = async (command, args) => command === 'gh' && args[0] === 'api' ? JSON.stringify(release) : command === 'git' ? `${sha}\trefs/tags/v0.4.0\n` : '[]';
+  await assert.rejects(updateOnce({ state, policy: { baselineVersion: '0.3.0' }, mode: 'cutover', expected, execute, deploy: async () => assert.fail('must not deploy') }), /checks incomplete/);
+  await saveCheckpoint(state, { schema: 1, appliedVersion: '0.3.0', status: 'working', targetVersion: '0.4.0' });
+  assert.equal((await updateOnce({ state, policy: { baselineVersion: '0.3.0' }, mode: 'cutover', expected, execute: async () => assert.fail('must not discover') })).status, 'blocked');
+});
+test('clone moved tag or mismatched actual toolchain cannot reach activation', async t => {
+  for (const failure of ['commit', 'runtime-node', 'runtime-pnpm']) {
+    const directory = await temp(t), seen = [];
+    const execute = async (command, args, options) => {
+      const step = options.log.split('/').at(-1).replace('.log', ''); seen.push(step);
+      if (step === 'clone') { await mkdir(args.at(-1)); await writeFile(join(args.at(-1), 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@12.18.0' })); }
+      if (step === 'commit') return failure === 'commit' ? 'b'.repeat(40) : sha;
+      if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
+      if (step === 'runtime-node') return JSON.stringify({ version: failure === 'runtime-node' ? '24.22.1' : '26.13.0', path: process.execPath });
+      if (step === 'runtime-pnpm') return '10.34.9';
+      return '';
+    };
+    await assert.rejects(deployRelease(release, sha, directory, execute));
+    for (const forbidden of ['install', 'backup-hub', 'activate-hub', 'restart-agentd']) assert.ok(!seen.includes(forbidden));
+  }
 });

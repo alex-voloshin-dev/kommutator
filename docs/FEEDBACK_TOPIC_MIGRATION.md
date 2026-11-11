@@ -10,7 +10,7 @@ with the optional maintainer, using the old spaced topic. Fresh installations us
 It preserves the existing observer mailbox, cursor, host/session identity, pending jobs,
 report IDs and replay keys. Do not edit SQLite rows or erase either state directory.
 
-1. Build the updated checkout with Node 24 and pnpm 10.34.9:
+1. Build the updated checkout with Node 26.13.0 and pnpm 12.18.0:
 
    ```sh
    pnpm install --frozen-lockfile

@@ -6,7 +6,7 @@ Work from the repository root. Read [the current map](docs/ARCHITECTURE.md),
 Executable schemas live in `packages/protocol/src/`; keep all three contracts consistent.
 Historical reviews and handoffs are evidence, not current installation instructions.
 
-Use Node 24 and pnpm 10.34.9. Install with `pnpm install --frozen-lockfile`.
+Use Node 26.13.0 and pnpm 12.18.0. Install with `pnpm install --frozen-lockfile`.
 After implementation run `pnpm -r build`, `pnpm -r typecheck`, `pnpm -r test`, in that order.
 Build first because process tests and workspace imports use `dist/`. For packaging run
 `pnpm release:check`. No lint/format script is configured. See [CONTRIBUTING](CONTRIBUTING.md).

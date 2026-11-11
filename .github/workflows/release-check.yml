@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
-      - run: corepack enable && corepack prepare pnpm@10.34.9 --activate
+          node-version: '26.13.0'
+      - run: npm install --global --prefix "$RUNNER_TEMP/pnpm" --ignore-scripts pnpm@12.18.0
+      - run: echo "$RUNNER_TEMP/pnpm/bin" >> "$GITHUB_PATH"
+      - run: test "$(pnpm --version)" = 12.18.0
       - run: pnpm release:check

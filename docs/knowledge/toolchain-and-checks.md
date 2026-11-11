@@ -6,7 +6,7 @@ tags: ["toolchain", "testing"]
 
 # Toolchain and validation order
 
-Use Node 24 from [.nvmrc](../../.nvmrc) and pnpm 10.34.9 from
+Use Node 26.13.0 from [.nvmrc](../../.nvmrc) and pnpm 12.18.0 from
 [package.json](../../package.json). The [workspace](../../pnpm-workspace.yaml) includes
 packages/*, not spikes. The existing lockfile supports frozen setup.
 
@@ -57,3 +57,8 @@ backpressure and signal exit even with an undrained stdout pipe. Actual Chromium
 nine scenarios; real CLI/hub/daemon processes passed eight diagnostics/outage/recovery
 checks. [Evidence](../sdlc/m1-operability/implementation.md). Full-day real-use acceptance
 is still open; those smoke checks do not replace it.
+
+The runtime refresh pins exact Node types 26.6.6 and approves only esbuild dependency builds
+in pnpm-workspace.yaml. pnpm 12 is native; a private npm prefix installation with
+--ignore-scripts supplies its platform binary without Corepack. Node 26 Linux needs
+libatomic.so.1. Preserve dated baseline observations below. See [[hub-deployment-requirements]].

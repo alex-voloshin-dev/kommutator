@@ -1,4 +1,4 @@
-// SQLite access for the hub. Uses the built-in node:sqlite (Node 24 LTS), no native build.
+// SQLite access for the hub. Uses the built-in node:sqlite (Node 26.13.0 LTS), no native build.
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

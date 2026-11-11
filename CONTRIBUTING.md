@@ -3,11 +3,12 @@
 Start with [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and
 [AGENTS.md](AGENTS.md). No private maintainer plugin or external account is needed.
 
-Use Node 24.11 or newer in the Node 24 line (`.nvmrc`) and pnpm 10.34.9 (`packageManager` in package.json).
+Use Node 26.13.0 (`.nvmrc`) and pnpm 12.18.0 (`packageManager` in package.json).
 From the checkout root:
 
 ```sh
-corepack enable
+npm install --global --prefix "$HOME/.local/kommutator-toolchain" --ignore-scripts pnpm@12.18.0
+export PATH="$HOME/.local/kommutator-toolchain/bin:$PATH"
 pnpm install --frozen-lockfile
 pnpm -r build
 pnpm -r typecheck

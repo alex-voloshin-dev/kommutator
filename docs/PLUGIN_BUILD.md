@@ -4,7 +4,7 @@ This step is for the operator producing client artifacts. End users install from
 GitHub marketplace using the [quickstart](QUICKSTART.md); they do not need the build toolchain.
 The hub-only Docker path also does not need host Node or pnpm.
 
-From the project root, with Node 24.11 or newer in the Node 24 line and pnpm 10.34.9
+From the project root, with Node 26.13.0 and pnpm 12.18.0
 (and Python 3 plus GNU tar for packaging the hosted release):
 
 ```sh
@@ -28,7 +28,7 @@ Public distribution remains an explicit release action; see [release procedure](
 
 By default the current Node executable is used; its adjacent `../LICENSE` is preferred,
 with `/usr/share/doc/nodejs/LICENSE` as the distribution fallback. To build
-another supported target, supply an official extracted Node 24 distribution's binary/license:
+another supported target, supply an official extracted Node 26.13.0 distribution's binary/license:
 `KOM_EXPORT_NODE`, `KOM_EXPORT_NODE_LICENSE`, `KOM_EXPORT_PLATFORM` (`linux` or `darwin`) and
 `KOM_EXPORT_ARCH` (`x64` or `arm64`). Cross-target exports require execution on that target
 before claiming support. These standalone local artifacts contain Node already; they do not download it at startup.
@@ -64,3 +64,6 @@ The root package.json version is the authoritative release version (currently 0.
 a development preview). After a deliberate version bump run `pnpm version:sync`; builds
 and the release gate check derived version consistency. Runtime content hashes and runtime
 compatibility-contract versions are separate identifiers. This does not publish a release.
+
+Linux glibc bundles require libatomic.so.1 (Ubuntu: libatomic1), in addition to the usual
+Node shared libraries. The Alpine hub image supplies its musl runtime independently.

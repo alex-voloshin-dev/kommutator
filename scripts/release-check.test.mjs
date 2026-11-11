@@ -30,7 +30,7 @@ async function fixture(t) {
     await writeFile(join(payload, 'LICENSE'), license);
     await writeFile(join(directory, 'LICENSE'), license);
     const files = await inventory(payload);
-    await writeFile(join(directory, 'runtime/release.json'), JSON.stringify({ version: '1.2.3', platform: 'linux', arch: 'x64', files, id: hash(JSON.stringify(files)) }));
+    await writeFile(join(directory, 'runtime/release.json'), JSON.stringify({ version: '1.2.3', nodeVersion: '26.13.0', format: 2, platform: 'linux', arch: 'x64', files, id: hash(JSON.stringify(files)) }));
     const manifest = join(directory, vendor === 'codex' ? '.codex-plugin' : '.claude-plugin');
     await mkdir(manifest);
     await writeFile(join(manifest, 'plugin.json'), JSON.stringify({ version: '1.2.3' }));

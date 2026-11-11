@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
-if (process.platform !== 'linux' || process.arch !== 'x64' || process.versions.node.split('.')[0] !== '24') throw new Error('Release qualification currently requires Linux x64 and Node 24');
+if (process.platform !== 'linux' || process.arch !== 'x64' || process.versions.node !== '26.13.0') throw new Error('Release qualification currently requires Linux x64 and Node 26.13.0');
 async function run(command, args, env = process.env) {
   console.log(`\nRelease check: ${command} ${args.join(' ')}`);
   const child = spawn(command, args, { cwd: root, env, stdio: 'inherit' });
@@ -22,7 +22,7 @@ try {
   await run('pnpm', ['-r', 'build']);
   await run('pnpm', ['-r', 'typecheck']);
   await run('pnpm', ['-r', 'test']);
-  await run(process.execPath, ['--test', 'scripts/release-check.test.mjs', 'scripts/hub.test.mjs', 'scripts/hosted-plugin.test.mjs', 'scripts/feedback-observer.test.mjs', 'scripts/feedback-observer-process.test.mjs', 'scripts/feedback-maintainer.test.mjs', 'scripts/feedback-topic-migration.test.mjs', 'scripts/test-data-cleanup.test.mjs', 'scripts/local-release-deploy.test.mjs']);
+  await run(process.execPath, ['--test', 'scripts/release-check.test.mjs', 'scripts/hub.test.mjs', 'scripts/hosted-plugin.test.mjs', 'scripts/feedback-observer.test.mjs', 'scripts/feedback-observer-process.test.mjs', 'scripts/feedback-maintainer.test.mjs', 'scripts/feedback-topic-migration.test.mjs', 'scripts/test-data-cleanup.test.mjs', 'scripts/local-release-deploy.test.mjs', 'scripts/release-assets.test.mjs', 'scripts/runtime-bootstrap.test.mjs']);
   const artifact = join(scratch, 'export');
   const env = { ...process.env };
   for (const name of ['KOM_EXPORT_NODE', 'KOM_EXPORT_PLATFORM', 'KOM_EXPORT_ARCH']) delete env[name];
