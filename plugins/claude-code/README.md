@@ -63,7 +63,9 @@ this manual integration). Trust the updated plugin hooks so `SessionStart` can r
 and cannot create one. `setup_status` configuration and daemon compatibility do not prove
 session registration; verify with `whoami` after resuming.
 
-Each invocation has a total process deadline below the 200 ms budget, including stdin.
+Each invocation keeps a 140 ms entrypoint timer, including stdin, and a 90 ms IPC timeout.
+Full-process tests temporarily allow <300 ms while reporting the original 200 ms target
+(see DESIGN §19 and issue #9); this is an observation threshold, not a latency fix.
 Missing daemon: spawn detached and return empty output immediately. Malformed/empty input,
 slow IPC and unavailable hub fail open. Header output is capped by `packHeaders` to five
 headers and 4000 code points; only successfully written headers are acknowledged. If the

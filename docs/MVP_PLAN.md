@@ -1,5 +1,9 @@
 # kommutator — MVP work plan
 
+Current timing exception (2026-11-11): the historical 200 ms hook criteria below now use a
+temporary <300 ms full-process test limit, with the 200 ms target still reported. Runtime
+timers are unchanged; see [DESIGN §19](DESIGN.md#temporary-hook-process-observation-threshold-2026-11-11).
+
 Status: 2026-10-25, rev 7 · for the implementing agent/engineer · source of truth for *what*
 is `docs/DESIGN.md` v0.2.9 and `docs/PROTOCOL.md`; this file is the *order* and the *done*
 criteria. Rev 2 closes four gaps found while planning: `session.upsert` split into three

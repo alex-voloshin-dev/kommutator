@@ -52,7 +52,9 @@ Headers acknowledged by a hook were shown in that tree, not necessarily to the p
 A shared MCP process staying alive without a SessionEnd event cannot prove that a thread
 ended. Switching threads is not an end event.
 
-Hook errors fail open with empty stdout, exit 0, and the existing 200 ms budget. A message
+Hook errors fail open with empty stdout and exit 0. The 140 ms entrypoint timer and 90 ms
+IPC timeout remain unchanged; full-process tests temporarily allow <300 ms while reporting
+the original 200 ms target (DESIGN §19 / issue #9). A message
 header is acknowledged only after its output is flushed. The Stop poll respects DND/FYI,
 hop limits and the one-shot latch. Peer messages never supply user consent.
 

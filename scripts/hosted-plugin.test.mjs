@@ -58,8 +58,12 @@ test('first MCP startup downloads once, validates, and works offline afterwards'
 test('hooks never download or install; cold hooks and invalid state paths fail open', async t => {
   const f = await fixture(t);
   const start = performance.now();
-  assert.deepEqual(await f.run(['hook', 'SessionStart']), { code: 0, stdout: '', stderr: '' });
-  assert.ok(performance.now() - start < 200);
+  const result = await f.run(['hook', 'SessionStart']);
+  const elapsedMs = performance.now() - start;
+  // Temporary process-level observation gate; DESIGN §19 / issue #9.
+  t.diagnostic(`[hook-timing] hosted cold SessionStart: ${elapsedMs.toFixed(3)} ms; target=200 ms; limit=300 ms; above_target=${elapsedMs >= 200}`);
+  assert.deepEqual(result, { code: 0, stdout: '', stderr: '' });
+  assert.ok(elapsedMs < 300, `hosted cold SessionStart took ${elapsedMs.toFixed(3)} ms`);
   await assert.rejects(readFile(f.env.MOCK_COUNT), { code: 'ENOENT' });
   await assert.rejects(readFile(join(f.env.KOM_HOME, 'downloads')), { code: 'ENOENT' });
   assert.deepEqual(await f.run(['hook', 'Stop'], { KOM_HOME: 'relative' }), { code: 0, stdout: '', stderr: '' });

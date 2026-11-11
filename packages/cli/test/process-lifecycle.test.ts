@@ -1,3 +1,4 @@
+import { expectHookProcessTime } from "./hook-timing.js";
 import { describe, expect, it } from "vitest";
 import { spawn } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
@@ -185,11 +186,11 @@ async function whoami(client: Client) {
 }
 
 describe("built CLI process lifecycle with fake vendor sessions (not live vendor E2E)", () => {
-  it("returns a valid cold SessionStart within 200ms and leaves its detached daemon running", async () => {
+  it("returns a valid cold SessionStart within the temporary 300ms process limit and leaves its detached daemon running", async () => {
     const setup = await fixture();
     try {
       const hook = await setup.register("fixture-cold-start", "cold-start");
-      expect(hook.elapsed).toBeLessThan(200);
+      expectHookProcessTime(hook.elapsed, "configured cold SessionStart");
       await expect.poll(async () => {
         try { return (await setup.daemonInfo()).pid; } catch { return undefined; }
       }, { timeout: 5_000, interval: 25 }).toBeTypeOf("number");

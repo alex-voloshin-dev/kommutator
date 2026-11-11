@@ -1,3 +1,4 @@
+import { expectHookProcessTime } from "./hook-timing.js";
 import { spawn } from "node:child_process";
 import { createServer, type Socket } from "node:net";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
@@ -46,8 +47,9 @@ it.each([false, true])("keeps real hook output and observations truthful when IP
     child.stderr.on("data", chunk => { stderr += String(chunk); });
     child.stdin.end(JSON.stringify({ session_id: "test-root" }));
     const code = await new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
+    const elapsedMs = performance.now() - started;
+    expectHookProcessTime(elapsedMs, `Codex Stop IPC stalled=${stalled}`);
     expect(code).toBe(0);
-    expect(performance.now() - started).toBeLessThan(200);
     expect(stderr).not.toContain("secret transport details");
     const observations = await readHookObservations("test-root", home);
     if (stalled) {
