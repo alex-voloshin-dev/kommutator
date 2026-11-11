@@ -1565,3 +1565,59 @@ that `ok` alone does not establish a changed mailbox. A queued daemon response r
 message `id` values from the same session's inbox, not `seq` values or another session's IDs.
 This improves diagnostics and does not establish the cause of the earlier unread replay
 report, which was not reproduced with correct IDs and caller identity.
+
+### Reject malformed destinations before outbox insertion (2026-11-11)
+
+New outbound messages validate every destination with the shared address parser before
+persisting a `message.send` outbox entry, including while offline. MCP performs the same
+syntax check for single and array destinations before calling IPC; agentd also validates
+raw agent and human CLI sends. The hub retains its independent validation and authoritative
+recipient resolution and membership checks. Valid but nonexistent recipients still require
+the hub and are not guessed or rewritten locally.
+
+The outbound schema is separate from `Message`/`StoredMessage`, preserving historical
+records and existing queued payloads. Validation does not normalize the stored payload or
+change idempotency keys. Existing blocked entries are not automatically corrected, resent,
+or removed; operator recovery still requires inspection and a verified backup.
+
+### Retire Claude hook authority before delivery imports (2026-11-11)
+
+Like SessionStart, a plugin SessionEnd captures its process-birth-bound conversation
+and generation before loading delivery code. It writes the existing generation-specific
+end marker first; a delayed import or diagnostic write must not leave that generation
+available to MCP. A stale conversation ID cannot end the current conversation. The
+captured generation is then used for the existing authenticated `session.gone` IPC call;
+reading current authority again after retirement would reject the hook's own end marker.
+A concurrent newer SessionStart remains protected by generation fencing. Local retirement
+and daemon acceptance are separate facts: the marker prevents MCP replay, while hub
+retirement requires daemon processing through the hook notification or the durable-marker
+reconciliation described below.
+The 140 ms entrypoint deadline, 90 ms IPC timeout and fail-open output remain unchanged.
+
+### Reconcile durable hook retirement when notification is interrupted (2026-11-11)
+
+A generation-specific Claude `.ended` marker is also durable local retirement evidence.
+The daemon's optional vendor adapter retirement probe reads only its own private state
+home and the exact PID, process birth and positive owner generation of a known record.
+Missing markers, unreadable metadata, symlinks and nonempty/non-file markers are not retirement evidence. It never infers an
+end from missing authority or from an unavailable socket. The core reconciles these markers
+at startup, on the regular sweep, on status requests and before session listings, and for the exact
+owner before registration can revive a liveness-retired generation. After each asynchronous probe
+it rechecks the record's owner, generation and lifecycle epoch before marking it gone with
+reason `session-end`, using the existing durable outbox and replay keys. This explicit end
+must not be revived by same-generation liveness recovery. An old generation or another
+owner's marker cannot retire the current conversation. No marker is removed by reconciliation.
+When offline the end remains queued; when connected, listings flush it before returning.
+This covers a hook deadline interrupting delivery-module loading or IPC after the marker
+was committed, without replaying the hook or increasing any hook/IPC timeout.
+
+If the exact generation is already liveness-retired, positive durable end evidence upgrades
+its reason to `session-end` without replacing or duplicating its queued gone operation.
+This prevents same-generation liveness recovery from reviving an explicitly ended root.
+
+Status initiates background retirement reconciliation and outbox flushing, returning a
+local diagnostic snapshot without waiting for marker filesystem probes or hub acknowledgements. A stalled hub cannot consume the short daemon
+compatibility-probe budget. Session listings still await their normal flush. Hook diagnostics
+use `retired-locally` when an end marker was committed and IPC rejects its terminal binding;
+this reports local retirement only, not hub delivery. Compatibility and connectivity failures
+retain their own outcomes.

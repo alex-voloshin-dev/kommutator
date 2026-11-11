@@ -34,6 +34,7 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [],
   let root: string | undefined;
   let outcome: HookOutcome = "invalid-input";
   let outputWritten = false;
+  let retiredLocally = false;
   // Diagnostic filesystem latency must not precede conversation authority or delivery.
   // Serialize best-effort writes so a late attempt cannot overwrite the final outcome.
   let observations = Promise.resolve();
@@ -58,10 +59,13 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [],
         else observed = prepared?.observed ?? await saveClaudeRegistration(hookHello(payload));
       }
       if (!vendor) {
-        const active = observed ?? await activeClaudeRegistration(process.ppid, payload.session_id);
+        const active = (event === "SessionEnd" ? prepared?.retired : undefined) ?? observed ?? await activeClaudeRegistration(process.ppid, payload.session_id);
         if (active.hello.vendor_session_id !== payload.session_id) return;
         hello = { ...hello, owner_generation: active.hello.owner_generation };
-        if (event === "SessionEnd") await forgetClaudeRegistration(payload.session_id, process.ppid, active);
+        if (event === "SessionEnd") {
+          if (!prepared?.retired) await forgetClaudeRegistration(payload.session_id, process.ppid, active);
+          retiredLocally = true;
+        }
       }
       if ((await pluginConflicts(process.env.KOM_PLUGIN_PROFILE, payload.cwd)).length) { outcome = "conflict"; return; }
       if (await pluginDaemonStatus(false, 35) !== "compatible") { outcome = "daemon-incompatible"; return; }
@@ -75,6 +79,7 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [],
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
     if (outputWritten) outcome = "output-written-ack-unverified";
+    else if (retiredLocally && code === -32020) outcome = "retired-locally";
     else if (code === -32030) outcome = "hub-unavailable";
     else if (code === "ENOENT" || code === "ECONNREFUSED") outcome = "ipc-unavailable";
     if (code === "ENOENT" || code === "ECONNREFUSED") {

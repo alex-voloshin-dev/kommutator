@@ -143,6 +143,10 @@ it("a running MCP resolves resumed hook identity despite its stale launch ID, th
     const generations = await Promise.all((await readdir(contexts, { withFileTypes: true })).filter(entry => entry.isDirectory()).map(entry => readdir(join(contexts, entry.name))));
     expect(endReply.error, JSON.stringify({ endedIn, generations, reply: endReply.text })).toBe(true);
     const status = await f.call("status");
+    // Local authority retirement and daemon/hub reconciliation are independent outcomes.
+    // The status read reconciles an interrupted notification; never replay SessionEnd here.
+    await expect.poll(() => f.db.prepare("SELECT state FROM sessions WHERE id = ?").get(back.id),
+      { timeout: 1_000 }).toEqual({ state: "gone" });
     expect(status.error, status.text).toBe(false);
     expect(JSON.parse(status.text)).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
     expect((await f.call("whoami")).error).toBe(true);
@@ -229,6 +233,39 @@ it("commits SessionStart authority before a delayed delivery-module import reach
     const next = f.hookEvidence[1] as { authority: Array<{ generation: number; root: string }> };
     expect(next.authority.map(row => row.generation).sort()).toEqual([1, 2]);
     expect((await f.whoami()).id).toBe(session.id);
+  } finally { await f.close(); }
+}, 15_000);
+
+it("retires only the current SessionEnd authority before a delayed delivery import", async () => {
+  const f = await fixture();
+  try {
+    await f.hook("end-after-import");
+    const session = await f.whoami();
+    const preload = join(f.home, "delay-hook-delivery.mjs");
+    const marker = join(f.home, "delivery-import-started");
+    await writeFile(preload, `
+      import { writeFileSync } from "node:fs";
+      import { registerHooks } from "node:module";
+      registerHooks({ load(url, context, nextLoad) {
+        const result = nextLoad(url, context);
+        if (/\\/hooks-[^/]+\\.js$/.test(url)) {
+          writeFileSync(${JSON.stringify(marker)}, "delayed");
+          return { ...result, source: 'await new Promise(resolve => setTimeout(resolve, 500));\\n' + result.source };
+        }
+        return result;
+      } });
+    `);
+    // A late end for another conversation must leave this generation available.
+    expectHookProcessTime(await f.hook("stale-conversation", "SessionEnd", preload), "Stale SessionEnd");
+    expect((await f.whoami()).id).toBe(session.id);
+    expectHookProcessTime(await f.hook("end-after-import", "SessionEnd", preload), "SessionEnd delayed import");
+    expect(await readFile(marker, "utf8")).toBe("delayed");
+    expect((await f.call("whoami")).error).toBe(true);
+    // The import never completed, so no session.gone IPC could have been submitted.
+    // A status read reconciles durable end evidence without replaying the hook.
+    expect((await f.call("status")).error).toBe(false);
+    await expect.poll(() => f.db.prepare("SELECT state FROM sessions WHERE id = ?").get(session.id),
+      { timeout: 1_000 }).toEqual({ state: "gone" });
   } finally { await f.close(); }
 }, 15_000);
 

@@ -1,9 +1,9 @@
 import { RELEASE_VERSION, DaemonStatusParams } from "@kommutator/protocol";
 import { randomUUID, createHash } from "node:crypto";
-import { basename } from "node:path";
+import { basename, dirname, isAbsolute } from "node:path";
 import { stat } from "node:fs/promises";
 import * as z from "zod";
-import { Methods, Notifications, Results, RegisteredSession, Session, Message, PROTOCOL_VERSION, toIdent, type MethodName } from "@kommutator/protocol";
+import { Methods, Notifications, Results, RegisteredSession, Session, Message, OutboundMessage, PROTOCOL_VERSION, toIdent, type MethodName } from "@kommutator/protocol";
 import { claudeAdapter, claudeCapability } from "./adapters/claude.js";
 import { codexAdapter } from "./adapters/codex.js";
 import { genericAdapter } from "./adapters/generic.js";
@@ -72,6 +72,7 @@ export class DaemonCore {
   disconnect(peer: IpcPeer): void { this.peers.delete(peer); }
 
   async start(): Promise<void> {
+    await this.reconcileRetirements();
     for (const record of this.registry.all()) {
       if (record.session.state === "gone") continue;
       const probe = await this.probeLiveness(record);
@@ -156,7 +157,31 @@ export class DaemonCore {
     this.diagnostic("session.gone", record, reason, cause);
   }
 
+  private async reconcileRetirements(matches: (record: LocalRecord) => boolean = () => true): Promise<void> {
+    if (!isAbsolute(this.options.dbPath)) return;
+    const home = dirname(this.options.dbPath);
+    for (const record of this.registry.all()) {
+      if (!matches(record) || (record.session.state === "gone" && record.goneReason !== "liveness")) continue;
+      const adapter = this.adapter(record);
+      if (!adapter.isEnded) continue;
+      let ended = false;
+      try { ended = await adapter.isEnded(record, home); } catch { /* Missing evidence is not an end. */ }
+      if (!ended) continue;
+      const current = this.registry.get(record.key);
+      if (!current || (current.session.state === "gone" && current.goneReason !== "liveness") || current.pid !== record.pid ||
+          current.processStartedAt !== record.processStartedAt || current.ownerGeneration !== record.ownerGeneration ||
+          current.lifecycleEpoch !== record.lifecycleEpoch) continue;
+      if (current.session.state === "gone") {
+        current.goneReason = "session-end";
+        current.lifecycleEpoch = (current.lifecycleEpoch ?? 0) + 1;
+        this.registry.save(current);
+        this.diagnostic("session.gone", current, "session-end", "durable-vendor-end");
+      } else this.markGone(current, "session-end", "durable-vendor-end");
+    }
+  }
+
   async sweep(): Promise<void> {
+    await this.reconcileRetirements();
     for (const record of this.registry.all()) {
       if (record.session.state === "gone") continue;
       const probe = await this.probeLiveness(record);
@@ -191,6 +216,7 @@ export class DaemonCore {
     let existing = this.registry.get(key);
     if (vendor === "claude-code") {
       if (!vendorId || !pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
+      await this.reconcileRetirements(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
       const owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
       const latestGeneration = Math.max(0, ...owned.map(record => record.ownerGeneration ?? 0));
       const generation = hello.owner_generation ?? 0;
@@ -380,6 +406,7 @@ export class DaemonCore {
       const parsed = DaemonStatusParams.safeParse(value);
       if (!parsed.success) throw new RpcError(-32602, "invalid daemon.status parameters");
       if (parsed.data.caller) this.requireCli(peer);
+      void this.reconcileRetirements().then(() => this.flush()).catch(() => this.report("retirement reconciliation failed"));
       return this.statusForCaller(parsed.data.caller);
     }
     if (method === "board.get" && peer.hello.client === "cli") {
@@ -453,10 +480,11 @@ export class DaemonCore {
     }
     if (method === "human.send") {
       this.requireCli(peer);
-      const params = z.object({ message: Message.omit({ from: true }).extend({ from: z.string().optional() }) }).parse(value);
+      const params = z.object({ message: OutboundMessage.omit({ from: true }).extend({ from: z.string().optional() }) }).parse(value);
       const record = await this.register(peer.hello, true);
       return this.send(record, { ...params.message, from: "", force_wake: params.message.origin === "human" && params.message.force_wake });
     }
+    if (method === "session.list") await this.reconcileRetirements();
     const record = this.currentOwner(peer, await this.bind(peer));
     if (method === "whoami") {
       await this.flush();
@@ -486,7 +514,7 @@ export class DaemonCore {
     // Callers cannot choose local identity, authorship, replay keys or lifecycle epochs.
     if ("session_id" in params || "idempotency_key" in params || "op_id" in params || "reg_id" in params) throw new RpcError(-32602, "caller identity and replay keys are assigned by agentd");
     if (method === "message.send") {
-      const message = Message.parse({ ...ObjectParams.parse(params["message"]), from: "" });
+      const message = OutboundMessage.parse({ ...ObjectParams.parse(params["message"]), from: "" });
       if (message.origin !== "agent" || message.force_wake) throw new RpcError(-32602, "agent sessions cannot send human-origin or force-wake messages");
       const result = await this.send(record, message);
       this.currentOwner(peer, record);

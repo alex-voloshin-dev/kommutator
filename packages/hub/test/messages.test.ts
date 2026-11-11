@@ -266,7 +266,11 @@ describe("message routing and inbox", () => {
   });
 
   it("rejects malformed addresses and a caller from the wrong host", () => {
-    expect(() => sendMessage(ctx, peer, params(["not an address"]))).toThrow(RpcFault);
+    const malformed = {
+      session_id: "a", idempotency_key: "invalid-address-key",
+      message: Message.parse({ from: "forged@server", to: ["not an address"], body: "invalid" }),
+    };
+    expect(() => sendMessage(ctx, peer, malformed)).toThrow(RpcFault);
     expect(() => sendMessage(ctx, { host: "server" }, params(["b@laptop"]))).toThrow("session does not belong");
     expect(() => listInbox(ctx, { host: "server" }, Methods["inbox.list"].parse({ session_id: "b" }))).toThrow("session does not belong");
     expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 0 });

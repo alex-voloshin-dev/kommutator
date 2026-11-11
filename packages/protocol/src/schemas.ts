@@ -3,6 +3,7 @@
 
 import * as z from "zod";
 import { Ident } from "./ident.js";
+import { AddressError, parseAddress } from "./address.js";
 
 export const Vendor = z.enum(["claude-code", "codex", "chatgpt-work", "other"]);
 export const SessionState = z.enum(["active", "idle", "gone", "unknown"]);
@@ -75,6 +76,19 @@ export const Message = z.object({
   created_at: z.string().datetime().optional(),
 });
 export type Message = z.infer<typeof Message>;
+
+/** Syntax validation for new sends only; historical message records retain their wire shape. */
+export const SendAddress = z.string().max(300).superRefine((value, ctx) => {
+  if (value.length > 300) return; // Keep the bounded length error; never parse or echo oversized input.
+  try { parseAddress(value); }
+  catch (error) {
+    if (!(error instanceof AddressError)) throw error;
+    ctx.addIssue({ code: "custom", message: "bad address; use topic:<name>, <name>@<host>, @role:<role>, or all" });
+  }
+});
+export const OutboundMessage = Message.extend({
+  to: z.array(SendAddress).min(1).max(LIMITS.recipients),
+});
 
 /** A message as the hub stores and delivers it: id, thread and timestamp are assigned. */
 export const StoredMessage = Message.extend({
@@ -173,7 +187,7 @@ export const Methods = {
   // Topic expansion excludes the sender; explicit self addressing still delivers.
   "message.send": z.object({
     session_id: SessionId,
-    message: Message,
+    message: OutboundMessage,
     /** UUID chosen by agentd; the hub stores it with the message and returns the existing
      *  message on a repeat (DESIGN.md §8). */
     idempotency_key: z.string().min(8).max(64),

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 
 const events = ["SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd"] as const;
-const outcomes = ["attempted", "success", "invalid-input", "identity-unavailable", "conflict", "daemon-incompatible", "hub-unavailable", "ipc-unavailable", "failed", "output-written-ack-unverified"] as const;
+const outcomes = ["attempted", "success", "retired-locally", "invalid-input", "identity-unavailable", "conflict", "daemon-incompatible", "hub-unavailable", "ipc-unavailable", "failed", "output-written-ack-unverified"] as const;
 export type HookOutcome = typeof outcomes[number];
 export interface HookObservation { event: typeof events[number] | "unknown"; outcome: HookOutcome; at: string; root_hash?: string }
 const hash = (root: string) => createHash("sha256").update(root).digest("hex");
