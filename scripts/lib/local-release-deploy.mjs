@@ -182,7 +182,7 @@ export async function deployRelease(release, commit, directory, execute = run, p
   if ((await step('commit', 'git', ['rev-parse', 'HEAD'])).trim() !== commit) throw new Error('release tag moved during preparation');
   await normalizeTrackedSource(clone, await step('source-modes', 'git', ['ls-files', '--stage', '-z']));
   const pkg = JSON.parse(await readFile(join(clone, 'package.json'), 'utf8'));
-  if (pkg.version !== version || pkg.packageManager !== 'pnpm@10.18.0') throw new Error('release source identity mismatch');
+  if (pkg.version !== version || pkg.packageManager !== 'pnpm@10.34.9') throw new Error('release source identity mismatch');
   await step('install', 'pnpm', ['install', '--frozen-lockfile']);
   await step('build', 'pnpm', ['-r', 'build']);
   const cli = join(clone, 'packages/cli/dist/index.js');

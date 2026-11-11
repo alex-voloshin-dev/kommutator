@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@kommutator/protocol": "workspace:*",
-    "ws": "^8.18.0",
+    "ws": "^8.22.2",
     "zod": "^4.6.6"
   },
   "devDependencies": {

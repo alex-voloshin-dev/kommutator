@@ -1,12 +1,12 @@
 ---
-title: Toolchain and validation order
+title: "Toolchain and validation order"
 type: note
-tags: [toolchain, testing]
+tags: ["toolchain", "testing"]
 ---
 
 # Toolchain and validation order
 
-Use Node 24 from [.nvmrc](../../.nvmrc) and pnpm 10.18.0 from
+Use Node 24 from [.nvmrc](../../.nvmrc) and pnpm 10.34.9 from
 [package.json](../../package.json). The [workspace](../../pnpm-workspace.yaml) includes
 packages/*, not spikes. The existing lockfile supports frozen setup.
 

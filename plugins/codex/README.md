@@ -12,7 +12,7 @@ Stop poll. Idle native wake is not enabled; it requires the separate app-server 
 Cloud-orchestrated Work threads and native Windows clients are outside this support scope.
 
 With private hub/key configuration already created using the installation guide, build
-with Node 24 and pnpm 10.18.0. Ensure `kom` and Node resolve in the target app's
+with Node 24 and pnpm 10.34.9. Ensure `kom` and Node resolve in the target app's
 actual launch environment, then opt in:
 
 ```sh

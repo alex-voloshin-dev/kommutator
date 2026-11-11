@@ -3,7 +3,7 @@
 Start with [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md) and
 [AGENTS.md](AGENTS.md). No private maintainer plugin or external account is needed.
 
-Use Node 24.11 or newer in the Node 24 line (`.nvmrc`) and pnpm 10.18.0 (`packageManager` in package.json).
+Use Node 24.11 or newer in the Node 24 line (`.nvmrc`) and pnpm 10.34.9 (`packageManager` in package.json).
 From the checkout root:
 
 ```sh
@@ -20,6 +20,13 @@ The release gate additionally validates fresh Linux x64 artifacts, licenses, che
 clean-PATH smoke and synthetic integration. Other targets need execution on their target OS.
 No lint or formatting script is currently configured. Keep the lockfile synchronized with
 intentional dependency changes; do not substitute another package manager.
+
+Type checking uses TypeScript 7 (`pnpm exec tsc --version`). Declaration bundling with
+`tsup` still requires the JavaScript compiler API: `typescript` is an npm alias for
+`@typescript/typescript6`, while `@typescript/native` aliases TypeScript 7 and supplies
+`tsc`. Keep both aliases when updating the toolchain; removing the compatibility
+package breaks declaration builds. This follows the
+[TypeScript 7 migration guidance](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/).
 
 Make focused changes with behavior tests for changed contracts. Keep documentation in
 English; update DESIGN/PROTOCOL/executable schemas together when behavior changes. Do not
