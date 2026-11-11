@@ -111,3 +111,21 @@ describe("MCP tool surface", () => {
     expect(calls).toHaveLength(1);
   });
 });
+
+
+it.each([
+  { ok: true },
+  { status: "queued", outbox_id: 7, outbox_depth: 1 },
+  { ok: true, counts: { requested: 1, matched: 0, marked_read: 0, already_read: 0, unmatched: 1 } },
+])("preserves acknowledgement compatibility and queued outcomes without inventing counts: %j", async result => {
+  const rpc: RpcClient = { close() {}, async call() { return result; } };
+  const server = createMcpServer(rpc);
+  const client = new Client({ name: "claude-code", version: "test" });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  await server.connect(serverTransport);
+  await client.connect(clientTransport);
+  close.push(() => client.close(), () => server.close());
+  const reply = await client.callTool({ name: "ack", arguments: { ids: ["opaque-message-id"] } });
+  expect(reply.isError).not.toBe(true);
+  expect(reply.content).toEqual([{ type: "text", text: JSON.stringify(result) }]);
+});

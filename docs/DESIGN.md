@@ -147,7 +147,7 @@ agent-bus (MustaphaSteph), muster, codex-session-messenger, AMQ.
 | **hub** | one Docker container on the server (or `kom hub run` anywhere) | Source of truth: sessions, topics, messages, boards. JSON-RPC over WS for daemons; GET + SSE for the dashboard. |
 | **agentd** | one process per host | Holds the key and one WS to the hub. Observes local sessions through vendor adapters, delivers/wakes, queues outbound traffic while the hub is unreachable. |
 | **kom mcp** (shim) | one per agent session (stdio MCP server spawned by the agent) | Exposes the tool surface; forwards every call to agentd over local IPC. ~100 lines. |
-| **kom hook** | invoked by vendor hooks | Register, heartbeat, inject unread headers, Stop-time poll. Fail-open, ≤200 ms. |
+| **kom hook** | invoked by vendor hooks | Register, heartbeat, inject unread headers, Stop-time poll. Fail-open, 200 ms target; temporary <300 ms process-test limit (§19). |
 | **skill** | installed into the agent | Protocol etiquette. |
 | **dashboard** | one static HTML page served by hub | Read-only. |
 
@@ -371,8 +371,9 @@ UTF-16 units, still under Claude Code's 10,000-character cap on `additionalConte
 Headers that did not fit are reported as "+N more unread" and stay `unread`; only the
 headers actually included may be marked `read` (§5). Bodies come from `read(id)`.
 
-**Fail-open:** every hook call has a 200 ms IPC timeout and returns success with empty
-output on any failure. An absent daemon never slows the agent. `SessionEnd` is the tightest
+**Fail-open:** hooks retain a 90 ms IPC timeout and a 140 ms entrypoint timer and return
+success with empty output on failure. The full-process target is 200 ms; the temporary
+process-test limit is 300 ms (see §19). An absent daemon never slows the agent. `SessionEnd` is the tightest
 case — Claude Code gives all `SessionEnd` hooks a shared 1.5 s budget and Codex allows at
 most 3 s — so that hook only writes `session.gone` to the IPC socket and exits.
 
@@ -430,7 +431,7 @@ no forms.
 **Lazy start.** The shim connects to the IPC endpoint; if absent, it spawns
 `kom daemon run` detached and retries with backoff (the shim lives as long as the agent, so
 it can wait). A hook that finds no endpoint spawns the daemon the same way but does **not**
-wait: it returns empty output immediately, within its 200 ms budget, and the next hook or
+wait: it returns empty output immediately, within the temporary 300 ms process-test limit, and the next hook or
 the shim will find the daemon up. Detach with
 `spawn(..., { detached: true, stdio: 'ignore' }).unref()` (new session via `setsid` on
 Unix) so the daemon outlives the agent that started it. Single instance: bind the socket;
@@ -1524,3 +1525,43 @@ environment ID, cwd inference, diagnostic record or later prompt can replace Ses
 Malformed input, incomplete journals and ended generations retain their existing fences.
 This reduces import contention; it does not guarantee registration when OS scheduling or
 filesystem latency exhausts the hook budget before journal publication.
+
+### Temporary hook process observation threshold (2026-11-11)
+
+The maintainer authorized a temporary full-process test limit of **less than 300 ms**
+while observing the intermittent 222–271 ms CI results in
+[issue #9](https://github.com/alex-voloshin-dev/kommutator/issues/9). The original 200 ms
+latency target remains visible. This changes acceptance of measured process duration,
+not runtime behavior: the 140 ms entrypoint timer, 90 ms IPC timeout, empty-output
+fail-open behavior and exit-zero requirements are unchanged. The entrypoint timer starts
+after Node enters JavaScript and cannot cap process startup or parent-side close delivery.
+
+Process tests emit `[hook-timing]` measurements, the 200 ms target, the 300 ms limit and
+`above_target` on every measured run, including passing runs. Inspect these records in CI
+before revisiting the temporary threshold. A run at or above 300 ms still fails; a run
+between 200 and 300 ms remains an observation above target, not evidence of a latency fix.
+The root cause and issue #9 remain open. This temporary process-test policy supersedes the
+200 ms full-process limits in earlier decisions; historical evidence retains its original limits.
+
+### Receipt acknowledgement diagnostics (2026-11-11)
+
+`receipt.mark` retains `ok: true` for an authorized, processed request, including an
+idempotent or unmatched request. It additionally returns `counts` with `requested`,
+`matched`, `marked_read`, `already_read` and `unmatched`, all counting distinct input IDs.
+`matched` includes only deliveries owned by the bound calling session; `already_read`
+counts those already read before this request, and `marked_read` counts unread deliveries
+transitioned by this request. Unknown IDs and IDs belonging only to other recipients are
+indistinguishable `unmatched` entries. No foreign lookup or existence signal is added.
+For `state: unread`, the existing no-op behavior remains: `marked_read` is zero, while the
+other counts describe the current caller's deliveries without reverting any receipt.
+Counts and changes are computed in one transaction; events are emitted only for changed
+receipts after commit. Duplicate IDs never inflate counts or emit duplicate events.
+
+The counts object is optional on the wire for compatibility with older hubs, but upgraded
+hubs always include all its fields. Absent counts are unknown, never inferred as zero or as
+successful matching. Existing clients can keep reading `ok`; newer tool descriptions warn
+that `ok` alone does not establish a changed mailbox. A queued daemon response remains
+`status: queued` without hub counts; it is not a committed acknowledgement. Use complete
+message `id` values from the same session's inbox, not `seq` values or another session's IDs.
+This improves diagnostics and does not establish the cause of the earlier unread replay
+report, which was not reproduced with correct IDs and caller identity.

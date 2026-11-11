@@ -42,7 +42,7 @@ describe("protocol conformance through the production dispatcher", () => {
     expect(inbox.headers).toMatchObject([{ id: sent.id, preview: "Please review", state: "unread", seq: 1 }]);
     expect(Results["message.read"].parse(reviewer.request("message.read", { id: sent.id })))
       .toMatchObject({ message: { body: "Please review\nDetails" }, state: "read" });
-    expect(Results["receipt.mark"].parse(reviewer.request("receipt.mark", { ids: [sent.id], state: "read" }))).toEqual({ ok: true });
+    expect(Results["receipt.mark"].parse(reviewer.request("receipt.mark", { ids: [sent.id], state: "read" }))).toEqual({ ok: true, counts: { requested: 1, matched: 1, marked_read: 0, already_read: 1, unmatched: 0 } });
     expect(Results["inbox.list"].parse(reviewer.request("inbox.list", { unread_only: true })).headers).toEqual([]);
   });
 

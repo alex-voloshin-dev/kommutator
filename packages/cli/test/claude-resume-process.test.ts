@@ -1,3 +1,4 @@
+import { expectHookProcessTime } from "./hook-timing.js";
 import { readHookObservations } from "../src/hook-observations.js";
 import { expect, it } from "vitest";
 import { spawn } from "node:child_process";
@@ -192,9 +193,9 @@ it("publishes resumed authority and ends it even when diagnostic storage never c
       };
       syncBuiltinESMExports();
     `);
-    expect(await f.hook("resumed-b", "SessionStart", preload)).toBeLessThan(200);
+    expectHookProcessTime(await f.hook("resumed-b", "SessionStart", preload), "SessionStart stalled observation");
     expect((await f.whoami()).vendor_session_id).toBe("resumed-b");
-    expect(await f.hook("resumed-b", "SessionEnd", preload)).toBeLessThan(200);
+    expectHookProcessTime(await f.hook("resumed-b", "SessionEnd", preload), "SessionEnd stalled observation");
     expect((await f.call("whoami")).error).toBe(true);
   } finally { await f.close(); }
 }, 15_000);
@@ -216,7 +217,7 @@ it("commits SessionStart authority before a delayed delivery-module import reach
         return result;
       } });
     `);
-    expect(await f.hook("resumed-before-delivery", "SessionStart", preload)).toBeLessThan(200);
+    expectHookProcessTime(await f.hook("resumed-before-delivery", "SessionStart", preload), "SessionStart delayed import");
     expect(await readFile(marker, "utf8")).toBe("delayed");
     const session = await f.whoami();
     expect(session.vendor_session_id).toBe("resumed-before-delivery");

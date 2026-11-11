@@ -1,3 +1,4 @@
+import { expectHookProcessTime } from "./hook-timing.js";
 import { readHookObservations } from "../src/hook-observations.js";
 import { afterEach, describe, expect, it } from "vitest";
 import { spawn } from "node:child_process";
@@ -69,15 +70,15 @@ describe("production entrypoints", () => {
       await new Promise<void>(resolve => daemon.close(() => resolve()));
     }
   });
-  it("empty stdin with no daemon exits silently under the 200ms total budget", async () => {
+  it("empty stdin with no daemon exits silently under the temporary 300ms process limit", async () => {
     const result = await hook("");
     expect(result).toMatchObject({ code: 0, stdout: "" });
-    expect(result.elapsed).toBeLessThan(200);
+    expectHookProcessTime(result.elapsed, "Stop empty stdin");
   });
   it("enforces the same budget even when stdin never ends", async () => {
     const result = await hook(undefined);
     expect(result).toMatchObject({ code: 0, stdout: "" });
-    expect(result.elapsed).toBeLessThan(200);
+    expectHookProcessTime(result.elapsed, "Stop stalled stdin");
   });
   it("malformed JSON exits successfully without output", async () => {
     expect(await hook("{broken")).toMatchObject({ code: 0, stdout: "" });
@@ -85,7 +86,7 @@ describe("production entrypoints", () => {
   it("keeps the Codex hook deadline and fails open on unsupported vendor arguments", async () => {
     const result = await hook(undefined, ["--vendor", "codex"]);
     expect(result).toMatchObject({ code: 0, stdout: "" });
-    expect(result.elapsed).toBeLessThan(200);
+    expectHookProcessTime(result.elapsed, "Codex Stop stalled stdin");
     expect(await hook('{"session_id":"root"}', ["--vendor", "unknown"])).toMatchObject({ code: 0, stdout: "" });
   });
   it("speaks real MCP stdio and lists messaging and private setup tools without starting the daemon", async () => {
@@ -102,7 +103,7 @@ describe("production entrypoints", () => {
 it("records interrupted stdin only as an attempted hook, without output or false success", async () => {
   const result = await hook(undefined);
   expect(result).toMatchObject({ code: 0, stdout: "" });
-  expect(result.elapsed).toBeLessThan(200);
+  expectHookProcessTime(result.elapsed, "Stop interrupted stdin observation");
   const observations = await readHookObservations(undefined, result.home);
   expect(observations).toMatchObject([{ event: "Stop", outcome: "attempted" }]);
 });

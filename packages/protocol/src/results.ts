@@ -1,7 +1,7 @@
 // Result shapes for the methods whose answers clients depend on (DESIGN.md §7).
 import * as z from "zod";
 import { MessageHeader } from "./headers.js";
-import { BoardEntry, MessageId, ReceiptState, Session, SessionId, StoredMessage, TopicName } from "./schemas.js";
+import { BoardEntry, LIMITS, MessageId, ReceiptState, Session, SessionId, StoredMessage, TopicName } from "./schemas.js";
 import { Ident } from "./ident.js";
 
 export const RegisteredSession = Session.extend({ id: SessionId, handle: z.string().min(3).max(127) });
@@ -16,7 +16,13 @@ export const Results = {
   "topic.join": Ok.extend({ created: z.boolean(), joined: z.boolean() }),
   "topic.leave": Ok,
   "topic.list": z.object({ topics: z.array(z.object({ name: TopicName, kind: z.enum(["global", "project", "adhoc"]) })) }),
-  "receipt.mark": Ok,
+  "receipt.mark": Ok.extend({ counts: z.object({
+    requested: z.number().int().nonnegative().max(LIMITS.receiptIds),
+    matched: z.number().int().nonnegative().max(LIMITS.receiptIds),
+    marked_read: z.number().int().nonnegative().max(LIMITS.receiptIds),
+    already_read: z.number().int().nonnegative().max(LIMITS.receiptIds),
+    unmatched: z.number().int().nonnegative().max(LIMITS.receiptIds),
+  }).optional() }),
   "deliveries.resync": z.object({ replayed: z.number().int().nonnegative() }),
   "board.get": z.object({ entries: z.array(BoardEntry) }),
   "board.history": z.object({

@@ -370,14 +370,40 @@ describe("message routing and inbox", () => {
     expect(readMessage(ctx, peer, { session_id: "b", id: first.id })).toEqual({ message: stored(first.id), state: "read" });
     const eventCount = events.length;
     readMessage(ctx, peer, { session_id: "b", id: first.id });
-    expect(markReceipt(ctx, peer, { session_id: "b", ids: [first.id, onlyC.id, "missing"], state: "unread" })).toEqual({ ok: true });
+    expect(markReceipt(ctx, peer, { session_id: "b", ids: [first.id, onlyC.id, "missing"], state: "unread" })).toEqual({ ok: true, counts: { requested: 3, matched: 1, marked_read: 0, already_read: 1, unmatched: 2 } });
     markReceipt(ctx, peer, { session_id: "b", ids: [onlyC.id], state: "read" });
     expect(events).toHaveLength(eventCount);
     expect(inbox().headers[0]?.state).toBe("read");
     expect(inbox("c").headers.map((header) => header.state)).toEqual(["unread", "unread"]);
-    expect(markReceipt(ctx, { host: "server" }, { session_id: "c", ids: [first.id, first.id], state: "read" })).toEqual({ ok: true });
+    expect(markReceipt(ctx, { host: "server" }, { session_id: "c", ids: [first.id, first.id], state: "read" })).toEqual({ ok: true, counts: { requested: 1, matched: 1, marked_read: 1, already_read: 0, unmatched: 0 } });
     expect(inbox("c").headers.map((header) => header.state)).toEqual(["read", "unread"]);
     expect(events.at(-1)).toMatchObject({ type: "delivery.read", data: { session_id: "c", message_id: first.id, state: "read", cause: "ack" } });
+  });
+
+  it("reports distinct receipt matches without revealing other recipients and remains idempotent", () => {
+    const read = sendMessage(ctx, peer, params(["b@laptop"]));
+    const unread = sendMessage(ctx, peer, params(["b@laptop"]));
+    const foreign = sendMessage(ctx, peer, params(["c@server"]));
+    readMessage(ctx, peer, { session_id: "b", id: read.id });
+    const before = events.length;
+    const request = { session_id: "b", ids: [read.id, unread.id, unread.id, foreign.id, "missing"], state: "read" as const };
+    expect(markReceipt(ctx, peer, request)).toEqual({ ok: true, counts: {
+      requested: 4, matched: 2, marked_read: 1, already_read: 1, unmatched: 2,
+    } });
+    expect(events.slice(before)).toMatchObject([{ type: "delivery.read", data: { message_id: unread.id } }]);
+    expect(markReceipt(ctx, peer, request)).toEqual({ ok: true, counts: {
+      requested: 4, matched: 2, marked_read: 0, already_read: 2, unmatched: 2,
+    } });
+    expect(events).toHaveLength(before + 1);
+    expect(inbox("b", { unread_only: true }).headers).toEqual([]);
+    expect(inbox("c", { unread_only: true }).headers.map(header => header.id)).toEqual([foreign.id]);
+    expect(markReceipt(ctx, peer, { session_id: "b", ids: [foreign.id], state: "read" }))
+      .toEqual(markReceipt(ctx, peer, { session_id: "b", ids: ["missing"], state: "read" }));
+    const stillUnread = sendMessage(ctx, peer, params(["b@laptop"]));
+    expect(markReceipt(ctx, peer, { session_id: "b", ids: [stillUnread.id], state: "unread" })).toEqual({ ok: true, counts: {
+      requested: 1, matched: 1, marked_read: 0, already_read: 0, unmatched: 0,
+    } });
+    expect(inbox("b", { unread_only: true }).headers.map(header => header.id)).toEqual([stillUnread.id]);
   });
 
   it("rejects host spoofing for read and receipt changes", () => {
