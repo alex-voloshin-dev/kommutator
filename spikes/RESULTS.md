@@ -670,3 +670,82 @@ cold-hook timing check measured226.86ms; the parallel exact-commit run and a sin
 rerun passed. All latest exact-candidate Release checks and Secret scan runs are green.
 These observations do not establish arbitrary-load latency, real-vendor wake, physical
 subnet access, reboot/logon or day-long reliability. Publication/deployment are separate.
+
+
+## 2026-11-11 — Published 0.12.0 and local Node26 cutover
+
+Release v0.12.0 points to frozen source `f948359aa48281b1994cccbe8556b1169fe82404`.
+The release assets were uploaded unchanged, then anonymously downloaded and matched the
+previously recorded tar/ZIP SHA256 values. Catalogs reached main only after publication.
+
+Native clean-profile installers succeeded with Claude Code2.1.322 and Codex CLI0.167.0.
+The installed launcher MCP probes reported0.12.0 and bundled Node26.13.0; tools/list,
+unconfigured setup_status, private loopback setup form and cross-origin rejection passed.
+These were direct protocol probes of native-installed plugins, not model conversations or
+live wake qualification. Codex warned that helper PATH aliases are unavailable under a
+/tmp CODEX_HOME; plugin installation and its launcher checks still succeeded.
+
+The production updater timer was stopped; the service drained/inactive, kernel lock free,
+and checkpoint idle0.11.0 before publication. A private retained Node26.13.0/pnpm12.18.0
+prefix passed an actual systemd environment check. The old service unit was backed up;
+only its working directory, executable and PATH changed. Explicit cutover selected the
+qualified version and source commit, verified downloaded assets, took both SQLite backups,
+activated the hub and restarted agentd. Both pre-upgrade backups passed PRAGMA quick_check.
+
+Observed after cutover: hub0.12.0 and daemon0.12.0 both run Node26.13.0; runtime contract3;
+hub connection true, health healthy, no reported issues. Production image
+`kommutator-hub:release-0.12.0` has image ID
+`sha256:22931a75502094fc1a7cccb05e1d779ee0e56615de346b9f2fa834581df23510`.
+It was rebuilt from the frozen source and independently smoke-tested before activation.
+The maintainer's existing Codex MCP0.11.0 reconnected with the same hub session ID and a new
+incarnation; this does not claim an in-place client plugin update. The normal updater
+oneshot completed successfully and the timer returned to active/waiting with checkpoint
+idle/applied0.12.0. Existing key, data and single-subnet ingress configuration were preserved.
+
+A real release announcement was persisted to kommutator-feedback as message
+`18026824-705f-4986-89a8-5116632732fc`, status sent, five recipient deliveries initially
+unread. This is live client-to-hub publication evidence, not recipient-read proof.
+No synthetic production messages or sessions were created. The previously listed
+physical-subnet, reboot/logon, endurance, other-platform and native-wake gates remain open.
+
+## 2026-11-11 — 0.12.1 acknowledgement diagnostics publication and local rollout
+
+Frozen source/tag: `c1f63b700249884ac9e22fc604a9bf94500aad5b` / `v0.12.1`.
+Published development preview: https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.12.1 .
+
+- Ordered build/typecheck and 526 workspace tests passed; full release qualification also
+  passed 134 script tests, audit, export integrity, clean-PATH setup/cache smoke and synthetic
+  cross-vendor messaging/lifecycle E2E. Independent correctness/security/external review and
+  QA approved. Exact-candidate CI runs 43089149796, 43089155152 and 43089172954 passed,
+  alongside their Secret scan runs. Source diff scan was clean; two artifact generic-key
+  matches were verified payload SHA-256 manifests, not credentials.
+- Anonymous public downloads matched Linux tar SHA-256
+  `536bfe48bfe6661403c06f4ed9a030d15f5b915b7b10bebfe5bcaac19bf91407`
+  and Claude ZIP SHA-256
+  `a216760ddbfef47a74aa1444af0addfeac8c9a78400e892f1b603ff2b365c801`.
+- Native installation from the public repository passed in separate empty profiles using
+  Claude Code 2.1.322 and Codex CLI 0.167.0. Installed MCP reported 0.12.1 on bundled Node
+  26.13.0; private setup HTTP/origin checks passed. These were installation/protocol probes,
+  not actual vendor model conversations or native-wake acceptance.
+- The authorized local updater applied 0.12.1 to the Docker hub and shared daemon. Final
+  checkpoint was idle/applied 0.12.1; hub container `kommutator-hub:release-0.12.1` was healthy,
+  daemon reported 0.12.1, caller was active, hub connected and outbox empty. Both pre-upgrade
+  SQLite backups passed `PRAGMA quick_check`. The updater timer resumed active/waiting.
+- A live acknowledgement of an already-read feedback message through the existing compatible
+  0.11.0 client returned `requested=1`, `matched=1`, `marked_read=0`, `already_read=1`,
+  `unmatched=0`. No synthetic production messages or receipt modifications were needed.
+- Release/deployment announcement sent to `kommutator-feedback` as message
+  `432fe5e0-95be-400f-8bcd-7adaf9999bad`. Sent is not proof all recipients read it.
+
+The original unread-replay report remains unconfirmed; this release fixes ambiguous ack
+reporting. Hook latency issue #9 remains open under the temporary 300 ms observation gate.
+Physical subnet clients, Windows reboot, day-long reliability, Work desktop/native idle wake
+and other-platform execution remain separate acceptance gates. Runtime backups, toolchains
+and deployed clones remain private and were not committed.
+
+Reporter follow-up (message `9ce00c62-44a3-4b9e-8ff5-84c366322b99`, received
+2026-11-11): the affected live 0.11.0 client successfully acknowledged one complete message
+ID, then the remaining roughly fifty IDs, leaving an empty unread inbox. The earlier failed
+call's exact arguments were lost during context compaction, so its cause remains unknown.
+This is peer-reported live evidence, not an independently repeated vendor test; it supports
+the diagnostic correction without establishing a receipt-persistence defect.
