@@ -721,7 +721,7 @@ paths via `os.homedir()`, IPC via Node `net` (unix socket now, `\\.\pipe\kommuta
 later), detached spawn via `detached: true`, and every hook is `kom hook <event>` — never a
 shell pipeline.
 
-Node **24 LTS**; `node:sqlite` (built in, no native toolchain). Shim bundled to one file for
+Node **26.13.0 LTS**; `node:sqlite` (built in, no native toolchain). Shim bundled to one file for
 fast startup.
 
 ---
@@ -748,7 +748,7 @@ Each package has a `tsup.config.ts`; the ones that import Node builtins set
 prefix by default and esbuild then looks for an npm package called `sqlite`, which breaks
 `node:sqlite` at runtime. The CLI's shebang lives in `src/index.ts` and survives the
 bundle (no `--banner` flag). Deploying the hub for Docker uses `pnpm deploy --legacy`,
-because pnpm 10 otherwise requires injected workspace packages.
+whose production workspace deployment was verified with pnpm 12.18.0; no workspace injection is required.
 
 One npm package (`kommutator`, bin `kom`) is what hosts install; it depends on `@kommutator/agentd`
 and `@kommutator/hub`, so `kom hub run` works anywhere. The Docker image runs the hub package
@@ -756,7 +756,7 @@ directly (`node dist/index.js`) and does not need the CLI.
 
 | Choice | Decision |
 |---|---|
-| Language / runtime | TypeScript, Node 24 LTS |
+| Language / runtime | TypeScript, Node 26.13.0 LTS |
 | Monorepo | pnpm workspaces, `tsup` per package |
 | MCP | `@modelcontextprotocol/sdk` |
 | Hub | `ws` + `node:sqlite`; tiny HTTP for GET + SSE (Node `http` or Fastify) |
@@ -1087,7 +1087,8 @@ Remaining questions:
 ### Plugin distribution and private onboarding (2026-10-28)
 
 The first local plugin artifacts target Claude Code and Codex on Linux/macOS. Each
-platform artifact contains Node 24, production dependencies and their license files;
+initial platform artifact contained Node 24; the current artifact contains Node 26.13.0,
+production dependencies and their license files;
 installation requires no separate `kom`/npm installation and startup performs no downloads.
 The shared runtime is copied with checksum verification into a private, content-addressed
 `~/.kommutator/runtimes/<sha256>` directory, with atomic directory publication. Existing
@@ -1318,6 +1319,28 @@ older pending reports with saved replay keys or an already acknowledged board wr
 replies are not removed. Lost board or terminal-reply acknowledgements retain the original
 replay keys; a lost acknowledgement never launches a second engineering worker. No model
 invocation occurs while the queue is empty.
+
+### Exact runtime cutover (2026-11-11)
+
+The Node 26.13.0 / pnpm 12.18.0 transition uses the explicit local updater `cutover`
+command. It requires both `--expected-version X.Y.Z` and `--expected-commit <40-hex>`;
+missing, duplicate or unknown arguments fail before checkpoint mutation. Ordinary `run`
+retains its highest-qualified-published-release selection and cannot accept cutover flags.
+A cutover fetches only the requested published tag, checks its resolved commit and latest
+successful exact-commit workflows, and refuses substitution by a newer unrelated release.
+The clone must retain that commit and source version. Downloaded Linux tar/Claude ZIP
+assets must match their checksum files and the cloned source catalogs; the tar runtime
+identity must match its source version, exact Node runtime and verified payload hashes.
+These checks, plus actual Node/pnpm executable versions, precede backups or activation.
+
+An unavailable or mismatched candidate does not start a deployment attempt. Once staging
+has begun, a preparation or activation failure leaves the existing blocked checkpoint and
+retained attempt for inspection; no retry, downgrade, schema restore or automatic rollback
+is introduced. An interrupted working checkpoint is still fenced as blocked. Cutover
+constraints are retained with the attempt. Operators quiesce the timer and drain the
+oneshot/lock before replacing the trusted updater runtime, keep them quiescent through
+activation, and resume only after verification or explicit failure reconciliation.
+No wire protocol, database schema, receipt or caller-identity contract changes.
 
 ### Opt-in local released-version deployment (2026-11-02)
 

@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm"],
-  target: "node24",
+  target: "node26",
   clean: true,
   // Bundle schema/workspace imports so cold hooks retain their 200 ms budget.
   external: ["ws"],

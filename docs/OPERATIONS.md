@@ -3,7 +3,7 @@
 For the Docker hub in WSL, LAN setup and WSL2/macOS client launch, start with
 [the deployment runbook](WINDOWS_LAN_SETUP.md). This guide covers the client diagnostics.
 
-Use Node 24 and pnpm 10.34.9. Build from the repository root with `pnpm -r build`.
+Use Node 26.13.0 and pnpm 12.18.0. Build from the repository root with `pnpm -r build`.
 The built executable is `packages/cli/dist/index.js`; expose it as `kom` on the PATH
 inherited by the vendor process. Its `#!/usr/bin/env node` also requires Node on that PATH.
 See the [local setup](../README.md#local-m1-setup) for hub configuration and the

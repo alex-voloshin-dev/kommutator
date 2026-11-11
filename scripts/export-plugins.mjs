@@ -17,7 +17,7 @@ if (!license) throw new Error('Set KOM_EXPORT_NODE_LICENSE to the bundled Node d
 const platform = process.env.KOM_EXPORT_PLATFORM ?? process.platform;
 const arch = process.env.KOM_EXPORT_ARCH ?? process.arch;
 if (!['linux', 'darwin'].includes(platform) || !['x64', 'arm64'].includes(arch)) throw new Error('Unsupported target');
-if (platform === process.platform && arch === process.arch && !execFileSync(node, ['--version'], { encoding: 'utf8' }).startsWith('v24.')) throw new Error('Node 24 required');
+if (platform === process.platform && arch === process.arch && execFileSync(node, ['--version'], { encoding: 'utf8' }).trim() !== 'v26.13.0') throw new Error('Node 26.13.0 required');
 if (out === root || out.startsWith(root + '/packages/') || out.startsWith(root + '/plugins/')) throw new Error('Output must be outside source packages');
 try { await stat(out); throw new Error('Output already exists; choose a fresh directory'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 await mkdir(out, { recursive: true });
@@ -28,7 +28,7 @@ const { createRequire } = await import('node:module');
 const require = createRequire(await realpath(join(root, 'node_modules/tsup/package.json')));
 const { build } = require('esbuild');
 await build({ entryPoints: [join(root, 'packages/cli/src/index.ts')], outdir: join(payload, 'app/dist'),
-  bundle: true, splitting: true, format: 'esm', platform: 'node', target: 'node24',
+  bundle: true, splitting: true, format: 'esm', platform: 'node', target: 'node26',
   external: ['bufferutil', 'utf-8-validate'],
   banner: { js: "import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);" },
 });
@@ -51,7 +51,7 @@ for (const dependency of await readdir(join(root, 'node_modules/.pnpm'))) {
 await cp(join(root, 'LICENSE'), join(payload, 'LICENSE'));
 await cp(node, join(payload, 'node')); await chmod(join(payload, 'node'), 0o755);
 await cp(license, join(payload, 'NODE-LICENSE'));
-await writeFile(join(payload, 'ready'), 'kommutator plugin runtime 1\n');
+await writeFile(join(payload, 'ready'), 'kommutator plugin runtime 2\n');
 async function hashes(directory, prefix = '') {
   const files = {};
   for (const entry of (await readdir(directory, { withFileTypes: true })).sort((a,b) => a.name.localeCompare(b.name))) {
@@ -64,7 +64,7 @@ async function hashes(directory, prefix = '') {
 }
 const files = await hashes(payload);
 const id = createHash('sha256').update(JSON.stringify(files)).digest('hex');
-const release = { version, platform, arch, id, files };
+const release = { version, platform, arch, nodeVersion: '26.13.0', format: 2, id, files };
 const events = ['SessionStart', 'UserPromptSubmit', 'PostToolUse', 'Stop', 'SessionEnd'];
 for (const vendor of ['claude-code', 'codex']) {
   const dest = join(out, 'plugins', vendor);
@@ -85,7 +85,7 @@ for (const vendor of ['claude-code', 'codex']) {
   await mkdir(join(dest, 'hooks'));
   const hooks = Object.fromEntries(events.map(event => [event, [{ hooks: [{ type: 'command', ...(vendor === 'claude-code' ? { command: variable + '/bin/hook', args: [event] } : { command: `exec "${variable}/bin/hook" ${event}` }), timeout: 1 }] }]]));
   await writeFile(join(dest, 'hooks/hooks.json'), JSON.stringify({ hooks }, null, 2));
-  const manifest = { name: 'kommutator', version, description: 'Private local agent messaging; bundled Node 24. Setup with setup_start.', mcpServers: './.mcp.json', ...(vendor === 'codex' ? { hooks: './hooks/hooks.json' } : {}) };
+  const manifest = { name: 'kommutator', version, description: 'Private local agent messaging; bundled Node 26.13.0. Setup with setup_start.', mcpServers: './.mcp.json', ...(vendor === 'codex' ? { hooks: './hooks/hooks.json' } : {}) };
   await mkdir(join(dest, vendor === 'claude-code' ? '.claude-plugin' : '.codex-plugin'));
   await writeFile(join(dest, vendor === 'claude-code' ? '.claude-plugin/plugin.json' : '.codex-plugin/plugin.json'), JSON.stringify(manifest, null, 2));
   await cp(join(root, 'plugins/claude-code/skills'), join(dest, 'skills'), { recursive: true });

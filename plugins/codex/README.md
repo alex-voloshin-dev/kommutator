@@ -2,7 +2,7 @@
 
 For normal installation use the [bundled client guide](../../docs/INSTALL.md).
 This file describes the advanced source/manual alternative. Before running commands below,
-complete its private connection configuration and make Node 24 and `kom` available in the
+complete its private connection configuration and make Node 26.13.0 and `kom` available in the
 actual vendor launch environment. Do not combine manual and bundled hooks.
 
 
@@ -12,7 +12,7 @@ Stop poll. Idle native wake is not enabled; it requires the separate app-server 
 Cloud-orchestrated Work threads and native Windows clients are outside this support scope.
 
 With private hub/key configuration already created using the installation guide, build
-with Node 24 and pnpm 10.34.9. Ensure `kom` and Node resolve in the target app's
+with Node 26.13.0 and pnpm 12.18.0. Ensure `kom` and Node resolve in the target app's
 actual launch environment, then opt in:
 
 ```sh

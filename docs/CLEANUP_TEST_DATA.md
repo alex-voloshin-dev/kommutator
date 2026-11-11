@@ -4,7 +4,7 @@ The dashboard is read-only. Database cleanup is a separate operator task with a 
 backup and an explicit list of reviewed records. It is not automatic retention or prune.
 Do not select everything that is old, ended, or happens to contain the word “test”.
 
-Use Node 24 and the checkout matching the deployed hub. The hub must already have upgraded
+Use Node 26.13.0 and the checkout matching the deployed hub. The hub must already have upgraded
 its database to schema 6. Earlier schemas are refused by this command; dry runs never migrate
 or modify a database. Build before running the test suite with `pnpm test:data-cleanup`.
 

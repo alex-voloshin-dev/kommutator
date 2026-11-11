@@ -4,25 +4,28 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-import { loadDeployPolicy, readCheckpoint, saveCheckpoint, updateOnce, run } from './lib/local-release-deploy.mjs';
+import { loadDeployPolicy, readCheckpoint, saveCheckpoint, updateOnce, run, cutoverConstraints } from './lib/local-release-deploy.mjs';
 
 async function main() {
   process.umask(0o077);
-  if (process.platform !== 'linux' || process.arch !== 'x64' || process.versions.node.split('.')[0] !== '24') throw new Error('Linux x64 Node 24 required');
+  if (process.platform !== 'linux' || process.arch !== 'x64' || process.versions.node !== '26.13.0') throw new Error('Linux x64 Node 26.13.0 required');
   const args = process.argv.slice(2), command = args.shift() ?? 'status';
-  if (!['run', '_run', 'status', 'reconcile', '_reconcile'].includes(command)) throw new Error('invalid command');
+  if (!['run', '_run', 'cutover', '_cutover', 'status', 'reconcile', '_reconcile'].includes(command)) throw new Error('invalid command');
+  const isCutover = command === 'cutover' || command === '_cutover';
+  const expected = isCutover ? cutoverConstraints(args) : undefined;
+  if (['run', '_run', 'status'].includes(command) && args.length) throw new Error('unexpected arguments');
   const state = join(homedir(), '.local/state/kommutator-release-deploy'), path = join(homedir(), '.config/kommutator-release-deploy/policy.json');
   await mkdir(state, { recursive: true, mode: 0o700 });
   const policy = await loadDeployPolicy(path, state);
-  if (command === 'run' || command === 'reconcile') {
+  if (command === 'run' || command === 'cutover' || command === 'reconcile') {
     const child = spawn('flock', ['--nonblock', '--conflict-exit-code', '75', '--no-fork', join(state, 'update.lock'), process.execPath, fileURLToPath(import.meta.url), `_${command}`, ...args], { stdio: 'inherit' });
     for (const signal of ['SIGTERM', 'SIGINT']) process.once(signal, () => child.kill(signal));
     await new Promise((resolve, reject) => { child.once('error', reject); child.once('close', code => { process.exitCode = code ?? 1; resolve(); }); }); return;
   }
-  if (command === '_run') {
+  if (command === '_run' || command === '_cutover') {
     const controller = new AbortController();
     for (const signal of ['SIGTERM', 'SIGINT']) process.once(signal, () => controller.abort());
-    console.log(JSON.stringify(await updateOnce({ policy, state, execute: (cmd, argv, opts) => run(cmd, argv, { ...opts, signal: controller.signal }) }), null, 2)); return;
+    console.log(JSON.stringify(await updateOnce({ policy, state, mode: isCutover ? 'cutover' : 'run', expected, execute: (cmd, argv, opts) => run(cmd, argv, { ...opts, signal: controller.signal }) }), null, 2)); return;
   }
   const checkpoint = await readCheckpoint(state, policy.baselineVersion);
   if (command === '_reconcile') {

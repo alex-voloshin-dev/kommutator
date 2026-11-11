@@ -2,7 +2,7 @@
 
 For normal installation use the [bundled client guide](../../docs/INSTALL.md).
 This file describes the advanced source/manual alternative. Before running commands below,
-complete its private connection configuration and make Node 24 and `kom` available in the
+complete its private connection configuration and make Node 26.13.0 and `kom` available in the
 actual vendor launch environment. Do not combine manual and bundled hooks.
 
 
@@ -14,7 +14,7 @@ see [the work plan](../../docs/MVP_PLAN.md) and [spike results](../../spikes/RES
 
 ## Local setup
 
-Use the project's Node 24 and pnpm 10.34.9 toolchain, build the workspace, and make the built
+Use the project's Node 26.13.0 and pnpm 12.18.0 toolchain, build the workspace, and make the built
 `packages/cli/dist/index.js` available as `kom` on the PATH inherited by Claude. The package
 has not been published. Do not install this plugin into an unrelated coding environment.
 

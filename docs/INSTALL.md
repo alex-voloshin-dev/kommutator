@@ -167,7 +167,7 @@ hook command work; no universal latency guarantee is implied.
 ## Advanced: manual source integration
 
 Build using [CONTRIBUTING](../CONTRIBUTING.md). Put `packages/cli/dist/index.js` on the
-client's actual launch PATH as `kom`, with Node 24 available there (GUI PATH can differ).
+client's actual launch PATH as `kom`, with Node 26.13.0 available there (GUI PATH can differ).
 Before either vendor's manual commands, configure the connection. The following Bash/zsh
 example accepts the key privately with terminal echo disabled, exports it only for `kom init`,
 and clears it afterwards. Never pass `--key` or put a literal secret in shell history.
@@ -190,3 +190,6 @@ Use the real reachable URL for a remote hub. Configuration is stored privately (
 Then follow the manual [Claude](../plugins/claude-code/README.md) or
 [Codex](../plugins/codex/README.md) instructions. This advanced path is an alternative to
 bundled installation, not an additional required step.
+
+Bundled Linux Node 26.13.0 requires libatomic.so.1. On Ubuntu, install the libatomic1
+package if the launcher reports that library missing; the Docker hub supplies it in-image.

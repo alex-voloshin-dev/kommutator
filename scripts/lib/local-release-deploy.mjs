@@ -5,10 +5,26 @@ import { join, sep, dirname, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
+import { verifyReleaseAssets } from './release-assets.mjs';
 import { redact } from './feedback-observer.mjs';
 
 export const REPOSITORY = 'alex-voloshin-dev/kommutator';
 const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+export function cutoverConstraints(args) {
+  if (!Array.isArray(args) || args.length !== 4) throw new Error('cutover requires expected version and commit');
+  const values = {};
+  for (let i = 0; i < args.length; i += 2) {
+    if (!['--expected-version', '--expected-commit'].includes(args[i]) || Object.hasOwn(values, args[i])) throw new Error('invalid cutover arguments');
+    values[args[i]] = args[i + 1];
+  }
+  const expected = { version: values['--expected-version'], commit: values['--expected-commit'] };
+  validateCutover(expected);
+  return expected;
+}
+export function validateCutover(expected) {
+  if (!expected || typeof expected.version !== 'string' || !VERSION.test(expected.version) ||
+      typeof expected.commit !== 'string' || !/^[a-f0-9]{40}$/.test(expected.commit)) throw new Error('cutover requires exact version and commit');
+}
 export function compareVersions(a, b) {
   if (!VERSION.test(a) || !VERSION.test(b)) throw new Error('unsupported release version');
   const left = a.split('.').map(BigInt), right = b.split('.').map(BigInt);
@@ -146,6 +162,8 @@ import {writeFile,readFile} from 'node:fs/promises';
 import {spawn,spawnSync} from 'node:child_process';
 const deadline=setTimeout(()=>process.exit(1),30000);
 const expected=process.argv[1];
+if(process.versions.node!=='26.13.0')throw Error('Image Node mismatch');
+if(!(await readFile('/app/LICENSE','utf8')).includes('MIT License'))throw Error('Project license missing');
 if(JSON.parse(await readFile('/app/package.json','utf8')).version!==expected)throw Error('Image version mismatch');
 const key='isolated-image-smoke-key-not-a-real-credential';
 await writeFile('/tmp/kom-smoke.key',key,{mode:0o600});
@@ -173,7 +191,8 @@ export function imageSmokeArguments(image, version, uid = process.getuid(), gid 
     'node', '--input-type=module', '-e', imageSmoke, version];
 }
 
-export async function deployRelease(release, commit, directory, execute = run, paths = defaultPaths()) {
+export async function deployRelease(release, commit, directory, execute = run, paths = defaultPaths(), expected) {
+  if (expected) { validateCutover(expected); if (release.tag_name !== `v${expected.version}` || commit !== expected.commit) throw new Error('cutover deployment identity mismatch'); }
   const version = release.tag_name.slice(1), clone = join(directory, 'repo');
   const env = { KOM_UID: String(process.getuid()), KOM_GID: String(process.getgid()), KOM_KEY_FILE: paths.key, KOM_DATA_DIR: paths.data, KOM_PUBLISH_HOST: '127.0.0.1', KOM_PUBLISH_PORT: '8787', KOM_HOME: paths.daemon,
     XDG_CACHE_HOME: join(directory, 'cache'), XDG_DATA_HOME: join(directory, 'data') };
@@ -182,7 +201,10 @@ export async function deployRelease(release, commit, directory, execute = run, p
   if ((await step('commit', 'git', ['rev-parse', 'HEAD'])).trim() !== commit) throw new Error('release tag moved during preparation');
   await normalizeTrackedSource(clone, await step('source-modes', 'git', ['ls-files', '--stage', '-z']));
   const pkg = JSON.parse(await readFile(join(clone, 'package.json'), 'utf8'));
-  if (pkg.version !== version || pkg.packageManager !== 'pnpm@10.34.9') throw new Error('release source identity mismatch');
+  if (pkg.version !== version || pkg.packageManager !== 'pnpm@12.18.0') throw new Error('release source identity mismatch');
+  const actualNode = JSON.parse(await step('runtime-node', 'node', ['-p', 'JSON.stringify({version:process.versions.node,path:process.execPath})']));
+  if (actualNode.version !== '26.13.0' || actualNode.path !== process.execPath || (await step('runtime-pnpm', 'pnpm', ['--version'])).trim() !== '12.18.0') throw new Error('deployment toolchain mismatch');
+  const assetIdentity = expected ? await verifyReleaseAssets(clone, directory, version, (command, args) => step('release-assets', command, args)) : undefined;
   await step('install', 'pnpm', ['install', '--frozen-lockfile']);
   await step('build', 'pnpm', ['-r', 'build']);
   const cli = join(clone, 'packages/cli/dist/index.js');
@@ -212,28 +234,38 @@ export async function deployRelease(release, commit, directory, execute = run, p
     await new Promise(resolve => setTimeout(resolve, 500));
   }
   if (status.daemon?.running !== true || status.daemon?.version !== version || !Number.isSafeInteger(status.runtime_contract) || status.runtime_contract <= 0 || !status.hub?.connected || status.health?.state !== 'healthy') throw new Error('new daemon did not become healthy');
+  if (!Number.isSafeInteger(status.daemon.pid) || status.daemon.pid <= 0) throw new Error('invalid daemon PID');
+  const daemonNode = (await step('verify-daemon-node', process.execPath, ['--input-type=module', '-e', 'import {realpath} from "node:fs/promises"; console.log(await realpath("/proc/"+process.argv[1]+"/exe"));', String(status.daemon.pid)])).trim();
+  if (daemonNode !== actualNode.path) throw new Error('daemon Node executable mismatch');
+  if ((await step('verify-hub-node', 'docker', [...compose, 'exec', '-T', 'hub', 'node', '-p', 'process.versions.node'])).trim() !== '26.13.0') throw new Error('hub Node version mismatch');
   const current = (await step('current', 'docker', [...compose, 'ps', '--quiet', 'hub'])).trim();
   const actual = JSON.parse(await step('verify-hub', 'docker', ['inspect', current]))[0]; validateContainer(actual, paths);
   if (actual.State?.Health?.Status !== 'healthy' || actual.Config?.Image !== image) throw new Error('new hub did not become healthy');
-  return { version, commit, image, daemonPid: status.daemon.pid, runtimeContract: status.runtime_contract, directory };
+  return { version, commit, image, nodeVersion: actualNode.version, nodePath: actualNode.path, pnpmVersion: '12.18.0', ...(assetIdentity ? { assets: assetIdentity } : {}), daemonPid: status.daemon.pid, runtimeContract: status.runtime_contract, directory };
 }
-export async function updateOnce({ policy, state, execute = run, deploy = deployRelease }) {
+export async function updateOnce({ policy, state, execute = run, deploy = deployRelease, mode = 'run', expected }) {
+  if (mode === 'cutover') validateCutover(expected);
+  else if (mode !== 'run' || expected !== undefined) throw new Error('invalid deployment mode');
   const checkpoint = await readCheckpoint(state, policy.baselineVersion);
   if (checkpoint.status !== 'idle') {
     if (checkpoint.status === 'working') { checkpoint.status = 'blocked'; checkpoint.error = 'Interrupted update: inspect services and backups before reconciliation.'; await saveCheckpoint(state, checkpoint); }
     return checkpoint;
   }
-  const release = chooseRelease(await discover(execute), checkpoint.appliedVersion);
+  const release = mode === 'cutover'
+    ? JSON.parse(await execute('gh', ['api', `repos/${REPOSITORY}/releases/tags/v${expected.version}`]))
+    : chooseRelease(await discover(execute), checkpoint.appliedVersion);
+  if (mode === 'cutover' && (release?.tag_name !== `v${expected.version}` || release.draft !== false || typeof release.published_at !== 'string' || compareVersions(expected.version, checkpoint.appliedVersion) <= 0 || !assetsReady(release))) throw new Error('exact cutover release unavailable');
   if (!release || !assetsReady(release)) return checkpoint;
   const refs = await execute('git', ['ls-remote', `https://github.com/${REPOSITORY}.git`, `refs/tags/${release.tag_name}`, `refs/tags/${release.tag_name}^{}`]);
   const lines = refs.trim().split('\n'), commit = (lines.find(line => line.endsWith('^{}')) ?? lines[0])?.split(/\s/)[0];
+  if (mode === 'cutover' && commit !== expected.commit) throw new Error('cutover release commit mismatch');
   if (!/^[a-f0-9]{40}$/.test(commit)) throw new Error('invalid release commit');
   const runs = JSON.parse(await execute('gh', ['run', 'list', '--repo', REPOSITORY, '--commit', commit, '--limit', '100', '--json', 'databaseId,workflowName,headSha,status,conclusion']));
-  if (!checksReady(runs, commit)) return checkpoint;
+  if (!checksReady(runs, commit)) { if (mode === 'cutover') throw new Error('cutover release checks incomplete'); return checkpoint; }
   const directory = join(state, 'attempts', `${release.tag_name}-${randomUUID()}`); await mkdir(directory, { recursive: true, mode: 0o700 });
-  Object.assign(checkpoint, { status: 'working', targetVersion: release.tag_name.slice(1), commit, directory }); await saveCheckpoint(state, checkpoint);
+  Object.assign(checkpoint, { status: 'working', targetVersion: release.tag_name.slice(1), commit, directory, ...(expected ? { cutover: expected } : {}) }); await saveCheckpoint(state, checkpoint);
   try {
-    checkpoint.result = await deploy(release, commit, directory, execute); checkpoint.appliedVersion = checkpoint.targetVersion; checkpoint.status = 'idle'; delete checkpoint.error;
+    checkpoint.result = await deploy(release, commit, directory, execute, undefined, expected); checkpoint.appliedVersion = checkpoint.targetVersion; checkpoint.status = 'idle'; delete checkpoint.error;
   } catch { checkpoint.status = 'blocked'; checkpoint.error = 'Update failed; inspect private attempt logs and current services. No automatic retry or rollback.'; }
   await saveCheckpoint(state, checkpoint); return checkpoint;
 }

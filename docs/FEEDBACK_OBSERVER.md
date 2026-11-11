@@ -13,7 +13,7 @@ Model use consumes your existing Codex allowance. Default limits are one worker,
 
 ## Install
 
-Use Node 24, pnpm 10.34.9, Linux `flock`, and a Codex CLI with an existing local login.
+Use Node 26.13.0, pnpm 12.18.0, Linux `flock`, and a Codex CLI with an existing local login.
 The tool-disabled invocation was qualified against Codex 0.164.0; recheck its tool menu before
 upgrading that binary. Codex 0.164.0 can emit an error-item advisory stating that Code Mode
 is unavailable because its host is disabled and will fail closed. The observer accepts only

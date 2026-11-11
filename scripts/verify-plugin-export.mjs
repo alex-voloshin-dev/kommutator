@@ -29,6 +29,8 @@ export async function verifyExport(artifact, version, license) {
     const directory = join(artifact, 'plugins', vendor);
     const release = JSON.parse(await readFile(join(directory, 'runtime/release.json'), 'utf8'));
     assert.equal(release.version, version, 'Release version differs');
+    assert.equal(release.nodeVersion, '26.13.0', 'Runtime Node version differs');
+    assert.equal(release.format, 2, 'Runtime format differs');
     assert.equal(release.platform, 'linux'); assert.equal(release.arch, 'x64');
     const payload = join(directory, 'runtime/payload');
     const files = await filesAt(payload);
