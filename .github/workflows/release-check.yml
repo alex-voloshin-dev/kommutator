@@ -14,5 +14,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: corepack enable && corepack prepare pnpm@10.18.0 --activate
+      - run: corepack enable && corepack prepare pnpm@10.34.9 --activate
       - run: pnpm release:check

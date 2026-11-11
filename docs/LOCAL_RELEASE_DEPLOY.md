@@ -8,7 +8,7 @@ key, database and `~/.kommutator` state. It does not change vendor installations
 This is disabled by default. The operator must explicitly authorize local service restarts;
 a feedback message or release alone cannot grant that permission. Prereleases marked in
 GitHub are included when their tag is numeric `vMAJOR.MINOR.PATCH`. Semver suffix tags are
-not supported. Node 24, pnpm 10.18.0, gh authentication, git, flock, Docker Compose and access
+not supported. Node 24, pnpm 10.34.9, gh authentication, git, flock, Docker Compose and access
 to the local Docker socket are required. Docker access is a powerful host permission.
 
 Create `~/.config/kommutator-release-deploy` with mode 0700 and `policy.json` with mode 0600:
@@ -37,6 +37,35 @@ systemctl --user daemon-reload
 systemctl --user enable --now kommutator-release-deploy.timer
 node scripts/local-release-deploy.mjs status
 ```
+
+## Transition from the pnpm 10.18.0 updater
+
+Before publishing the first release that requires pnpm 10.34.9, refresh any installed
+updater from a reviewed, trusted checkout containing the new source-validation gate.
+The old updater requires `packageManager: pnpm@10.18.0`; installing a newer pnpm binary
+alone does not update that gate and the new release would leave its attempt blocked.
+
+1. Stop the timer with `systemctl --user stop kommutator-release-deploy.timer` to prevent
+   another scheduled attempt. Inspect `systemctl --user status kommutator-release-deploy.service`
+   and allow an active oneshot to finish before changing its checkout or toolchain. Do not
+   kill it just to upgrade the updater. Confirm that the private state's `update.lock` is
+   free, including any manually started updater, and prevent concurrent manual runs during
+   this maintenance window. Stopping the timer alone does not drain an active service.
+2. Inspect the updater's status, retained attempt logs and actual running service versions.
+   Preserve the checkpoint and backups. If an earlier attempt is `working` or `blocked`,
+   investigate and reconcile it using the procedure below; do not erase state to bypass
+   the block or accept an unverified deployment.
+3. Point the service's `WorkingDirectory` and `ExecStart` at the reviewed updater checkout
+   and explicit Node 24 executable, then run `systemctl --user daemon-reload`. Install or
+   provide pnpm 10.34.9 through the service's existing PATH. Check `pnpm --version` and
+   executable resolution using the service's configured user, PATH and working directory;
+   an interactive shell's pnpm version is not sufficient. Keep the service's existing
+   permissions and access restrictions.
+4. Preserve the old checkout and retained release clones while any running daemon uses
+   their code or dependencies. Verify the new updater's status and source gate, then
+   restart the timer with `systemctl --user start kommutator-release-deploy.timer` only
+   after the checkpoint is reconciled and the toolchain checks pass. Publishing and
+   authorizing the subsequent service deployment remain separate operator actions.
 
 The timer checks every five minutes while the user's systemd manager and WSL are running.
 It waits for uploaded Linux assets and successful latest exact-commit Release checks and

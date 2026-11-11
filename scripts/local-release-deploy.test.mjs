@@ -66,7 +66,7 @@ test('staged deployment builds before backups/activation, verifies exact version
   const { compose, container } = fixtures(paths), order = [];
   const execute = async (cmd, args, opts) => {
     const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
-    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.18.0' })); }
+    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.34.9' })); }
     if (step === 'commit') return sha;
     if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
     if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
@@ -155,7 +155,7 @@ test('a newer actual service blocks downgrade before image creation or downtime'
     const { compose, container } = fixtures(paths), order = [];
     const execute = async (cmd, args, opts) => {
       const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
-      if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.18.0' })); }
+      if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.34.9' })); }
       if (step === 'commit') return sha;
     if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
       if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });
@@ -214,7 +214,7 @@ test('failed isolated image smoke prevents backups and any live activation', asy
   const { compose, container } = fixtures(paths), order = [];
   const execute = async (cmd, args, opts) => {
     const step = opts.log.split('/').pop().replace('.log', ''); order.push(step);
-    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.18.0' })); }
+    if (step === 'clone') { const clone = args.at(-1); await mkdir(clone); await writeFile(join(clone, 'package.json'), JSON.stringify({ version: '0.4.0', packageManager: 'pnpm@10.34.9' })); }
     if (step === 'commit') return sha;
     if (step === 'source-modes') return `100644 ${sha} 0\tpackage.json\0`;
     if (step === 'protocol') return JSON.stringify({ version: '0.4.0' });

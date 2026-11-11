@@ -14,7 +14,7 @@ see [the work plan](../../docs/MVP_PLAN.md) and [spike results](../../spikes/RES
 
 ## Local setup
 
-Use the project's Node 24 and pnpm 10.18.0 toolchain, build the workspace, and make the built
+Use the project's Node 24 and pnpm 10.34.9 toolchain, build the workspace, and make the built
 `packages/cli/dist/index.js` available as `kom` on the PATH inherited by Claude. The package
 has not been published. Do not install this plugin into an unrelated coding environment.
 

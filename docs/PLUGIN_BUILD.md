@@ -4,7 +4,7 @@ This step is for the operator producing client artifacts. End users install from
 GitHub marketplace using the [quickstart](QUICKSTART.md); they do not need the build toolchain.
 The hub-only Docker path also does not need host Node or pnpm.
 
-From the project root, with Node 24.11 or newer in the Node 24 line and pnpm 10.18.0
+From the project root, with Node 24.11 or newer in the Node 24 line and pnpm 10.34.9
 (and Python 3 plus GNU tar for packaging the hosted release):
 
 ```sh

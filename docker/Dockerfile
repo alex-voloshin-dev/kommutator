@@ -1,6 +1,6 @@
 # Build from the repository root; Dockerfile.dockerignore excludes local runtime data.
 FROM node:24-alpine AS build
-RUN corepack enable && corepack prepare pnpm@10.18.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.34.9 --activate
 WORKDIR /src
 COPY . .
 # pnpm 10 legacy deploy copies the built workspace dependency without injection.
