@@ -707,3 +707,38 @@ A real release announcement was persisted to kommutator-feedback as message
 unread. This is live client-to-hub publication evidence, not recipient-read proof.
 No synthetic production messages or sessions were created. The previously listed
 physical-subnet, reboot/logon, endurance, other-platform and native-wake gates remain open.
+
+## 2026-11-11 — 0.12.1 acknowledgement diagnostics publication and local rollout
+
+Frozen source/tag: `c1f63b700249884ac9e22fc604a9bf94500aad5b` / `v0.12.1`.
+Published development preview: https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.12.1 .
+
+- Ordered build/typecheck and 526 workspace tests passed; full release qualification also
+  passed 134 script tests, audit, export integrity, clean-PATH setup/cache smoke and synthetic
+  cross-vendor messaging/lifecycle E2E. Independent correctness/security/external review and
+  QA approved. Exact-candidate CI runs 43089149796, 43089155152 and 43089172954 passed,
+  alongside their Secret scan runs. Source diff scan was clean; two artifact generic-key
+  matches were verified payload SHA-256 manifests, not credentials.
+- Anonymous public downloads matched Linux tar SHA-256
+  `536bfe48bfe6661403c06f4ed9a030d15f5b915b7b10bebfe5bcaac19bf91407`
+  and Claude ZIP SHA-256
+  `a216760ddbfef47a74aa1444af0addfeac8c9a78400e892f1b603ff2b365c801`.
+- Native installation from the public repository passed in separate empty profiles using
+  Claude Code 2.1.322 and Codex CLI 0.167.0. Installed MCP reported 0.12.1 on bundled Node
+  26.13.0; private setup HTTP/origin checks passed. These were installation/protocol probes,
+  not actual vendor model conversations or native-wake acceptance.
+- The authorized local updater applied 0.12.1 to the Docker hub and shared daemon. Final
+  checkpoint was idle/applied 0.12.1; hub container `kommutator-hub:release-0.12.1` was healthy,
+  daemon reported 0.12.1, caller was active, hub connected and outbox empty. Both pre-upgrade
+  SQLite backups passed `PRAGMA quick_check`. The updater timer resumed active/waiting.
+- A live acknowledgement of an already-read feedback message through the existing compatible
+  0.11.0 client returned `requested=1`, `matched=1`, `marked_read=0`, `already_read=1`,
+  `unmatched=0`. No synthetic production messages or receipt modifications were needed.
+- Release/deployment announcement sent to `kommutator-feedback` as message
+  `432fe5e0-95be-400f-8bcd-7adaf9999bad`. Sent is not proof all recipients read it.
+
+The original unread-replay report remains unconfirmed; this release fixes ambiguous ack
+reporting. Hook latency issue #9 remains open under the temporary 300 ms observation gate.
+Physical subnet clients, Windows reboot, day-long reliability, Work desktop/native idle wake
+and other-platform execution remain separate acceptance gates. Runtime backups, toolchains
+and deployed clones remain private and were not committed.
