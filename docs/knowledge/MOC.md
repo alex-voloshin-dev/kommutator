@@ -15,3 +15,4 @@ The map-of-content for this project's knowledge vault. Link notes here under the
 - [[feedback-maintenance-mandate|Local feedback maintenance mandate]]
 - [[toolchain-and-checks|Toolchain and validation order]]
 - [[hub-deployment-requirements|Hub deployment requirements]]
+- [[autonomous-kommutator-maintenance|Autonomous Kommutator maintenance]]

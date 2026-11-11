@@ -83,23 +83,32 @@ export function markReceipt(
   ctx: HubContext,
   peer: HubPeer,
   params: z.output<(typeof Methods)["receipt.mark"]>,
-): { ok: true } {
-  const changed = transaction(ctx, () => {
+): z.output<(typeof Results)["receipt.mark"]> {
+  const committed = transaction(ctx, () => {
     requireSession(ctx, peer, params.session_id);
-    if (params.state !== "read") return [];
-    const ids: string[] = [];
+    const uniqueIds = new Set(params.ids);
+    const counts = { requested: uniqueIds.size, matched: 0, marked_read: 0, already_read: 0, unmatched: 0 };
+    const changed: string[] = [];
+    const lookup = ctx.db.prepare("SELECT state FROM deliveries WHERE message_id = ? AND session_id = ?");
     const update = ctx.db.prepare(`UPDATE deliveries SET state = 'read', updated_at = ?
       WHERE message_id = ? AND session_id = ? AND state = 'unread'`);
     const now = ctx.now();
-    for (const id of new Set(params.ids)) {
-      if (update.run(now, id, params.session_id).changes > 0) ids.push(id);
+    for (const id of uniqueIds) {
+      const delivery = lookup.get(id, params.session_id) as { state: "unread" | "read" } | undefined;
+      if (!delivery) { counts.unmatched++; continue; }
+      counts.matched++;
+      if (delivery.state === "read") counts.already_read++;
+      else if (params.state === "read" && update.run(now, id, params.session_id).changes > 0) {
+        counts.marked_read++;
+        changed.push(id);
+      }
     }
-    return ids;
+    return { changed, result: Results["receipt.mark"].parse({ ok: true, counts }) };
   });
-  for (const id of changed) {
+  for (const id of committed.changed) {
     ctx.events.publish("delivery.read", { session_id: params.session_id, message_id: id, state: "read", cause: "ack" });
   }
-  return { ok: true };
+  return committed.result;
 }
 
 export function resyncDeliveries(
