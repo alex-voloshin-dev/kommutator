@@ -766,3 +766,42 @@ row using all stored fields as conditions under BEGIN IMMEDIATE. No message was 
 no hub receipt changed. Final status: active caller, connected hub, healthy, outbox depth 0.
 Private backup/state were not added to source. This evidence authorizes no automatic cleanup
 of other queues or uncertain deliveries.
+
+### 2026-11-11 — 0.12.2 publication and verified local rollout
+
+Published immutable development-preview tag `v0.12.2` at
+`87ad0cd3e05bcfc626a46d2013a688018d3d7f04`; PR #14 merged as `a21b978`.
+Final local qualification passed 552 workspace tests, 134 script tests, export verification,
+clean-PATH installation/setup smoke and synthetic cross-vendor lifecycle E2E. All 12 local
+hook observations were 115.193–182.817 ms. Exact-commit branch, PR and tag Release checks and
+Secret scan runs passed. Earlier failed qualification observations and subsequent fixes are
+retained in `docs/sdlc/outbox-address-validation/review-change-1.md`; no timeout was relaxed.
+
+Anonymous downloads matched both published sidecars and pinned catalog hashes:
+- Linux tar: `a9ace9c5a9c4eebe6add69aa0f41c271a306b1bc8717f2b1f0bc9f9a0e7d202f`.
+- Claude ZIP: `56818f84c8c3f9bceff29629034eaf987e25cbd2e1486bf5a6dec1b4bfe7155b`.
+
+Actual Claude 2.1.322 and Codex 0.167.0 CLIs installed the public GitHub marketplace/plugin
+into separate clean homes. Both installed MCP servers reported 0.12.2 with bundled Node
+26.13.0; private loopback setup returned HTTP 200 and rejected a foreign Origin with 403.
+These are installed-process probes, not real model conversations or native idle-wake proof.
+
+The local updater built and smoke-tested the release image, backed up both databases and
+activated Docker hub 0.12.2. Its daemon restart then received `ECONNRESET`; the old process
+had exited and its socket was absent. The updater correctly blocked without automatic retry.
+A manual start from the same verified retained release checkout launched daemon 0.12.2.
+Actual executable/command, hub package version and Node 26.13.0 were checked. Current MCP
+status then showed an active caller, healthy connected hub and outbox depth 0. Both private
+backups had mode 0600 and passed SQLite `quick_check`. Only after those checks was the
+attempt reconciled as accepted; checkpoint is idle/appliedVersion 0.12.2 and timer resumed.
+The checkpoint's previous automated result remains historical; the acceptance note records
+this manual completion. Issue #15 tracks the shutdown-reset restart transition separately.
+
+The current chat MCP process remains compatible 0.12.1 (contract 3); it was not silently
+replaced. The `kommutator-developer` role and canonical `kommutator-feedback` and
+`agentic-forge-feedback` subscriptions were verified after daemon restart. Announcement
+`6690e3d6-99f3-483b-8993-f1f5adf3d9fa` was sent to `kommutator-feedback`; queued recipient
+receipts were not claimed as reads. Issue #13 is closed by the qualified retirement recovery;
+issue #9 retains the temporary 300 ms process cap and 200 ms target. Original unread replay
+causality remains unconfirmed. Physical-subnet, Windows reboot, day-long reliability,
+ChatGPT Work/native idle wake and other-platform gates remain open.
