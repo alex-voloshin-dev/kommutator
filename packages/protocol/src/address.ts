@@ -39,7 +39,7 @@ export function parseAddress(raw: string): Address {
     return { kind: "session", name, host };
   }
 
-  throw new AddressError(raw, "unrecognized address");
+  throw new AddressError(raw, "unrecognized address; use topic:<name>, <name>@<host>, @role:<role>, or all");
 }
 
 export function formatAddress(a: Address): string {

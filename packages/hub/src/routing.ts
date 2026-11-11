@@ -170,7 +170,7 @@ export function sendMessage(
       parent = ctx.db.prepare(`SELECT m.* FROM messages m WHERE m.id = ? AND
         (m.from_session = ? OR EXISTS (SELECT 1 FROM deliveries d WHERE d.message_id = m.id AND d.session_id = ?))`)
         .get(params.message.reply_to, sender.id, sender.id) as MessageRow | undefined;
-      if (!parent) throw new RpcFault(errors.notFound, "reply parent is not accessible");
+      if (!parent) throw new RpcFault(errors.notFound, "reply parent is not accessible; use the full message ID returned by inbox or read (prefixes are not supported)");
     }
     const recipients = resolveRecipients(ctx, sender, targets);
     if (parent && targets.some(target => target.kind === "session" && formatAddress(target) === parent.from_handle)

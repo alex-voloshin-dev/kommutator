@@ -601,15 +601,22 @@ shim process; pull only.
 | Tool | Args | Returns |
 |---|---|---|
 | `whoami` | — | handle, host, project, topics, capability, wake |
-| `list_sessions` | `topic?`, `role?`, `state?` | sessions with status lines |
+| `list_sessions` | `topic?`, `role?`, `state?`, `compact?` | sessions with status lines; compact retains identity/state/status fields |
 | `send` | `to`, `body`, `subject?`, `kind?` (`dm`\|`topic`\|`request`), `priority?`, `reply_to?` | id, per-recipient state |
-| `inbox` | `since_seq?`, `unread_only?` | headers + cursor |
+| `inbox` | `since_seq?`, `unread_only?`, `limit?`, `preview?` | headers + cursor; `preview: false` omits preview text |
 | `read` | `id` | full message (marks read) |
 | `ack` | `ids[]` | |
 | `join_topic` / `leave_topic` / `list_topics` | `name` | |
 | `board_get` / `board_put` / `board_history` | §4 | |
 | `set_status` | `status_line`, `role?`, `name?`, `wake?` | |
-| `status` | — | daemon + hub health |
+| `status` | `detailed?` | daemon + hub/caller health, session counts, outbox summary; detailed adds full lists |
+
+MCP `board_put` omits the echoed entry body by default; `include_body: true` returns the
+full entry. Version, author, protection metadata and replay evidence remain present.
+These presentation controls are removed before RPC and do not change hub result schemas,
+authorization, storage or receipts. `list_sessions` remains full by default. `status` retains
+caller recovery, health issues, hook observations and last errors in summary mode;
+`detailed: true` returns the original diagnostic payload.
 
 Tool descriptions carry the etiquette: "use `kind: request` when you need an answer",
 "never reply to a pure acknowledgement". `set_status` and `whoami` map to `session.upsert`,
@@ -1467,3 +1474,30 @@ resolved recipient to still be the parent's stable author session. A renamed or 
 fails closed rather than redirecting private triage to a different session. Observer transport
 failures retain the pending job and replay key; they never fall back to the topic. Replays of
 already committed replies return their original result before resolving current handles.
+
+### Feedback exclusion diagnostics (2026-11-11)
+
+Observer exclusions retain a bounded reason (`self`, `other-topic`, `hop-limit`,
+`acknowledgement`, or `model-acknowledgement`). Status counts reasons and marks hop-limit
+items as requiring manual review; it does not replay, analyze or answer them automatically.
+Old ignored jobs without a saved reason are classified from their stored message when
+possible, otherwise reported as `unknown`. Hop limits and original replay keys remain intact.
+A substantive follow-up below the hop limit is eligible independently of its parent thread.
+
+Maintainer synthetic exclusion uses an explicit `[synthetic feedback]` subject prefix or
+an exact legacy fixture body (`synthetic monitor test` / `synthetic acceptance test`). A
+mention of synthetic tests in a real report is not a test marker. This local ingestion
+classification grants no authority; operator policy, redaction and review gates still apply.
+
+### Early Claude hook authority capture (2026-11-11)
+
+The bounded hook entrypoint reads and validates SessionStart input and commits the existing
+owner-PID/process-birth generation journal before importing delivery, daemon diagnostics or
+conflict scanning. Lightweight process/path exports keep daemon implementation imports out
+of this authority path. Delivery consumes the captured generation instead of publishing a
+second generation. The hard fail-open deadline remains unchanged; interrupted delivery can
+be recovered by the existing MCP replay of this exact committed authority. No launch
+environment ID, cwd inference, diagnostic record or later prompt can replace SessionStart.
+Malformed input, incomplete journals and ended generations retain their existing fences.
+This reduces import contention; it does not guarantee registration when OS scheduling or
+filesystem latency exhausts the hook budget before journal publication.

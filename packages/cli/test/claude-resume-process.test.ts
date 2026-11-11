@@ -198,3 +198,49 @@ it("publishes resumed authority and ends it even when diagnostic storage never c
     expect((await f.call("whoami")).error).toBe(true);
   } finally { await f.close(); }
 }, 15_000);
+
+it("commits SessionStart authority before a delayed delivery-module import reaches the hook deadline", async () => {
+  const f = await fixture();
+  try {
+    const preload = join(f.home, "delay-hook-delivery.mjs");
+    const marker = join(f.home, "delivery-import-started");
+    await writeFile(preload, `
+      import { writeFileSync } from "node:fs";
+      import { registerHooks } from "node:module";
+      registerHooks({ load(url, context, nextLoad) {
+        const result = nextLoad(url, context);
+        if (/\\/hooks-[^/]+\\.js$/.test(url)) {
+          writeFileSync(${JSON.stringify(marker)}, "delayed");
+          return { ...result, source: 'await new Promise(resolve => setTimeout(resolve, 500));\\n' + result.source };
+        }
+        return result;
+      } });
+    `);
+    expect(await f.hook("resumed-before-delivery", "SessionStart", preload)).toBeLessThan(200);
+    expect(await readFile(marker, "utf8")).toBe("delayed");
+    const session = await f.whoami();
+    expect(session.vendor_session_id).toBe("resumed-before-delivery");
+    expect(f.hookEvidence).toHaveLength(1);
+    const evidence = f.hookEvidence[0] as { authority: Array<{ generation: number; root: string }> };
+    expect(evidence.authority).toEqual([{ generation: 1, root: "resumed-before-delivery" }]);
+    // The normal path consumes the captured generation instead of publishing twice.
+    await f.hook("resumed-before-delivery");
+    const next = f.hookEvidence[1] as { authority: Array<{ generation: number; root: string }> };
+    expect(next.authority.map(row => row.generation).sort()).toEqual([1, 2]);
+    expect((await f.whoami()).id).toBe(session.id);
+  } finally { await f.close(); }
+}, 15_000);
+
+it("an invalid SessionStart cannot replace previously observed conversation authority", async () => {
+  const f = await fixture();
+  try {
+    await f.hook("valid-conversation");
+    const original = await f.whoami();
+    await f.hook("");
+    const current = await f.whoami();
+    expect(current.id).toBe(original.id);
+    expect(current.vendor_session_id).toBe("valid-conversation");
+    const evidence = f.hookEvidence[1] as { authority: Array<{ generation: number; root: string }> };
+    expect(evidence.authority).toEqual([{ generation: 1, root: "valid-conversation" }]);
+  } finally { await f.close(); }
+}, 15_000);

@@ -26,6 +26,12 @@ describe("parseAddress", () => {
     expect(() => parseAddress("author@alexs-macbook-air.local")).toThrow(AddressError);
   });
 
+  it("explains address syntax without guessing topic or session existence", () => {
+    for (const raw of ["kommutator-feedback", "unknown-topic", "author"]) {
+      expect(() => parseAddress(raw)).toThrow("use topic:<name>, <name>@<host>, @role:<role>, or all");
+    }
+  });
+
   it("round-trips through formatAddress", () => {
     for (const raw of ["author@laptop", "@role:executor", "topic:global", "all"]) {
       expect(formatAddress(parseAddress(raw))).toBe(raw);

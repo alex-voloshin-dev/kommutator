@@ -310,6 +310,16 @@ describe("message routing and inbox", () => {
     expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 1 });
   });
 
+  it("gives full-ID guidance for missing and inaccessible reply parents without revealing existence", () => {
+    const root = sendMessage(ctx, peer, params(["b@laptop"]));
+    const guidance = "reply parent is not accessible; use the full message ID returned by inbox or read (prefixes are not supported)";
+    for (const id of [root.id, "19d61573", "missing-message"]) {
+      expect(() => sendMessage(ctx, { host: "server" }, params(["a@laptop"], { reply_to: id }, "c")))
+        .toThrow(guidance);
+    }
+    expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 1 });
+  });
+
   it("derives reply thread and increasing hops, rejecting an inaccessible parent", () => {
     const root = sendMessage(ctx, peer, params(["b@laptop"]));
     expect(() => sendMessage(ctx, { host: "server" }, params(["a@laptop"], { reply_to: root.id }, "c")))

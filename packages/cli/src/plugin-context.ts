@@ -1,7 +1,8 @@
 import { mkdir, readFile, link, rename, unlink, writeFile, readdir } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute, join } from "node:path";
-import { pathsFor } from "@kommutator/agentd";
+import { pathsFor } from "@kommutator/agentd/paths";
+import { processStart } from "@kommutator/agentd/process";
 import * as z from "zod";
 
 const Context = z.object({ cwd: z.string().min(1).max(1024).refine(isAbsolute) }).strict();
@@ -29,7 +30,6 @@ export async function pluginContext(vendor: string, id: string): Promise<string>
 
 // Claude may resume one vendor conversation in multiple live processes.
 async function claudeOwnerPaths(id: string, pid: number): Promise<{ file: string; directory: string; birth: string }> {
-  const { processStart } = await import("@kommutator/agentd");
   const birth = await processStart(z.number().int().positive().parse(pid));
   if (!birth) throw new Error("Claude root registration unavailable or expired");
   return { file: contextPath("claude-registration", JSON.stringify([id, pid, birth])),
@@ -83,7 +83,6 @@ export async function claudeRegistration(id: string, ownerPid: number): Promise<
   } catch { throw new Error("Claude root registration unavailable or expired. Trust the plugin hooks and start a fresh session."); }
 }
 export async function activeClaudeRegistration(ownerPid: number, legacyId?: string): Promise<ActiveClaudeRegistration> {
-  const { processStart } = await import("@kommutator/agentd");
   const { Methods } = await import("@kommutator/protocol");
   try {
     const { directory, birth } = await claudeOwnerPaths("", ownerPid);

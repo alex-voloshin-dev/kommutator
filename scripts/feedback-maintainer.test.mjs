@@ -27,6 +27,16 @@ test('imports real feedback once; excludes old, synthetic, own and unredacted jo
   f.queue.import(f.policy); f.queue.import(f.policy);
   assert.deepEqual(f.queue.jobs().map(j => j.id), [id]);
 });
+test('real reports mentioning synthetic work are imported; explicit fixture subjects are excluded', async t => {
+  const f = await fixture(t);
+  const first = f.add({ body: 'Return a synthetic FYI reminder in the sender inbox.' });
+  const second = f.add({ subject: 'Synthetic tests missed this real crash', body: 'The live session failed.' });
+  f.add({ subject: '[synthetic feedback] observer smoke', body: 'Deliberate fixture.' });
+  f.add({ subject: '  [SYNTHETIC FEEDBACK] acceptance', body: 'Deliberate fixture.' });
+  f.queue.import(f.policy); f.queue.import(f.policy);
+  assert.deepEqual(f.queue.jobs().map(job => job.id), [first, second]);
+});
+
 test('one worker handles concurrent ticks; empty queue never calls model', async t => {
   const f = await fixture(t); let calls = 0, finish;
   const worker = async () => { calls++; await new Promise(resolve => { finish = resolve; }); return result; };

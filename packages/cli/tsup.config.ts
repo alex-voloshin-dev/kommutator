@@ -7,7 +7,7 @@ export default defineConfig({
   clean: true,
   // Bundle schema/workspace imports so cold hooks retain their 200 ms budget.
   external: ["ws"],
-  noExternal: [/^@kommutator\/(agentd|protocol)$/, /^zod(?:\/|$)/],
+  noExternal: [/^@kommutator\/(agentd|protocol)(?:\/|$)/, /^zod(?:\/|$)/],
   removeNodeProtocol: false,
   // The shebang in src/index.ts is preserved by esbuild; no banner needed.
 });

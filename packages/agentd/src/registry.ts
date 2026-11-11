@@ -1,28 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import * as z from "zod";
 import { Session, Notifications } from "@kommutator/protocol";
 import type { LocalSession } from "./adapters/types.js";
 
 export const STATE_SCHEMA_VERSION = 3;
-const execFileAsync = promisify(execFile);
 
-/** Process birth time closes the PID-reuse hole in the adapter's existence probe. */
-export async function processStart(pid: number): Promise<string | undefined> {
-  try {
-    const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "lstart="], { timeout: 1000, maxBuffer: 1024 });
-    return stdout.trim() || undefined;
-  } catch { return undefined; }
-}
-
-/** Only ESRCH proves exit; permission errors and failed probes are inconclusive. */
-export function processExists(pid: number): boolean | undefined {
-  try { process.kill(pid, 0); return true; }
-  catch (error) {
-    return error && typeof error === "object" && "code" in error && error.code === "ESRCH" ? false : undefined;
-  }
-}
+export { processStart, processExists } from "./process.js";
 
 export type GoneReason = "liveness" | "session-end" | "superseded";
 const LocalRecordSchema = z.object({
