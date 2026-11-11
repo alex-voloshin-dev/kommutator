@@ -1542,3 +1542,26 @@ before revisiting the temporary threshold. A run at or above 300 ms still fails;
 between 200 and 300 ms remains an observation above target, not evidence of a latency fix.
 The root cause and issue #9 remain open. This temporary process-test policy supersedes the
 200 ms full-process limits in earlier decisions; historical evidence retains its original limits.
+
+### Receipt acknowledgement diagnostics (2026-11-11)
+
+`receipt.mark` retains `ok: true` for an authorized, processed request, including an
+idempotent or unmatched request. It additionally returns `counts` with `requested`,
+`matched`, `marked_read`, `already_read` and `unmatched`, all counting distinct input IDs.
+`matched` includes only deliveries owned by the bound calling session; `already_read`
+counts those already read before this request, and `marked_read` counts unread deliveries
+transitioned by this request. Unknown IDs and IDs belonging only to other recipients are
+indistinguishable `unmatched` entries. No foreign lookup or existence signal is added.
+For `state: unread`, the existing no-op behavior remains: `marked_read` is zero, while the
+other counts describe the current caller's deliveries without reverting any receipt.
+Counts and changes are computed in one transaction; events are emitted only for changed
+receipts after commit. Duplicate IDs never inflate counts or emit duplicate events.
+
+The counts object is optional on the wire for compatibility with older hubs, but upgraded
+hubs always include all its fields. Absent counts are unknown, never inferred as zero or as
+successful matching. Existing clients can keep reading `ok`; newer tool descriptions warn
+that `ok` alone does not establish a changed mailbox. A queued daemon response remains
+`status: queued` without hub counts; it is not a committed acknowledgement. Use complete
+message `id` values from the same session's inbox, not `seq` values or another session's IDs.
+This improves diagnostics and does not establish the cause of the earlier unread replay
+report, which was not reproduced with correct IDs and caller identity.

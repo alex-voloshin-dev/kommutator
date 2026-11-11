@@ -147,11 +147,11 @@ it("drains a 130-message backlog through MCP ack/read without replaying the fina
   expect(first).toMatchObject({ cursor: 50, more: true });
   // Merely listing the same unread page must not create receipts.
   expect(await inbox()).toEqual(first);
-  expect(await toolReply(receiver.client, "ack", { ids: first.headers.map(header => header.id) })).toEqual({ ok: true });
+  expect(await toolReply(receiver.client, "ack", { ids: first.headers.map(header => header.id) })).toEqual({ ok: true, counts: { requested: 50, matched: 50, marked_read: 50, already_read: 0, unmatched: 0 } });
   const second = await inbox();
   expect(second.headers.map(header => header.seq)).toEqual(Array.from({ length: 50 }, (_, index) => index + 51));
   expect(second.more).toBe(true);
-  expect(await toolReply(receiver.client, "ack", { ids: second.headers.slice(0, 29).map(header => header.id) })).toEqual({ ok: true });
+  expect(await toolReply(receiver.client, "ack", { ids: second.headers.slice(0, 29).map(header => header.id) })).toEqual({ ok: true, counts: { requested: 29, matched: 29, marked_read: 29, already_read: 0, unmatched: 0 } });
   const last = Results["inbox.list"].parse(await toolReply(receiver.client, "inbox", { since_seq: 129 }));
   expect(last.headers.map(header => header.seq)).toEqual([130]);
   expect(await toolReply(receiver.client, "read", { id: last.headers[0]!.id })).toMatchObject({ state: "read" });
@@ -160,13 +160,13 @@ it("drains a 130-message backlog through MCP ack/read without replaying the fina
   expect(remaining).toMatchObject({ cursor: 129, more: false });
 
   // Sequence cursors are not message IDs; the current acknowledgement contract ignores unmatched IDs.
-  expect(await toolReply(receiver.client, "ack", { ids: remaining.headers.map(header => String(header.seq)) })).toEqual({ ok: true });
+  expect(await toolReply(receiver.client, "ack", { ids: remaining.headers.map(header => String(header.seq)) })).toEqual({ ok: true, counts: { requested: 50, matched: 0, marked_read: 0, already_read: 0, unmatched: 50 } });
   expect(await inbox()).toEqual(remaining);
 
   // A different recipient cannot acknowledge this mailbox; ok alone is not proof of a change.
-  expect(await toolReply(sender.client, "ack", { ids: remaining.headers.map(header => header.id) })).toEqual({ ok: true });
+  expect(await toolReply(sender.client, "ack", { ids: remaining.headers.map(header => header.id) })).toEqual({ ok: true, counts: { requested: 50, matched: 0, marked_read: 0, already_read: 0, unmatched: 50 } });
   expect(await inbox()).toEqual(remaining);
-  expect(await toolReply(receiver.client, "ack", { ids: remaining.headers.map(header => header.id) })).toEqual({ ok: true });
+  expect(await toolReply(receiver.client, "ack", { ids: remaining.headers.map(header => header.id) })).toEqual({ ok: true, counts: { requested: 50, matched: 50, marked_read: 50, already_read: 0, unmatched: 0 } });
   expect(await inbox()).toMatchObject({ headers: [], cursor: 0, more: false });
   expect(await inbox()).toMatchObject({ headers: [], more: false });
   await send();

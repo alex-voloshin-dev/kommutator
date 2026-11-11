@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Results } from "../src/results.js";
 import { BoardEntry, LIMITS, Message, Methods, Session, TopicName, NewTopicName } from "../src/schemas.js";
 
 describe("Session", () => {
@@ -133,5 +134,16 @@ describe("new topic naming", () => {
       expect(NewTopicName.safeParse(name).success).toBe(false);
       expect(TopicName.safeParse(name).success).toBe(true);
     }
+  });
+});
+
+describe("receipt result compatibility", () => {
+  it("accepts legacy acknowledgements without inventing counts and validates complete diagnostics", () => {
+    expect(Results["receipt.mark"].parse({ ok: true })).toEqual({ ok: true });
+    const result = { ok: true, counts: { requested: 3, matched: 2, marked_read: 1, already_read: 1, unmatched: 1 } };
+    expect(Results["receipt.mark"].parse(result)).toEqual(result);
+    expect(Results["receipt.mark"].safeParse({ ok: true, counts: { requested: 3 } }).success).toBe(false);
+    expect(Results["receipt.mark"].safeParse({ ...result, counts: { ...result.counts, matched: -1 } }).success).toBe(false);
+    expect(Results["receipt.mark"].safeParse({ ...result, counts: { ...result.counts, requested: LIMITS.receiptIds + 1 } }).success).toBe(false);
   });
 });
