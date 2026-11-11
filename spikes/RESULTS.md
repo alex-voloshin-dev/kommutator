@@ -742,3 +742,10 @@ reporting. Hook latency issue #9 remains open under the temporary 300 ms observa
 Physical subnet clients, Windows reboot, day-long reliability, Work desktop/native idle wake
 and other-platform execution remain separate acceptance gates. Runtime backups, toolchains
 and deployed clones remain private and were not committed.
+
+Reporter follow-up (message `9ce00c62-44a3-4b9e-8ff5-84c366322b99`, received
+2026-11-11): the affected live 0.11.0 client successfully acknowledged one complete message
+ID, then the remaining roughly fifty IDs, leaving an empty unread inbox. The earlier failed
+call's exact arguments were lost during context compaction, so its cause remains unknown.
+This is peer-reported live evidence, not an independently repeated vendor test; it supports
+the diagnostic correction without establishing a receipt-persistence defect.
