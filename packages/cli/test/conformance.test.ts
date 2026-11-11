@@ -130,3 +130,48 @@ it("recovers a retired ClaudePluginClient through real daemon and hub handlers w
   expect(methods).not.toContain("receipt.mark");
   await expect(core.request(first, "whoami")).rejects.toThrow("ended");
 });
+
+
+it("drains a 130-message backlog through MCP ack/read without replaying the final fifty unread headers", async () => {
+  const { sender, receiver, send } = await fixture();
+  const toolReply = async (client: Client, name: string, args: Record<string, unknown> = {}): Promise<unknown> => {
+    const reply = await client.callTool({ name, arguments: args });
+    expect(reply.isError).not.toBe(true);
+    const text = z.object({ content: z.array(z.object({ type: z.literal("text"), text: z.string() })).min(1) }).parse(reply);
+    return JSON.parse(text.content[0]!.text);
+  };
+  const inbox = async () => Results["inbox.list"].parse(await toolReply(receiver.client, "inbox", { unread_only: true }));
+  for (let index = 0; index < 130; index++) expect((await send()).isError).not.toBe(true);
+  const first = await inbox();
+  expect(first.headers).toHaveLength(50);
+  expect(first).toMatchObject({ cursor: 50, more: true });
+  // Merely listing the same unread page must not create receipts.
+  expect(await inbox()).toEqual(first);
+  expect(await toolReply(receiver.client, "ack", { ids: first.headers.map(header => header.id) })).toEqual({ ok: true });
+  const second = await inbox();
+  expect(second.headers.map(header => header.seq)).toEqual(Array.from({ length: 50 }, (_, index) => index + 51));
+  expect(second.more).toBe(true);
+  expect(await toolReply(receiver.client, "ack", { ids: second.headers.slice(0, 29).map(header => header.id) })).toEqual({ ok: true });
+  const last = Results["inbox.list"].parse(await toolReply(receiver.client, "inbox", { since_seq: 129 }));
+  expect(last.headers.map(header => header.seq)).toEqual([130]);
+  expect(await toolReply(receiver.client, "read", { id: last.headers[0]!.id })).toMatchObject({ state: "read" });
+  const remaining = await inbox();
+  expect(remaining.headers.map(header => header.seq)).toEqual(Array.from({ length: 50 }, (_, index) => index + 80));
+  expect(remaining).toMatchObject({ cursor: 129, more: false });
+
+  // Sequence cursors are not message IDs; the current acknowledgement contract ignores unmatched IDs.
+  expect(await toolReply(receiver.client, "ack", { ids: remaining.headers.map(header => String(header.seq)) })).toEqual({ ok: true });
+  expect(await inbox()).toEqual(remaining);
+
+  // A different recipient cannot acknowledge this mailbox; ok alone is not proof of a change.
+  expect(await toolReply(sender.client, "ack", { ids: remaining.headers.map(header => header.id) })).toEqual({ ok: true });
+  expect(await inbox()).toEqual(remaining);
+  expect(await toolReply(receiver.client, "ack", { ids: remaining.headers.map(header => header.id) })).toEqual({ ok: true });
+  expect(await inbox()).toMatchObject({ headers: [], cursor: 0, more: false });
+  expect(await inbox()).toMatchObject({ headers: [], more: false });
+  await send();
+  const next = await inbox();
+  expect(next.headers.map(header => header.seq)).toEqual([131]);
+  expect(await toolReply(receiver.client, "read", { id: next.headers[0]!.id })).toMatchObject({ state: "read" });
+  expect(await inbox()).toMatchObject({ headers: [], more: false });
+});
