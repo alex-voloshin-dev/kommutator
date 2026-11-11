@@ -39,9 +39,15 @@ export function observerHost(host, topic) {
   const digest = createHash('sha256').update(`${host}:${topic}`).digest('hex').slice(0, 10);
   return `${host.slice(0, 40)}-feedback-${digest}`;
 }
+export function ignoredReason(message, session, topic) {
+  if (message.from === session.handle) return 'self';
+  if (topic !== null && !message.to.includes(`topic:${topic}`)) return 'other-topic';
+  if (message.hops >= 3) return 'hop-limit';
+  if (/^(?:thanks|thank you|ack|acknowledged|got it|received|спасибо|понял|принято|ок|okay|ok)[.!\s]*$/iu.test(message.body.trim())) return 'acknowledgement';
+  return null;
+}
 export function ignored(message, session, topic) {
-  if (message.from === session.handle || !message.to.includes(`topic:${topic}`) || message.hops >= 3) return true;
-  return /^(?:thanks|thank you|ack|acknowledged|got it|received|спасибо|понял|принято|ок|okay|ok)[.!\s]*$/iu.test(message.body.trim());
+  return ignoredReason(message, session, topic) !== null;
 }
 
 export class Journal {
@@ -74,10 +80,17 @@ export class Journal {
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   status() {
-    const counts = {};
-    for (const job of this.jobs()) counts[job.stage] = (counts[job.stage] ?? 0) + 1;
+    const counts = {}, ignoredReasons = {};
+    for (const job of this.jobs()) {
+      counts[job.stage] = (counts[job.stage] ?? 0) + 1;
+      if (job.stage === 'ignored') {
+        const inferred = job.message && ignoredReason(job.message, this.get('session') ?? {}, job.topic ?? null);
+        const reason = job.ignoredReason ?? inferred ?? (job.analysis?.category === 'acknowledgement' ? 'model-acknowledgement' : 'unknown');
+        ignoredReasons[reason] = (ignoredReasons[reason] ?? 0) + 1;
+      }
+    }
     return { session: this.get('session')?.handle ?? null, last_poll: this.get('last_poll') ?? null,
-      last_error: this.get('last_error') ?? null, last_report_error: this.get('last_report_error') ?? null, jobs: counts, cursor: this.get('cursor') ?? 0 };
+      last_error: this.get('last_error') ?? null, last_report_error: this.get('last_report_error') ?? null, jobs: counts, ignored_reasons: ignoredReasons, manual_review_required: ignoredReasons['hop-limit'] ?? 0, cursor: this.get('cursor') ?? 0 };
   }
   close() { this.db.close(); }
 }
@@ -235,7 +248,8 @@ export class FeedbackObserver {
       }
       const topic = job.topic ?? this.topic;
       if (topic !== this.topic && !(topic === LEGACY_FEEDBACK_TOPIC && this.journal.get('topic_migration')?.legacyJobIds.includes(job.id))) throw new Error('unapproved legacy job');
-      if (ignored(job.message, session, topic)) { job.stage = 'ignored'; this.journal.save(job); return; }
+      const reason = ignoredReason(job.message, session, topic);
+      if (reason) { job.stage = 'ignored'; job.ignoredReason = reason; this.journal.save(job); return; }
       if (!job.analysis) {
         if (job.attempts >= 3) { job.stage = 'failed'; this.journal.save(job); return; }
         if (this.now() < (this.journal.get('last_model_at') ?? 0) + this.cooldownMs) return;
@@ -252,7 +266,7 @@ export class FeedbackObserver {
         }
       }
       if (this.stopped) return;
-      if (job.analysis.category === 'acknowledgement') { job.stage = 'ignored'; this.journal.save(job); return; }
+      if (job.analysis.category === 'acknowledgement') { job.stage = 'ignored'; job.ignoredReason = 'model-acknowledgement'; this.journal.save(job); return; }
       const boardKey = `feedback-observer/${job.id}`;
       if (!job.boardDone) {
         const { entries } = await this.rpc('board.get', { session_id: session.id, topic, key: boardKey });

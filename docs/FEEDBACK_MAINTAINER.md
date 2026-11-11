@@ -113,3 +113,14 @@ Do not present an enabled unit as evidence of successful end-to-end autonomous p
 
 Existing services on the old spaced topic must follow the explicit
 [feedback topic migration](FEEDBACK_TOPIC_MIGRATION.md) before restarting this version.
+
+### Excluded feedback
+
+Observer status reports `ignored_reasons` and `manual_review_required`. A `hop-limit`
+item may contain useful new evidence, but automation must not extend a high-hop thread.
+Review those items manually; the count is not proof that an engineer has handled them.
+Upgrading does not replay old ignored jobs or change their original reply keys.
+
+For deliberate fixture traffic, prefix the subject with `[synthetic feedback]`.
+The exact legacy bodies `synthetic monitor test` and `synthetic acceptance test` are also
+excluded. Merely mentioning synthetic tests in a report no longer excludes it.

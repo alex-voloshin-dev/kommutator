@@ -49,6 +49,11 @@ export async function loadPolicy(path, stateDir, { allowLegacyTopic = false } = 
   return Object.freeze(value);
 }
 
+function isSyntheticFeedback(message) {
+  return /^\[synthetic feedback\](?:\s|$)/i.test((message.subject ?? '').trim()) ||
+    /^synthetic (?:monitor|acceptance) test[.!]?$/i.test(message.body.trim());
+}
+
 export class MaintainerQueue {
   constructor(path, policy, { allowMigration = false } = {}) {
     this.db = new DatabaseSync(path);
@@ -97,7 +102,7 @@ export class MaintainerQueue {
             item.analysis?.category === 'acknowledgement' || message.from === own || message.hops >= 3 ||
             !Array.isArray(message.to) || !message.to.includes(`topic:${topic}`) ||
             typeof message.body !== 'string' || message.body.length > 100_000 ||
-            /\bsynthetic\b|\[automated feedback/i.test(`${message.subject ?? ''}\n${message.body}`) ||
+            isSyntheticFeedback(message) || /\[automated feedback/i.test(`${message.subject ?? ''}\n${message.body}`) ||
             (!policy.includeIds.includes(row.id) && !(Date.parse(message.created_at) >= Date.parse(policy.acceptAfter)))) continue;
         const job = { id: row.id, attempt: 0, message: { from: redact(item.sanitizedMessage.from), subject: redact(item.sanitizedMessage.subject), body: redact(item.sanitizedMessage.body) } };
         this.transition(job, 'queued', 'Accepted for independent verification under the operator mandate.'); known.add(row.id);

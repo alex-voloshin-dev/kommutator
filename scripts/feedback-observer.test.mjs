@@ -148,6 +148,30 @@ test('pure acknowledgements, other topics and high hops do not invoke analysis',
   for (let i = 0; i < 4; i++) await f.observer.tick();
   assert.equal(calls, 0); assert.equal(f.replies().length, 0);
 });
+test('substantive follow-ups are triaged while high-hop evidence remains visible for manual review', async t => {
+  let calls = 0; const f = await fixture(t, async () => { calls++; return analysis; });
+  const root = await f.send('Registration failed.');
+  await f.observer.tick();
+  let parent = root.id;
+  for (let hop = 1; hop <= 4; hop++) {
+    const reply = await f.send(`Thanks. New measurement ${hop}: import takes 126 ms.`, { reply_to: parent });
+    parent = reply.id;
+    f.advance(); await f.observer.tick();
+  }
+  assert.equal(calls, 3);
+  const blocked = f.journal.jobs().find(job => job.id === parent);
+  assert.equal(blocked.stage, 'ignored'); assert.equal(blocked.ignoredReason, 'hop-limit');
+  assert.equal(f.journal.status().manual_review_required, 2);
+  assert.equal(f.journal.status().ignored_reasons['hop-limit'], 2);
+  // Old ignored records gain diagnostics without being requeued or allocating new replay keys.
+  const replyKey = blocked.replyKey;
+  delete blocked.ignoredReason; f.journal.save(blocked);
+  await f.restart(); f.advance(); await f.observer.tick();
+  assert.equal(f.journal.status().manual_review_required, 2);
+  assert.equal(f.journal.jobs().find(job => job.id === parent).replyKey, replyKey);
+  assert.equal(calls, 3);
+});
+
 test('analysis retries are bounded and failure survives restart', async t => {
   let calls = 0; const f = await fixture(t, async () => { calls++; throw new Error('secret must not reach status'); });
   await f.send('Broken feature');

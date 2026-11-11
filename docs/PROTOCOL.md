@@ -157,6 +157,10 @@ topic:project:<key>      every member of a topic
 all                      everyone
 ```
 
+Invalid addresses return syntax guidance without guessing whether a named topic or session
+exists. `reply_to` requires the full message ID; a missing or inaccessible parent returns
+the same error with full-ID guidance. Prefixes are not resolved and access checks are unchanged.
+
 See `packages/protocol/src/address.ts` and `ident.ts`.
 
 Codex diagnostic hook events are process-local evidence collected after successful hook polls;
@@ -237,3 +241,26 @@ Codex registration itself defers when process birth cannot be observed.
 IPC error `-32030` means hub unavailable or request timed out; `-32031` means the daemon
 is stopping. Neither is proof of mutation failure or a persisted queue entry. Inspect
 status before deciding whether to resend. Unexpected errors remain redacted.
+
+## MCP presentation controls
+
+The MCP shim supports local response projections; these options are never forwarded to
+agentd or the hub. Wire method parameters and result schemas above remain unchanged.
+
+- `status({ detailed?: boolean })` defaults to a summary. It replaces `sessions` with
+  `session_counts: { total, by_state }` and `outbox` with
+  `outbox_summary: { total, blocked, oldest_age_ms }`. Caller registration/recovery,
+  daemon version, runtime contract, hub/health, outbox depth, hook observations and last
+  errors are preserved. `detailed: true` returns the full existing payload.
+- `board_put({ ..., include_body?: boolean })` omits `entry.body` unless `include_body`
+  is true. All remaining entry metadata and `replayed` are preserved.
+- `list_sessions({ ..., compact?: boolean })` remains full by default. `compact: true`
+  retains each session's `id`, `handle`, `vendor_session_id`, `vendor`, `host`, `role`,
+  `state` and `status_line`; requested server-side filters are unchanged.
+- `inbox({ ..., preview?: boolean })` remains full by default. `preview: false` removes
+  only each header's preview; full IDs, sequence, unread state, wake decision, subject,
+  thread, cursor and `more` remain unchanged. Listing does not acknowledge messages.
+  `unread_only: true` intentionally ignores `since_seq`; for incremental polling use
+  `unread_only: false` and pass the returned cursor as the next `since_seq`.
+
+No projection prunes history, changes membership, authorizes offline reads or creates receipts.
