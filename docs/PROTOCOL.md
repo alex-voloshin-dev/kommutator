@@ -45,7 +45,12 @@ asynchronous probes/flushes/reads. A live hook-only owner does not require a nat
 A unique prior owner may be resumed only with positive process-exit/PID-reuse evidence
 and matching cwd/project;
 otherwise register separately. Cold Claude context/registration is process-scoped, and
-SessionEnd removes only that owner's replay authority. Bundled Claude plugins additionally
+SessionEnd removes only that owner's replay authority before delivery-module loading.
+Its durable generation end marker also lets agentd reconcile an interrupted notification
+on startup, sweep, status or session listing through the existing session.gone outbox.
+Status triggers background reconciliation and returns a local snapshot without waiting
+for marker reads or hub acknowledgement; session listings await their normal flush.
+Missing marker evidence never implies retirement. Bundled Claude plugins additionally
 send optional positive `owner_generation` from their exact owner-scoped SessionStart journal.
 A higher generation retires previous same-owner conversations; stale/missing generations
 after fencing and equal generations naming another conversation are rejected. A shim
@@ -157,8 +162,10 @@ topic:project:<key>      every member of a topic
 all                      everyone
 ```
 
-Invalid addresses return syntax guidance without guessing whether a named topic or session
-exists. `reply_to` requires the full message ID; a missing or inaccessible parent returns
+New sends validate address syntax at MCP, agentd (before outbox insertion, also offline)
+and the hub. Stored message schemas remain permissive for historical records. MCP
+returns bounded syntax guidance; raw IPC and hub schema failures use their generic
+invalid-parameter errors. Validation does not guess whether a named topic or session exists. `reply_to` requires the full message ID; a missing or inaccessible parent returns
 the same error with full-ID guidance. Prefixes are not resolved and access checks are unchanged.
 
 See `packages/protocol/src/address.ts` and `ident.ts`.

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createServer, type Server } from "node:net";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { claudeAdapter, claudeCapability, classifyReply } from "../src/adapters/claude.js";
@@ -157,5 +158,64 @@ describe("claudeAdapter.isAlive", () => {
     expect(await claudeAdapter.isAlive(hookOnly)).toBe(true);
     const { pid: _pid, ...ownerless } = hookOnly;
     expect(await claudeAdapter.isAlive(ownerless)).toBe(false);
+  });
+});
+
+describe("claudeAdapter.isEnded", () => {
+  function markerFixture() {
+    const home = mkdtempSync(join(tmpdir(), "kom-end-marker-"));
+    const local: LocalSession = { ...localSession("/unused.sock"), processStartedAt: "fixture-process-birth", ownerGeneration: 3 };
+    // Published plugin-context journal contract; no marker means no retirement evidence.
+    const owner = JSON.stringify([local.pid, local.processStartedAt]);
+    const key = createHash("sha256").update(`claude-active:${owner}`).digest("hex");
+    const directory = join(home, "contexts", `${key}.json.d`);
+    mkdirSync(directory, { recursive: true });
+    const probe = claudeAdapter.isEnded;
+    if (!probe) throw new Error("Claude retirement probe missing");
+    return { home, local, marker: join(directory, "3.ended"), probe };
+  }
+
+  it("accepts only the exact process owner, birth and conversation generation", async () => {
+    const { home, local, marker, probe } = markerFixture();
+    try {
+      expect(await probe(local, home)).toBe(false);
+      writeFileSync(marker, "");
+      expect(await probe(local, home)).toBe(true);
+      for (const other of [
+        { ...local, pid: process.pid + 1 },
+        { ...local, processStartedAt: "another-process-birth" },
+        { ...local, ownerGeneration: 2 },
+        { ...local, ownerGeneration: 4 },
+      ]) expect(await probe(other, home)).toBe(false);
+      expect(await probe(local, join(home, "another-state-home"))).toBe(false);
+    } finally { rmSync(home, { recursive: true, force: true }); }
+  });
+
+  it("does not infer authority from incomplete or unsafe generation metadata", async () => {
+    const { home, local, marker, probe } = markerFixture();
+    try {
+      writeFileSync(marker, "");
+      const { pid: _pid, ...noPid } = local;
+      const { processStartedAt: _birth, ...noBirth } = local;
+      const { ownerGeneration: _generation, ...noGeneration } = local;
+      for (const incomplete of [noPid, noBirth, noGeneration]) expect(await probe(incomplete, home)).toBe(false);
+      for (const ownerGeneration of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+        expect(await probe({ ...local, ownerGeneration }, home)).toBe(false);
+      }
+    } finally { rmSync(home, { recursive: true, force: true }); }
+  });
+
+  it.each(["nonempty", "directory", "symlink"])("rejects a %s marker as retirement evidence", async kind => {
+    const { home, local, marker, probe } = markerFixture();
+    try {
+      if (kind === "nonempty") writeFileSync(marker, "not an empty retirement marker");
+      else if (kind === "directory") mkdirSync(marker);
+      else {
+        const target = join(home, "empty-target");
+        writeFileSync(target, "");
+        symlinkSync(target, marker);
+      }
+      expect(await probe(local, home)).toBe(false);
+    } finally { rmSync(home, { recursive: true, force: true }); }
   });
 });

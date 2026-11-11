@@ -24,6 +24,9 @@ export interface Adapter {
 
   /** Cheap owner-process liveness probe; delivery availability is separate. */
   isAlive(session: LocalSession): Promise<boolean>;
+
+  /** Positive durable vendor retirement evidence; missing evidence must return false. */
+  isEnded?(session: LocalSession, stateHome: string): Promise<boolean>;
 }
 
 export type DeliveryResult =
@@ -58,4 +61,6 @@ export interface LocalSession {
   inboundPolicy?: "default" | "accept" | "hold" | "refuse";
   /** Host process birth identity, checked by the registry to reject PID reuse. */
   processStartedAt?: string;
+  /** Vendor conversation generation within this process owner. */
+  ownerGeneration?: number;
 }

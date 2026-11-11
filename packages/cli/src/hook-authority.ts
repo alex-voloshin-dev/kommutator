@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { Methods, PROTOCOL_VERSION } from "@kommutator/protocol";
-import { saveClaudeRegistration, type ActiveClaudeRegistration } from "./plugin-context.js";
+import { saveClaudeRegistration, activeClaudeRegistration, forgetClaudeRegistration, type ActiveClaudeRegistration } from "./plugin-context.js";
 import type { Hello } from "./ipc-client.js";
 
 export const HookEvent = z.enum(["SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd"]);
@@ -31,9 +31,9 @@ export async function readInput(): Promise<unknown> {
   return JSON.parse(text) as unknown;
 }
 
-export interface HookPreparation { payload: unknown; observed?: ActiveClaudeRegistration }
+export interface HookPreparation { payload: unknown; observed?: ActiveClaudeRegistration; retired?: ActiveClaudeRegistration }
 
-/** Capture only vendor-observed SessionStart authority before loading delivery code. */
+/** Capture vendor-observed lifecycle authority before loading delivery code. */
 export async function prepareHook(rawEvent: string | undefined, args: string[]): Promise<HookPreparation> {
   const event = HookEvent.parse(rawEvent);
   if (args.length !== 0 && !(args.length === 2 && args[0] === "--vendor" && args[1] === "codex")) throw new Error("Invalid hook vendor");
@@ -41,6 +41,12 @@ export async function prepareHook(rawEvent: string | undefined, args: string[]):
   if (event === "SessionStart" && args.length === 0 && process.env.KOM_PLUGIN_PROFILE === "claude-code") {
     const observed = await saveClaudeRegistration(hookHello(payload));
     return { payload, ...(observed ? { observed } : {}) };
+  }
+  if (event === "SessionEnd" && args.length === 0 && process.env.KOM_PLUGIN_PROFILE === "claude-code") {
+    const retired = await activeClaudeRegistration(process.ppid, payload.session_id);
+    if (retired.hello.vendor_session_id !== payload.session_id) throw new Error("Stale SessionEnd");
+    await forgetClaudeRegistration(payload.session_id, process.ppid, retired);
+    return { payload, retired };
   }
   return { payload };
 }

@@ -72,13 +72,13 @@ class FakeTransport implements HubTransport {
 const cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close(); });
 
-async function fixture(options: { online?: boolean; dbPath?: string; clock?: ManualClock; hub?: ReturnType<typeof createConformanceHarness>; birth?: (pid: number) => Promise<string | undefined>; alive?: boolean; exists?: (pid: number) => boolean | undefined } = {}) {
+async function fixture(options: { online?: boolean; dbPath?: string; clock?: ManualClock; hub?: ReturnType<typeof createConformanceHarness>; birth?: (pid: number) => Promise<string | undefined>; alive?: boolean; exists?: (pid: number) => boolean | undefined; ended?: NonNullable<Adapter["isEnded"]> } = {}) {
   const hub = options.hub ?? createConformanceHarness();
   if (!options.hub) cleanup.push(async () => hub.close());
   const transport = new FakeTransport(hub);
   const clock = options.clock ?? new ManualClock();
   const attempts: Array<{ id: string | undefined; at: number }> = [];
-  const adapter: Adapter = { vendor: "claude-code", capability: "native", isAlive: async () => true, deliver: async (_record, message, wake) => {
+  const adapter: Adapter = { vendor: "claude-code", capability: "native", isAlive: async () => true, ...(options.ended ? { isEnded: options.ended } : {}), deliver: async (_record, message, wake) => {
     if (wake) attempts.push({ id: message.id, at: clock.time });
     return wake ? { outcome: "written" } : { outcome: "inbox" };
   } };
@@ -1009,8 +1009,10 @@ describe("Claude recovery QA boundaries", () => {
 
   it("rechecks caller registration after an asynchronous birth probe overlaps SessionEnd", async () => {
     let release: ((birth: string) => void) | undefined;
+    let probed!: () => void;
+    const probing = new Promise<void>(resolve => { probed = resolve; });
     let delay = false;
-    const { core } = await fixture({ birth: async () => { if (!delay) return "birth"; delay = false; return new Promise<string>(resolve => { release = resolve; }); } });
+    const { core } = await fixture({ birth: async () => { if (!delay) return "birth"; delay = false; return new Promise<string>(resolve => { release = resolve; probed(); }); } });
     const first = await hook(core, "status-race", { owner_generation: 1 });
     const operator = await cli(core);
     delay = true;
@@ -1018,6 +1020,7 @@ describe("Claude recovery QA boundaries", () => {
       vendor: "claude-code", vendor_session_id: "status-race", pid: 55,
       process_started_at: "birth", owner_generation: 1,
     } });
+    await probing;
     await core.request(first.peer, "session.gone");
     if (!release) throw new Error("status never probed the owner");
     release("birth");
@@ -1300,4 +1303,180 @@ describe("watch authorization after a pause", () => {
     core.registry.save(record);
     await expect(core.request(manager, "watch.poll", params)).rejects.toThrow();
   });
+});
+
+
+it.each([true, false])("rejects malformed agent and human sends before enqueue, online=%s", async online => {
+  const { core, transport } = await fixture({ online });
+  const agent = await hook(core, "sender");
+  const operator = await cli(core);
+  const before = core.registry.outbox();
+  const registrationsBefore = core.registry.all();
+  const sentBefore = transport.calls.filter(call => call.method === "message.send").length;
+  for (const address of ["agentic-forge-feedback", "topic:", "@role:", "name@bad host", ""]) {
+    const message = { to: ["valid@host", address], body: "must not queue" };
+    await expect(core.request(agent.peer, "message.send", { message })).rejects.toThrow("bad address");
+    await expect(core.request(operator, "human.send", { message })).rejects.toThrow("bad address");
+    expect(core.registry.outbox()).toEqual(before);
+    expect(core.registry.all()).toEqual(registrationsBefore);
+  }
+  expect(transport.calls.filter(call => call.method === "message.send")).toHaveLength(sentBefore);
+});
+
+it("preserves valid address forms and payload bytes in offline outbox entries", async () => {
+  const { core } = await fixture({ online: false });
+  const agent = await hook(core, "sender");
+  const to = [" Reviewer@Laptop ", "@ROLE:executor", "topic:project:github.com/team/repo", "all", "topic:legacy name"];
+  expect(await core.request(agent.peer, "message.send", { message: { to, body: "offline" } })).toMatchObject({ status: "queued" });
+  const entries = core.registry.outbox().filter(entry => entry.method === "message.send");
+  expect(entries).toHaveLength(1);
+  expect(JSON.parse(entries[0]!.params).message.to).toEqual(to);
+});
+
+
+async function retirementHome() {
+  const home = await mkdtemp(join(tmpdir(), "kom-retirement-"));
+  cleanup.push(async () => { await rm(home, { recursive: true, force: true }); });
+  return join(home, "state.db");
+}
+
+it("reconciles durable vendor retirement before listings, once, without ending another owner", async () => {
+  const { core, transport, adapter } = await fixture({ dbPath: await retirementHome() });
+  const ended = await hook(core, "conversation", { owner_generation: 1 });
+  const observer = await hook(core, "conversation", { ppid: 56, owner_generation: 1 });
+  adapter.isEnded = async record => record.pid === 55;
+  await core.request(observer.peer, "session.list", { state: "gone" });
+  expect(core.registry.byId(ended.session!.id)?.goneReason).toBe("session-end");
+  expect(core.registry.byId(observer.session!.id)?.session.state).not.toBe("gone");
+  await core.sweep();
+  expect(transport.calls.filter(call => call.method === "session.gone")).toHaveLength(1);
+  await expect(hook(core, "conversation", { owner_generation: 1 })).rejects.toThrow();
+  adapter.isEnded = async () => false;
+  expect((await hook(core, "conversation", { owner_generation: 2 })).session?.state).not.toBe("gone");
+});
+
+it("persists a swept retirement offline and replays its same outbox entry after restart", async () => {
+  const dbPath = await retirementHome();
+  const first = await fixture({ dbPath });
+  const ended = await hook(first.core, "conversation", { owner_generation: 1 });
+  first.transport.disconnect();
+  first.adapter.isEnded = async () => true;
+  await first.core.sweep();
+  const entries = first.core.registry.outbox();
+  expect(entries).toHaveLength(1);
+  expect(entries[0]?.method).toBe("session.gone");
+  await first.core.sweep();
+  expect(first.core.registry.outbox()).toEqual(entries);
+  await first.close();
+  const restarted = await fixture({ dbPath, hub: first.hub, online: false, ended: async () => true });
+  expect(restarted.core.registry.outbox()).toEqual(entries);
+  expect(restarted.core.registry.byId(ended.session!.id)?.goneReason).toBe("session-end");
+  await restarted.transport.reconnect();
+  expect(restarted.core.registry.outbox()).toEqual([]);
+  expect(restarted.transport.calls.filter(call => call.method === "session.upsert")).toEqual([]);
+});
+
+it("reconciles a marker at startup before queuing reincarnation", async () => {
+  const dbPath = await retirementHome();
+  const first = await fixture({ dbPath });
+  const owner = await hook(first.core, "conversation", { owner_generation: 1 });
+  await first.close();
+  const restarted = await fixture({ dbPath, hub: first.hub, ended: async () => true });
+  expect(restarted.core.registry.byId(owner.session!.id)?.goneReason).toBe("session-end");
+  expect(restarted.transport.calls.filter(call => call.method === "session.upsert")).toEqual([]);
+  expect(restarted.transport.calls.filter(call => call.method === "session.gone")).toHaveLength(1);
+});
+
+it.each(["generation", "epoch"])("fences a positive retirement probe against a concurrent %s change", async changed => {
+  const { core, adapter } = await fixture({ dbPath: await retirementHome() });
+  const owner = await hook(core, "conversation", { owner_generation: 1 });
+  let release!: (ended: boolean) => void;
+  let probed!: () => void;
+  const started = new Promise<void>(resolve => { probed = resolve; });
+  let firstProbe = true;
+  adapter.isEnded = async () => {
+    if (!firstProbe) return false;
+    firstProbe = false;
+    probed(); return new Promise<boolean>(resolve => { release = resolve; });
+  };
+  const pending = core.sweep();
+  await started;
+  if (changed === "generation") await hook(core, "conversation", { owner_generation: 2 });
+  else {
+    const record = core.registry.byId(owner.session!.id)!;
+    record.lifecycleEpoch = (record.lifecycleEpoch ?? 0) + 1;
+    core.registry.save(record);
+  }
+  release(true);
+  await pending;
+  expect(core.registry.byId(owner.session!.id)?.session.state).not.toBe("gone");
+});
+
+
+it("upgrades liveness retirement to explicit end without replacing its queued gone operation", async () => {
+  const { core, transport, adapter } = await fixture({ dbPath: await retirementHome(), alive: false, exists: () => false });
+  const owner = await hook(core, "conversation", { owner_generation: 1 });
+  transport.disconnect();
+  adapter.isAlive = async () => false;
+  await core.sweep();
+  expect(core.registry.byId(owner.session!.id)?.goneReason).toBe("liveness");
+  const outbox = core.registry.outbox();
+  expect(outbox.filter(entry => entry.method === "session.gone")).toHaveLength(1);
+  adapter.isEnded = async () => true;
+  // A delayed same-generation hook must consult the marker before the next sweep.
+  await expect(hook(core, "conversation", { owner_generation: 1 })).rejects.toThrow();
+  expect(core.registry.byId(owner.session!.id)?.goneReason).toBe("session-end");
+  expect(core.registry.outbox()).toEqual(outbox);
+  adapter.isAlive = async () => true;
+  await expect(hook(core, "conversation", { owner_generation: 1 })).rejects.toThrow();
+  adapter.isEnded = async () => false;
+  await hook(core, "conversation", { owner_generation: 2 });
+  expect(core.registry.byId(owner.session!.id)?.session.state).not.toBe("gone");
+});
+
+
+it("returns local status while a connected hub stalls an outbox acknowledgement", async () => {
+  const { core, transport } = await fixture();
+  const owner = await hook(core, "status-owner", { owner_generation: 1 });
+  const operator = await cli(core);
+  const record = core.registry.byId(owner.session!.id)!;
+  let release!: () => void;
+  const stalled = new Promise<void>(resolve => { release = resolve; });
+  transport.afterRequest = async () => stalled;
+  core.registry.enqueue(record.key, "session.heartbeat", { session_id: owner.session!.id, state: "active" }, 0);
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const result = await Promise.race([
+      core.request(operator, "daemon.status"),
+      new Promise(resolve => { timeout = setTimeout(() => resolve("blocked on hub"), 500); }),
+    ]);
+    expect(result).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
+    expect(core.registry.outbox()).toHaveLength(1);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+    release();
+    await core.flush();
+  }
+});
+
+
+it("returns a local status snapshot while durable retirement evidence probing stalls", async () => {
+  const { core, adapter } = await fixture({ dbPath: await retirementHome() });
+  await hook(core, "status-owner", { owner_generation: 1 });
+  const operator = await cli(core);
+  let release!: (ended: boolean) => void;
+  adapter.isEnded = async () => new Promise<boolean>(resolve => { release = resolve; });
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const result = await Promise.race([
+      core.request(operator, "daemon.status"),
+      new Promise(resolve => { timeout = setTimeout(() => resolve("blocked on marker"), 500); }),
+    ]);
+    expect(result).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
+  } finally {
+    if (timeout) clearTimeout(timeout);
+    release(false);
+    await new Promise<void>(resolve => setImmediate(resolve));
+    await core.flush();
+  }
 });

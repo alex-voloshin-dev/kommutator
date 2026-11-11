@@ -129,3 +129,34 @@ it.each([
   expect(reply.isError).not.toBe(true);
   expect(reply.content).toEqual([{ type: "text", text: JSON.stringify(result) }]);
 });
+
+
+it("rejects malformed single and array destinations before calling IPC", async () => {
+  const { client, calls } = await setup();
+  for (const to of ["agentic-forge-feedback", ["valid@host", "agentic-forge-feedback"], "topic:", "@role:"]) {
+    const result = await client.callTool({ name: "send", arguments: { to, body: "must not queue" } });
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("bad address");
+  }
+  expect(calls).toEqual([]);
+  for (const to of ["topic:agentic-forge-feedback", "worker@host", "@role:executor", "all"]) {
+    expect((await client.callTool({ name: "send", arguments: { to, body: "valid" } })).isError).not.toBe(true);
+  }
+  expect(calls.map(call => call.params?.["message"])).toEqual(
+    ["topic:agentic-forge-feedback", "worker@host", "@role:executor", "all"].map(to => expect.objectContaining({ to: [to] })),
+  );
+});
+
+
+it("keeps oversized destination errors bounded before IPC", async () => {
+  const { client, calls } = await setup();
+  const address = "x".repeat(300_000);
+  for (const to of [address, ["valid@host", address]]) {
+    const result = await client.callTool({ name: "send", arguments: { to, body: "must not queue" } });
+    expect(result.isError).toBe(true);
+    const diagnostic = JSON.stringify(result.content);
+    expect(diagnostic).not.toContain(address);
+    expect(diagnostic.length).toBeLessThan(2_000);
+  }
+  expect(calls).toEqual([]);
+});

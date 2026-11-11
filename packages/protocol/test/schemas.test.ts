@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Results } from "../src/results.js";
-import { BoardEntry, LIMITS, Message, Methods, Session, TopicName, NewTopicName } from "../src/schemas.js";
+import { BoardEntry, LIMITS, Message, OutboundMessage, Methods, Session, TopicName, NewTopicName } from "../src/schemas.js";
 
 describe("Session", () => {
   it("rejects names and hosts that cannot be addressed", () => {
@@ -146,4 +146,32 @@ describe("receipt result compatibility", () => {
     expect(Results["receipt.mark"].safeParse({ ...result, counts: { ...result.counts, matched: -1 } }).success).toBe(false);
     expect(Results["receipt.mark"].safeParse({ ...result, counts: { ...result.counts, requested: LIMITS.receiptIds + 1 } }).success).toBe(false);
   });
+});
+
+
+it("validates new destinations without rewriting them or rejecting historical records", () => {
+  const to = [" Reviewer@Laptop ", "@ROLE:executor", "topic:project:github.com/team/repo", "all", "topic:legacy name"];
+  expect(OutboundMessage.parse({ from: "a@b", to, body: "test" }).to).toEqual(to);
+  for (const address of ["agentic-forge-feedback", "topic:", "@role:", "name@bad host", ""]) {
+    const message = { from: "a@b", to: ["valid@host", address], body: "test" };
+    expect(Message.parse(message).to).toEqual(message.to);
+    expect(Results["message.read"].parse({
+      message: { ...message, id: "historical-message", thread_id: "historical-thread", created_at: "2026-11-11T12:00:00.000Z" },
+      state: "read",
+    }).message.to).toEqual(message.to);
+    expect(() => OutboundMessage.parse(message)).toThrow("bad address");
+    expect(() => Methods["message.send"].parse({ session_id: "s", idempotency_key: "key-12345", message })).toThrow("bad address");
+  }
+});
+
+
+it("keeps outbound address diagnostics bounded without echoing rejected destinations", () => {
+  for (const address of ["private-unqualified-destination", "x".repeat(300_000)]) {
+    const result = OutboundMessage.safeParse({ from: "a@b", to: [address], body: "test" });
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error("invalid address accepted");
+    const diagnostic = JSON.stringify(result.error.issues);
+    expect(diagnostic).not.toContain(address);
+    expect(diagnostic.length).toBeLessThan(500);
+  }
 });

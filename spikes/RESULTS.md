@@ -749,3 +749,20 @@ ID, then the remaining roughly fifty IDs, leaving an empty unread inbox. The ear
 call's exact arguments were lost during context compaction, so its cause remains unknown.
 This is peer-reported live evidence, not an independently repeated vendor test; it supports
 the diagnostic correction without establishing a receipt-persistence defect.
+
+## 2026-11-11 — rejected outbox 354 recovery and resumed client
+
+After the session restart, `setup_status` reported MCP client and daemon 0.12.1, contract 3.
+The root caller was active with both feedback subscriptions. Initial hook failures during
+restart were followed by successful observations. Health was degraded solely by one blocked
+send: a bare `agentic-forge-feedback` address.
+
+Read-only inspection attributed entry 354 to the local Claude Agentic Forge developer.
+The same author had already published identical subject/body to the canonical topic in
+message `2eca9b49-a986-49e7-9136-e5fef4cba3e8` (13 delivery rows); the rejected operation's
+idempotency key was absent from hub messages. The operator preserved the rejected row and a
+private `VACUUM INTO` database backup (quick_check: ok), then deleted only the exact unchanged
+row using all stored fields as conditions under BEGIN IMMEDIATE. No message was resent and
+no hub receipt changed. Final status: active caller, connected hub, healthy, outbox depth 0.
+Private backup/state were not added to source. This evidence authorizes no automatic cleanup
+of other queues or uncertain deliveries.

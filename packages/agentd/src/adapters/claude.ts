@@ -13,6 +13,9 @@
 //     passed in bypass mode. Silence stays written, never accepted (see classifyReply).
 
 import { connect } from "node:net";
+import { createHash } from "node:crypto";
+import { lstat } from "node:fs/promises";
+import { join } from "node:path";
 import type { Message, Session } from "@kommutator/protocol";
 import type { Adapter, DeliveryResult, LocalSession } from "./types.js";
 
@@ -128,6 +131,17 @@ export const claudeAdapter: Adapter = {
         reject(e);
       });
     });
+  },
+
+  async isEnded(local: LocalSession, stateHome: string): Promise<boolean> {
+    if (!local.pid || !local.processStartedAt || !Number.isSafeInteger(local.ownerGeneration) || (local.ownerGeneration ?? 0) <= 0) return false;
+    // This is the existing plugin-context journal layout, scoped to one process birth.
+    const owner = JSON.stringify([local.pid, local.processStartedAt]);
+    const key = createHash("sha256").update(`claude-active:${owner}`).digest("hex");
+    try {
+      const marker = await lstat(join(stateHome, "contexts", `${key}.json.d`, `${local.ownerGeneration}.ended`));
+      return marker.isFile() && marker.size === 0;
+    } catch { return false; }
   },
 
   /** The core checks process birth; native socket availability is a delivery fact,

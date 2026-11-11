@@ -21,12 +21,18 @@ process.on('message', async message => {
     } else if (message.action === 'inspect') {
       result = { pid: mcp?.pid, launch_session_id: process.env.CLAUDE_CODE_SESSION_ID };
     } else if (message.action === 'hook') {
+      const started = performance.now();
       const child = launch('hook', [message.event], { cwd: '/', env: process.env, stdio: ['pipe', 'pipe', 'pipe'] });
       let stdout = ''; let stderr = '';
       child.stdout.on('data', chunk => { stdout += chunk; });
       child.stderr.on('data', chunk => { stderr += chunk; });
       const done = new Promise((resolve, reject) => {
-        const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('Hook fixture timed out')); }, 2000);
+        const timer = setTimeout(() => {
+          const diagnostic = { event: message.event, pid: child.pid, elapsed_ms: Math.round(performance.now() - started),
+            exit_code: child.exitCode, signal: child.signalCode, stdout_bytes: Buffer.byteLength(stdout), stderr_bytes: Buffer.byteLength(stderr) };
+          child.kill('SIGKILL');
+          reject(new Error(`Hook fixture timed out: ${JSON.stringify(diagnostic)}`));
+        }, 2000);
         child.once('error', error => { clearTimeout(timer); reject(error); });
         child.once('close', code => {
           clearTimeout(timer);
