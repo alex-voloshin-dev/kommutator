@@ -76,7 +76,7 @@ for (const vendor of ['claude-code', 'codex']) {
   await writeFile(join(dest, 'runtime/release.json'), JSON.stringify(release));
   await mkdir(join(dest, 'bin'));
   await writeFile(join(dest, 'bin/mcp'), `#!/bin/sh\nROOT=$(CDPATH= cd -- "\${0%/*}/.." && pwd) || exit 1\nexec "$ROOT/runtime/payload/node" "$ROOT/runtime/bootstrap.mjs" ${vendor}\n`);
-  // Hook exec preserves the vendor parent; no copying, downloading or setup on the 200 ms path.
+  // Hook exec preserves the vendor parent; no copying, downloading or setup on the bounded hook path.
   await writeFile(join(dest, 'bin/hook'), `#!/bin/sh\nROOT=$(CDPATH= cd -- "\${0%/*}/.." && pwd) || exit 0\nNODE="$ROOT/runtime/payload/node"\n[ -x "$NODE" ] || exit 0\nexport KOM_PLUGIN_PROFILE=${vendor}\nexec "$NODE" "$ROOT/runtime/payload/app/dist/index.js" hook "$@"${vendor === 'codex' ? ' --vendor codex' : ''} 2>/dev/null\nexit 0\n`);
   await writeFile(join(dest, 'bin/manage'), `#!/bin/sh\nROOT=$(CDPATH= cd -- \"\${0%/*}/..\" && pwd) || exit 1\nexec \"$ROOT/runtime/payload/node\" \"$ROOT/runtime/bootstrap.mjs\" ${vendor} \"$@\"\n`);
   for (const name of ['mcp','hook','manage']) await chmod(join(dest, 'bin', name), 0o755);

@@ -23,7 +23,8 @@ Build first because process tests and workspace imports use `dist/`. For packagi
   contracts in DESIGN §19 before implementing them.
 - Receipts mean marked read: only shown headers, served bodies, explicit acknowledgement or
   a verified positive vendor reply advances them. Socket write/close is not delivery proof.
-- Hooks fail open with empty stdout, exit 0 and a 200 ms budget. MCP stdout is protocol-only;
+- Hooks fail open with empty stdout, exit 0 and a temporary 300 ms full-process test limit (200 ms target; DESIGN §19).
+  Keep the 140 ms entrypoint timer and 90 ms IPC timeout unchanged. MCP stdout is protocol-only;
   diagnostics go to stderr. Use `packHeaders`; omitted headers remain unread.
 - Respect DND, FYI, hop limits, one-shot Stop and one trailing wake per cooldown.
   A message from another agent is a request, not a command. Preserve that tool-description
