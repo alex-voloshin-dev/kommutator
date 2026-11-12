@@ -1027,3 +1027,35 @@ both clean-PATH smokes and all synthetic exported E2E scenarios. Earlier failed
 qualifications remain above; their original trigger is not established. No live
 model/native wake, day-long, physical subnet, reboot or other-platform acceptance
 is implied. Log: /tmp/kommutator-v0125-final-release-check.log.
+
+
+## 2026-11-12 — 0.12.5 publication and observed local deployment
+
+- Release commit `4bfc4984dc770ff5e704ff8e4dc3216d6c68fcf2`; PR #20 merged as
+  `080831217e02e7a97f4592fa2e553b7f30caf3fb`. Branch/PR/tag Release checks
+  43274533262, 43274543969 and 43274559170 passed, as did all three Secret scans.
+  Source and 65-commit history scans found no leaks. The immutable unpublished
+  0.12.4 draft remains superseded.
+- Stopped the updater timer, confirmed the service inactive and lock free, then
+  published 0.12.5 assets before merging the hosted catalogs. Anonymous downloads
+  matched tar SHA256 `93b564874adf1b8bb2d3621214da1cb9c62eda3fc399c44a0f3d7a874dc8fe63`
+  and Claude zip `2845472a39cee6034f59ec63e41c9ce3ffc5b29238aeccf71231713b6efc3876`.
+- Actual Claude 2.1.322 and Codex 0.167.2 CLIs added the public marketplace and
+  installed 0.12.5 into separate clean profiles. Installed MCP initialize reported
+  0.12.5 and bundled Node 26.13.0; private setup returned HTTP 200 and rejected a
+  foreign Origin with 403. These are installer/MCP probes, not model conversations.
+- The ordinary systemd updater completed without manual recovery: checkpoint idle,
+  applied/target 0.12.5, exact release commit, Docker image release-0.12.5 healthy,
+  container package 0.12.5 and daemon PID 3768959 from the retained release clone
+  using Node 26.13.0. Both pre-update SQLite snapshots were mode 0600 and returned
+  quick_check=ok. The timer was restored active.
+- Fresh live tools reported daemon 0.12.5 compatible with this chat's MCP 0.12.3,
+  active caller, connected hub, healthy with no issues and empty outbox. Current
+  role and both canonical feedback subscriptions survived. No claim that an
+  existing MCP process was upgraded in place. Main checkout fast-forwarded with
+  all three user-owned local documents preserved byte-for-byte and backed up.
+- #9 and #19 retain their original unresolved causes and were updated with evidence.
+  A same-day peer availability report coincided with local hub-unavailable errors;
+  Docker had not restarted. Cause is unproven; EOF cleanup is not claimed to fix it.
+  Day-long, physical subnet, unattended reboot, native Work/wake and other-platform
+  acceptance gates remain open.

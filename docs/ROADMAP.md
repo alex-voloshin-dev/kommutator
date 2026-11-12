@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-12. Released baseline: [0.12.3](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.12.3).
+Updated 2026-11-12. Released baseline: [0.12.5](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.12.5).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -12,16 +12,21 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
 
-Candidate 0.12.5 supersedes the unpublished immutable 0.12.4 draft. It fixes MCP
+Published 0.12.5 supersedes the unpublished immutable 0.12.4 draft. It fixes MCP
 stdin EOF cleanup, including late resources from in-flight handlers, isolates the
 canonical hello schema for hook authority, and preserves lifecycle test failures
 when cleanup also fails. Independent review and final qualification passed:
 584 workspace tests, 140 script tests, export verification, clean-PATH smokes and
-synthetic E2E. Publication and observed local rollout follow qualification.
+synthetic E2E. Branch, PR and tag CI passed on the exact release commit. Anonymous
+asset downloads matched pinned hashes; real Claude/Codex CLI installs into clean
+profiles and installed MCP/private-setup probes passed. The ordinary updater
+deployed local hub and daemon 0.12.5, with healthy connected caller, empty outbox
+and both private database backups passing quick_check. The updater timer is active.
 
 Earlier semantic registration failures remain recorded in RESULTS; their cause is
 not established. Issues #9 and #19 stay open. The restarted chat MCP is 0.12.3;
-local hub and daemon remain 0.12.3 until deployment is observed.
+the live chat MCP remains compatible with daemon 0.12.5. Installed-probe MCPs
+are 0.12.5; this does not hot-reload the existing chat process.
 
 ## Immediate maintenance
 
@@ -43,10 +48,10 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Core and identity | Hub, daemon, MCP/hooks, boards and dashboard; live macOS two-Claude native exchange; same-host identity and resume fencing; 0.12.2 durable retirement recovery and pre-enqueue address validation | Preserve these contracts; synthetic recovery coverage is separate from every vendor/environment combination |
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
-| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.12.3 deployed; #15 restart fix completed the ordinary updater path without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
+| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.12.5 deployed; #15 restart fix completed the ordinary updater path without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
 | Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.3 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
-| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.12.3 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
+| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.12.5 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
 
 ## Acceptance work that needs a suitable environment
