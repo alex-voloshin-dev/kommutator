@@ -1,14 +1,16 @@
 ---
 type: release
 feature: hook-import-isolation
-status: approved
-version: 0.12.4
+status: draft
+review_decision: revise
+version: 0.12.5
 changelog:
   - "Fixed: keep daemon-only WebSocket and SQLite imports out of the client hook path."
+  - "Fixed: test rejected hook registration independently of best-effort diagnostic persistence."
 breaking: []
 ---
 
-# Kommutator 0.12.4 development preview
+# Kommutator 0.12.5 development preview
 
 Hooks now obtain pathsFor through the existing isolated paths export rather than
 the daemon barrel. This removes unnecessary daemon module loading while retaining
@@ -34,7 +36,24 @@ its continuation are retained, not counted as a product fix.
 No claim of real model conversations, native wake/Work, other platforms, physical
 subnet behavior, unattended Windows reboot or day-long reliability.
 
-Final qualification passed 573 workspace and 140 script tests plus export smokes
+Earlier 0.12.4 qualification passed 573 workspace and 140 script tests plus export smokes
 and synthetic E2E. The first full run failed initial Claude registration; its cause
 remains unknown. Diagnostic fixture hardening preceded the second passing run;
 this is not evidence that the original registration issue is fixed.
+
+## Superseded candidate
+
+Version 0.12.4 was tagged and staged as a draft but not published. Its branch
+push check (43135901281) failed because the rejection test required a final
+`failed` observation but received `attempted`. PR 43135906663 and tag 43135917242
+passed at the same commit without reruns. The final diagnostic write is explicitly
+best-effort and may be interrupted; the exact interruption cause in CI is unknown.
+The tag and assets remain immutable. Version 0.12.5 separates deterministic final
+outcome testing from process rejection and registration checks. Qualification of
+0.12.5 is blocked; the 573/140 totals above describe the earlier candidate.
+
+Two 0.12.5 full checks failed different Claude resume/retirement assertions: first
+573 passed/1 failed, then 572 passed/2 failed. Both passed build/typecheck but did
+not reach script/export checks. These are not resolved by the focused diagnostic
+pass. Missing generation publication is observed; its cause remains unknown.
+No 0.12.5 tag, publication or deployment is authorized by this draft artifact.

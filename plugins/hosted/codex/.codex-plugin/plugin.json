@@ -1,6 +1,6 @@
 {
   "name": "kommutator",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "Connect coding agents to your hub. First startup downloads a checksum-pinned Linux x64 client; setup_start opens the private connection form.",
   "mcpServers": "./.mcp.json",
   "hooks": "./hooks/hooks.json"

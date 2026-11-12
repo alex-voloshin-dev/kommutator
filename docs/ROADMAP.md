@@ -7,8 +7,29 @@ are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/
 
 Issue #15 is complete in 0.12.3: deterministic reset regression, independent reviews,
 full release qualification and ordinary local updater completion are recorded in
-[RESULTS](../spikes/RESULTS.md). The current chat MCP remains compatible 0.12.2;
+[RESULTS](../spikes/RESULTS.md). The previous chat MCP was compatible 0.12.2;
 clean-profile installed MCP probes verified 0.12.3.
+
+## Current release qualification
+
+The unpublished 0.12.4 draft is superseded by candidate 0.12.5; its tag and assets
+remain unchanged. Independent review identified an invalid test assumption that a
+best-effort hook diagnostic always persists before the hard deadline. Candidate
+0.12.5 separates real-process rejection/no-registration checks from deterministic
+final-outcome persistence.
+
+The first 0.12.5 full qualification is blocked: 573 workspace tests passed and one
+Claude resume test failed because `whoami` still succeeded after `SessionEnd` with
+diagnostic storage intentionally stalled. Its 208.118 ms duration was below the
+300 ms cap. The cause is unknown, and script/export checks were not reached.
+A second qualification with reviewed failure diagnostics passed 572 tests and
+failed two: a final resumed SessionStart did not publish its next generation, and
+a separate retirement fixture reported a daemon IPC timeout. No cause is proven.
+A bounded corrected trace published all four generations before the deadline,
+then hit an unlabelled IPC timeout. Next distinguish body/teardown failures and
+preserve the original error during cleanup before tracing publication again.
+Do not repeat qualification merely to obtain a passing result. Local hub and daemon remain 0.12.3; the restarted chat MCP is now
+0.12.3 with an active caller and both feedback subscriptions.
 
 ## Immediate maintenance
 
@@ -31,7 +52,7 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
 | WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.12.3 deployed; #15 restart fix completed the ordinary updater path without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.2 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.3 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
 | Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.12.3 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |

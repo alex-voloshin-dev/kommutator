@@ -191,7 +191,7 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
   it("does not mistake a rejected hook's fail-open exit for successful registration", async () => {
     const setup = await fixture();
     const sockets = new Set<import("node:net").Socket>();
-    let hellos = 0;
+    const methods: string[] = [];
     const listener = createServer(socket => {
       sockets.add(socket);
       socket.once("close", () => sockets.delete(socket));
@@ -202,7 +202,7 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
         while ((end = buffer.indexOf("\n")) >= 0) {
           const frame = z.object({ id: z.number(), method: z.string() }).parse(JSON.parse(buffer.slice(0, end)));
           buffer = buffer.slice(end + 1);
-          if (frame.method === "ipc.hello") hellos++;
+          methods.push(frame.method);
           socket.write(JSON.stringify({ jsonrpc: "2.0", id: frame.id,
             error: { code: -32020, message: "Synthetic process ownership unavailable" } }) + "\n");
         }
@@ -215,8 +215,10 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
       });
       const hook = await setup.register("fixture-rejected", "rejected");
       expect({ code: hook.code, stdout: hook.stdout }).toEqual({ code: 0, stdout: "" });
-      expect(hellos).toBe(1);
-      expect(hook.observations).toEqual([expect.objectContaining({ event: "SessionStart", outcome: "failed" })]);
+      expect(methods).toEqual(["ipc.hello"]);
+      // The process deadline may interrupt diagnostic persistence. Rejection is proved
+      // by the IPC fixture and absent registration, never by an attempted observation.
+      expect(hook.observations.some(row => row.outcome === "success")).toBe(false);
       expect(setup.db.prepare("SELECT COUNT(*) AS count FROM sessions").get()).toEqual({ count: 0 });
     } finally {
       for (const socket of sockets) socket.destroy();

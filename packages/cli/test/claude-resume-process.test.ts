@@ -2,7 +2,7 @@ import { expectHookProcessTime } from "./hook-timing.js";
 import { readHookObservations } from "../src/hook-observations.js";
 import { expect, it } from "vitest";
 import { spawn } from "node:child_process";
-import { mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,6 +17,43 @@ import { IpcClient } from "../src/ipc-client.js";
 const entry = fileURLToPath(new URL("../dist/index.js", import.meta.url));
 const Reply = z.object({ isError: z.boolean().optional(), content: z.array(z.object({ type: z.literal("text"), text: z.string() })) });
 const Identity = z.object({ session: RegisteredSession });
+
+// Read only after a failed retirement assertion; never emit stored identities or paths.
+async function retirementEvidence(home: string, cwd: string, reply: { error: boolean; text: string }, sessionId: string) {
+  const journals: unknown[] = [];
+  let unreadable = false;
+  try {
+    const directories = (await readdir(join(home, "contexts"), { withFileTypes: true }))
+      .filter(entry => entry.isDirectory()).slice(0, 8);
+    for (const directory of directories) {
+      const path = join(home, "contexts", directory.name);
+      const names = await readdir(path);
+      const rows: unknown[] = [];
+      for (const name of names.filter(name => /^[1-9][0-9]*\.json$/.test(name)).slice(0, 32)) {
+        const generation = Number(name.slice(0, -5));
+        const file = join(path, name);
+        const info = await lstat(file);
+        if (!info.isFile() || info.size > 8192) { unreadable = true; continue; }
+        try {
+          const record = z.object({ generation: z.number(), hello: z.object({
+            owner_generation: z.number().optional(), ppid: z.number().optional(),
+            vendor_session_id: z.string().optional(), cwd: z.string().optional(),
+          }) }).parse(JSON.parse(await readFile(file, "utf8")) as unknown);
+          rows.push({ generation, recordGenerationMatches: record.generation === generation,
+            ownerGenerationMatches: record.hello.owner_generation === generation,
+            ownerMatches: record.hello.ppid === process.pid, resumedVendorMatches: record.hello.vendor_session_id === "resumed-b",
+            cwdMatches: record.hello.cwd === cwd, ended: names.includes(`${generation}.ended`) });
+        } catch { unreadable = true; }
+      }
+      journals.push({ rows, truncated: names.filter(name => name.endsWith(".json")).length > 32 });
+    }
+  } catch { unreadable = true; }
+  let identity;
+  try { identity = Identity.safeParse(JSON.parse(reply.text) as unknown); } catch { /* Error replies are plain text. */ }
+  return { journals, unreadable, replyError: reply.error, identityParsed: identity?.success === true,
+    resumedVendorMatches: identity?.success ? identity.data.session.vendor_session_id === "resumed-b" : null,
+    registeredSessionMatches: identity?.success ? identity.data.session.id === sessionId : null };
+}
 
 async function fixture() {
   const home = await mkdtemp(join(tmpdir(), "kom-resume-process-"));
@@ -198,9 +235,16 @@ it("publishes resumed authority and ends it even when diagnostic storage never c
       syncBuiltinESMExports();
     `);
     expectHookProcessTime(await f.hook("resumed-b", "SessionStart", preload), "SessionStart stalled observation");
-    expect((await f.whoami()).vendor_session_id).toBe("resumed-b");
-    expectHookProcessTime(await f.hook("resumed-b", "SessionEnd", preload), "SessionEnd stalled observation");
-    expect((await f.call("whoami")).error).toBe(true);
+    const resumed = await f.whoami();
+    expect(resumed.vendor_session_id).toBe("resumed-b");
+    const elapsed = await f.hook("resumed-b", "SessionEnd", preload);
+    expectHookProcessTime(elapsed, "SessionEnd stalled observation");
+    const reply = await f.call("whoami");
+    if (!reply.error) {
+      console.error("[retirement-failure]", JSON.stringify({ elapsed,
+        ...await retirementEvidence(f.home, f.cwd, reply, resumed.id) }));
+    }
+    expect(reply.error).toBe(true);
   } finally { await f.close(); }
 }, 15_000);
 

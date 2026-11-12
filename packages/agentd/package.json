@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "name": "@kommutator/agentd",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "kommutator per-host daemon: hub link, local IPC, outbox, vendor adapters",
   "type": "module",
   "main": "./dist/index.js",

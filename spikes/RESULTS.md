@@ -947,3 +947,60 @@ differs from the earlier direct-Node A/B; no reliable wrapper-latency improvemen
 is established. Post-run host load is context only, not evidence of the cause.
 The release remains blocked pending diagnostic qualification; no service update
 or publication occurred during these experiments.
+
+
+## 2026-11-12 — restarted session and blocked 0.12.5 qualification
+
+Observed MCP 0.12.3, daemon 0.12.3 (contract 3 compatible), active caller, connected
+hub and empty outbox. Docker `kommutator-hub:release-0.12.3` is healthy. Canonical
+Kommutator and Agentic Forge feedback memberships are retained. Native hook
+headers were delivered after restart; individual failed hook observations remain,
+so this does not certify every hook invocation or native idle wake.
+
+The staged 0.12.4 branch check 43135901281 failed a rejected-hook observation
+assertion (`attempted` instead of final `failed`). Same-commit PR 43135906663 and
+tag 43135917242 passed; no rerun was requested. Independent review identified
+the test's invalid guarantee of best-effort final persistence. The immutable
+0.12.4 tag/assets remain an unpublished draft. Candidate 0.12.5 separates the
+real-process rejection/zero-registration contract from deterministic final
+observation persistence. Eight focused tests passed, and internal/external
+review approved that correction without findings.
+
+One complete 0.12.5 qualification passed build/typecheck and 573 workspace tests
+but failed `claude-resume-process.test.ts:203`: after SessionEnd with diagnostic
+storage intentionally stalled, `whoami` still succeeded. Initial and resumed
+identities passed. SessionEnd took 208.118 ms, below the 300 ms test cap; this
+is a semantic failure, not a timing assertion failure. Script/export stages were
+not reached. The original cause is unknown; cleanup removed the fixture state
+and the assertion did not print its collected authority evidence. Log retained
+locally at `/tmp/kommutator-v0125-release-check.log`; no credentials are included
+in this report. No production deployment occurred.
+
+Second qualification after reviewed failure-only diagnostics passed 572 workspace
+tests and failed two. Original stalled-observation retirement passed (187.984 ms).
+B-to-A-to-B instead retained A after a 230.683 ms final B SessionStart; recorded
+journals contained only generation 1 B and generation 2 A. Missing next-generation
+publication is observed, but its cause is unknown. A separate delayed-delivery
+retirement fixture reported an IPC timeout with no definitive operation/cleanup
+label. Build/typecheck passed; script/export stages were not reached. Log:
+`/tmp/kommutator-v0125-release-check-round2.log`. No release/deployment occurred.
+
+A bounded follow-up phase diagnostic first failed because its execFile wrapper
+did not preserve Node's promisify metadata; that run is invalid for product
+conclusions. One corrected trace preserved the actual custom-promisify descriptor.
+All four SessionStart generations published, with atomic links completing at
+106.94, 102.02, 102.42 and 117.40 ms after preload. Hook durations were
+172.29–207.35 ms. Three deadline callbacks fired at 143.57, 144.23 and 146.19 ms
+after publication. The later IPC timeout's operation/cleanup phase remains
+unidentified. The preserved descriptor bypassed the ps timing wrapper, so no ps
+duration conclusion is available. Missing publication was not reproduced.
+Logs: `/tmp/kom-v0125-phase-diagnostic.log` (invalid instrumentation) and
+`/tmp/kom-v0125-phase-corrected.log` (corrected trace). No runtime changes followed.
+
+A separate contemporaneous host sample showed six CPUs and high I/O pressure
+(some/full avg10 86.46/81.03 percent). It was not sampled during each failing hook
+and does not establish the historical cause. Other workloads were not stopped.
+Next: label body versus teardown IPC operations and preserve original body errors
+when cleanup fails, then trace publication phases under the failing workload.
+Do not relax timers, identity fences or assertions, or repeat qualification merely
+to obtain a passing result. Both candidate release and local deployment stay held.
