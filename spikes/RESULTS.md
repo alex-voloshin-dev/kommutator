@@ -1059,3 +1059,26 @@ is implied. Log: /tmp/kommutator-v0125-final-release-check.log.
   Docker had not restarted. Cause is unproven; EOF cleanup is not claimed to fix it.
   Day-long, physical subnet, unattended reboot, native Work/wake and other-platform
   acceptance gates remain open.
+
+
+## 2026-11-12 — #9 scheduler contribution and #19 registration race
+
+Bounded investigation on 0.12.5 collected 80 interleaved hook samples. One untraced
+manual cold start took 310.501 ms (cause unknown). A natural traced 207.380 ms
+outlier entered JavaScript at 90.204 ms; Linux schedstat measured 54.349 ms total
+main-thread runnable wait, 38.327 ms already before preload. The hook finished
+without firing its deadline. Scheduling delay is an observed contributor to this
+sample, not proof of all historical CI causes or a calibrated tracing correction.
+
+For original manual lifecycle #19, a baseline passed; injecting 200 ms before local
+registration reproduced the exact missing-registration error with hooks below
+200 ms. Delaying only hub upsert did not. A post-failure-only snapshot showed the
+missing record appear without another hook/identity-call retry. This proves that
+fail-open hook exit can race an accepted but unfinished daemon registration. The
+injected delay does not identify the original slow prerequisite. No production fix,
+timer increase or assertion relaxation was made; both issues remain open.
+
+See [investigation](../docs/sdlc/hook-registration-investigation/investigation.md)
+and evidence `2026-11-12-hook-scheduler-investigation.json` /
+`2026-11-12-registration-race-investigation.json`. Next instrument accepted hello,
+registration queue/process-birth/local-save/flush boundaries in the CI fixture.

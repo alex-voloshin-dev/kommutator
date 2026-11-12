@@ -1,0 +1,325 @@
+{
+  "date": "2026-11-12",
+  "version": "0.12.5",
+  "sourceCommit": "4d0602f922d91692c66e4bb00799f336ab59070a",
+  "node": "26.13.0",
+  "scope": "Synthetic manual Claude lifecycle; real child hook/MCP/daemon processes and isolated in-memory hub. No live services accessed.",
+  "runs": [
+    {
+      "name": "baseline-trace",
+      "injection": "none",
+      "assertionResult": "passed",
+      "hookSamples": [
+        {
+          "issue19": "fixture-author",
+          "elapsed": 174.1741730000001,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.5301159999999996
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 3.231932999999998
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 3.3214339999999964
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 59.697208
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 71.319626,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "ipc.reply",
+              "ms": 107.936699,
+              "id": 1
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 109.10991100000001,
+              "method": "whoami"
+            },
+            {
+              "phase": "ipc.reply",
+              "ms": 120.945132,
+              "id": 2
+            }
+          ]
+        },
+        {
+          "issue19": "fixture-reviewer",
+          "elapsed": 144.9670759999999,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.5721160000000012
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 3.4267350000000008
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 3.538336000000001
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 52.036730000000006
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 62.942441,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "ipc.reply",
+              "ms": 81.771533,
+              "id": 1
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 83.016445,
+              "method": "whoami"
+            },
+            {
+              "phase": "ipc.reply",
+              "ms": 94.963567,
+              "id": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delayed-probe-trace",
+      "injection": "200ms asynchronous wait at registerOwner entry, before process birth probe",
+      "assertionResult": "failed as expected",
+      "hookSamples": [
+        {
+          "issue19": "fixture-author",
+          "elapsed": 196.3629759999999,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.3360119999999966
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 2.813625000000002
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 2.947127000000002
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 55.36630099999999
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 65.939896,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "deadline.fired",
+              "ms": 143.891201
+            }
+          ]
+        },
+        {
+          "issue19": "fixture-reviewer",
+          "elapsed": 186.58608700000013,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.173809999999996
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 2.4709219999999945
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 2.5753229999999974
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 49.582747999999995
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 59.100334000000004,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "deadline.fired",
+              "ms": 142.866491
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delayed-hub-trace",
+      "injection": "200ms asynchronous wait in HubLink.request for session.upsert only",
+      "assertionResult": "passed",
+      "hookSamples": [
+        {
+          "issue19": "fixture-author",
+          "elapsed": 195.74096899999995,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.3835130000000007
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 2.850327
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 3.021929
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 56.504039
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 73.2929,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "deadline.fired",
+              "ms": 142.687062
+            }
+          ]
+        },
+        {
+          "issue19": "fixture-reviewer",
+          "elapsed": 192.64273900000012,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.3612129999999993
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 2.8089259999999996
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 2.9524280000000047
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 58.636658999999995
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 70.030468,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "deadline.fired",
+              "ms": 143.04976499999998
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delayed-probe-settlement",
+      "injection": "same registerOwner delay plus post-failure-only400ms observation; no retry",
+      "assertionResult": "failed as expected",
+      "hookSamples": [
+        {
+          "issue19": "fixture-author",
+          "elapsed": 191.67990699999996,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.304912999999999
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 2.8010269999999977
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 2.937827999999996
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 56.094429
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 66.24372499999998,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "deadline.fired",
+              "ms": 143.448753
+            }
+          ]
+        },
+        {
+          "issue19": "fixture-reviewer",
+          "elapsed": 183.769632,
+          "phases": [
+            {
+              "phase": "preload.ready",
+              "ms": 1.1258109999999988
+            },
+            {
+              "phase": "entry.enter",
+              "ms": 2.5315240000000045
+            },
+            {
+              "phase": "deadline.armed",
+              "ms": 2.6434250000000006
+            },
+            {
+              "phase": "runHook.enter",
+              "ms": 53.481104
+            },
+            {
+              "phase": "ipc.send",
+              "ms": 63.136596,
+              "method": "ipc.hello"
+            },
+            {
+              "phase": "deadline.fired",
+              "ms": 142.457443
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "findings": [
+    "Delay before local record creation reproduces original missing-registration error while total hook duration remains below200ms.",
+    "200ms hub request delay alone does not reproduce original missing-registration assertion, although hooks hit140msdeadline.",
+    "After failure, reviewer registration completes without another hook or whoami retry; ownership is the live parent, not exited hook."
+  ],
+  "limits": [
+    "Injected delay proves sufficient mechanism, not original CI cause.",
+    "Baseline includes diagnostic preload overhead and is not a production latency benchmark.",
+    "The delay named probe is injected at registerOwner entry, not evidence that OS ps itself was slow.",
+    "Original historical CI lacks phase evidence; not reproduced without injected delay here."
+  ],
+  "harness_sha256": {
+    "issue19-diagnostic.test.ts": "9ea6ef8e654be2e8476312778201145eb57071b1248975f23df15dbadaa4c08b",
+    "kom-issue19-daemon-probe.mjs": "568ee7e5485919de7079bce398d70bd869b7e2cf66992b1fafe1b6e1eff8d08a",
+    "kom-issue19-hook-preload.mjs": "ddacfccd6d0cb08893a65dd6a87b4ac0447aff5a08b61eaf464b06a71c6d30ed",
+    "kom-issue19-hub-delay.mjs": "3c86f030daa00f0ebf327006175ccf9c69c06d696037392d4a2c83ffd47cd2d6"
+  },
+  "trace_clock": "Hook phase ms are relative to preload performance.now, not parent spawn. Hook elapsed is parent spawn to close."
+}

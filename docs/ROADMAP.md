@@ -32,8 +32,8 @@ are 0.12.5; this does not hot-reload the existing chat process.
 
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
-| 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Ten bounded local lifecycle runs passed (40 tests); capture labelled hook outcomes and first failed identity lookup; registration rejection is proven to pass the old fail-open exit assertion, but the original CI trigger remains unknown; preserve deadlines, fences and single attempts |
-| 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Phase diagnostics and hook import A/B recorded in [RESULTS](../spikes/RESULTS.md); capture a traced outlier or CI evidence next; establish a cause before changing behavior; retain the temporary 300 ms full-process cap, 200 ms target and unchanged 140/90 ms internal timers |
+| 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled delayed-local-registration experiment reproduces the exact error below 200 ms; hub-only delay does not. Capture daemon queue/process-birth/local-save phases in CI; original trigger remains unknown. Preserve deadlines, fences and single attempts |
+| 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
 | Ongoing | Feedback and release maintenance | Investigate substantive feedback, preserve receipt semantics, validate fixes and announce qualified releases in `kommutator-feedback`; deploy and verify the local hub and daemon under the existing maintainer authorization |
 
 The earlier unread replay report has no established root cause: the reporter cleared the

@@ -1,0 +1,4713 @@
+{
+  "results": {
+    "metadata": {
+      "base_commit": "4d0602f922d91692c66e4bb00799f336ab59070a",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "version": "0.12.5",
+      "node": "v26.13.0",
+      "platform": "linux",
+      "arch": "x64",
+      "artifactHashes": {
+        "chunk-65CXHMVY.js": "e11ebd015861f8c9790154ee78175aa77433cc6827becbbd21f9e4487aab4323",
+        "chunk-75MOBK6D.js": "45b489a351d682b8df3f583179a0b219c65440bd989cd39e5d3b1cf85e3966d6",
+        "chunk-BGRZEQYW.js": "6bd0532bd939c9ef452c703afd77532ce189b05061c889839548989f831fe075",
+        "chunk-HEML4MQG.js": "de0a30d71e80c23fb19ec338858bc0c7c806a1e67acdd87f0ce6c3ded78fa0cb",
+        "chunk-V2H6W3RB.js": "bc51ba925adb8492718f6942cba47084107314d101ce0059f18feb4e8180d0bf",
+        "chunk-VJ5CK5RX.js": "93f7859a032d45328cd077934de38e4f881f7ea6812025eed08d4eaba6d5ad35",
+        "chunk-Y3SZLMOP.js": "84c9f623721a3fdd285858a2d9595b5a03a1c78d457d15f05cd28d36e13dab10",
+        "chunk-ZCMY5GLL.js": "f277993a557860991d1d56dd19147f03cda63bab0daaf4067e831c9cb7de71db",
+        "commands-7YX25WGF.js": "5ea8b9e28c8097b655366091eb8b4286bf7e06536b84d58c70079049116e4295",
+        "hook-authority-EXZGFSUA.js": "9b60092128e64476c5e9e7e95d4ba6f3c2fb63202cf03da3544aaf1fa7443728",
+        "hooks-H44NPGZX.js": "380ea44cb6e6c9a8603fa343aa1f81509ae3b1833c26e6f1cdc30575aa32073b",
+        "index.js": "4cd61e0ed8a23c3bd819b052c92d84216f007fbe8e0aaf0f77bc54f6671540d6",
+        "mcp-46OX3KMP.js": "9038d62fdd2c5f99fae4970e90a4b76142d4b8d35a55fe059ca1d42e0757c7d3",
+        "watch-SECUD7TZ.js": "baf97af3228b0dce879e2bd8f62463e062914285c011b3533776f07c857ddb7a"
+      }
+    },
+    "summary": [
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "samples": 8,
+        "median_ms": 112.0400065,
+        "max_ms": 119.63937,
+        "over_200": 0,
+        "over_300": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "samples": 8,
+        "median_ms": 113.9366725,
+        "max_ms": 128.809842,
+        "over_200": 0,
+        "over_300": 0
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "samples": 8,
+        "median_ms": 115.2507635,
+        "max_ms": 310.500901,
+        "over_200": 1,
+        "over_300": 1
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "samples": 8,
+        "median_ms": 113.6607455,
+        "max_ms": 129.749508,
+        "over_200": 0,
+        "over_300": 0
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "samples": 8,
+        "median_ms": 176.7767005,
+        "max_ms": 183.507083,
+        "over_200": 0,
+        "over_300": 0
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "samples": 8,
+        "median_ms": 182.59335950000002,
+        "max_ms": 190.266377,
+        "over_200": 0,
+        "over_300": 0
+      }
+    ],
+    "samples": [
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 0,
+        "total_ms": 310.500901,
+        "times": {
+          "parent_before_spawn": "185165095879122",
+          "parent_spawn": "185165101175071",
+          "parent_exit": "185165406347123",
+          "parent_close": "185165406380023"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 0,
+        "total_ms": 118.280803,
+        "times": {
+          "parent_before_spawn": "185166548095676",
+          "parent_spawn": "185166550691000",
+          "parent_exit": "185166666368179",
+          "parent_close": "185166666376479"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955030,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185166586363833",
+              "sched": [
+                34599300,
+                289100,
+                7
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185166587573444"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185166587645045"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185166589668064"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185166641269945"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185166641275045"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185166641783650"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185166646213791"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185166661468633"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185166661589434",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185166661853437",
+              "code": 0,
+              "sched": [
+                103360900,
+                632700,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 81228,
+                "systemCPUTime": 42751,
+                "maxRSS": 63804,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6161,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 167,
+                "involuntaryContextSwitches": 6
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 1,
+        "total_ms": 129.749508,
+        "times": {
+          "parent_before_spawn": "185166850498693",
+          "parent_spawn": "185166852858815",
+          "parent_exit": "185166980174100",
+          "parent_close": "185166980248201"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955084,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185166885364718",
+              "sched": [
+                32470000,
+                0,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185166886678230"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185166886753431"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185166888781050"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185166939644423"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185166939651023"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185166940310829"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185166945137074"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185166971351818"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185166971487620",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185166971786422",
+              "code": 0,
+              "sched": [
+                100845400,
+                61700,
+                42
+              ],
+              "usage": {
+                "userCPUTime": 101215,
+                "systemCPUTime": 20243,
+                "maxRSS": 63788,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6152,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 170,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 1,
+        "total_ms": 129.829508,
+        "times": {
+          "parent_before_spawn": "185167167986549",
+          "parent_spawn": "185167170231170",
+          "parent_exit": "185167297807157",
+          "parent_close": "185167297816057"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 2,
+        "total_ms": 114.288964,
+        "times": {
+          "parent_before_spawn": "185167479823451",
+          "parent_spawn": "185167481956071",
+          "parent_exit": "185167594101115",
+          "parent_close": "185167594112415"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 2,
+        "total_ms": 113.192452,
+        "times": {
+          "parent_before_spawn": "185167853439826",
+          "parent_spawn": "185167855366644",
+          "parent_exit": "185167966623678",
+          "parent_close": "185167966632278"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955213,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185167890452170",
+              "sched": [
+                33291400,
+                169500,
+                7
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185167891627381"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185167891693182"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185167893652700"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185167941988049"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185167942041349"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185167942520254"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185167946379190"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185167961712732"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185167961860434",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185167962113436",
+              "code": 0,
+              "sched": [
+                98375600,
+                187900,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 99248,
+                "systemCPUTime": 19086,
+                "maxRSS": 63588,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6156,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 166,
+                "involuntaryContextSwitches": 3
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 3,
+        "total_ms": 112.562346,
+        "times": {
+          "parent_before_spawn": "185168149222274",
+          "parent_spawn": "185168151058491",
+          "parent_exit": "185168261773820",
+          "parent_close": "185168261784620"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955247,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185168183834696",
+              "sched": [
+                29842700,
+                0,
+                4
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185168185137308"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185168185207609"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185168187061826"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185168235071772"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185168235077172"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185168235510776"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185168239279811"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185168256452770"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185168256638672",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185168256854874",
+              "code": 0,
+              "sched": [
+                96040100,
+                2800,
+                39
+              ],
+              "usage": {
+                "userCPUTime": 82546,
+                "systemCPUTime": 33769,
+                "maxRSS": 63856,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6168,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 160,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 3,
+        "total_ms": 103.35116,
+        "times": {
+          "parent_before_spawn": "185168420631296",
+          "parent_spawn": "185168422220811",
+          "parent_exit": "185168523971856",
+          "parent_close": "185168523982456"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 4,
+        "total_ms": 121.110217,
+        "times": {
+          "parent_before_spawn": "185168707326040",
+          "parent_spawn": "185168709211460",
+          "parent_exit": "185168828425557",
+          "parent_close": "185168828436257"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 4,
+        "total_ms": 114.442045,
+        "times": {
+          "parent_before_spawn": "185169012862063",
+          "parent_spawn": "185169014973886",
+          "parent_exit": "185169127293108",
+          "parent_close": "185169127304108"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955369,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185169049057657",
+              "sched": [
+                34123100,
+                0,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185169050185969"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185169050255470"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185169052216991"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185169101863231"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185169101869231"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185169102381337"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185169106853286"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185169122256153"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185169122434155",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185169122711058",
+              "code": 0,
+              "sched": [
+                100288300,
+                0,
+                41
+              ],
+              "usage": {
+                "userCPUTime": 92862,
+                "systemCPUTime": 27084,
+                "maxRSS": 63680,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6179,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 174,
+                "involuntaryContextSwitches": 0
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 5,
+        "total_ms": 112.702626,
+        "times": {
+          "parent_before_spawn": "185169310611502",
+          "parent_spawn": "185169312525823",
+          "parent_exit": "185169423298628",
+          "parent_close": "185169423314128"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955403,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185169350035331",
+              "sched": [
+                36337600,
+                137500,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185169351172943"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185169351241344"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185169353093864"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185169398400557"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185169398405857"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185169398820661"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185169402814705"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185169418379674"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185169418510176",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185169418743178",
+              "code": 0,
+              "sched": [
+                101441800,
+                147800,
+                38
+              ],
+              "usage": {
+                "userCPUTime": 103477,
+                "systemCPUTime": 17246,
+                "maxRSS": 63532,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6163,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 159,
+                "involuntaryContextSwitches": 3
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 5,
+        "total_ms": 116.212563,
+        "times": {
+          "parent_before_spawn": "185169606908225",
+          "parent_spawn": "185169608965247",
+          "parent_exit": "185169723113988",
+          "parent_close": "185169723120788"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 6,
+        "total_ms": 114.046938,
+        "times": {
+          "parent_before_spawn": "185169908266599",
+          "parent_spawn": "185169910182020",
+          "parent_exit": "185170022300137",
+          "parent_close": "185170022313537"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 6,
+        "total_ms": 114.129039,
+        "times": {
+          "parent_before_spawn": "185170205852831",
+          "parent_spawn": "185170207539849",
+          "parent_exit": "185170319974970",
+          "parent_close": "185170319981870"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955525,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185170240290304",
+              "sched": [
+                29150100,
+                12500,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185170241641419"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185170241725120"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185170243935344"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185170294911298"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185170294916298"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185170295313902"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185170299075543"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185170314915415"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185170315107117",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185170315365920",
+              "code": 0,
+              "sched": [
+                98626600,
+                125100,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 92886,
+                "systemCPUTime": 27091,
+                "maxRSS": 63968,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6162,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 170,
+                "involuntaryContextSwitches": 2
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 7,
+        "total_ms": 108.866883,
+        "times": {
+          "parent_before_spawn": "185170478793594",
+          "parent_spawn": "185170481065219",
+          "parent_exit": "185170587654677",
+          "parent_close": "185170587660477"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955556,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185170513174168",
+              "sched": [
+                31811500,
+                347200,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185170514407181"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185170514504682"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185170516548404"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185170563073110"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185170563078110"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185170563486714"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185170567338956"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185170582243118"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185170582497421",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185170582782424",
+              "code": 0,
+              "sched": [
+                96166500,
+                475800,
+                43
+              ],
+              "usage": {
+                "userCPUTime": 105866,
+                "systemCPUTime": 9624,
+                "maxRSS": 63704,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6181,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 166,
+                "involuntaryContextSwitches": 11
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 7,
+        "total_ms": 111.62531,
+        "times": {
+          "parent_before_spawn": "185170771921376",
+          "parent_spawn": "185170774170101",
+          "parent_exit": "185170883540886",
+          "parent_close": "185170883546686"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 0,
+        "total_ms": 179.067942,
+        "times": {
+          "parent_before_spawn": "185171221314648",
+          "parent_spawn": "185171223037167",
+          "parent_exit": "185171400376690",
+          "parent_close": "185171400382590"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 0,
+        "total_ms": 188.657644,
+        "times": {
+          "parent_before_spawn": "185171585481596",
+          "parent_spawn": "185171587256416",
+          "parent_exit": "185171774133640",
+          "parent_close": "185171774139240"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955699,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185171627755855",
+              "sched": [
+                37520400,
+                36400,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185171629185370"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185171629310772"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185171631449995"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185171663491542"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185171663497742"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185171663933247"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185171666899979"
+            },
+            {
+              "name": "ps_start",
+              "at": "185171671847333"
+            },
+            {
+              "name": "ps_end",
+              "at": "185171682186845"
+            },
+            {
+              "name": "generation_published",
+              "at": "185171689057519"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185171690017230"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185171690019730"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185171707987024"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185171707989824"
+            },
+            {
+              "name": "deadline_fired",
+              "at": "185171769126386"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185171769163486",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185171769382089",
+              "code": 0,
+              "sched": [
+                124578900,
+                144400,
+                48
+              ],
+              "usage": {
+                "userCPUTime": 122154,
+                "systemCPUTime": 25273,
+                "maxRSS": 63448,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6342,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 32,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 208,
+                "involuntaryContextSwitches": 2
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 1,
+        "total_ms": 182.267273,
+        "times": {
+          "parent_before_spawn": "185171958948641",
+          "parent_spawn": "185171960718160",
+          "parent_exit": "185172141209914",
+          "parent_close": "185172141215914"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955761,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185171997732661",
+              "sched": [
+                35933100,
+                0,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185171998873873"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185171998943874"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185172000844594"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185172031735529"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185172031740329"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185172032155533"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185172034914763"
+            },
+            {
+              "name": "ps_start",
+              "at": "185172039677515"
+            },
+            {
+              "name": "ps_end",
+              "at": "185172048888014"
+            },
+            {
+              "name": "generation_published",
+              "at": "185172055029681"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185172056466996"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185172056469396"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185172075178799"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185172075181599"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185172136447362"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185172136524063",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185172136730665",
+              "code": 0,
+              "sched": [
+                115780100,
+                314400,
+                55
+              ],
+              "usage": {
+                "userCPUTime": 100680,
+                "systemCPUTime": 37177,
+                "maxRSS": 63528,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6373,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 40,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 221,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 1,
+        "total_ms": 180.613255,
+        "times": {
+          "parent_before_spawn": "185172328194837",
+          "parent_spawn": "185172329957057",
+          "parent_exit": "185172508803492",
+          "parent_close": "185172508808092"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 2,
+        "total_ms": 183.507083,
+        "times": {
+          "parent_before_spawn": "185172729351279",
+          "parent_spawn": "185172731377901",
+          "parent_exit": "185172912853662",
+          "parent_close": "185172912858362"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 2,
+        "total_ms": 182.723713,
+        "times": {
+          "parent_before_spawn": "185173123850515",
+          "parent_spawn": "185173125643532",
+          "parent_exit": "185173306569328",
+          "parent_close": "185173306574228"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955924,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185173160560059",
+              "sched": [
+                34919300,
+                0,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185173161932372"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185173162044673"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185173164085392"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185173193370967"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185173193376367"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185173193646069"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185173196333194"
+            },
+            {
+              "name": "ps_start",
+              "at": "185173200880737"
+            },
+            {
+              "name": "ps_end",
+              "at": "185173209880821"
+            },
+            {
+              "name": "generation_published",
+              "at": "185173215817777"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185173216837087"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185173216838987"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185173235395960"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185173235398660"
+            },
+            {
+              "name": "deadline_fired",
+              "at": "185173301400779"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185173301436779",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185173301700982",
+              "code": 0,
+              "sched": [
+                109497800,
+                7100,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 119864,
+                "systemCPUTime": 11237,
+                "maxRSS": 63528,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6318,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 32,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 197,
+                "involuntaryContextSwitches": 0
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 3,
+        "total_ms": 179.402982,
+        "times": {
+          "parent_before_spawn": "185173517049800",
+          "parent_spawn": "185173518961018",
+          "parent_exit": "185173696447782",
+          "parent_close": "185173696452782"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3955951,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185173554020447",
+              "sched": [
+                33747500,
+                73900,
+                4
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185173555428160"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185173555504861"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185173557627381"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185173583491623"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185173583497223"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185173583746525"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185173586458151"
+            },
+            {
+              "name": "ps_start",
+              "at": "185173591262496"
+            },
+            {
+              "name": "ps_end",
+              "at": "185173599798676"
+            },
+            {
+              "name": "generation_published",
+              "at": "185173606142035"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185173607030544"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185173607032744"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185173628324543"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185173628327543"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185173691633737"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185173691722237",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185173691928839",
+              "code": 0,
+              "sched": [
+                112025900,
+                83500,
+                53
+              ],
+              "usage": {
+                "userCPUTime": 116449,
+                "systemCPUTime": 17915,
+                "maxRSS": 63756,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6388,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 40,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 217,
+                "involuntaryContextSwitches": 0
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 3,
+        "total_ms": 172.244911,
+        "times": {
+          "parent_before_spawn": "185173882309721",
+          "parent_spawn": "185173884111337",
+          "parent_exit": "185174054549932",
+          "parent_close": "185174054554632"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 4,
+        "total_ms": 177.276758,
+        "times": {
+          "parent_before_spawn": "185174239958767",
+          "parent_spawn": "185174241956285",
+          "parent_exit": "185174417230825",
+          "parent_close": "185174417235525"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 4,
+        "total_ms": 182.463006,
+        "times": {
+          "parent_before_spawn": "185174627741894",
+          "parent_spawn": "185174629512411",
+          "parent_exit": "185174810199399",
+          "parent_close": "185174810204900"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956069,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185174662775322",
+              "sched": [
+                31182100,
+                9500,
+                4
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185174664618539"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185174664735941"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185174667189263"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185174701400983"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185174701405984"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185174701691786"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185174704399311"
+            },
+            {
+              "name": "ps_start",
+              "at": "185174708941554"
+            },
+            {
+              "name": "ps_end",
+              "at": "185174719113649"
+            },
+            {
+              "name": "generation_published",
+              "at": "185174727545928"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185174728798139"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185174728802439"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185174751383750"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185174751386450"
+            },
+            {
+              "name": "deadline_fired",
+              "at": "185174804614947"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185174804660748",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185174804933350",
+              "code": 0,
+              "sched": [
+                122898200,
+                8072300,
+                74
+              ],
+              "usage": {
+                "userCPUTime": 115445,
+                "systemCPUTime": 28861,
+                "maxRSS": 63580,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6354,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 32,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 191,
+                "involuntaryContextSwitches": 43
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 5,
+        "total_ms": 190.266377,
+        "times": {
+          "parent_before_spawn": "185175003582705",
+          "parent_spawn": "185175006076529",
+          "parent_exit": "185175193842482",
+          "parent_close": "185175193849082"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956144,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185175042441268",
+              "sched": [
+                35129900,
+                27200,
+                7
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185175043862081"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185175043938182"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185175046301504"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185175077233993"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185175077240493"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185175077525296"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185175080304622"
+            },
+            {
+              "name": "ps_start",
+              "at": "185175085853674"
+            },
+            {
+              "name": "ps_end",
+              "at": "185175098064788"
+            },
+            {
+              "name": "generation_published",
+              "at": "185175106878070"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185175107911380"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185175107913480"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185175129240779"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185175129243379"
+            },
+            {
+              "name": "deadline_fired",
+              "at": "185175184296693"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185175184344493",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185175184616296",
+              "code": 0,
+              "sched": [
+                123612500,
+                5069000,
+                58
+              ],
+              "usage": {
+                "userCPUTime": 102267,
+                "systemCPUTime": 43829,
+                "maxRSS": 63588,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6381,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 32,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 196,
+                "involuntaryContextSwitches": 22
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 5,
+        "total_ms": 165.745647,
+        "times": {
+          "parent_before_spawn": "185175409363795",
+          "parent_spawn": "185175411211112",
+          "parent_exit": "185175575104542",
+          "parent_close": "185175575109442"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 6,
+        "total_ms": 176.276643,
+        "times": {
+          "parent_before_spawn": "185175759961767",
+          "parent_spawn": "185175762138088",
+          "parent_exit": "185175936230110",
+          "parent_close": "185175936238410"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 6,
+        "total_ms": 186.652539,
+        "times": {
+          "parent_before_spawn": "185176122517347",
+          "parent_spawn": "185176124876469",
+          "parent_exit": "185176309163286",
+          "parent_close": "185176309169886"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956269,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185176162112216",
+              "sched": [
+                35208400,
+                41200,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185176163555529"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185176163626930"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185176165602348"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185176195674529"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185176195680029"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185176195921931"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185176198759057"
+            },
+            {
+              "name": "ps_start",
+              "at": "185176203265699"
+            },
+            {
+              "name": "ps_end",
+              "at": "185176212139182"
+            },
+            {
+              "name": "generation_published",
+              "at": "185176219019046"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185176220211957"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185176220218057"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185176241181353"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185176241184253"
+            },
+            {
+              "name": "deadline_fired",
+              "at": "185176304337541"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185176304373642",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185176304604444",
+              "code": 0,
+              "sched": [
+                116741400,
+                2055000,
+                46
+              ],
+              "usage": {
+                "userCPUTime": 107030,
+                "systemCPUTime": 29748,
+                "maxRSS": 63680,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6361,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 32,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 193,
+                "involuntaryContextSwitches": 2
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": true,
+        "iteration": 7,
+        "total_ms": 167.766587,
+        "times": {
+          "parent_before_spawn": "185176502694690",
+          "parent_spawn": "185176504745409",
+          "parent_exit": "185176670456077",
+          "parent_close": "185176670461277"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956322,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185176534666888",
+              "sched": [
+                28319800,
+                0,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185176535780799"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185176535844699"
+            },
+            {
+              "name": "authority_import_start",
+              "at": "185176538035920"
+            },
+            {
+              "name": "authority_import_end",
+              "at": "185176568641405"
+            },
+            {
+              "name": "authority_prepare_start",
+              "at": "185176568646605"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185176568890207"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185176571455031"
+            },
+            {
+              "name": "ps_start",
+              "at": "185176575774871"
+            },
+            {
+              "name": "ps_end",
+              "at": "185176584692255"
+            },
+            {
+              "name": "generation_published",
+              "at": "185176590295807"
+            },
+            {
+              "name": "authority_prepare_end",
+              "at": "185176591181315"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185176591182915"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185176608310372"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185176608313472"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185176665677038"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185176665740539",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185176665971941",
+              "code": 0,
+              "sched": [
+                104635100,
+                21300,
+                55
+              ],
+              "usage": {
+                "userCPUTime": 109917,
+                "systemCPUTime": 15352,
+                "maxRSS": 63652,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6375,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 40,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 216,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "authority_records": 1
+      },
+      {
+        "scenario": "plugin-start",
+        "traced": false,
+        "iteration": 7,
+        "total_ms": 161.890312,
+        "times": {
+          "parent_before_spawn": "185176857025191",
+          "parent_spawn": "185176858696504",
+          "parent_exit": "185177018906703",
+          "parent_close": "185177018915503"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "authority_records": 1
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 0,
+        "total_ms": 110.749398,
+        "times": {
+          "parent_before_spawn": "185177050916863",
+          "parent_spawn": "185177052639277",
+          "parent_exit": "185177161661961",
+          "parent_close": "185177161666261"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 0,
+        "total_ms": 112.24621,
+        "times": {
+          "parent_before_spawn": "185177165495492",
+          "parent_spawn": "185177167254306",
+          "parent_exit": "185177277737902",
+          "parent_close": "185177277741702"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956398,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185177199455067",
+              "sched": [
+                29516400,
+                59000,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185177200690677"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185177200758778"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185177202659793"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185177249954377"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185177249958877"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185177250358580"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185177254011410"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185177273086864"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185177273188565",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185177273404967",
+              "code": 0,
+              "sched": [
+                96444900,
+                93600,
+                36
+              ],
+              "usage": {
+                "userCPUTime": 99687,
+                "systemCPUTime": 15336,
+                "maxRSS": 63604,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5942,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 171,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 1,
+        "total_ms": 112.084408,
+        "times": {
+          "parent_before_spawn": "185177281282631",
+          "parent_spawn": "185177282926644",
+          "parent_exit": "185177393362239",
+          "parent_close": "185177393367039"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956409,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185177313685993",
+              "sched": [
+                29722800,
+                0,
+                4
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185177314815803"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185177314881403"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185177316837819"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185177364658707"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185177364664007"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185177365058910"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185177368968942"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185177388633701"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185177388743902",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185177388985104",
+              "code": 0,
+              "sched": [
+                95886300,
+                410500,
+                35
+              ],
+              "usage": {
+                "userCPUTime": 98358,
+                "systemCPUTime": 17563,
+                "maxRSS": 63304,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5923,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 164,
+                "involuntaryContextSwitches": 2
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 1,
+        "total_ms": 112.624613,
+        "times": {
+          "parent_before_spawn": "185177397364772",
+          "parent_spawn": "185177399156686",
+          "parent_exit": "185177509984385",
+          "parent_close": "185177509989385"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 2,
+        "total_ms": 119.63937,
+        "times": {
+          "parent_before_spawn": "185177514496722",
+          "parent_spawn": "185177516688339",
+          "parent_exit": "185177634131192",
+          "parent_close": "185177634136092"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 2,
+        "total_ms": 113.462519,
+        "times": {
+          "parent_before_spawn": "185177637789321",
+          "parent_spawn": "185177639598436",
+          "parent_exit": "185177751247540",
+          "parent_close": "185177751251840"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956449,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185177674703021",
+              "sched": [
+                32975900,
+                0,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185177675881730"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185177675948231"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185177678803754"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185177725703534"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185177725708334"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185177726166637"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185177730036569"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185177746658803"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185177746747704",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185177746953806",
+              "code": 0,
+              "sched": [
+                103855900,
+                23400,
+                35
+              ],
+              "usage": {
+                "userCPUTime": 95682,
+                "systemCPUTime": 27907,
+                "maxRSS": 63424,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5900,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 170,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 3,
+        "total_ms": 128.809842,
+        "times": {
+          "parent_before_spawn": "185177755025971",
+          "parent_spawn": "185177758110896",
+          "parent_exit": "185177883831113",
+          "parent_close": "185177883835813"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956463,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185177802245053",
+              "sched": [
+                43633600,
+                298300,
+                11
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185177803771865"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185177803868066"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185177806104884"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185177854136673"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185177854141773"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185177854547076"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185177858482608"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185177879128275"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185177879271976",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185177879491678",
+              "code": 0,
+              "sched": [
+                113049500,
+                298300,
+                39
+              ],
+              "usage": {
+                "userCPUTime": 113629,
+                "systemCPUTime": 19591,
+                "maxRSS": 63268,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5912,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 172,
+                "involuntaryContextSwitches": 6
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 3,
+        "total_ms": 109.496386,
+        "times": {
+          "parent_before_spawn": "185177887726345",
+          "parent_spawn": "185177889679961",
+          "parent_exit": "185177997218131",
+          "parent_close": "185177997222731"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 4,
+        "total_ms": 118.328457,
+        "times": {
+          "parent_before_spawn": "185178001581766",
+          "parent_spawn": "185178003325180",
+          "parent_exit": "185178119888523",
+          "parent_close": "185178119910223"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 4,
+        "total_ms": 114.410826,
+        "times": {
+          "parent_before_spawn": "185178124077957",
+          "parent_spawn": "185178125758771",
+          "parent_exit": "185178238484483",
+          "parent_close": "185178238488783"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956539,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185178158999240",
+              "sched": [
+                30909700,
+                4700,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185178160478352"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185178160550452"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185178162548668"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185178211134661"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185178211139862"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185178211558365"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185178216443404"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185178233886146"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185178233979746",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185178234186048",
+              "code": 0,
+              "sched": [
+                102130800,
+                97100,
+                36
+              ],
+              "usage": {
+                "userCPUTime": 97680,
+                "systemCPUTime": 24420,
+                "maxRSS": 63292,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5922,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 174,
+                "involuntaryContextSwitches": 2
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 5,
+        "total_ms": 119.783969,
+        "times": {
+          "parent_before_spawn": "185178242782818",
+          "parent_spawn": "185178244701033",
+          "parent_exit": "185178362562387",
+          "parent_close": "185178362566787"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956556,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185178281781633",
+              "sched": [
+                36116700,
+                90300,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185178283073544"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185178283145544"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185178285114560"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185178335730370"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185178335735670"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185178336250374"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185178339991704"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185178358361353"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185178358472154",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185178358697055",
+              "code": 0,
+              "sched": [
+                107193700,
+                101700,
+                37
+              ],
+              "usage": {
+                "userCPUTime": 95680,
+                "systemCPUTime": 31893,
+                "maxRSS": 63424,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5888,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 166,
+                "involuntaryContextSwitches": 3
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 5,
+        "total_ms": 116.609143,
+        "times": {
+          "parent_before_spawn": "185178366148516",
+          "parent_spawn": "185178367723928",
+          "parent_exit": "185178482752959",
+          "parent_close": "185178482757659"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 6,
+        "total_ms": 111.016298,
+        "times": {
+          "parent_before_spawn": "185178486134087",
+          "parent_spawn": "185178487917701",
+          "parent_exit": "185178597145585",
+          "parent_close": "185178597150385"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 6,
+        "total_ms": 112.372709,
+        "times": {
+          "parent_before_spawn": "185178601112717",
+          "parent_spawn": "185178602815331",
+          "parent_exit": "185178713481126",
+          "parent_close": "185178713485426"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956625,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185178635784897",
+              "sched": [
+                29916800,
+                38600,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185178637801614"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185178637909215"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185178640762338"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185178687093413"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185178687098613"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185178687504816"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185178691620449"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185178708824788"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185178708952189",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185178709166891",
+              "code": 0,
+              "sched": [
+                102286400,
+                101300,
+                33
+              ],
+              "usage": {
+                "userCPUTime": 98835,
+                "systemCPUTime": 23720,
+                "maxRSS": 63768,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5937,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 168,
+                "involuntaryContextSwitches": 2
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": true,
+        "iteration": 7,
+        "total_ms": 124.109702,
+        "times": {
+          "parent_before_spawn": "185178716999854",
+          "parent_spawn": "185178718785569",
+          "parent_exit": "185178841105656",
+          "parent_close": "185178841109556"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3956642,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185178755461065",
+              "sched": [
+                33832500,
+                0,
+                4
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185178756919877"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185178757021777"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185178759020493"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185178815536550"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185178815541450"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185178815978053"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185178819829484"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185178836879122"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185178836984323",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185178837197325",
+              "code": 0,
+              "sched": [
+                110977800,
+                479900,
+                37
+              ],
+              "usage": {
+                "userCPUTime": 109013,
+                "systemCPUTime": 22711,
+                "maxRSS": 63296,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 5905,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 170,
+                "involuntaryContextSwitches": 8
+              }
+            }
+          ]
+        }
+      },
+      {
+        "scenario": "codex-responsive",
+        "traced": false,
+        "iteration": 7,
+        "total_ms": 111.4554,
+        "times": {
+          "parent_before_spawn": "185178843835478",
+          "parent_spawn": "185178845459091",
+          "parent_exit": "185178955285878",
+          "parent_close": "185178955290878"
+        },
+        "stdout_bytes": 198,
+        "stderr_bytes": 0
+      }
+    ]
+  },
+  "manual-results": {
+    "metadata": {
+      "base_commit": "4d0602f922d91692c66e4bb00799f336ab59070a",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "version": "0.12.5",
+      "node": "v26.13.0",
+      "platform": "linux",
+      "arch": "x64",
+      "artifactHashes": {
+        "chunk-65CXHMVY.js": "e11ebd015861f8c9790154ee78175aa77433cc6827becbbd21f9e4487aab4323",
+        "chunk-75MOBK6D.js": "45b489a351d682b8df3f583179a0b219c65440bd989cd39e5d3b1cf85e3966d6",
+        "chunk-BGRZEQYW.js": "6bd0532bd939c9ef452c703afd77532ce189b05061c889839548989f831fe075",
+        "chunk-HEML4MQG.js": "de0a30d71e80c23fb19ec338858bc0c7c806a1e67acdd87f0ce6c3ded78fa0cb",
+        "chunk-V2H6W3RB.js": "bc51ba925adb8492718f6942cba47084107314d101ce0059f18feb4e8180d0bf",
+        "chunk-VJ5CK5RX.js": "93f7859a032d45328cd077934de38e4f881f7ea6812025eed08d4eaba6d5ad35",
+        "chunk-Y3SZLMOP.js": "84c9f623721a3fdd285858a2d9595b5a03a1c78d457d15f05cd28d36e13dab10",
+        "chunk-ZCMY5GLL.js": "f277993a557860991d1d56dd19147f03cda63bab0daaf4067e831c9cb7de71db",
+        "commands-7YX25WGF.js": "5ea8b9e28c8097b655366091eb8b4286bf7e06536b84d58c70079049116e4295",
+        "hook-authority-EXZGFSUA.js": "9b60092128e64476c5e9e7e95d4ba6f3c2fb63202cf03da3544aaf1fa7443728",
+        "hooks-H44NPGZX.js": "380ea44cb6e6c9a8603fa343aa1f81509ae3b1833c26e6f1cdc30575aa32073b",
+        "index.js": "4cd61e0ed8a23c3bd819b052c92d84216f007fbe8e0aaf0f77bc54f6671540d6",
+        "mcp-46OX3KMP.js": "9038d62fdd2c5f99fae4970e90a4b76142d4b8d35a55fe059ca1d42e0757c7d3",
+        "watch-SECUD7TZ.js": "baf97af3228b0dce879e2bd8f62463e062914285c011b3533776f07c857ddb7a"
+      }
+    },
+    "summary": [
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "samples": 16,
+        "median_ms": 114.904167,
+        "max_ms": 145.14588,
+        "over_200": 0,
+        "over_300": 0
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "samples": 16,
+        "median_ms": 117.746605,
+        "max_ms": 207.379611,
+        "over_200": 1,
+        "over_300": 0
+      }
+    ],
+    "samples": [
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 0,
+        "total_ms": 114.191034,
+        "times": {
+          "parent_before_spawn": "185207017125446",
+          "parent_spawn": "185207021998490",
+          "parent_exit": "185207131285079",
+          "parent_close": "185207131316480"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958128,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185207053900079",
+              "sched": [
+                33040800,
+                0,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185207055021189"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185207055085690"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185207056928606"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185207104633138"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185207104638138"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185207105034142"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185207109126779"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185207126189433"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185207126285534",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185207126504636",
+              "code": 0,
+              "sched": [
+                96260300,
+                45900,
+                41
+              ],
+              "usage": {
+                "userCPUTime": 92756,
+                "systemCPUTime": 22084,
+                "maxRSS": 63656,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6157,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 168,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 0,
+        "total_ms": 112.929622,
+        "times": {
+          "parent_before_spawn": "185207317079760",
+          "parent_spawn": "185207319058378",
+          "parent_exit": "185207430000482",
+          "parent_close": "185207430009382"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 1,
+        "total_ms": 109.51689,
+        "times": {
+          "parent_before_spawn": "185207613715045",
+          "parent_spawn": "185207615367659",
+          "parent_exit": "185207723219035",
+          "parent_close": "185207723231935"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 1,
+        "total_ms": 124.674426,
+        "times": {
+          "parent_before_spawn": "185207906428490",
+          "parent_spawn": "185207908436808",
+          "parent_exit": "185208031095416",
+          "parent_close": "185208031102916"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958220,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185207946165649",
+              "sched": [
+                36295100,
+                304900,
+                10
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185207947300059"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185207947368160"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185207949320777"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185208003352565"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185208003358565"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185208003855170"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185208010165027"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185208026522674"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185208026635475",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185208026856877",
+              "code": 0,
+              "sched": [
+                108243600,
+                536000,
+                48
+              ],
+              "usage": {
+                "userCPUTime": 103647,
+                "systemCPUTime": 23918,
+                "maxRSS": 63904,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6177,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 166,
+                "involuntaryContextSwitches": 7
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 2,
+        "total_ms": 133.555406,
+        "times": {
+          "parent_before_spawn": "185208216893294",
+          "parent_spawn": "185208218556809",
+          "parent_exit": "185208350438500",
+          "parent_close": "185208350448700"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958263,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185208249418288",
+              "sched": [
+                30218600,
+                15400,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185208250562698"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185208250632399"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185208252554716"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185208321905142"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185208321910143"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185208322317346"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185208325992279"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185208344815049"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185208345048552",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185208345372354",
+              "code": 0,
+              "sched": [
+                100436900,
+                8423000,
+                51
+              ],
+              "usage": {
+                "userCPUTime": 101891,
+                "systemCPUTime": 17720,
+                "maxRSS": 63420,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6133,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 170,
+                "involuntaryContextSwitches": 18
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 2,
+        "total_ms": 109.60579,
+        "times": {
+          "parent_before_spawn": "185208534629264",
+          "parent_spawn": "185208536600882",
+          "parent_exit": "185208644225554",
+          "parent_close": "185208644235054"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 3,
+        "total_ms": 110.865238,
+        "times": {
+          "parent_before_spawn": "185208831179149",
+          "parent_spawn": "185208833095068",
+          "parent_exit": "185208942036386",
+          "parent_close": "185208942044387"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 3,
+        "total_ms": 116.417595,
+        "times": {
+          "parent_before_spawn": "185209099974907",
+          "parent_spawn": "185209101672425",
+          "parent_exit": "185209216382902",
+          "parent_close": "185209216392502"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958356,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185209133860255",
+              "sched": [
+                31036200,
+                0,
+                4
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185209134978667"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185209135041567"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185209136970187"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185209185969390"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185209185974790"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185209186365794"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185209190390935"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185209209270629"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185209209380930",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185209209606932",
+              "code": 0,
+              "sched": [
+                96623700,
+                309400,
+                40
+              ],
+              "usage": {
+                "userCPUTime": 92320,
+                "systemCPUTime": 24083,
+                "maxRSS": 63580,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6176,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 161,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 4,
+        "total_ms": 111.320242,
+        "times": {
+          "parent_before_spawn": "185209399773484",
+          "parent_spawn": "185209401560502",
+          "parent_exit": "185209511081326",
+          "parent_close": "185209511093726"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958383,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185209432570921",
+              "sched": [
+                31206300,
+                0,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185209433804033"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185209433876734"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185209437027666"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185209487546785"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185209487551785"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185209487953189"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185209491636427"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185209506390478"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185209506508279",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185209506746282",
+              "code": 0,
+              "sched": [
+                97131600,
+                25200,
+                45
+              ],
+              "usage": {
+                "userCPUTime": 78598,
+                "systemCPUTime": 37231,
+                "maxRSS": 63968,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6153,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 171,
+                "involuntaryContextSwitches": 2
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 4,
+        "total_ms": 117.433403,
+        "times": {
+          "parent_before_spawn": "185209694124105",
+          "parent_spawn": "185209695683121",
+          "parent_exit": "185209811547108",
+          "parent_close": "185209811557508"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 5,
+        "total_ms": 130.747339,
+        "times": {
+          "parent_before_spawn": "185209994193380",
+          "parent_spawn": "185209995926497",
+          "parent_exit": "185210124923819",
+          "parent_close": "185210124940719"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 5,
+        "total_ms": 114.139669,
+        "times": {
+          "parent_before_spawn": "185210308669702",
+          "parent_spawn": "185210310353819",
+          "parent_exit": "185210422803771",
+          "parent_close": "185210422809371"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958493,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185210343669360",
+              "sched": [
+                30064400,
+                0,
+                7
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185210345011274"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185210345079775"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185210346974594"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185210396410101"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185210396415201"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185210396844905"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185210400644444"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185210417190014"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185210417407516",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185210417623718",
+              "code": 0,
+              "sched": [
+                97801900,
+                260900,
+                46
+              ],
+              "usage": {
+                "userCPUTime": 107071,
+                "systemCPUTime": 12848,
+                "maxRSS": 63804,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6147,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 174,
+                "involuntaryContextSwitches": 3
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 6,
+        "total_ms": 131.80285,
+        "times": {
+          "parent_before_spawn": "185210605704045",
+          "parent_spawn": "185210607239061",
+          "parent_exit": "185210737498395",
+          "parent_close": "185210737506895"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958520,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185210659602898",
+              "sched": [
+                49301800,
+                39900,
+                5
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185210660840210"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185210660905111"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185210662716430"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185210711360328"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185210711365328"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185210711754832"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185210715440069"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185210731699536"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185210731849837",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185210732244641",
+              "code": 0,
+              "sched": [
+                116137000,
+                62300,
+                39
+              ],
+              "usage": {
+                "userCPUTime": 114249,
+                "systemCPUTime": 21157,
+                "maxRSS": 63872,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6146,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 163,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 6,
+        "total_ms": 105.770082,
+        "times": {
+          "parent_before_spawn": "185210923234395",
+          "parent_spawn": "185210924944913",
+          "parent_exit": "185211028998377",
+          "parent_close": "185211029004477"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 7,
+        "total_ms": 107.422099,
+        "times": {
+          "parent_before_spawn": "185211186697790",
+          "parent_spawn": "185211188606910",
+          "parent_exit": "185211294113689",
+          "parent_close": "185211294119889"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 7,
+        "total_ms": 112.224848,
+        "times": {
+          "parent_before_spawn": "185211452215907",
+          "parent_spawn": "185211453728722",
+          "parent_exit": "185211564435155",
+          "parent_close": "185211564440755"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958624,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185211487215065",
+              "sched": [
+                30779200,
+                21700,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185211488377676"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185211488443377"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185211490334797"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185211538337088"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185211538341988"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185211538750792"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185211542514830"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185211559553505"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185211559718606",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185211559938209",
+              "code": 0,
+              "sched": [
+                95651000,
+                71200,
+                41
+              ],
+              "usage": {
+                "userCPUTime": 98361,
+                "systemCPUTime": 16393,
+                "maxRSS": 63536,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6146,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 171,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 8,
+        "total_ms": 142.96816,
+        "times": {
+          "parent_before_spawn": "185211855413929",
+          "parent_spawn": "185211857761953",
+          "parent_exit": "185211998375789",
+          "parent_close": "185211998382089"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958676,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185211891328395",
+              "sched": [
+                31416200,
+                0,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185211892644609"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185211892714110"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185211894739230"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185211946932063"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185211946937763"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185211947365168"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185211952113116"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185211988376487"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185211988672090",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185211988954393",
+              "code": 0,
+              "sched": [
+                103657900,
+                98800,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 104362,
+                "systemCPUTime": 25046,
+                "maxRSS": 63544,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6175,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 176,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 8,
+        "total_ms": 118.968915,
+        "times": {
+          "parent_before_spawn": "185212157017409",
+          "parent_spawn": "185212159045230",
+          "parent_exit": "185212275979624",
+          "parent_close": "185212275986324"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 9,
+        "total_ms": 120.301329,
+        "times": {
+          "parent_before_spawn": "185212459122095",
+          "parent_spawn": "185212461027714",
+          "parent_exit": "185212579417623",
+          "parent_close": "185212579423424"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 9,
+        "total_ms": 119.075615,
+        "times": {
+          "parent_before_spawn": "185212762007887",
+          "parent_spawn": "185212763757705",
+          "parent_exit": "185212881077302",
+          "parent_close": "185212881083502"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958806,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185212802138697",
+              "sched": [
+                36242500,
+                714300,
+                10
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185212803457110"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185212803544611"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185212805596732"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185212854570531"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185212854575731"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185212854981835"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185212858693773"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185212874927339"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185212875054240",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185212875335543",
+              "code": 0,
+              "sched": [
+                102114000,
+                863000,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 105165,
+                "systemCPUTime": 18132,
+                "maxRSS": 63888,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6184,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 170,
+                "involuntaryContextSwitches": 5
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 10,
+        "total_ms": 113.963362,
+        "times": {
+          "parent_before_spawn": "185213066214090",
+          "parent_spawn": "185213067943807",
+          "parent_exit": "185213180172652",
+          "parent_close": "185213180177452"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3958850,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185213098405118",
+              "sched": [
+                28745400,
+                44600,
+                8
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185213099601230"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185213099674231"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185213101855053"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185213152575770"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185213152583070"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185213153106176"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185213157170317"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185213175212101"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185213175358403",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185213175587105",
+              "code": 0,
+              "sched": [
+                99959000,
+                84200,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 90922,
+                "systemCPUTime": 27672,
+                "maxRSS": 63932,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6164,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 167,
+                "involuntaryContextSwitches": 4
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 10,
+        "total_ms": 145.14588,
+        "times": {
+          "parent_before_spawn": "185213426795667",
+          "parent_spawn": "185213429309192",
+          "parent_exit": "185213571913646",
+          "parent_close": "185213571941547"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 11,
+        "total_ms": 133.190756,
+        "times": {
+          "parent_before_spawn": "185213781971087",
+          "parent_spawn": "185213783786806",
+          "parent_exit": "185213915156743",
+          "parent_close": "185213915161843"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 11,
+        "total_ms": 125.858781,
+        "times": {
+          "parent_before_spawn": "185214098584011",
+          "parent_spawn": "185214100446330",
+          "parent_exit": "185214224438192",
+          "parent_close": "185214224442792"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3959056,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185214137616908",
+              "sched": [
+                36478100,
+                2200,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185214138893921"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185214138966822"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185214140977442"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185214192640968"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185214192646668"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185214193067573"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185214197094714"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185214213077176"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185214213224478",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185214213545381",
+              "code": 0,
+              "sched": [
+                104050300,
+                586600,
+                41
+              ],
+              "usage": {
+                "userCPUTime": 102761,
+                "systemCPUTime": 21408,
+                "maxRSS": 63512,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6150,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 173,
+                "involuntaryContextSwitches": 1
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 12,
+        "total_ms": 207.379611,
+        "times": {
+          "parent_before_spawn": "185214421122595",
+          "parent_spawn": "185214428363668",
+          "parent_exit": "185214628496806",
+          "parent_close": "185214628502206"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3959105,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185214508781487",
+              "sched": [
+                46192200,
+                38327300,
+                38
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185214511327013"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185214511411914"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185214514277643"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185214583917752"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185214583923952"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185214584419857"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185214590044515"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185214618300602"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185214618416103",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185214618726607",
+              "code": 0,
+              "sched": [
+                127844300,
+                54348700,
+                155
+              ],
+              "usage": {
+                "userCPUTime": 118717,
+                "systemCPUTime": 26793,
+                "maxRSS": 63388,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6172,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 207,
+                "involuntaryContextSwitches": 140
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 12,
+        "total_ms": 113.781656,
+        "times": {
+          "parent_before_spawn": "185214816535019",
+          "parent_spawn": "185214817980833",
+          "parent_exit": "185214930311575",
+          "parent_close": "185214930316675"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 13,
+        "total_ms": 114.864767,
+        "times": {
+          "parent_before_spawn": "185215113514538",
+          "parent_spawn": "185215115114254",
+          "parent_exit": "185215228374305",
+          "parent_close": "185215228379305"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 13,
+        "total_ms": 112.07104,
+        "times": {
+          "parent_before_spawn": "185215411173263",
+          "parent_spawn": "185215412786380",
+          "parent_exit": "185215523239403",
+          "parent_close": "185215523244303"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3959225,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185215445221110",
+              "sched": [
+                31989200,
+                0,
+                3
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185215446415622"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185215446509023"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185215448405442"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185215492745193"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185215492750493"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185215493179797"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185215497064837"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185215518203451"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185215518337653",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185215518567355",
+              "code": 0,
+              "sched": [
+                97959300,
+                0,
+                36
+              ],
+              "usage": {
+                "userCPUTime": 112975,
+                "systemCPUTime": 3895,
+                "maxRSS": 63556,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6147,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 157,
+                "involuntaryContextSwitches": 0
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 14,
+        "total_ms": 107.730293,
+        "times": {
+          "parent_before_spawn": "185215706443365",
+          "parent_spawn": "185215707956980",
+          "parent_exit": "185215814169258",
+          "parent_close": "185215814173658"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3959248,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185215738113286",
+              "sched": [
+                28502700,
+                120000,
+                6
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185215739183697"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185215739246498"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185215741072816"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185215786574878"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185215786580178"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185215787023983"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185215791687630"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185215808206098"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185215808373699",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185215808740303",
+              "code": 0,
+              "sched": [
+                93921000,
+                247800,
+                44
+              ],
+              "usage": {
+                "userCPUTime": 94301,
+                "systemCPUTime": 20500,
+                "maxRSS": 63600,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6127,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 167,
+                "involuntaryContextSwitches": 4
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 14,
+        "total_ms": 114.943567,
+        "times": {
+          "parent_before_spawn": "185216022457872",
+          "parent_spawn": "185216025668105",
+          "parent_exit": "185216137396339",
+          "parent_close": "185216137401439"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": false,
+        "iteration": 15,
+        "total_ms": 120.661325,
+        "times": {
+          "parent_before_spawn": "185216321574708",
+          "parent_spawn": "185216323245325",
+          "parent_exit": "185216442231433",
+          "parent_close": "185216442236033"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "detached_daemon_alive": true
+      },
+      {
+        "scenario": "manual-cold",
+        "traced": true,
+        "iteration": 15,
+        "total_ms": 128.804339,
+        "times": {
+          "parent_before_spawn": "185216625984698",
+          "parent_spawn": "185216628137119",
+          "parent_exit": "185216754783837",
+          "parent_close": "185216754789037"
+        },
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "trace": {
+          "pid": 3959370,
+          "marks": [
+            {
+              "name": "preload",
+              "at": "185216669751742",
+              "sched": [
+                40001300,
+                650300,
+                14
+              ]
+            },
+            {
+              "name": "entry",
+              "at": "185216671005455"
+            },
+            {
+              "name": "deadline_armed",
+              "at": "185216671081855"
+            },
+            {
+              "name": "delivery_import_start",
+              "at": "185216673190377"
+            },
+            {
+              "name": "delivery_import_end",
+              "at": "185216726129872"
+            },
+            {
+              "name": "run_hook_start",
+              "at": "185216726135072"
+            },
+            {
+              "name": "stdin_start",
+              "at": "185216726539376"
+            },
+            {
+              "name": "stdin_end",
+              "at": "185216730233010"
+            },
+            {
+              "name": "run_hook_end",
+              "at": "185216748578380"
+            },
+            {
+              "name": "exit_requested",
+              "at": "185216748684481",
+              "code": 0
+            },
+            {
+              "name": "child_exit",
+              "at": "185216748977584",
+              "code": 0,
+              "sched": [
+                108312900,
+                850500,
+                52
+              ],
+              "usage": {
+                "userCPUTime": 92220,
+                "systemCPUTime": 34582,
+                "maxRSS": 63848,
+                "sharedMemorySize": 0,
+                "unsharedDataSize": 0,
+                "unsharedStackSize": 0,
+                "minorPageFault": 6125,
+                "majorPageFault": 0,
+                "swappedOut": 0,
+                "fsRead": 0,
+                "fsWrite": 24,
+                "ipcSent": 0,
+                "ipcReceived": 0,
+                "signalsCount": 0,
+                "voluntaryContextSwitches": 170,
+                "involuntaryContextSwitches": 15
+              }
+            }
+          ]
+        },
+        "detached_daemon_alive": true
+      }
+    ]
+  },
+  "harness_sha256": {
+    "driver.mjs": "323a3cb3f9a2c2291e8f251d4660a24f8c5f0e87e411432e43d23d4c6b48db6b",
+    "manual-driver.mjs": "ed775cd5941f7083d9744bb6de7b086c6ebdd4dbf9273c2b24e4c94cc5cae45a",
+    "preload.mjs": "5dbda1e65ae5def4236ecb2013373608e8238aa630df4875bd93ca16616fd5dc"
+  },
+  "limits": [
+    "Synthetic private hubs and owners, not live vendor acceptance.",
+    "Tracing changes process startup; paired controls are retained, not a calibrated per-sample correction.",
+    "Natural traced scheduler-delay contributor does not identify historical CI causes.",
+    "Untraced310.5ms outlier has no internal phase evidence."
+  ]
+}
