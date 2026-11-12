@@ -1,0 +1,1376 @@
+{
+  "schema": 1,
+  "source_commit": "bd30dac20f71f56efa677b28b06c083f4c70bc17",
+  "versions": {
+    "client": "0.12.6",
+    "daemon": "0.12.6",
+    "hub": "0.12.6"
+  },
+  "daemon_endpoint_is_loopback": true,
+  "kernel": "6.18.58.1-microsoft-standard-WSL2",
+  "window_utc": [
+    "2026-11-12T17:00:00Z",
+    "2026-11-12T20:00:00Z"
+  ],
+  "allocation_failure_count": 60,
+  "kernel_extract": [
+    "2026-11-12T17:02:41+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:02:41+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:02:41+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:02:41+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:02:41+00:00 Node 0 DMA32: 46164*4kB (UME) 12473*8kB (UME) 4383*16kB (UME) 2007*32kB (UME) 509*64kB (UME) 83*128kB (UME) 13*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 465320kB",
+    "2026-11-12T17:02:41+00:00 Node 0 Normal: 3190*4kB (UMEH) 1083*8kB (UMEH) 390*16kB (UMEH) 170*32kB (UMEH) 58*64kB (UME) 11*128kB (UME) 3*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 38992kB",
+    "2026-11-12T17:04:44+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:04:44+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:04:44+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:04:44+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:04:44+00:00 Node 0 DMA32: 12282*4kB (UME) 3855*8kB (UME) 2751*16kB (UME) 1442*32kB (UME) 312*64kB (UME) 66*128kB (UME) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 198800kB",
+    "2026-11-12T17:04:44+00:00 Node 0 Normal: 4415*4kB (UMEH) 1024*8kB (UMEH) 489*16kB (UMEH) 235*32kB (UMEH) 56*64kB (UME) 9*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 45932kB",
+    "2026-11-12T17:04:59+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:04:59+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:04:59+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:04:59+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:05:00+00:00 Node 0 DMA32: 35429*4kB (UME) 8928*8kB (UME) 3881*16kB (UME) 2057*32kB (UME) 475*64kB (UME) 99*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 384132kB",
+    "2026-11-12T17:05:00+00:00 Node 0 Normal: 3096*4kB (UMEH) 995*8kB (UMEH) 442*16kB (UMEH) 229*32kB (UMEH) 55*64kB (UME) 7*128kB (UM) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 39160kB",
+    "2026-11-12T17:07:07+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:07:07+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:07:07+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:07:07+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:07:07+00:00 Node 0 DMA32: 18321*4kB (UME) 8381*8kB (UME) 4371*16kB (UME) 3013*32kB (UME) 981*64kB (UME) 383*128kB (UME) 36*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 427708kB",
+    "2026-11-12T17:07:07+00:00 Node 0 Normal: 4150*4kB (UMEH) 961*8kB (UMEH) 342*16kB (UMEH) 208*32kB (UMEH) 74*64kB (UME) 22*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 43968kB",
+    "2026-11-12T17:10:40+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:10:40+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:10:40+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:10:40+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:10:40+00:00 Node 0 DMA32: 51619*4kB (UME) 24279*8kB (UME) 4935*16kB (UME) 1507*32kB (UME) 282*64kB (UME) 39*128kB (UME) 17*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 555284kB",
+    "2026-11-12T17:10:40+00:00 Node 0 Normal: 5018*4kB (UMEH) 991*8kB (UMEH) 330*16kB (UMEH) 174*32kB (UMEH) 74*64kB (UME) 27*128kB (UME) 1*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 47296kB",
+    "2026-11-12T17:13:40+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:13:40+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:13:40+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:13:40+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:13:40+00:00 Node 0 DMA32: 26325*4kB (UME) 6924*8kB (UME) 2019*16kB (UME) 1879*32kB (UME) 409*64kB (UME) 27*128kB (UME) 8*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 284804kB",
+    "2026-11-12T17:13:40+00:00 Node 0 Normal: 4218*4kB (UMEH) 1006*8kB (UMEH) 282*16kB (UMEH) 178*32kB (UMEH) 55*64kB (UME) 27*128kB (UME) 1*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 42360kB",
+    "2026-11-12T17:13:54+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:13:54+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:13:54+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:13:54+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:13:54+00:00 Node 0 DMA32: 25274*4kB (UME) 6776*8kB (UME) 1916*16kB (UME) 1032*32kB (UME) 133*64kB (UME) 11*128kB (UME) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 229160kB",
+    "2026-11-12T17:13:54+00:00 Node 0 Normal: 5254*4kB (UMEH) 1100*8kB (UMEH) 302*16kB (UMEH) 175*32kB (UMEH) 62*64kB (UME) 27*128kB (UME) 1*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 47928kB",
+    "2026-11-12T17:14:08+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:14:08+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:14:08+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:14:08+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:14:08+00:00 Node 0 DMA32: 62716*4kB (UME) 13200*8kB (UME) 2528*16kB (UME) 1080*32kB (UME) 162*64kB (UME) 10*128kB (ME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 443120kB",
+    "2026-11-12T17:14:08+00:00 Node 0 Normal: 4914*4kB (UMEH) 1095*8kB (UMEH) 296*16kB (UMEH) 167*32kB (UMEH) 60*64kB (UME) 26*128kB (UME) 2*256kB (ME) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 46176kB",
+    "2026-11-12T17:16:33+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:16:33+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:16:33+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:16:33+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:16:33+00:00 Node 0 DMA32: 1197*4kB (UME) 2746*8kB (UME) 1493*16kB (UME) 1421*32kB (UME) 9*64kB (UM) 1*128kB (M) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 96820kB",
+    "2026-11-12T17:16:33+00:00 Node 0 Normal: 2119*4kB (MEH) 1043*8kB (UMEH) 409*16kB (UMEH) 150*32kB (UMEH) 9*64kB (UME) 13*128kB (UE) 2*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 30916kB",
+    "2026-11-12T17:16:46+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:16:46+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:16:46+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:16:46+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:16:46+00:00 Node 0 DMA32: 30734*4kB (UME) 6847*8kB (UME) 1876*16kB (UME) 1426*32kB (UME) 441*64kB (UME) 70*128kB (UME) 3*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 291312kB",
+    "2026-11-12T17:16:46+00:00 Node 0 Normal: 3100*4kB (UMEH) 1152*8kB (UMEH) 434*16kB (UMEH) 204*32kB (UMEH) 37*64kB (UM) 8*128kB (UM) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 38736kB",
+    "2026-11-12T17:17:01+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:17:01+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:17:01+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:17:01+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:17:01+00:00 Node 0 DMA32: 6829*4kB (UME) 3305*8kB (UME) 1332*16kB (UME) 1429*32kB (UME) 202*64kB (UME) 26*128kB (UME) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 137308kB",
+    "2026-11-12T17:17:01+00:00 Node 0 Normal: 3600*4kB (UMEH) 1256*8kB (UMEH) 389*16kB (UMEH) 202*32kB (UMEH) 37*64kB (UM) 11*128kB (UM) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 41168kB",
+    "2026-11-12T17:17:15+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:17:15+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:17:15+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:17:15+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:17:15+00:00 Node 0 DMA32: 52243*4kB (UME) 12239*8kB (UME) 5230*16kB (UME) 2933*32kB (UME) 770*64kB (UME) 75*128kB (UME) 2*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 543812kB",
+    "2026-11-12T17:17:15+00:00 Node 0 Normal: 5042*4kB (UMEH) 1424*8kB (UMEH) 383*16kB (UMEH) 192*32kB (UMEH) 37*64kB (UM) 9*128kB (UM) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 47608kB",
+    "2026-11-12T17:17:30+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:17:30+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:17:30+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:17:30+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:17:30+00:00 Node 0 DMA32: 17017*4kB (UME) 4342*8kB (UME) 1542*16kB (UME) 1661*32kB (UME) 1048*64kB (UME) 167*128kB (UME) 12*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 272148kB",
+    "2026-11-12T17:17:30+00:00 Node 0 Normal: 1968*4kB (UMEH) 1226*8kB (UMEH) 410*16kB (UMEH) 194*32kB (UMEH) 51*64kB (UME) 13*128kB (UME) 3*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 36144kB",
+    "2026-11-12T17:18:14+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:18:14+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:18:14+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:18:14+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:18:14+00:00 Node 0 DMA32: 54098*4kB (UME) 14377*8kB (UME) 3333*16kB (UME) 1459*32kB (UME) 285*64kB (UME) 19*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 452096kB",
+    "2026-11-12T17:18:14+00:00 Node 0 Normal: 3362*4kB (UMEH) 1515*8kB (UMEH) 495*16kB (UMEH) 235*32kB (UMEH) 67*64kB (UME) 16*128kB (UME) 7*256kB (UME) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 49136kB",
+    "2026-11-12T17:18:27+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:18:27+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:18:27+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:18:27+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:18:27+00:00 Node 0 DMA32: 78874*4kB (UME) 19945*8kB (UME) 6160*16kB (UME) 3231*32kB (UME) 764*64kB (UME) 103*128kB (UME) 4*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 740112kB",
+    "2026-11-12T17:18:27+00:00 Node 0 Normal: 7991*4kB (UMEH) 1135*8kB (UMEH) 346*16kB (UMEH) 216*32kB (UMEH) 57*64kB (UME) 13*128kB (UME) 7*256kB (UME) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 60596kB",
+    "2026-11-12T17:18:41+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:18:41+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:18:41+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:18:41+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:18:41+00:00 Node 0 DMA32: 24670*4kB (UME) 11150*8kB (UME) 4489*16kB (UME) 3336*32kB (UME) 1027*64kB (UME) 106*128kB (UME) 2*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 446264kB",
+    "2026-11-12T17:18:41+00:00 Node 0 Normal: 1697*4kB (UMEH) 741*8kB (UMEH) 370*16kB (UMEH) 205*32kB (UMEH) 64*64kB (UME) 18*128kB (UME) 5*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 32876kB",
+    "2026-11-12T17:20:17+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:20:17+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:20:17+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:20:17+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:20:17+00:00 Node 0 DMA32: 37630*4kB (UME) 10125*8kB (UME) 3781*16kB (UME) 2829*32kB (UME) 946*64kB (UME) 228*128kB (UME) 27*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 479184kB",
+    "2026-11-12T17:20:17+00:00 Node 0 Normal: 2557*4kB (UMEH) 1199*8kB (UMEH) 377*16kB (UMEH) 166*32kB (UMEH) 43*64kB (UME) 10*128kB (ME) 2*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 35708kB",
+    "2026-11-12T17:20:31+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:20:31+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:20:31+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:20:31+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:20:31+00:00 Node 0 DMA32: 37768*4kB (UME) 10755*8kB (UME) 3749*16kB (UME) 2321*32kB (UME) 539*64kB (UME) 125*128kB (UME) 12*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 424936kB",
+    "2026-11-12T17:20:31+00:00 Node 0 Normal: 5617*4kB (UMEH) 1172*8kB (UMEH) 378*16kB (UMEH) 174*32kB (UMEH) 45*64kB (UME) 9*128kB (ME) 2*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 48004kB",
+    "2026-11-12T17:20:41+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:20:41+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:20:41+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:20:41+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:20:41+00:00 Node 0 DMA32: 11784*4kB (UME) 8176*8kB (UME) 3630*16kB (UME) 2753*32kB (UME) 930*64kB (UME) 211*128kB (UME) 20*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 350368kB",
+    "2026-11-12T17:20:41+00:00 Node 0 Normal: 3881*4kB (UMEH) 1174*8kB (UMEH) 396*16kB (UMEH) 192*32kB (UMEH) 43*64kB (UME) 6*128kB (UME) 2*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 41428kB",
+    "2026-11-12T17:20:52+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:20:52+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:20:52+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:20:52+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:20:52+00:00 Node 0 DMA32: 23784*4kB (UME) 9002*8kB (UME) 3344*16kB (UME) 2096*32kB (UME) 705*64kB (UME) 177*128kB (UME) 21*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 360880kB",
+    "2026-11-12T17:20:52+00:00 Node 0 Normal: 1998*4kB (UMEH) 1142*8kB (UMEH) 466*16kB (UMEH) 187*32kB (UMEH) 42*64kB (UME) 6*128kB (UME) 2*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 34536kB",
+    "2026-11-12T17:21:02+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:21:02+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:21:02+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:21:02+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:21:02+00:00 Node 0 DMA32: 31985*4kB (UME) 13345*8kB (UME) 5266*16kB (UME) 2354*32kB (UME) 571*64kB (UME) 77*128kB (UME) 14*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 444268kB",
+    "2026-11-12T17:21:02+00:00 Node 0 Normal: 3760*4kB (UMEH) 1362*8kB (UMEH) 398*16kB (UMEH) 193*32kB (UMEH) 41*64kB (UME) 8*128kB (UME) 2*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 42640kB",
+    "2026-11-12T17:26:15+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:26:15+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:26:15+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:26:15+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:26:15+00:00 Node 0 DMA32: 25130*4kB (UME) 6532*8kB (UME) 2763*16kB (UME) 827*32kB (UME) 170*64kB (UME) 109*128kB (UM) 7*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 250072kB",
+    "2026-11-12T17:26:15+00:00 Node 0 Normal: 3413*4kB (UMEH) 1354*8kB (UMEH) 497*16kB (UMEH) 244*32kB (UMEH) 101*64kB (UME) 31*128kB (ME) 8*256kB (ME) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 52724kB",
+    "2026-11-12T17:26:30+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:26:30+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:26:30+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:26:30+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:26:30+00:00 Node 0 DMA32: 29687*4kB (UME) 4825*8kB (UME) 2411*16kB (UME) 584*32kB (UME) 211*64kB (UME) 108*128kB (UM) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 242196kB",
+    "2026-11-12T17:26:30+00:00 Node 0 Normal: 3987*4kB (UMEH) 1086*8kB (UMEH) 376*16kB (UMEH) 212*32kB (UMEH) 73*64kB (ME) 25*128kB (UME) 1*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 45564kB",
+    "2026-11-12T17:26:44+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:26:44+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:26:44+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:26:44+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:26:44+00:00 Node 0 DMA32: 27568*4kB (UME) 6281*8kB (UME) 2121*16kB (UME) 456*32kB (UME) 92*64kB (UME) 37*128kB (M) 5*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 220952kB",
+    "2026-11-12T17:26:44+00:00 Node 0 Normal: 3897*4kB (UMEH) 1223*8kB (UMEH) 422*16kB (UMEH) 174*32kB (UMEH) 55*64kB (UME) 17*128kB (UME) 2*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 43900kB",
+    "2026-11-12T17:27:09+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:27:09+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:27:09+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:27:09+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:27:09+00:00 Node 0 DMA32: 76110*4kB (UME) 15232*8kB (UME) 3602*16kB (UME) 947*32kB (UME) 187*64kB (UME) 25*128kB (ME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 529400kB",
+    "2026-11-12T17:27:09+00:00 Node 0 Normal: 3851*4kB (UMEH) 1212*8kB (UMEH) 420*16kB (UMEH) 140*32kB (UMEH) 44*64kB (UME) 15*128kB (UME) 5*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 42316kB",
+    "2026-11-12T17:27:30+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:27:30+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:27:30+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:27:30+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:27:30+00:00 Node 0 DMA32: 62403*4kB (UME) 15107*8kB (UME) 3655*16kB (UME) 1068*32kB (UME) 279*64kB (UME) 63*128kB (UME) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 489300kB",
+    "2026-11-12T17:27:30+00:00 Node 0 Normal: 3188*4kB (UMEH) 750*8kB (UMEH) 309*16kB (UMEH) 177*32kB (UMEH) 44*64kB (UME) 17*128kB (UME) 6*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 35888kB",
+    "2026-11-12T17:29:15+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:29:15+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:29:15+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:29:15+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:29:15+00:00 Node 0 DMA32: 48513*4kB (UME) 15402*8kB (UME) 4107*16kB (UME) 1087*32kB (UME) 283*64kB (UME) 65*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 444196kB",
+    "2026-11-12T17:29:15+00:00 Node 0 Normal: 1636*4kB (UEH) 805*8kB (UMEH) 225*16kB (UEH) 180*32kB (UMEH) 65*64kB (UME) 15*128kB (UME) 3*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 29192kB",
+    "2026-11-12T17:29:31+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:29:31+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:29:31+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:29:31+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:29:31+00:00 Node 0 DMA32: 28166*4kB (UME) 6490*8kB (UME) 3485*16kB (UME) 2965*32kB (UME) 1235*64kB (UME) 337*128kB (UME) 45*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 448920kB",
+    "2026-11-12T17:29:31+00:00 Node 0 Normal: 2686*4kB (UMEH) 1091*8kB (UMEH) 320*16kB (UMEH) 185*32kB (UMEH) 57*64kB (UME) 14*128kB (UME) 4*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 36976kB",
+    "2026-11-12T17:29:43+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:29:43+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:29:43+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:29:43+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:29:43+00:00 Node 0 DMA32: 28017*4kB (UME) 5731*8kB (UME) 3811*16kB (UME) 2726*32kB (UME) 1144*64kB (UME) 331*128kB (UME) 40*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 431948kB",
+    "2026-11-12T17:29:43+00:00 Node 0 Normal: 4769*4kB (UMEH) 995*8kB (UMEH) 407*16kB (UMEH) 195*32kB (UMEH) 62*64kB (UME) 13*128kB (UME) 5*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 46700kB",
+    "2026-11-12T17:31:08+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:31:08+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:31:08+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:31:08+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:31:08+00:00 Node 0 DMA32: 24693*4kB (UME) 7234*8kB (UME) 5178*16kB (UME) 2893*32kB (UME) 1177*64kB (UME) 333*128kB (UME) 43*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 461028kB",
+    "2026-11-12T17:31:08+00:00 Node 0 Normal: 7038*4kB (UMEH) 1443*8kB (UMEH) 321*16kB (UMEH) 170*32kB (UMEH) 49*64kB (UME) 9*128kB (ME) 2*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 55072kB",
+    "2026-11-12T17:34:32+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:34:32+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:34:32+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:34:32+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:34:32+00:00 Node 0 DMA32: 13204*4kB (UME) 5097*8kB (UME) 3043*16kB (UME) 1993*32kB (UME) 1061*64kB (UME) 239*128kB (UME) 21*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 309928kB",
+    "2026-11-12T17:34:32+00:00 Node 0 Normal: 1256*4kB (MEH) 992*8kB (MEH) 336*16kB (MEH) 193*32kB (MEH) 63*64kB (ME) 18*128kB (ME) 2*256kB (ME) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 31360kB",
+    "2026-11-12T17:34:44+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:34:44+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:34:44+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:34:44+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:34:44+00:00 Node 0 DMA32: 14856*4kB (UME) 6153*8kB (UME) 3681*16kB (UME) 2002*32kB (UME) 1011*64kB (UME) 228*128kB (UME) 20*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 330616kB",
+    "2026-11-12T17:34:44+00:00 Node 0 Normal: 6737*4kB (UMEH) 1422*8kB (UMEH) 321*16kB (UMEH) 176*32kB (UMEH) 57*64kB (ME) 16*128kB (ME) 1*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 55044kB",
+    "2026-11-12T17:36:51+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:36:51+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:36:51+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:36:51+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:36:51+00:00 Node 0 DMA32: 15362*4kB (UME) 5101*8kB (UME) 1955*16kB (UME) 813*32kB (UME) 207*64kB (UME) 38*128kB (UME) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 177920kB",
+    "2026-11-12T17:36:51+00:00 Node 0 Normal: 5353*4kB (UMEH) 1165*8kB (UMEH) 357*16kB (UMEH) 191*32kB (UMEH) 64*64kB (UME) 19*128kB (UME) 1*256kB (E) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 49340kB",
+    "2026-11-12T17:41:56+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:41:56+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:41:56+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:41:56+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:41:56+00:00 Node 0 DMA32: 2545*4kB (UME) 3273*8kB (UME) 1164*16kB (UME) 388*32kB (UME) 49*64kB (UME) 7*128kB (UME) 4*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 72460kB",
+    "2026-11-12T17:41:56+00:00 Node 0 Normal: 2477*4kB (UMEH) 1049*8kB (UMEH) 365*16kB (UMEH) 182*32kB (UMEH) 39*64kB (UME) 3*128kB (ME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 32844kB",
+    "2026-11-12T17:42:07+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:42:07+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:42:07+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:42:07+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:42:07+00:00 Node 0 DMA32: 9376*4kB (UME) 5116*8kB (UME) 2609*16kB (UME) 1224*32kB (UME) 316*64kB (UME) 71*128kB (ME) 2*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 189168kB",
+    "2026-11-12T17:42:07+00:00 Node 0 Normal: 3135*4kB (UMEH) 1253*8kB (UMEH) 377*16kB (UMEH) 183*32kB (UMEH) 37*64kB (UME) 6*128kB (ME) 4*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 38612kB",
+    "2026-11-12T17:51:19+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:51:19+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:51:19+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:51:19+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:51:19+00:00 Node 0 DMA32: 24308*4kB (UME) 13800*8kB (UME) 4744*16kB (UME) 2163*32kB (UME) 2*64kB (E) 0*128kB 0*256kB 1*512kB (M) 0*1024kB 0*2048kB 0*4096kB = 353392kB",
+    "2026-11-12T17:51:19+00:00 Node 0 Normal: 2162*4kB (MEH) 693*8kB (UMEH) 233*16kB (UMH) 268*32kB (UMEH) 1*64kB (M) 1*128kB (M) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 26944kB",
+    "2026-11-12T17:51:30+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:51:30+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:51:30+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:51:30+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:51:30+00:00 Node 0 DMA32: 15446*4kB (UME) 4355*8kB (UME) 1423*16kB (UME) 1387*32kB (UME) 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 163776kB",
+    "2026-11-12T17:51:30+00:00 Node 0 Normal: 4670*4kB (UMEH) 1943*8kB (UMEH) 553*16kB (UMEH) 272*32kB (UMEH) 38*64kB (UME) 8*128kB (ME) 5*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 56512kB",
+    "2026-11-12T17:51:44+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:51:44+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:51:44+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:51:44+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:51:44+00:00 Node 0 DMA32: 24045*4kB (UME) 4877*8kB (UME) 1408*16kB (UME) 1251*32kB (UME) 37*64kB (UME) 5*128kB (M) 2*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 201276kB",
+    "2026-11-12T17:51:44+00:00 Node 0 Normal: 4384*4kB (UMEH) 1578*8kB (UMEH) 408*16kB (UMEH) 211*32kB (UMEH) 59*64kB (UME) 18*128kB (UME) 3*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 50288kB",
+    "2026-11-12T17:51:56+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:51:56+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:51:56+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:51:56+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:51:56+00:00 Node 0 DMA32: 21955*4kB (UME) 18507*8kB (UME) 4458*16kB (UME) 1779*32kB (UME) 116*64kB (UME) 18*128kB (M) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 374116kB",
+    "2026-11-12T17:51:56+00:00 Node 0 Normal: 7090*4kB (UMEH) 1665*8kB (UMEH) 447*16kB (UMEH) 250*32kB (UMEH) 68*64kB (UME) 14*128kB (UME) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 63232kB",
+    "2026-11-12T17:57:23+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:57:23+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:57:23+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:57:23+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:57:23+00:00 Node 0 DMA32: 38761*4kB (UME) 10487*8kB (UME) 2283*16kB (UME) 983*32kB (UME) 208*64kB (UME) 39*128kB (UME) 9*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 327532kB",
+    "2026-11-12T17:57:23+00:00 Node 0 Normal: 2967*4kB (UMEH) 1513*8kB (UMEH) 361*16kB (UMEH) 232*32kB (UMEH) 72*64kB (UME) 12*128kB (UME) 4*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 44340kB",
+    "2026-11-12T17:57:44+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:57:44+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:57:44+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:57:44+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:57:44+00:00 Node 0 DMA32: 39456*4kB (UME) 10439*8kB (UME) 1789*16kB (UME) 859*32kB (UME) 131*64kB (UME) 29*128kB (UME) 4*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 310568kB",
+    "2026-11-12T17:57:44+00:00 Node 0 Normal: 2543*4kB (UMEH) 1593*8kB (UMEH) 450*16kB (UMEH) 248*32kB (UMEH) 71*64kB (UME) 17*128kB (UE) 7*256kB (UE) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 46564kB",
+    "2026-11-12T17:58:07+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:58:07+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:58:07+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:58:07+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:58:07+00:00 Node 0 DMA32: 45478*4kB (UME) 11433*8kB (UME) 3415*16kB (UME) 2266*32kB (UME) 801*64kB (UME) 226*128kB (UME) 19*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 485584kB",
+    "2026-11-12T17:58:07+00:00 Node 0 Normal: 7510*4kB (UMEH) 2154*8kB (UMEH) 691*16kB (UMEH) 274*32kB (UMEH) 97*64kB (UME) 53*128kB (UME) 5*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 81368kB",
+    "2026-11-12T17:59:53+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T17:59:53+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T17:59:53+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T17:59:53+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T17:59:53+00:00 Node 0 DMA32: 48646*4kB (UME) 13257*8kB (UME) 3855*16kB (UME) 2303*32kB (UME) 706*64kB (UME) 187*128kB (UME) 13*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 508464kB",
+    "2026-11-12T17:59:53+00:00 Node 0 Normal: 1914*4kB (UMEH) 605*8kB (UMEH) 79*16kB (MEH) 146*32kB (UMEH) 74*64kB (UME) 21*128kB (UME) 4*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 26880kB",
+    "2026-11-12T18:27:27+00:00 kworker/0:0: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:27:27+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:27:27+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:27:27+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:27:27+00:00 Node 0 DMA32: 19364*4kB (UME) 4461*8kB (UME) 1288*16kB (UME) 1935*32kB (UME) 337*64kB (UME) 59*128kB (UME) 4*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 225816kB",
+    "2026-11-12T18:27:27+00:00 Node 0 Normal: 21637*4kB (UMEH) 2501*8kB (UMEH) 697*16kB (UMH) 224*32kB (UMH) 98*64kB (UM) 25*128kB (UM) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 134604kB",
+    "2026-11-12T18:28:03+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:28:03+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:28:03+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:28:03+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:28:03+00:00 Node 0 DMA32: 35553*4kB (UME) 7198*8kB (UME) 1680*16kB (UME) 1973*32kB (UME) 415*64kB (UME) 82*128kB (UME) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 327124kB",
+    "2026-11-12T18:28:03+00:00 Node 0 Normal: 14234*4kB (UMEH) 2348*8kB (UMEH) 816*16kB (UMH) 329*32kB (UMH) 124*64kB (UM) 37*128kB (U) 2*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 112488kB",
+    "2026-11-12T18:28:15+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:28:15+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:28:15+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:28:15+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:28:15+00:00 Node 0 DMA32: 12555*4kB (UME) 6162*8kB (UME) 1696*16kB (UME) 1989*32kB (UME) 390*64kB (UME) 74*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 224732kB",
+    "2026-11-12T18:28:15+00:00 Node 0 Normal: 3416*4kB (UMEH) 1002*8kB (UMEH) 469*16kB (UMH) 253*32kB (UMH) 115*64kB (UM) 38*128kB (UM) 4*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 50528kB",
+    "2026-11-12T18:28:28+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:28:28+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:28:28+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:28:28+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:28:28+00:00 Node 0 DMA32: 28898*4kB (UME) 7488*8kB (UME) 1628*16kB (UME) 1932*32kB (UME) 393*64kB (UME) 58*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 295944kB",
+    "2026-11-12T18:28:28+00:00 Node 0 Normal: 2872*4kB (UMEH) 954*8kB (UMEH) 519*16kB (UMEH) 279*32kB (UMH) 117*64kB (UM) 43*128kB (UM) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 49600kB",
+    "2026-11-12T18:28:40+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:28:40+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:28:40+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:28:40+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:28:40+00:00 Node 0 DMA32: 54871*4kB (UME) 15338*8kB (UME) 2626*16kB (UME) 2004*32kB (UME) 431*64kB (UME) 87*128kB (UME) 4*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 488076kB",
+    "2026-11-12T18:28:40+00:00 Node 0 Normal: 2268*4kB (UMEH) 752*8kB (UMEH) 358*16kB (UMEH) 215*32kB (UH) 94*64kB (U) 28*128kB (U) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 37552kB",
+    "2026-11-12T18:28:53+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:28:53+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:28:53+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:28:53+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:28:53+00:00 Node 0 DMA32: 60391*4kB (UME) 17958*8kB (UME) 3477*16kB (UME) 2421*32kB (UME) 532*64kB (UME) 105*128kB (UME) 6*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 567356kB",
+    "2026-11-12T18:28:53+00:00 Node 0 Normal: 1662*4kB (MEH) 638*8kB (UMEH) 619*16kB (UMEH) 353*32kB (UMH) 172*64kB (UM) 60*128kB (UM) 17*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 55992kB",
+    "2026-11-12T18:29:05+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:29:05+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:29:05+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:29:05+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:29:05+00:00 Node 0 DMA32: 37436*4kB (UME) 18009*8kB (UME) 3476*16kB (UME) 2489*32kB (UME) 560*64kB (UME) 106*128kB (UME) 6*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 480024kB",
+    "2026-11-12T18:29:05+00:00 Node 0 Normal: 2996*4kB (UMEH) 1317*8kB (UMEH) 431*16kB (UMEH) 305*32kB (UMH) 117*64kB (UM) 40*128kB (U) 12*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 54856kB",
+    "2026-11-12T18:36:33+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:36:33+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:36:33+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:36:33+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:36:33+00:00 Node 0 DMA32: 49958*4kB (UME) 9244*8kB (UME) 2339*16kB (UME) 2106*32kB (UME) 395*64kB (UME) 91*128kB (UME) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 415784kB",
+    "2026-11-12T18:36:33+00:00 Node 0 Normal: 25216*4kB (UMEH) 3293*8kB (UMEH) 707*16kB (UMEH) 181*32kB (UMEH) 21*64kB (UM) 5*128kB (UM) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 146296kB",
+    "2026-11-12T18:50:05+00:00 Under memory pressure, flushing caches.",
+    "2026-11-12T18:56:41+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:56:41+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:56:41+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:56:41+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:56:41+00:00 Node 0 DMA32: 18412*4kB (UME) 14551*8kB (UME) 6221*16kB (UME) 3927*32kB (UME) 37*64kB (UME) 7*128kB (UM) 5*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 419800kB",
+    "2026-11-12T18:56:41+00:00 Node 0 Normal: 4659*4kB (UMEH) 1330*8kB (UMEH) 415*16kB (UMEH) 167*32kB (UMEH) 4*64kB (UM) 1*128kB (U) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 41900kB",
+    "2026-11-12T18:56:55+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:56:55+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:56:55+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:56:55+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:56:55+00:00 Node 0 DMA32: 32545*4kB (UME) 7861*8kB (UME) 1500*16kB (UME) 2199*32kB (UME) 89*64kB (UME) 18*128kB (M) 1*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 295692kB",
+    "2026-11-12T18:56:55+00:00 Node 0 Normal: 5338*4kB (UMEH) 1234*8kB (UMEH) 381*16kB (UMEH) 141*32kB (UMEH) 6*64kB (UM) 2*128kB (U) 2*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 42984kB",
+    "2026-11-12T18:57:06+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T18:57:06+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T18:57:06+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T18:57:06+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T18:57:06+00:00 Node 0 DMA32: 22016*4kB (UME) 9444*8kB (UME) 2615*16kB (UME) 2514*32kB (UME) 659*64kB (UME) 164*128kB (UME) 9*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 351376kB",
+    "2026-11-12T18:57:06+00:00 Node 0 Normal: 2811*4kB (UMEH) 1005*8kB (UMEH) 419*16kB (UMEH) 168*32kB (UMEH) 32*64kB (UM) 6*128kB (UM) 3*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 34948kB",
+    "2026-11-12T19:03:24+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T19:03:24+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T19:03:24+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T19:03:24+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T19:03:24+00:00 Node 0 DMA32: 7977*4kB (UME) 5410*8kB (UME) 1426*16kB (UME) 1812*32kB (UME) 205*64kB (UME) 12*128kB (UE) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 170644kB",
+    "2026-11-12T19:03:24+00:00 Node 0 Normal: 3293*4kB (UMEH) 876*8kB (UMEH) 245*16kB (UMH) 101*32kB (UMH) 54*64kB (UM) 19*128kB (UM) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 33220kB",
+    "2026-11-12T19:04:44+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T19:04:44+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T19:04:44+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T19:04:44+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T19:04:44+00:00 Node 0 DMA32: 18231*4kB (UME) 8975*8kB (UME) 3520*16kB (UME) 3442*32kB (UME) 930*64kB (UME) 224*128kB (UME) 28*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 406548kB",
+    "2026-11-12T19:04:44+00:00 Node 0 Normal: 5152*4kB (UMEH) 1554*8kB (UMEH) 628*16kB (UMEH) 314*32kB (UMEH) 124*64kB (UM) 25*128kB (UM) 4*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 65296kB",
+    "2026-11-12T19:08:07+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T19:08:07+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T19:08:07+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T19:08:07+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T19:08:07+00:00 Node 0 DMA32: 28521*4kB (UME) 9866*8kB (UME) 3974*16kB (UME) 3819*32kB (UME) 1153*64kB (UME) 293*128kB (UME) 18*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 494708kB",
+    "2026-11-12T19:08:07+00:00 Node 0 Normal: 4395*4kB (UMEH) 1214*8kB (UMEH) 293*16kB (UMEH) 141*32kB (UMEH) 42*64kB (UM) 13*128kB (U) 2*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 41356kB",
+    "2026-11-12T19:13:30+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T19:13:30+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T19:13:30+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T19:13:30+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T19:13:30+00:00 Node 0 DMA32: 17348*4kB (UME) 9253*8kB (UME) 3793*16kB (UME) 3489*32kB (UME) 1167*64kB (UME) 321*128kB (UME) 22*256kB (UM) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 437160kB",
+    "2026-11-12T19:13:30+00:00 Node 0 Normal: 5366*4kB (UMEH) 1250*8kB (UMEH) 340*16kB (UMEH) 170*32kB (UMEH) 56*64kB (UM) 12*128kB (U) 2*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 47976kB",
+    "2026-11-12T19:13:56+00:00 Under memory pressure, flushing caches.",
+    "2026-11-12T19:15:37+00:00 kworker/0:1: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T19:15:37+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T19:15:37+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T19:15:37+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T19:15:37+00:00 Node 0 DMA32: 2449*4kB (UME) 1569*8kB (UME) 260*16kB (UME) 1444*32kB (UME) 2*64kB (M) 0*128kB 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 73100kB",
+    "2026-11-12T19:15:37+00:00 Node 0 Normal: 4180*4kB (UMEH) 1221*8kB (UMEH) 395*16kB (UMEH) 197*32kB (UMEH) 0*64kB 2*128kB (M) 1*256kB (M) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 39624kB",
+    "2026-11-12T19:35:10+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T19:35:10+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T19:35:10+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T19:35:10+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T19:35:10+00:00 Node 0 DMA32: 19829*4kB (UME) 9090*8kB (UME) 3175*16kB (UME) 2884*32kB (UME) 533*64kB (UME) 59*128kB (UME) 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 336788kB",
+    "2026-11-12T19:35:10+00:00 Node 0 Normal: 2401*4kB (UMEH) 1154*8kB (UMEH) 423*16kB (UMEH) 195*32kB (UMEH) 62*64kB (UM) 22*128kB (U) 3*256kB (U) 0*512kB 0*1024kB 0*2048kB 0*4096kB = 39396kB"
+  ],
+  "local_events": [
+    {
+      "at": "2026-11-12T17:02:07.380Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:02:17.677Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:03:47.077Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:03:52.186Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:03:57.389Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:04:03.810Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:04:09.617Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:04:16.220Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:04:25.783Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:07:22.382Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:07:27.488Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:07:32.690Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:07:38.094Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:07:46.437Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:07:53.043Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:08:01.250Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:08:12.655Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:09:47.150Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:09:52.257Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:09:57.463Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:10:02.864Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:11:27.181Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:13:07.221Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:13:12.325Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:14:47.237Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:14:52.346Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:14:57.546Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:16:27.251Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:17:43.266Z",
+      "event": "session.liveness-unverified"
+    },
+    {
+      "at": "2026-11-12T17:17:48.270Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:17:49.273Z",
+      "event": "session.liveness-unverified"
+    },
+    {
+      "at": "2026-11-12T17:17:53.373Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:17:58.580Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:18:03.266Z",
+      "event": "session.liveness-unverified"
+    },
+    {
+      "at": "2026-11-12T17:18:03.981Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:18:04.269Z",
+      "event": "session.liveness-unverified"
+    },
+    {
+      "at": "2026-11-12T17:18:09.788Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:23:47.354Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:24:03.125Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:24:08.332Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:28:27.461Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:28:32.566Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:28:37.770Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:28:43.172Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:28:48.979Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:28:55.581Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:29:03.786Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T17:34:47.601Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T17:40:52.329Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T18:00:05.253Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:00:05.499Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:00:05.901Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:00:06.784Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:49:21.222Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T18:49:30.540Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:49:35.743Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:49:41.150Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:49:48.226Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:49:54.830Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:50:03.038Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T18:53:19.223Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T18:53:24.330Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:02:19.426Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T19:02:37.877Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:02:43.082Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:02:48.486Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:03:15.418Z",
+      "event": "session.liveness-unverified"
+    },
+    {
+      "at": "2026-11-12T19:03:47.494Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:03:47.696Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:03:48.099Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:08:38.950Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T19:08:49.470Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:15:35.217Z",
+      "event": "session.liveness-unverified"
+    },
+    {
+      "at": "2026-11-12T19:15:40.222Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T19:15:45.328Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:15:50.533Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:26:19.238Z",
+      "event": "session.heartbeat-failed"
+    },
+    {
+      "at": "2026-11-12T19:26:30.786Z",
+      "event": "hub.connection-failed"
+    },
+    {
+      "at": "2026-11-12T19:26:35.987Z",
+      "event": "hub.connection-failed"
+    }
+  ],
+  "local_counts": {
+    "session.heartbeat-failed": 19,
+    "hub.connection-failed": 54,
+    "session.liveness-unverified": 6
+  },
+  "limitations": [
+    "Kernel warnings are rate-limited; counts are emitted warnings, not all failed allocations.",
+    "Correlation is not proof of the complete disconnect cause.",
+    "Docker events returned no retained events for this historical window; absence is not evidence of no restart.",
+    "Current container created 19:03:47.315Z and listener logged 19:03:48.246Z; recreated containers reset restart count.",
+    "Historical container logs before replacement unavailable from current container."
+  ],
+  "loopback_probe": {
+    "method": "Unauthenticated GET /version, 2s timeout, 2s between requests; no key sent",
+    "samples": [
+      {
+        "at": "2026-11-12T20:14:51.732347+00:00",
+        "http": 401,
+        "elapsed_ms": 63.3,
+        "pressure": {
+          "cpu": "some avg10=4.59 avg60=4.23 avg300=3.16 total=1067528361\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=4.40 avg60=3.69 avg300=6.63 total=2253622226\nfull avg10=2.77 avg60=2.57 avg300=4.82 total=1984258350",
+          "memory": "some avg10=0.00 avg60=1.39 avg300=3.21 total=315407421\nfull avg10=0.00 avg60=1.01 avg300=2.36 total=282464022"
+        }
+      },
+      {
+        "at": "2026-11-12T20:14:53.796156+00:00",
+        "http": 401,
+        "elapsed_ms": 2.943,
+        "pressure": {
+          "cpu": "some avg10=4.66 avg60=4.25 avg300=3.17 total=1067644154\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=3.60 avg60=3.57 avg300=6.58 total=2253627929\nfull avg10=2.27 avg60=2.49 avg300=4.78 total=1984262079",
+          "memory": "some avg10=0.00 avg60=1.34 avg300=3.19 total=315407422\nfull avg10=0.00 avg60=0.98 avg300=2.34 total=282464023"
+        }
+      },
+      {
+        "at": "2026-11-12T20:14:55.799522+00:00",
+        "http": 401,
+        "elapsed_ms": 2.286,
+        "pressure": {
+          "cpu": "some avg10=4.54 avg60=4.25 avg300=3.18 total=1067740960\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=3.13 avg60=3.49 avg300=6.54 total=2253651998\nfull avg10=1.86 avg60=2.41 avg300=4.75 total=1984281228",
+          "memory": "some avg10=0.00 avg60=1.30 avg300=3.16 total=315407422\nfull avg10=0.00 avg60=0.95 avg300=2.32 total=282464023"
+        }
+      },
+      {
+        "at": "2026-11-12T20:14:57.802415+00:00",
+        "http": 401,
+        "elapsed_ms": 2.263,
+        "pressure": {
+          "cpu": "some avg10=4.26 avg60=4.20 avg300=3.17 total=1067803520\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=2.56 avg60=3.37 avg300=6.50 total=2253667035\nfull avg10=1.52 avg60=2.33 avg300=4.72 total=1984291193",
+          "memory": "some avg10=0.00 avg60=1.25 avg300=3.14 total=315407422\nfull avg10=0.00 avg60=0.92 avg300=2.31 total=282464023"
+        }
+      },
+      {
+        "at": "2026-11-12T20:14:59.805108+00:00",
+        "http": 401,
+        "elapsed_ms": 2.024,
+        "pressure": {
+          "cpu": "some avg10=3.85 avg60=4.13 avg300=3.17 total=1067859428\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=2.28 avg60=3.29 avg300=6.46 total=2253692059\nfull avg10=1.42 avg60=2.28 avg300=4.69 total=1984312611",
+          "memory": "some avg10=0.00 avg60=1.21 avg300=3.12 total=315407422\nfull avg10=0.00 avg60=0.89 avg300=2.29 total=282464023"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:01.807545+00:00",
+        "http": 401,
+        "elapsed_ms": 2.974,
+        "pressure": {
+          "cpu": "some avg10=4.06 avg60=4.16 avg300=3.18 total=1067961197\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=8.02 avg60=4.30 avg300=6.65 total=2254406319\nfull avg10=5.69 avg60=3.03 avg300=4.83 total=1984832199",
+          "memory": "some avg10=0.00 avg60=1.17 avg300=3.10 total=315407423\nfull avg10=0.00 avg60=0.86 avg300=2.28 total=282464024"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:04.721579+00:00",
+        "http": 401,
+        "elapsed_ms": 2.103,
+        "pressure": {
+          "cpu": "some avg10=3.68 avg60=4.09 avg300=3.17 total=1068098480\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=15.81 avg60=5.83 avg300=6.95 total=2255485439\nfull avg10=11.18 avg60=4.10 avg300=5.04 total=1985569077",
+          "memory": "some avg10=0.00 avg60=1.13 avg300=3.08 total=315407423\nfull avg10=0.00 avg60=0.83 avg300=2.26 total=282464024"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:06.724093+00:00",
+        "http": 401,
+        "elapsed_ms": 1.819,
+        "pressure": {
+          "cpu": "some avg10=3.92 avg60=4.12 avg300=3.18 total=1068173712\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=13.49 avg60=5.73 avg300=6.92 total=2255491974\nfull avg10=9.34 avg60=4.00 avg300=5.02 total=1985573703",
+          "memory": "some avg10=0.00 avg60=1.10 avg300=3.06 total=315407424\nfull avg10=0.00 avg60=0.80 avg300=2.24 total=282464025"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:08.726339+00:00",
+        "http": 401,
+        "elapsed_ms": 1.981,
+        "pressure": {
+          "cpu": "some avg10=4.66 avg60=4.25 avg300=3.22 total=1068328290\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=11.04 avg60=5.55 avg300=6.88 total=2255492307\nfull avg10=7.64 avg60=3.87 avg300=4.98 total=1985574010",
+          "memory": "some avg10=0.00 avg60=1.06 avg300=3.04 total=315407424\nfull avg10=0.00 avg60=0.77 avg300=2.23 total=282464025"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:10.728707+00:00",
+        "http": 401,
+        "elapsed_ms": 1.985,
+        "pressure": {
+          "cpu": "some avg10=5.08 avg60=4.34 avg300=3.24 total=1068487899\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=9.04 avg60=5.36 avg300=6.83 total=2255503748\nfull avg10=6.26 avg60=3.74 avg300=4.95 total=1985581463",
+          "memory": "some avg10=0.00 avg60=1.02 avg300=3.01 total=315407424\nfull avg10=0.00 avg60=0.75 avg300=2.21 total=282464025"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:12.731153+00:00",
+        "http": 401,
+        "elapsed_ms": 1.746,
+        "pressure": {
+          "cpu": "some avg10=4.52 avg60=4.26 avg300=3.23 total=1068566820\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=7.40 avg60=5.19 avg300=6.78 total=2255504362\nfull avg10=5.12 avg60=3.62 avg300=4.91 total=1985582067",
+          "memory": "some avg10=0.00 avg60=0.99 avg300=2.99 total=315407424\nfull avg10=0.00 avg60=0.72 avg300=2.20 total=282464025"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:14.733632+00:00",
+        "http": 401,
+        "elapsed_ms": 2.75,
+        "pressure": {
+          "cpu": "some avg10=4.25 avg60=4.22 avg300=3.23 total=1068650626\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=6.06 avg60=5.02 avg300=6.74 total=2255510884\nfull avg10=4.19 avg60=3.50 avg300=4.88 total=1985586817",
+          "memory": "some avg10=0.00 avg60=0.96 avg300=2.97 total=315407424\nfull avg10=0.00 avg60=0.70 avg300=2.18 total=282464025"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:16.736850+00:00",
+        "http": 401,
+        "elapsed_ms": 1.577,
+        "pressure": {
+          "cpu": "some avg10=4.20 avg60=4.21 avg300=3.24 total=1068706606\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=5.14 avg60=4.89 avg300=6.70 total=2255529149\nfull avg10=3.43 avg60=3.39 avg300=4.85 total=1985601054",
+          "memory": "some avg10=0.00 avg60=0.93 avg300=2.95 total=315407424\nfull avg10=0.00 avg60=0.68 avg300=2.17 total=282464025"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:18.738834+00:00",
+        "http": 401,
+        "elapsed_ms": 1.628,
+        "pressure": {
+          "cpu": "some avg10=3.80 avg60=4.14 avg300=3.23 total=1068757221\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=4.21 avg60=4.73 avg300=6.65 total=2255529188\nfull avg10=2.81 avg60=3.28 avg300=4.81 total=1985601093",
+          "memory": "some avg10=0.00 avg60=0.90 avg300=2.93 total=315407424\nfull avg10=0.00 avg60=0.65 avg300=2.15 total=282464025"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:20.741122+00:00",
+        "http": 401,
+        "elapsed_ms": 2.948,
+        "pressure": {
+          "cpu": "some avg10=3.65 avg60=4.10 avg300=3.23 total=1068822158\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=3.45 avg60=4.57 avg300=6.60 total=2255540498\nfull avg10=2.30 avg60=3.17 avg300=4.78 total=1985609697",
+          "memory": "some avg10=0.00 avg60=0.87 avg300=2.91 total=315423114\nfull avg10=0.00 avg60=0.63 avg300=2.14 total=282479322"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:22.744726+00:00",
+        "http": 401,
+        "elapsed_ms": 2.198,
+        "pressure": {
+          "cpu": "some avg10=3.35 avg60=4.03 avg300=3.22 total=1068876467\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=2.82 avg60=4.42 avg300=6.56 total=2255543054\nfull avg10=1.88 avg60=3.06 avg300=4.75 total=1985611556",
+          "memory": "some avg10=0.00 avg60=0.84 avg300=2.89 total=315423114\nfull avg10=0.00 avg60=0.61 avg300=2.12 total=282479322"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:24.747405+00:00",
+        "http": 401,
+        "elapsed_ms": 1.779,
+        "pressure": {
+          "cpu": "some avg10=3.29 avg60=4.00 avg300=3.22 total=1069042338\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=2.31 avg60=4.28 avg300=6.51 total=2255544998\nfull avg10=1.54 avg60=2.96 avg300=4.71 total=1985613417",
+          "memory": "some avg10=0.00 avg60=0.81 avg300=2.87 total=315423360\nfull avg10=0.00 avg60=0.59 avg300=2.11 total=282479554"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:26.749719+00:00",
+        "http": 401,
+        "elapsed_ms": 1.622,
+        "pressure": {
+          "cpu": "some avg10=3.96 avg60=4.09 avg300=3.24 total=1069097812\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=1.89 avg60=4.14 avg300=6.47 total=2255562524\nfull avg10=1.26 avg60=2.87 avg300=4.68 total=1985626671",
+          "memory": "some avg10=0.00 avg60=0.78 avg300=2.85 total=315423360\nfull avg10=0.00 avg60=0.57 avg300=2.09 total=282479554"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:28.751700+00:00",
+        "http": 401,
+        "elapsed_ms": 2.343,
+        "pressure": {
+          "cpu": "some avg10=3.60 avg60=4.03 avg300=3.23 total=1069175825\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=1.55 avg60=4.00 avg300=6.42 total=2255563366\nfull avg10=1.03 avg60=2.77 avg300=4.65 total=1985627120",
+          "memory": "some avg10=0.00 avg60=0.76 avg300=2.83 total=315423960\nfull avg10=0.00 avg60=0.55 avg300=2.08 total=282480154"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:30.754461+00:00",
+        "http": 401,
+        "elapsed_ms": 2.171,
+        "pressure": {
+          "cpu": "some avg10=4.04 avg60=4.09 avg300=3.25 total=1069288725\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=1.26 avg60=3.87 avg300=6.38 total=2255574460\nfull avg10=0.84 avg60=2.68 avg300=4.62 total=1985633290",
+          "memory": "some avg10=0.00 avg60=0.73 avg300=2.81 total=315423960\nfull avg10=0.00 avg60=0.53 avg300=2.06 total=282480154"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:32.757056+00:00",
+        "http": 401,
+        "elapsed_ms": 1.71,
+        "pressure": {
+          "cpu": "some avg10=3.67 avg60=4.02 avg300=3.24 total=1069337420\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=1.03 avg60=3.74 avg300=6.34 total=2255574876\nfull avg10=0.69 avg60=2.59 avg300=4.58 total=1985633688",
+          "memory": "some avg10=0.00 avg60=0.71 avg300=2.79 total=315423960\nfull avg10=0.00 avg60=0.52 avg300=2.05 total=282480154"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:34.759334+00:00",
+        "http": 401,
+        "elapsed_ms": 2.688,
+        "pressure": {
+          "cpu": "some avg10=3.36 avg60=3.95 avg300=3.23 total=1069384293\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.85 avg60=3.62 avg300=6.29 total=2255574876\nfull avg10=0.56 avg60=2.51 avg300=4.55 total=1985633688",
+          "memory": "some avg10=0.00 avg60=0.68 avg300=2.77 total=315423960\nfull avg10=0.00 avg60=0.50 avg300=2.04 total=282480154"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:36.762553+00:00",
+        "http": 401,
+        "elapsed_ms": 1.928,
+        "pressure": {
+          "cpu": "some avg10=3.12 avg60=3.89 avg300=3.23 total=1069441965\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.69 avg60=3.50 avg300=6.25 total=2255582444\nfull avg10=0.46 avg60=2.43 avg300=4.52 total=1985639294",
+          "memory": "some avg10=0.00 avg60=0.66 avg300=2.75 total=315424055\nfull avg10=0.00 avg60=0.48 avg300=2.02 total=282480247"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:38.764976+00:00",
+        "http": 401,
+        "elapsed_ms": 2.309,
+        "pressure": {
+          "cpu": "some avg10=3.09 avg60=3.86 avg300=3.22 total=1069504432\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.56 avg60=3.39 avg300=6.21 total=2255582984\nfull avg10=0.37 avg60=2.35 avg300=4.49 total=1985639834",
+          "memory": "some avg10=0.00 avg60=0.64 avg300=2.74 total=315425406\nfull avg10=0.00 avg60=0.47 avg300=2.01 total=282481589"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:40.767798+00:00",
+        "http": 401,
+        "elapsed_ms": 1.527,
+        "pressure": {
+          "cpu": "some avg10=3.08 avg60=3.83 avg300=3.22 total=1069630885\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.46 avg60=3.27 avg300=6.16 total=2255585157\nfull avg10=0.31 avg60=2.27 avg300=4.46 total=1985641596",
+          "memory": "some avg10=0.00 avg60=0.62 avg300=2.72 total=315425954\nfull avg10=0.00 avg60=0.45 avg300=1.99 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:42.769867+00:00",
+        "http": 401,
+        "elapsed_ms": 1.674,
+        "pressure": {
+          "cpu": "some avg10=3.60 avg60=3.90 avg300=3.24 total=1069692019\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.38 avg60=3.17 avg300=6.12 total=2255590748\nfull avg10=0.25 avg60=2.19 avg300=4.43 total=1985646193",
+          "memory": "some avg10=0.00 avg60=0.60 avg300=2.70 total=315425954\nfull avg10=0.00 avg60=0.43 avg300=1.98 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:44.771934+00:00",
+        "http": 401,
+        "elapsed_ms": 1.754,
+        "pressure": {
+          "cpu": "some avg10=3.31 avg60=3.84 avg300=3.23 total=1069743498\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.31 avg60=3.06 avg300=6.08 total=2255590856\nfull avg10=0.20 avg60=2.12 avg300=4.40 total=1985646297",
+          "memory": "some avg10=0.00 avg60=0.58 avg300=2.68 total=315425954\nfull avg10=0.00 avg60=0.42 avg300=1.97 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:46.774112+00:00",
+        "http": 401,
+        "elapsed_ms": 1.737,
+        "pressure": {
+          "cpu": "some avg10=3.07 avg60=3.78 avg300=3.22 total=1069797708\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.25 avg60=2.96 avg300=6.04 total=2255595560\nfull avg10=0.16 avg60=2.05 avg300=4.37 total=1985649966",
+          "memory": "some avg10=0.00 avg60=0.56 avg300=2.66 total=315425954\nfull avg10=0.00 avg60=0.41 avg300=1.95 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:48.776428+00:00",
+        "http": 401,
+        "elapsed_ms": 1.769,
+        "pressure": {
+          "cpu": "some avg10=2.88 avg60=3.72 avg300=3.21 total=1069850018\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.20 avg60=2.87 avg300=6.00 total=2255600623\nfull avg10=0.13 avg60=1.98 avg300=4.34 total=1985653652",
+          "memory": "some avg10=0.00 avg60=0.54 avg300=2.64 total=315425954\nfull avg10=0.00 avg60=0.39 avg300=1.94 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:50.778678+00:00",
+        "http": 401,
+        "elapsed_ms": 1.713,
+        "pressure": {
+          "cpu": "some avg10=2.72 avg60=3.66 avg300=3.21 total=1069901094\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.17 avg60=2.77 avg300=5.95 total=2255608679\nfull avg10=0.11 avg60=1.92 avg300=4.31 total=1985659260",
+          "memory": "some avg10=0.00 avg60=0.52 avg300=2.62 total=315425954\nfull avg10=0.00 avg60=0.38 avg300=1.92 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:52.781178+00:00",
+        "http": 401,
+        "elapsed_ms": 1.7,
+        "pressure": {
+          "cpu": "some avg10=2.59 avg60=3.61 avg300=3.20 total=1069948792\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.13 avg60=2.68 avg300=5.91 total=2255609500\nfull avg10=0.09 avg60=1.86 avg300=4.28 total=1985660075",
+          "memory": "some avg10=0.00 avg60=0.50 avg300=2.60 total=315425954\nfull avg10=0.00 avg60=0.37 avg300=1.91 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:54.783523+00:00",
+        "http": 401,
+        "elapsed_ms": 2.511,
+        "pressure": {
+          "cpu": "some avg10=2.48 avg60=3.56 avg300=3.19 total=1070001932\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.11 avg60=2.59 avg300=5.87 total=2255609704\nfull avg10=0.07 avg60=1.79 avg300=4.25 total=1985660278",
+          "memory": "some avg10=0.00 avg60=0.49 avg300=2.59 total=315425954\nfull avg10=0.00 avg60=0.35 avg300=1.90 total=282481965"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:56.786534+00:00",
+        "http": 401,
+        "elapsed_ms": 1.983,
+        "pressure": {
+          "cpu": "some avg10=2.57 avg60=3.54 avg300=3.19 total=1070086753\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.09 avg60=2.51 avg300=5.83 total=2255616377\nfull avg10=0.06 avg60=1.74 avg300=4.22 total=1985665860",
+          "memory": "some avg10=0.00 avg60=0.47 avg300=2.57 total=315426477\nfull avg10=0.00 avg60=0.34 avg300=1.88 total=282482387"
+        }
+      },
+      {
+        "at": "2026-11-12T20:15:58.788963+00:00",
+        "http": 401,
+        "elapsed_ms": 2.0,
+        "pressure": {
+          "cpu": "some avg10=3.56 avg60=3.68 avg300=3.22 total=1070246140\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.07 avg60=2.42 avg300=5.79 total=2255617228\nfull avg10=0.05 avg60=1.68 avg300=4.19 total=1985666211",
+          "memory": "some avg10=0.00 avg60=0.45 avg300=2.55 total=315427199\nfull avg10=0.00 avg60=0.33 avg300=1.87 total=282482613"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:00.791496+00:00",
+        "http": 401,
+        "elapsed_ms": 1.933,
+        "pressure": {
+          "cpu": "some avg10=3.27 avg60=3.63 avg300=3.21 total=1070300036\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.06 avg60=2.34 avg300=5.75 total=2255617443\nfull avg10=0.04 avg60=1.62 avg300=4.16 total=1985666424",
+          "memory": "some avg10=0.00 avg60=0.44 avg300=2.53 total=315427199\nfull avg10=0.00 avg60=0.32 avg300=1.86 total=282482613"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:02.794031+00:00",
+        "http": 401,
+        "elapsed_ms": 1.879,
+        "pressure": {
+          "cpu": "some avg10=3.04 avg60=3.57 avg300=3.20 total=1070348948\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.05 avg60=2.27 avg300=5.71 total=2255632079\nfull avg10=0.03 avg60=1.57 avg300=4.13 total=1985675031",
+          "memory": "some avg10=0.00 avg60=0.42 avg300=2.52 total=315427199\nfull avg10=0.00 avg60=0.31 avg300=1.85 total=282482613"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:04.796330+00:00",
+        "http": 401,
+        "elapsed_ms": 1.982,
+        "pressure": {
+          "cpu": "some avg10=2.85 avg60=3.52 avg300=3.19 total=1070398739\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.04 avg60=2.19 avg300=5.67 total=2255638867\nfull avg10=0.02 avg60=1.52 avg300=4.10 total=1985679548",
+          "memory": "some avg10=0.00 avg60=0.41 avg300=2.50 total=315427199\nfull avg10=0.00 avg60=0.30 avg300=1.83 total=282482613"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:06.798815+00:00",
+        "http": 401,
+        "elapsed_ms": 1.873,
+        "pressure": {
+          "cpu": "some avg10=2.70 avg60=3.47 avg300=3.19 total=1070455847\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.03 avg60=2.12 avg300=5.63 total=2255642931\nfull avg10=0.02 avg60=1.47 avg300=4.08 total=1985682836",
+          "memory": "some avg10=0.00 avg60=0.40 avg300=2.48 total=315427199\nfull avg10=0.00 avg60=0.29 avg300=1.82 total=282482613"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:08.801231+00:00",
+        "http": 401,
+        "elapsed_ms": 1.95,
+        "pressure": {
+          "cpu": "some avg10=2.57 avg60=3.42 avg300=3.18 total=1070506511\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.02 avg60=2.05 avg300=5.60 total=2255647299\nfull avg10=0.01 avg60=1.42 avg300=4.05 total=1985685919",
+          "memory": "some avg10=0.00 avg60=0.38 avg300=2.46 total=315427199\nfull avg10=0.00 avg60=0.28 avg300=1.81 total=282482613"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:10.803569+00:00",
+        "http": 401,
+        "elapsed_ms": 1.946,
+        "pressure": {
+          "cpu": "some avg10=2.46 avg60=3.38 avg300=3.17 total=1070573917\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.02 avg60=1.98 avg300=5.56 total=2255653739\nfull avg10=0.01 avg60=1.37 avg300=4.02 total=1985690944",
+          "memory": "some avg10=0.00 avg60=0.37 avg300=2.45 total=315427199\nfull avg10=0.00 avg60=0.27 avg300=1.79 total=282482613"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:12.805936+00:00",
+        "http": 401,
+        "elapsed_ms": 1.835,
+        "pressure": {
+          "cpu": "some avg10=2.56 avg60=3.36 avg300=3.17 total=1070629651\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.01 avg60=1.92 avg300=5.52 total=2255658093\nfull avg10=0.01 avg60=1.33 avg300=3.99 total=1985694347",
+          "memory": "some avg10=0.00 avg60=0.36 avg300=2.43 total=315427806\nfull avg10=0.00 avg60=0.26 avg300=1.78 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:14.808268+00:00",
+        "http": 401,
+        "elapsed_ms": 1.874,
+        "pressure": {
+          "cpu": "some avg10=2.46 avg60=3.32 avg300=3.16 total=1070681773\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.01 avg60=1.85 avg300=5.48 total=2255662891\nfull avg10=0.00 avg60=1.28 avg300=3.96 total=1985698229",
+          "memory": "some avg10=0.00 avg60=0.35 avg300=2.41 total=315427806\nfull avg10=0.00 avg60=0.25 avg300=1.77 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:16.810628+00:00",
+        "http": 401,
+        "elapsed_ms": 1.614,
+        "pressure": {
+          "cpu": "some avg10=2.74 avg60=3.34 avg300=3.17 total=1070850265\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.01 avg60=1.79 avg300=5.44 total=2255667278\nfull avg10=0.00 avg60=1.24 avg300=3.94 total=1985701499",
+          "memory": "some avg10=0.00 avg60=0.33 avg300=2.40 total=315427806\nfull avg10=0.00 avg60=0.24 avg300=1.76 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:18.812687+00:00",
+        "http": 401,
+        "elapsed_ms": 1.946,
+        "pressure": {
+          "cpu": "some avg10=3.51 avg60=3.46 avg300=3.19 total=1070907185\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.73 avg300=5.41 total=2255669016\nfull avg10=0.00 avg60=1.20 avg300=3.91 total=1985703134",
+          "memory": "some avg10=0.00 avg60=0.32 avg300=2.38 total=315427806\nfull avg10=0.00 avg60=0.23 avg300=1.74 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:20.815112+00:00",
+        "http": 401,
+        "elapsed_ms": 2.151,
+        "pressure": {
+          "cpu": "some avg10=3.23 avg60=3.41 avg300=3.18 total=1070956575\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.68 avg300=5.37 total=2255677282\nfull avg10=0.00 avg60=1.16 avg300=3.88 total=1985709417",
+          "memory": "some avg10=0.00 avg60=0.31 avg300=2.36 total=315427806\nfull avg10=0.00 avg60=0.23 avg300=1.73 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:22.817912+00:00",
+        "http": 401,
+        "elapsed_ms": 1.643,
+        "pressure": {
+          "cpu": "some avg10=3.01 avg60=3.37 avg300=3.18 total=1071008015\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.62 avg300=5.33 total=2255680458\nfull avg10=0.00 avg60=1.12 avg300=3.86 total=1985711734",
+          "memory": "some avg10=0.00 avg60=0.30 avg300=2.35 total=315427806\nfull avg10=0.00 avg60=0.22 avg300=1.72 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:24.820052+00:00",
+        "http": 401,
+        "elapsed_ms": 2.285,
+        "pressure": {
+          "cpu": "some avg10=2.83 avg60=3.32 avg300=3.17 total=1071059186\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.57 avg300=5.29 total=2255681321\nfull avg10=0.00 avg60=1.08 avg300=3.83 total=1985712422",
+          "memory": "some avg10=0.00 avg60=0.29 avg300=2.33 total=315427806\nfull avg10=0.00 avg60=0.21 avg300=1.71 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:26.822798+00:00",
+        "http": 401,
+        "elapsed_ms": 1.621,
+        "pressure": {
+          "cpu": "some avg10=2.86 avg60=3.31 avg300=3.17 total=1071131651\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.52 avg300=5.26 total=2255687314\nfull avg10=0.00 avg60=1.05 avg300=3.80 total=1985716037",
+          "memory": "some avg10=0.00 avg60=0.28 avg300=2.31 total=315427806\nfull avg10=0.00 avg60=0.20 avg300=1.70 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:28.824866+00:00",
+        "http": 401,
+        "elapsed_ms": 1.697,
+        "pressure": {
+          "cpu": "some avg10=2.70 avg60=3.27 avg300=3.16 total=1071186785\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.47 avg300=5.22 total=2255697717\nfull avg10=0.00 avg60=1.01 avg300=3.78 total=1985724950",
+          "memory": "some avg10=0.00 avg60=0.27 avg300=2.30 total=315427806\nfull avg10=0.00 avg60=0.20 avg300=1.68 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:30.827419+00:00",
+        "http": 401,
+        "elapsed_ms": 1.77,
+        "pressure": {
+          "cpu": "some avg10=2.93 avg60=3.29 avg300=3.16 total=1071269270\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.42 avg300=5.19 total=2255707360\nfull avg10=0.00 avg60=0.98 avg300=3.75 total=1985732162",
+          "memory": "some avg10=0.00 avg60=0.26 avg300=2.28 total=315427806\nfull avg10=0.00 avg60=0.19 avg300=1.67 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:32.829706+00:00",
+        "http": 401,
+        "elapsed_ms": 3.019,
+        "pressure": {
+          "cpu": "some avg10=2.76 avg60=3.25 avg300=3.16 total=1071320598\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.37 avg300=5.15 total=2255707925\nfull avg10=0.00 avg60=0.95 avg300=3.72 total=1985732667",
+          "memory": "some avg10=0.00 avg60=0.25 avg300=2.27 total=315427806\nfull avg10=0.00 avg60=0.18 avg300=1.66 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:34.833163+00:00",
+        "http": 401,
+        "elapsed_ms": 1.794,
+        "pressure": {
+          "cpu": "some avg10=2.62 avg60=3.21 avg300=3.15 total=1071381432\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.33 avg300=5.11 total=2255708145\nfull avg10=0.00 avg60=0.92 avg300=3.70 total=1985732865",
+          "memory": "some avg10=0.00 avg60=0.24 avg300=2.25 total=315427806\nfull avg10=0.00 avg60=0.18 avg300=1.65 total=282483113"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:36.835356+00:00",
+        "http": 401,
+        "elapsed_ms": 1.68,
+        "pressure": {
+          "cpu": "some avg10=2.69 avg60=3.20 avg300=3.15 total=1071487295\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.28 avg300=5.08 total=2255724068\nfull avg10=0.00 avg60=0.89 avg300=3.67 total=1985744683",
+          "memory": "some avg10=0.00 avg60=0.24 avg300=2.23 total=315432878\nfull avg10=0.00 avg60=0.17 avg300=1.64 total=282486968"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:38.837578+00:00",
+        "http": 401,
+        "elapsed_ms": 1.802,
+        "pressure": {
+          "cpu": "some avg10=2.93 avg60=3.23 avg300=3.15 total=1071545853\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.24 avg300=5.04 total=2255730370\nfull avg10=0.00 avg60=0.86 avg300=3.65 total=1985750423",
+          "memory": "some avg10=0.00 avg60=0.23 avg300=2.22 total=315433416\nfull avg10=0.00 avg60=0.16 avg300=1.63 total=282487410"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:40.839777+00:00",
+        "http": 401,
+        "elapsed_ms": 1.666,
+        "pressure": {
+          "cpu": "some avg10=2.76 avg60=3.19 avg300=3.14 total=1071598600\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.20 avg300=5.01 total=2255731197\nfull avg10=0.00 avg60=0.83 avg300=3.62 total=1985750865",
+          "memory": "some avg10=0.00 avg60=0.22 avg300=2.20 total=315434130\nfull avg10=0.00 avg60=0.16 avg300=1.62 total=282488124"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:42.841917+00:00",
+        "http": 401,
+        "elapsed_ms": 1.66,
+        "pressure": {
+          "cpu": "some avg10=2.80 avg60=3.18 avg300=3.14 total=1071673640\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.16 avg300=4.97 total=2255738239\nfull avg10=0.00 avg60=0.80 avg300=3.60 total=1985756460",
+          "memory": "some avg10=0.00 avg60=0.21 avg300=2.19 total=315434130\nfull avg10=0.00 avg60=0.15 avg300=1.60 total=282488124"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:44.844003+00:00",
+        "http": 401,
+        "elapsed_ms": 1.758,
+        "pressure": {
+          "cpu": "some avg10=2.84 avg60=3.17 avg300=3.14 total=1071729889\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.12 avg300=4.94 total=2255748185\nfull avg10=0.00 avg60=0.77 avg300=3.57 total=1985763684",
+          "memory": "some avg10=0.00 avg60=0.20 avg300=2.17 total=315434130\nfull avg10=0.00 avg60=0.15 avg300=1.59 total=282488124"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:46.846288+00:00",
+        "http": 401,
+        "elapsed_ms": 2.843,
+        "pressure": {
+          "cpu": "some avg10=2.68 avg60=3.13 avg300=3.13 total=1071790309\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.08 avg300=4.91 total=2255751629\nfull avg10=0.00 avg60=0.75 avg300=3.55 total=1985765965",
+          "memory": "some avg10=0.00 avg60=0.20 avg300=2.16 total=315434130\nfull avg10=0.00 avg60=0.14 avg300=1.58 total=282488124"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:48.849738+00:00",
+        "http": 401,
+        "elapsed_ms": 2.226,
+        "pressure": {
+          "cpu": "some avg10=2.74 avg60=3.13 avg300=3.13 total=1071846294\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.05 avg300=4.87 total=2255757914\nfull avg10=0.00 avg60=0.72 avg300=3.52 total=1985770974",
+          "memory": "some avg10=0.00 avg60=0.19 avg300=2.14 total=315434130\nfull avg10=0.00 avg60=0.14 avg300=1.57 total=282488124"
+        }
+      },
+      {
+        "at": "2026-11-12T20:16:50.852514+00:00",
+        "http": 401,
+        "elapsed_ms": 2.109,
+        "pressure": {
+          "cpu": "some avg10=2.61 avg60=3.09 avg300=3.12 total=1071903465\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+          "io": "some avg10=0.00 avg60=1.01 avg300=4.84 total=2255773911\nfull avg10=0.00 avg60=0.70 avg300=3.50 total=1985782364",
+          "memory": "some avg10=0.00 avg60=0.18 avg300=2.13 total=315434650\nfull avg10=0.00 avg60=0.13 avg300=1.56 total=282488645"
+        }
+      }
+    ],
+    "count": 60,
+    "min_ms": 1.527,
+    "max_ms": 63.3,
+    "http_codes": [
+      401
+    ]
+  },
+  "later_kernel_extract": [
+    "2026-11-12T20:10:24+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T20:10:24+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T20:10:24+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T20:10:24+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T20:10:44+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T20:10:44+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T20:10:44+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T20:10:44+00:00  hvs_probe+0x1f6/0x4c0",
+    "2026-11-12T20:10:58+00:00 kworker/0:2: page allocation failure: order:7, mode:0xdc0(GFP_KERNEL|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0",
+    "2026-11-12T20:10:58+00:00 Workqueue: hv_pri_chan vmbus_add_channel_work",
+    "2026-11-12T20:10:58+00:00  vmbus_alloc_ring+0x78/0xd0",
+    "2026-11-12T20:10:58+00:00  hvs_probe+0x1f6/0x4c0"
+  ],
+  "collection_started_at": "2026-11-12T20:16:15.968385+00:00",
+  "collection_completed_at": "2026-11-12T20:19:38.163015+00:00",
+  "hook_lifecycle": {
+    "sources": [
+      "Initial status tool response and independent read-only hook-observation inspection during this investigation",
+      "Local agentd.log, line316 at collection"
+    ],
+    "retirement": {
+      "at": "2026-11-12T20:10:34.391Z",
+      "event": "session.gone",
+      "reason": "liveness",
+      "cause": "process-exited",
+      "root_alias": "current-root"
+    },
+    "selected_observations": [
+      {
+        "at": "2026-11-12T20:13:09.764Z",
+        "event": "SessionStart",
+        "outcome": "failed",
+        "root_alias": "current-root"
+      },
+      {
+        "at": "2026-11-12T20:13:20.910Z",
+        "event": "PostToolUse",
+        "outcome": "failed",
+        "root_alias": "current-root"
+      },
+      {
+        "at": "2026-11-12T20:13:33.306Z",
+        "event": "PostToolUse",
+        "outcome": "success",
+        "root_alias": "current-root"
+      }
+    ],
+    "limitations": [
+      "Ring entries may be overwritten; selected observations preserve facts read during this investigation, not an exhaustive history.",
+      "The exception responsible for failed is not retained; relation to prior root retirement is an inference.",
+      "The ordering relative to the first successful MCP registration is the maintainer observation; no timestamped MCP registration response was retained, so that before/after correlation is unverified."
+    ],
+    "root_alias": "current-root"
+  }
+}

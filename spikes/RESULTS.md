@@ -1146,3 +1146,25 @@ missing plugin generation publication and environment-dependent acceptance remai
 - #9 and unproven historical #19 triggers remain open; the controlled registration
   race is fixed. Day-long, physical-subnet, unattended-reboot, native Work/wake,
   real migration conversations and other-platform gates remain separate.
+
+
+## 2026-11-12: resumed 0.12.6 reliability investigation
+
+Loaded MCP, daemon and hub 0.12.6 verified with an active caller, contract 3, both
+canonical feedback subscriptions and empty local outbox. Early failed Codex hook
+observations were followed by successes; the old root had retired on process exit.
+The exact ordering relative to MCP re-registration is unverified. The coarse failure
+records cannot prove the exact exception.
+
+Latest main/merge CI supplied eight successful phase samples (87.330–121.401 ms),
+not a reproduction of #9/#19. Separate diagnostic invocations do not explain earlier
+untraced gate failures. Local and remote hub interruptions overlap kernel high-order
+allocation failures; causation remains under investigation. Sixty bounded loopback
+requests returned the expected unauthenticated HTTP 401, 1.527–63.300 ms. This is
+endpoint responsiveness, not authenticated E2E or a day-long acceptance result.
+
+See [research](../docs/sdlc/runtime-reliability-followup/research-brief.md),
+[incident](../docs/sdlc/runtime-reliability-followup/incident.md) and
+[evidence](evidence/2026-11-12-runtime-reliability-followup.json). No runtime code,
+identity fences, queue contents, hook timers, kernel settings or network exposure
+changed. No new release or code-test pass is claimed for this documentation work.
