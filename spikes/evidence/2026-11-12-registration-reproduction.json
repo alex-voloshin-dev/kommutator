@@ -1,0 +1,97 @@
+{
+  "commit": "98ddb0bb59aafad16387a0ed7ac4428b1315fc9b",
+  "node": "v26.13.0",
+  "planned_runs": 10,
+  "stop_on_failure": true,
+  "command": "pnpm exec vitest run test/process-lifecycle.test.ts",
+  "cwd": "packages/cli",
+  "pnpm": "12.18.0",
+  "platform": "linux-x64",
+  "source_modified": false,
+  "runs": [
+    {
+      "run": 1,
+      "exit": 0,
+      "elapsed_s": 16.699,
+      "tests_passed": 4,
+      "log_sha256": "653a0a70687fced2d40141d2e838b4900f0f253bb220c476999673d41966589a"
+    },
+    {
+      "run": 2,
+      "exit": 0,
+      "elapsed_s": 16.114,
+      "tests_passed": 4,
+      "log_sha256": "19eb5d7525fd42e8b02d8b997275e9a250bd1738b306091274b164dd8c645fed"
+    },
+    {
+      "run": 3,
+      "exit": 0,
+      "elapsed_s": 16.096,
+      "tests_passed": 4,
+      "log_sha256": "ca95b92e3a907c9b1b8210c27eb519b8e7a00bc4adaab77356641063f815ef54"
+    },
+    {
+      "run": 4,
+      "exit": 0,
+      "elapsed_s": 16.599,
+      "tests_passed": 4,
+      "log_sha256": "6e7fc12ac12b21d16f2de1a092938bddc9915b20fd42567c03e17698bc2eb8d2"
+    },
+    {
+      "run": 5,
+      "exit": 0,
+      "elapsed_s": 17.096,
+      "tests_passed": 4,
+      "log_sha256": "9b65467908b01656322cba5a32bcee3a945d39e7970f70dd7c5e5ee1d4310264"
+    },
+    {
+      "run": 6,
+      "exit": 0,
+      "elapsed_s": 16.393,
+      "tests_passed": 4,
+      "log_sha256": "b41a024c830e161843d23d97451aa8f893c8d7127a7dc071eb6b5f6beccf2cb8"
+    },
+    {
+      "run": 7,
+      "exit": 0,
+      "elapsed_s": 16.498,
+      "tests_passed": 4,
+      "log_sha256": "ade94044a16aa38970061de6da900dcab66f0f2219cb926827ee4201c61a595a"
+    },
+    {
+      "run": 8,
+      "exit": 0,
+      "elapsed_s": 16.439,
+      "tests_passed": 4,
+      "log_sha256": "d01aeb775fa795c4e216814095a698711758e128a9039efbf1e5e4d62cc8b969"
+    },
+    {
+      "run": 9,
+      "exit": 0,
+      "elapsed_s": 16.337,
+      "tests_passed": 4,
+      "log_sha256": "409d047367e3667b11cb79205214ca2c535947d30a84f46d5b4bd96fbf8992f8"
+    },
+    {
+      "run": 10,
+      "exit": 0,
+      "elapsed_s": 16.729,
+      "tests_passed": 4,
+      "log_sha256": "8205ef50a81235af2b8a9008e78ab2c4f7989aae3f17d05827b590fdc8f945c1"
+    }
+  ],
+  "tests_passed_total": 40,
+  "registration_failure_reproduced": false,
+  "timing_distribution_available": false,
+  "limitations": [
+    "Focused runner omitted successful console timing lines; do not infer hook latency distribution.",
+    "Ten bounded local executions do not explain the original intermittent CI failure.",
+    "No runtime fix justified by this sample; issue19 remains open."
+  ],
+  "invalid_setup_attempts": {
+    "count": 10,
+    "command": "pnpm --filter @kommutator/cli exec vitest run test/process-lifecycle.test.ts",
+    "result": "No projects matched the filters; exit0 but no tests executed",
+    "counted_as_coverage": false
+  }
+}

@@ -889,3 +889,61 @@ original CI cause and which of the two roots failed remain unknown; issue #19
 tracks this separately from latency #9. Follow-up diagnostic coverage retains
 single attempts, timing budgets and identity assertions, and reports only bounded
 fixture hook outcomes and explicitly selected hub identity fields on failure.
+
+### 2026-11-12 — bounded registration reproduction sample (#19)
+
+At unchanged 98ddb0b, Node 26.13.0/pnpm 12.18.0, ten sequential lifecycle runs
+passed all 40 tests; the predeclared stop-on-failure condition was not reached.
+[Sanitized provenance](evidence/2026-11-12-registration-reproduction.json) records
+each run and log digest. Initial invalid package-filter invocations executed no
+tests and are explicitly excluded. Passing console timing output was suppressed,
+so this is lifecycle outcome evidence, not a hook-latency distribution. The original
+CI failure did not reproduce; #19 stays open without a speculative registration fix.
+
+### 2026-11-12 — hook import isolation A/B (#9)
+
+The IPC client imported pathsFor through the agentd barrel. Its built hook graph
+loaded an approximately 85 KB chunk including node:sqlite, ws and daemon schemas.
+The existing /paths export exposes the same function without those dependencies.
+A controlled resolver-denial test fails on the baseline (SQLite import attempted,
+exit 0 but no visible header) and passes after the one-line import change, requiring
+visible output and the exact acknowledgement ID. Candidate IPC chunk is about 9.3 KB.
+
+[Paired measurements](evidence/2026-11-12-hook-import-ab.json) retain artifact hashes
+and the pre-version-bump candidate diff hash. Ten untraced pairs per scenario were
+alternated, plus three traced pairs. Untraced median milliseconds baseline→candidate:
+manual configured-cold SessionStart 160.641→138.933; responsive Codex Stop
+151.998→124.676; Claude plugin SessionStart 184.489→184.260. Each group contains
+ten samples; these are local observations, not CI tail-latency or causal proof for
+the historical outlier. Tracing adds overhead. All six traced Claude-plugin runs
+reached the unchanged 140 ms entrypoint deadline after publishing authority;
+these synthetic owner/probe runs do not prove successful native registration.
+The optimization improves two observed medians; no plugin-path improvement is claimed.
+
+The temporary measurement server aborted on an unhandled socket ECONNRESET after
+59 complete samples. Its missing error handler was corrected to retain socket codes;
+only the remaining 19 planned samples were executed, including the interrupted
+sample whose original outcome was unavailable. Earlier results were retained.
+The error is a fixture observation, not an established product defect. Runtime source
+did not change between measurement segments. All 78 completed samples satisfied
+expected output/exit assertions; their timing values are retained without filtering.
+#9 remains open, with 300 ms cap, 200 ms target and unchanged 140/90 ms timers.
+
+### 2026-11-12 — exported cold authority diagnostic (qualification blocked)
+
+The first full 0.12.4 qualification passed 573 workspace and 134 script tests,
+then failed the first Claude owner's whoami in exported E2E. Five interleaved
+baseline/candidate pairs were run with sanitized authority snapshots and no
+registration retries. [All samples](evidence/2026-11-12-cold-authority-diagnostic.json)
+record baseline 5/5 passing and candidate 4/5 passing. The original first-whoami
+failure did not recur. One candidate failed during its second hook before MCP;
+both owners were alive and both matching generation-1 journals were committed.
+The temporary sanitizer discarded its error message, so its exact cause is
+unavailable and must not be classified as a timeout.
+
+Completed exported wrapper-to-close hook durations ranged 159.714–761.972 ms on
+baseline and 141.294–731.751 ms on candidate. This metric includes the wrapper and
+differs from the earlier direct-Node A/B; no reliable wrapper-latency improvement
+is established. Post-run host load is context only, not evidence of the cause.
+The release remains blocked pending diagnostic qualification; no service update
+or publication occurred during these experiments.

@@ -1,6 +1,7 @@
 // Synthetic vendor parent: real process ancestry for exported hooks and MCP bootstrap.
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
+import { hookDiagnostic } from '../lib/plugin-e2e-diagnostics.mjs';
 const plugin = process.argv[2];
 const children = new Set();
 let stopping = false;
@@ -23,27 +24,33 @@ process.on('message', async message => {
     } else if (message.action === 'hook') {
       const started = performance.now();
       const child = launch('hook', [message.event], { cwd: '/', env: process.env, stdio: ['pipe', 'pipe', 'pipe'] });
-      let stdout = ''; let stderr = '';
-      child.stdout.on('data', chunk => { stdout += chunk; });
-      child.stderr.on('data', chunk => { stderr += chunk; });
+      let stdoutBytes = 0; let stderrBytes = 0;
+      child.stdout.on('data', chunk => { stdoutBytes += chunk.length; });
+      child.stderr.on('data', chunk => { stderrBytes += chunk.length; });
+      const diagnostic = (outcome, error) => hookDiagnostic({ event: message.event, outcome, elapsed_ms: performance.now() - started,
+        exit_code: child.exitCode, signal: child.signalCode, stdout_bytes: stdoutBytes, stderr_bytes: stderrBytes, error_code: error?.code });
+      const failure = (outcome, error) => Object.assign(new Error(`Hook fixture ${outcome}`), { diagnostic: diagnostic(outcome, error) });
       const done = new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
-          const diagnostic = { event: message.event, pid: child.pid, elapsed_ms: Math.round(performance.now() - started),
-            exit_code: child.exitCode, signal: child.signalCode, stdout_bytes: Buffer.byteLength(stdout), stderr_bytes: Buffer.byteLength(stderr) };
+          const error = failure('timeout');
           child.kill('SIGKILL');
-          reject(new Error(`Hook fixture timed out: ${JSON.stringify(diagnostic)}`));
+          reject(error);
         }, 2000);
-        child.once('error', error => { clearTimeout(timer); reject(error); });
+        child.once('error', error => { clearTimeout(timer); reject(failure('spawn-error', error)); });
+        child.stdin.once('error', error => {
+          const failed = failure('stdin-error', error);
+          clearTimeout(timer); child.kill('SIGKILL'); reject(failed);
+        });
         child.once('close', code => {
           clearTimeout(timer);
-          code === 0 && stdout === '' ? resolve() : reject(new Error(`Hook failed (${code}): ${stdout} ${stderr}`));
+          code === 0 && stdoutBytes === 0 ? resolve(diagnostic('success')) : reject(failure(code !== 0 ? 'nonzero-exit' : 'unexpected-stdout'));
         });
       });
       child.stdin.end(JSON.stringify(message.payload));
-      await done;
+      result = await done;
     } else throw new Error('Unknown owner fixture action');
     process.send({ id: message.id, result });
-  } catch (error) { process.send({ id: message.id, error: error.message }); }
+  } catch (error) { process.send({ id: message.id, error: error.diagnostic ? `Hook fixture ${error.diagnostic.outcome}` : 'Owner fixture action failed', ...(error.diagnostic ? { diagnostic: error.diagnostic } : {}) }); }
 });
 function stop() {
   stopping = true;

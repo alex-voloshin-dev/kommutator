@@ -3,8 +3,8 @@
 set -eu
 umask 077
 vendor='codex'
-expected='5303d767d77b8aca468e6a1dfdfa69e2644ee798fa8672e4fcf7f85dd65d57b4'
-url='https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.12.3/kommutator-v0.12.3-linux-x64.tar.gz'
+expected='94d029c836c16d63e3e3147a58ce86e338189f24947e2bd42b2235fb5f568c2f'
+url='https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.12.4/kommutator-v0.12.4-linux-x64.tar.gz'
 mode=${1:-mcp}
 [ "$#" -eq 0 ] || shift
 fail() { printf 'kommutator: %s\n' "$*" >&2; exit 1; }

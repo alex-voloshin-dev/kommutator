@@ -7,6 +7,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHubServer } from '../packages/hub/dist/server.js';
 import { openDatabase } from '../packages/hub/dist/db.js';
+import { hookDiagnostic, authorityDiagnostic } from './lib/plugin-e2e-diagnostics.mjs';
 const artifact = resolve(process.argv[2]);
 const home = await mkdtemp(join(tmpdir(), 'kom-export-e2e-'));
 const project = join(home, 'project');
@@ -32,6 +33,11 @@ await mkdir(join(home, '.claude')); await mkdir(join(home, 'codex'));
 await writeFile(claudeSettings, JSON.stringify(installedClaude));
 await writeFile(codexSettings, installedCodex);
 const clients = [];
+const owners = []; const hookResults = []; let lastStage = 'setup';
+function recordHook(owner, result) {
+  if (hookResults.length === 64) hookResults.shift();
+  hookResults.push({ owner, ...hookDiagnostic(result) });
+}
 const moved = [];
 const env = { HOME: home, KOM_HOME: kom, CODEX_HOME: join(home, 'codex'), PATH: join(home, 'os-bin') };
 function owner(id) {
@@ -39,20 +45,25 @@ function owner(id) {
     cwd: '/', env: { ...env, CLAUDE_CODE_SESSION_ID: id }, stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
   });
   clients.push(child);
+  const label = `owner-${owners.length + 1}`; owners.push({ child, label, vendorId: id });
   let serial = 0;
   const pending = new Map();
   child.on('message', reply => pending.get(reply.id)?.(reply));
-  return { child, command(action, payload = {}) {
+  return { child, label, command(action, payload = {}) {
     const requestId = ++serial;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(requestId); reject(new Error(`Owner fixture timeout: ${action}`)); }, 15000);
-      pending.set(requestId, reply => { clearTimeout(timer); pending.delete(requestId); reply.error ? reject(new Error(reply.error)) : resolve(reply.result); });
+      pending.set(requestId, reply => { clearTimeout(timer); pending.delete(requestId); reply.error ? reject(Object.assign(new Error(reply.error), { diagnostic: reply.diagnostic })) : resolve(reply.result); });
       child.send({ id: requestId, action, ...payload });
     });
   } };
 }
 async function hook(vendor, id, event = 'SessionStart', cwd = project, parent) {
-  if (parent) return parent.command('hook', { event, payload: { session_id: id, cwd, permission_mode: 'default' } });
+  lastStage = `hook:${vendor}:${parent?.label ?? 'standalone'}:${event}`;
+  if (parent) {
+    try { const result = await parent.command('hook', { event, payload: { session_id: id, cwd, permission_mode: 'default' } }); recordHook(parent.label, result); return result; }
+    catch (error) { if (error.diagnostic) recordHook(parent.label, error.diagnostic); throw error; }
+  }
   const child = spawn(join(artifact, 'plugins', vendor, 'bin/hook'), [event], { cwd: '/', env: { ...env, CLAUDE_CODE_SESSION_ID: id }, stdio: ['pipe', 'pipe', 'pipe'] });
   let stdout = ''; child.stdout.on('data', chunk => { stdout += chunk; }); child.stderr.resume();
   const done = new Promise((resolve, reject) => { child.on('error', reject); child.on('close', code => { try { assert.equal(code, 0); assert.equal(stdout, ''); resolve(); } catch (error) { reject(error); } }); });
@@ -60,6 +71,7 @@ async function hook(vendor, id, event = 'SessionStart', cwd = project, parent) {
   await done;
 }
 async function client(vendor, id, parent) {
+  lastStage = `client:${vendor}:${parent?.label ?? 'standalone'}`;
   const child = parent?.child ?? spawn(join(artifact, 'plugins', vendor, 'bin/mcp'), [], { cwd: '/', env: { ...env, CLAUDE_CODE_SESSION_ID: id }, stdio: ['pipe', 'pipe', 'pipe'] });
   if (!parent) clients.push(child);
   let buffer = ''; let serial = 0; const pending = new Map();
@@ -77,6 +89,7 @@ async function client(vendor, id, parent) {
   await request('initialize', { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: vendor, version: 'fixture' } });
   child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
   return { child, async call(name, args = {}, root = id, expectedError = false) {
+    lastStage = `tool:${vendor}:${parent?.label ?? 'standalone'}:${name}`;
     const reply = await request('tools/call', { name, arguments: args, _meta: { sessionId: root, threadId: root } });
     assert.equal(Boolean(reply.isError), expectedError, `${vendor} ${name}: ${reply.content?.[0]?.text}`);
     return expectedError ? reply.content[0].text : JSON.parse(reply.content[0].text);
@@ -227,6 +240,12 @@ try {
   assert.equal(queued.outbox_depth, 1);
   console.log('PASS: offline send remains queued after bounded readiness wait');
   console.log('PASS: exported cold Claude, concurrent same-cwd Codex roots, immutable context, cross-vendor send/read/reply/topic/board, cache deletion, shared daemon survivor and restart (synthetic fixtures only)');
+} catch (error) {
+  let authority;
+  try { authority = await authorityDiagnostic(kom, owners.map(({ child, label, vendorId }) => ({ label, vendorId, pid: child.pid, alive: child.exitCode === null && child.signalCode === null })), project); }
+  catch { authority = { context: 'diagnostic-unavailable' }; }
+  console.error('[export-e2e-diagnostic] ' + JSON.stringify({ stage: lastStage, hooks: hookResults, authority }));
+  throw error;
 } finally {
   for (const path of moved) await rename(path + '.qa-hidden', path);
   for (const child of clients) await stop(child);

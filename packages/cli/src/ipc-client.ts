@@ -1,7 +1,7 @@
 import { connect, type Socket } from "node:net";
 import { spawn } from "node:child_process";
 import { MAX_FRAME_BYTES, Methods, PROTOCOL_VERSION } from "@kommutator/protocol";
-import { pathsFor } from "@kommutator/agentd";
+import { pathsFor } from "@kommutator/agentd/paths";
 import * as z from "zod";
 import { isCodexClient } from "./codex.js";
 
