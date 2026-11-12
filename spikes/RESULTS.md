@@ -805,3 +805,40 @@ receipts were not claimed as reads. Issue #13 is closed by the qualified retirem
 issue #9 retains the temporary 300 ms process cap and 200 ms target. Original unread replay
 causality remains unconfirmed. Physical-subnet, Windows reboot, day-long reliability,
 ChatGPT Work/native idle wake and other-platform gates remain open.
+
+### 2026-11-12 — current Codex client after plugin reload
+
+The current session's actual `setup_status` reports client 0.12.2 and daemon 0.12.2,
+runtime contract 3 compatible. Fresh `whoami` reports an active Codex root with the
+`kommutator-developer` role and membership in `kommutator-feedback` and
+`agentic-forge-feedback`. This supersedes the previous rollout's observation that its
+long-lived MCP process was still 0.12.1; no identity was inferred from cache paths.
+This verifies the connected MCP version and registration, not native idle wake.
+
+### 2026-11-12 — bounded hook phase diagnostic and restart regression
+
+The isolated diagnostic used Node 26.13.0 on Linux x64 and an intermediate 0.12.3
+candidate based on 7747c5d. [Sanitized measurements](evidence/2026-11-12-hook-phase-timing.json)
+retain the exact built artifact hashes; these are not final release asset measurements.
+Three scenarios each ran three untraced controls and three interleaved traced samples.
+Untraced min/median/max milliseconds were 143.403/143.971/277.723 for manual
+configured-cold SessionStart, 176.846/177.305/187.118 for Claude plugin SessionStart,
+and 134.745/136.073/150.973 for responsive Codex Stop with synthetic ACK failure.
+All 18 processes exited successfully with their expected stdout behavior.
+
+One untraced sample exceeded the 200 ms target but remained below 300 ms. Its internal
+phases were not traced, so its cause remains unknown. A null deadline field means
+unobserved in an untraced control. Trace startup includes instrumentation imports;
+three samples do not establish calibrated tracing overhead or tail latency. The
+configured-cold path has no plugin profile and differs from plugin authority preparation.
+Traced Claude runs persisted authority records before the entrypoint deadline; this
+is not proof of native Claude registration. Observed parent exit-to-close gaps were
+0.006–0.032 ms, not evidence for the original CI outlier's cause. Issue #9 stays open;
+300 ms process cap, 200 ms target and internal 140/90 ms timers are unchanged.
+
+A disposable Unix socket fixture reproduced #15 against the built 0.12.2 baseline:
+a reset during shutdown caused restart to fail before replacement. The candidate
+confirms listener absence with fresh non-starting probes and starts exactly one
+replacement. Focused tests also cover persistent listeners, stage-specific failures
+and cancellation of stalled hello/shutdown/confirmation requests. No production
+daemon was interrupted by this diagnostic. Live rollout qualification is separate.

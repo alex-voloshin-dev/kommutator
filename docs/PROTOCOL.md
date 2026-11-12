@@ -130,7 +130,7 @@ Local IPC helpers are not forwarded verbatim to the hub:
 | `hook.ack` | `{ ids }` → queued read receipts for headers already flushed to stdout |
 | `daemon.status` / `status` | Local daemon/queue health and hub reachability; optional CLI-only `caller` selector adds read-only exact-owner registration health; excludes vendor credentials |
 | `daemon.diagnostics` | CLI-only read-only checks of live registered Claude socket presence and Codex shim liveness/observed hook polls; returns `claude_sessions` and `codex_sessions` (`id`, `shim_alive` as true/false/null for alive/dead/unverified, `hook_events`), never socket paths or tokens |
-| `daemon.shutdown` | CLI-only graceful shutdown |
+| `daemon.shutdown` | CLI-only graceful shutdown; CLI restart confirms listener absence after a reset before spawning (DESIGN §19) |
 | `session.dnd` | CLI-only `{ wake, session? }`; target local ID/handle or all live local sessions |
 | `human.send` | CLI-only `{ message }`; human origin requires the CLI's stdin TTY, otherwise agent origin and no force wake |
 

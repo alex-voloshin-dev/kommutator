@@ -1,19 +1,27 @@
 import { defineCommand, runMain } from "citty";
 import { PROTOCOL_VERSION, Message } from "@kommutator/protocol";
 import { pathsFor, runDaemon } from "@kommutator/agentd";
-import { IpcClient, cliHello, spawnDaemon } from "./ipc-client.js";
+import { IpcClient, cliHello } from "./ipc-client.js";
 import { initialize } from "./init.js";
 import { readStatus, runDoctor } from "./doctor.js";
 import { runLogs } from "./logs.js";
 import { boardCommand } from "./board.js";
+import { confirmDaemonStopped } from "./daemon-stop.js";
 import * as z from "zod";
 
 const print = (value: unknown) => console.log(JSON.stringify(value, null, 2));
 const notYet = (name: string) => () => { throw new Error(`kom ${name}: deferred; see docs/MVP_PLAN.md`); };
 
-async function management(method: string, params: Record<string, unknown> = {}, lazyStart = true): Promise<unknown> {
+async function management(method: string, params: Record<string, unknown> = {}, lazyStart = true, timeoutMs?: number): Promise<unknown> {
   const client = new IpcClient({ hello: cliHello, lazyStart });
-  try { return await client.call(method, params); } finally { client.close(); }
+  let deadline: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const reply = client.call(method, params);
+    if (timeoutMs === undefined) return await reply;
+    return await Promise.race([reply, new Promise<never>((_, reject) => {
+      deadline = setTimeout(() => { reject(new Error("Management deadline exceeded")); client.close(); }, timeoutMs);
+    })]);
+  } finally { if (deadline) clearTimeout(deadline); client.close(); }
 }
 
 export function terminalMessage(to: string, body: string, wake: boolean, isTTY: boolean): { message: Record<string, unknown> } {
@@ -22,22 +30,7 @@ export function terminalMessage(to: string, body: string, wake: boolean, isTTY: 
 }
 
 async function stopDaemon(): Promise<void> {
-  try { await management("daemon.shutdown", {}, false); }
-  catch (error) {
-    const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
-    if (code !== "ENOENT" && code !== "ECONNREFUSED") throw error;
-  }
-  // Wait for the old listener to close before a restart attempts the single-instance lock.
-  for (let attempt = 0; attempt < 40; attempt++) {
-    try { await management("daemon.status", {}, false); }
-    catch (error) {
-      const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
-      if (code === "ENOENT" || code === "ECONNREFUSED") return;
-      throw error;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error("Daemon did not stop within 2 seconds");
+  await confirmDaemonStopped((method, timeoutMs) => management(method, {}, false, timeoutMs));
 }
 
 async function hubRun(): Promise<void> {
@@ -62,7 +55,7 @@ export async function runCommands(): Promise<void> {
       daemon: defineCommand({ meta: { name: "daemon", description: "manage the per-host daemon" }, subCommands: {
         run: defineCommand({ meta: { name: "run" }, run: async () => { await runDaemon(); } }),
         stop: defineCommand({ meta: { name: "stop" }, run: stopDaemon }),
-        restart: defineCommand({ meta: { name: "restart" }, run: async () => { await stopDaemon(); spawnDaemon(); print(await management("daemon.status")); } }),
+        restart: defineCommand({ meta: { name: "restart" }, run: async () => { await stopDaemon(); print(await management("daemon.status")); } }),
       } }),
       mcp: defineCommand({ run: async () => { const { runMcp } = await import("./mcp.js"); await runMcp(); } }),
       init: defineCommand({ meta: { description: "write private daemon config and merge selected vendor hooks" }, args: {

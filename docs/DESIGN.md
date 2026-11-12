@@ -1621,3 +1621,17 @@ compatibility-probe budget. Session listings still await their normal flush. Hoo
 use `retired-locally` when an end marker was committed and IPC rejects its terminal binding;
 this reports local retirement only, not hub delivery. Compatibility and connectivity failures
 retain their own outcomes.
+
+### Confirm daemon shutdown after a reset (2026-11-12)
+
+CLI stop/restart treats `ECONNRESET` or RPC `-32031` (daemon stopping) during shutdown or its status confirmation as an
+uncertain transition, never proof that the daemon stopped. It sends shutdown once, then
+uses fresh non-starting management connections until `ENOENT` or `ECONNREFUSED` proves
+that the listener is absent. A responsive or repeatedly resetting listener cannot authorize
+a replacement. The entire stop phase has a two-second monotonic deadline, including
+management connection, hello and reply waits. Other failures retain a fixed stage-specific
+diagnostic and do not start a daemon. Restart invokes the existing spawn/single-instance
+lock path only after confirmed absence, using one lazy-start attempt rather than an
+explicit spawn followed by another lazy spawn. A successful status reply confirms the
+replacement is serving; no socket/lock files are removed by the CLI.
+This does not alter message replay, IPC wire schemas or the hook timers.
