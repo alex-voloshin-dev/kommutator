@@ -1111,3 +1111,38 @@ synthetic E2E. Independent correctness/security, external review and QA approved
 See [review](../docs/sdlc/pending-registration/review-change-2.md). Publication and
 local rollout still require observed evidence. #9 and unproven historical #19 causes,
 missing plugin generation publication and environment-dependent acceptance remain open.
+
+
+## 2026-11-12 — 0.12.6 published, CI traced and locally deployed
+
+- Release commit `3f08b5a9cb73db943c02ac9f9a57d13625a65c6d`, PR #21 merged as
+  `1aeee8273789b71341a1707b74098d2984708e27`. Exact-commit branch/PR/tag Release
+  checks 43285349145, 43285360054 and 43285360373 passed, including the new phase
+  sample; all three Secret scans passed. Changed-source/history scans were clean.
+  Export scanner matches were two release-manifest hash metadata entries; all 191
+  payload hashes per vendor were verified.
+- Branch CI emitted four traced parent durations: 100.447, 114.770, 94.785 and
+  89.364 ms; entry at 21–24 ms, main-thread scheduler wait 0.006–0.113 ms. No
+  above-target timing was printed in that run. Raw fixed-field phase evidence is
+  `evidence/2026-11-12-registration-ci-phases.json`. This is not an explanation for
+  earlier untraced failures or proof of a permanent latency guarantee.
+- Timer stopped, updater inactive and lock free before assets were published and
+  catalogs merged. Anonymous downloads matched tar SHA256
+  `5eb6d8e1fcc50953fe191d72f70f3eb353acd0d9cbc0e824793a177a6f955ec5`
+  and Claude zip `4960217ffc8029c5471083355f7a155f58cf821b18b1f1bca005687e0ea317e3`.
+- Native Claude 2.1.322 and Codex 0.167.2 installed the public marketplace plugin
+  into separate clean profiles. Installed MCP initialize reported 0.12.6 and
+  bundled Node 26.13.0; private setup returned HTTP 200 and rejected foreign Origin
+  with 403. These are installation/MCP probes, not real model conversations.
+- Ordinary updater completed without manual recovery: checkpoint idle/applied
+  0.12.6 at the exact release commit, Docker image release-0.12.6 healthy and
+  container package 0.12.6, daemon PID 2821613 from retained release checkout using
+  Node 26.13.0/pnpm 12.18.0. Both pre-update SQLite snapshots were mode 0600 and
+  passed quick_check. Timer restored active.
+- Fresh tools: daemon 0.12.6 compatible with existing chat MCP 0.12.3, active caller,
+  connected hub, healthy/no issues and empty outbox. Role and canonical feedback
+  subscriptions survived. Main fast-forwarded with user changes preserved and a
+  fresh private backup. No in-place MCP process upgrade is claimed.
+- #9 and unproven historical #19 triggers remain open; the controlled registration
+  race is fixed. Day-long, physical-subnet, unattended-reboot, native Work/wake,
+  real migration conversations and other-platform gates remain separate.

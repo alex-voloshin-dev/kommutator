@@ -1,0 +1,966 @@
+{
+  "run": 43285349145,
+  "commit": "3f08b5a9cb73db943c02ac9f9a57d13625a65c6d",
+  "parents": [
+    {
+      "owner": "author",
+      "child_pid": 7733,
+      "start_ns": "176956873982",
+      "close_ns": "177057311993",
+      "elapsed_ms": 100.44680500000004
+    },
+    {
+      "owner": "reviewer",
+      "child_pid": 7747,
+      "start_ns": "177061075444",
+      "close_ns": "177175836950",
+      "elapsed_ms": 114.76990899999998
+    },
+    {
+      "owner": "author",
+      "child_pid": 7824,
+      "start_ns": "177944415443",
+      "close_ns": "178039191436",
+      "elapsed_ms": 94.78456600000004
+    },
+    {
+      "owner": "reviewer",
+      "child_pid": 7838,
+      "start_ns": "178041126850",
+      "close_ns": "178130483914",
+      "elapsed_ms": 89.36408400000005
+    }
+  ],
+  "events": [
+    {
+      "phase": "preload",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7689,
+      "at_ns": "176556300058"
+    },
+    {
+      "phase": "preload",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7690,
+      "at_ns": "176556981314"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7689,
+      "at_ns": "176562309605"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7690,
+      "at_ns": "176562858082"
+    },
+    {
+      "phase": "preload",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7706,
+      "at_ns": "176796168581"
+    },
+    {
+      "phase": "preload",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "176796369368"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7706,
+      "at_ns": "176802032809"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "176802304774"
+    },
+    {
+      "phase": "exit",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7706,
+      "at_ns": "176854522003",
+      "scheduler": [
+        76767507,
+        2382743,
+        47
+      ]
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "176927962940"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "176931078851"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "176937878438"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "176937973331"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "176940616505"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "176940708674"
+    },
+    {
+      "phase": "preload",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "176979083483"
+    },
+    {
+      "phase": "entry",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "176980050098",
+      "scheduler": [
+        22285235,
+        31327,
+        7
+      ]
+    },
+    {
+      "phase": "delivery.import.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "176981505339"
+    },
+    {
+      "phase": "delivery.import.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "177012580514"
+    },
+    {
+      "phase": "delivery.run.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "177012653343"
+    },
+    {
+      "phase": "stdin.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "177012969680"
+    },
+    {
+      "phase": "stdin.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "177015326818"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177019480607"
+    },
+    {
+      "phase": "registration.queued",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177019731375"
+    },
+    {
+      "phase": "registration.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177020232940"
+    },
+    {
+      "phase": "birth.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177020283516"
+    },
+    {
+      "phase": "birth.finished",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177028148597"
+    },
+    {
+      "phase": "local.saved",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177032404094"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177032462502"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7705,
+      "at_ns": "177041754191"
+    },
+    {
+      "phase": "delivery.run.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "177053983076"
+    },
+    {
+      "phase": "exit",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7733,
+      "at_ns": "177054109386",
+      "scheduler": [
+        61084181,
+        112708,
+        41
+      ]
+    },
+    {
+      "phase": "preload",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177081908439"
+    },
+    {
+      "phase": "entry",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177082710987",
+      "scheduler": [
+        20085748,
+        0,
+        5
+      ]
+    },
+    {
+      "phase": "delivery.import.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177084146238"
+    },
+    {
+      "phase": "delivery.import.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177115037435"
+    },
+    {
+      "phase": "delivery.run.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177115113590"
+    },
+    {
+      "phase": "stdin.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177115452280"
+    },
+    {
+      "phase": "stdin.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177117689207"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177121704017"
+    },
+    {
+      "phase": "registration.queued",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177121774032"
+    },
+    {
+      "phase": "registration.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177121819190"
+    },
+    {
+      "phase": "birth.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177121842516"
+    },
+    {
+      "phase": "birth.finished",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177129698874"
+    },
+    {
+      "phase": "local.saved",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177131512439"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177131564196"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7705,
+      "at_ns": "177161675545"
+    },
+    {
+      "phase": "delivery.run.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177172960029"
+    },
+    {
+      "phase": "exit",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7747,
+      "at_ns": "177173077095",
+      "scheduler": [
+        58736060,
+        5889,
+        40
+      ]
+    },
+    {
+      "phase": "preload",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7762,
+      "at_ns": "177214698267"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7762,
+      "at_ns": "177220536006"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "177392792437"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "177400948546"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "177401073905"
+    },
+    {
+      "phase": "exit",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7689,
+      "at_ns": "177411819152",
+      "scheduler": [
+        232650675,
+        5938792,
+        100
+      ]
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "177432343066"
+    },
+    {
+      "phase": "exit",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7690,
+      "at_ns": "177435039055",
+      "scheduler": [
+        232959145,
+        10297201,
+        91
+      ]
+    },
+    {
+      "phase": "exit",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7762,
+      "at_ns": "177443963356",
+      "scheduler": [
+        197709020,
+        528749,
+        39
+      ]
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "177452313547"
+    },
+    {
+      "phase": "exit",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7705,
+      "at_ns": "177465569194",
+      "scheduler": [
+        141479247,
+        2104989,
+        146
+      ]
+    },
+    {
+      "phase": "preload",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7781,
+      "at_ns": "177531223032"
+    },
+    {
+      "phase": "preload",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7780,
+      "at_ns": "177531234399"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7781,
+      "at_ns": "177534130820"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7780,
+      "at_ns": "177537167187"
+    },
+    {
+      "phase": "preload",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "177757920416"
+    },
+    {
+      "phase": "preload",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7796,
+      "at_ns": "177760708538"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "177760871328"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7796,
+      "at_ns": "177763492469"
+    },
+    {
+      "phase": "exit",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7796,
+      "at_ns": "177909651560",
+      "scheduler": [
+        74844904,
+        3990547,
+        46
+      ]
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "177921200482"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "177924232697"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "177932559994"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "177932665463"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "177933243022"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "177933311976"
+    },
+    {
+      "phase": "preload",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "177964883183"
+    },
+    {
+      "phase": "entry",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "177965679372",
+      "scheduler": [
+        19876275,
+        6639,
+        6
+      ]
+    },
+    {
+      "phase": "delivery.import.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "177967104718"
+    },
+    {
+      "phase": "delivery.import.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "177998222206"
+    },
+    {
+      "phase": "delivery.run.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "177998287023"
+    },
+    {
+      "phase": "stdin.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "177998600786"
+    },
+    {
+      "phase": "stdin.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "178000874949"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178004853194"
+    },
+    {
+      "phase": "registration.queued",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178005117341"
+    },
+    {
+      "phase": "registration.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178005590333"
+    },
+    {
+      "phase": "birth.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178005637965"
+    },
+    {
+      "phase": "birth.finished",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178013522035"
+    },
+    {
+      "phase": "local.saved",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178017543775"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178017606108"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "author",
+      "pid": 7797,
+      "at_ns": "178024408249"
+    },
+    {
+      "phase": "delivery.run.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "178036328601"
+    },
+    {
+      "phase": "exit",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7824,
+      "at_ns": "178036419618",
+      "scheduler": [
+        58440672,
+        9262,
+        40
+      ]
+    },
+    {
+      "phase": "preload",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178064154759"
+    },
+    {
+      "phase": "entry",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178064933842",
+      "scheduler": [
+        22165252,
+        7851,
+        6
+      ]
+    },
+    {
+      "phase": "delivery.import.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178066430795"
+    },
+    {
+      "phase": "delivery.import.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178096972547"
+    },
+    {
+      "phase": "delivery.run.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178097072247"
+    },
+    {
+      "phase": "stdin.started",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178097417256"
+    },
+    {
+      "phase": "stdin.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178099665581"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178103578116"
+    },
+    {
+      "phase": "registration.queued",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178103645658"
+    },
+    {
+      "phase": "registration.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178103679449"
+    },
+    {
+      "phase": "birth.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178103693670"
+    },
+    {
+      "phase": "birth.finished",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178111744121"
+    },
+    {
+      "phase": "local.saved",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178113424360"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178113472563"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "reviewer",
+      "pid": 7797,
+      "at_ns": "178115921009"
+    },
+    {
+      "phase": "delivery.run.finished",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178127566912"
+    },
+    {
+      "phase": "exit",
+      "role": "hook",
+      "owner": "other",
+      "pid": 7838,
+      "at_ns": "178127656507",
+      "scheduler": [
+        60484692,
+        7851,
+        41
+      ]
+    },
+    {
+      "phase": "preload",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7853,
+      "at_ns": "178168333643"
+    },
+    {
+      "phase": "instrumentation.core",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7853,
+      "at_ns": "178174217711"
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "178345202498"
+    },
+    {
+      "phase": "hello.flush.started",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "178353459849"
+    },
+    {
+      "phase": "hello.flush.finished",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "178353554131"
+    },
+    {
+      "phase": "exit",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7780,
+      "at_ns": "178364430081",
+      "scheduler": [
+        220790330,
+        8533625,
+        85
+      ]
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "178384576676"
+    },
+    {
+      "phase": "exit",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7781,
+      "at_ns": "178387065428",
+      "scheduler": [
+        219333706,
+        7860062,
+        81
+      ]
+    },
+    {
+      "phase": "exit",
+      "role": "shim",
+      "owner": "other",
+      "pid": 7853,
+      "at_ns": "178396281794",
+      "scheduler": [
+        197261652,
+        59267,
+        39
+      ]
+    },
+    {
+      "phase": "hello.accepted",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "178404682626"
+    },
+    {
+      "phase": "exit",
+      "role": "daemon",
+      "owner": "other",
+      "pid": 7797,
+      "at_ns": "178417330979",
+      "scheduler": [
+        139220464,
+        754070,
+        160
+      ]
+    }
+  ]
+}
