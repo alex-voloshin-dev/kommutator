@@ -1082,3 +1082,32 @@ See [investigation](../docs/sdlc/hook-registration-investigation/investigation.m
 and evidence `2026-11-12-hook-scheduler-investigation.json` /
 `2026-11-12-registration-race-investigation.json`. Next instrument accepted hello,
 registration queue/process-birth/local-save/flush boundaries in the CI fixture.
+
+
+## 2026-11-12 — 0.12.6 accepted-registration recovery qualification
+
+Candidate 0.12.6 adds a 250 ms bounded wait only for an already accepted matching
+manual Claude hook registration, then verifies process birth and fresh identity.
+Shutdown/disconnect fence all new asynchronous boundaries; hook timers, schemas,
+receipts and replay remain unchanged. Nineteen new core behavior cases cover
+success, failure, timeout, late tickets, owner/generation changes and cancellation.
+
+Unchanged 0.12.5 failed the new regression in an independently installed baseline;
+candidate passed the original real-process 200 ms delayed-registration control with
+both hooks hitting their unchanged deadline and no new hook or whoami retry. The
+first baseline setup shared dependency links and is invalid; links were restored,
+verified and qualification repeated. Initial assets are quarantined; fresh qualified
+assets were regenerated after restoration.
+
+One intermediate full workspace gate failed 2/603: rejected hook sent no hello;
+cold SessionStart took 375.141 ms, above the unchanged 300 ms cap. Causes remain
+unproven. Follow-up instrumented cold, bounded 16-case and full 251-test CLI runs
+passed; these do not erase the failures. Phase diagnostics and limits are recorded
+in `evidence/2026-11-12-pending-registration-diagnostics.json`.
+
+Final single release:check on the completed reviewed changes passed 603 workspace
+and 140 script tests, build/typecheck, export integrity, both clean-PATH smokes and
+synthetic E2E. Independent correctness/security, external review and QA approved.
+See [review](../docs/sdlc/pending-registration/review-change-2.md). Publication and
+local rollout still require observed evidence. #9 and unproven historical #19 causes,
+missing plugin generation publication and environment-dependent acceptance remain open.

@@ -62,6 +62,12 @@ still names the earlier conversation. Generation tombstones prevent ended regist
 fallback, and delayed calls never replay against a successor. Duplicate resumed owners sharing a
 native endpoint are downgraded to hook delivery; the shared socket is never used for private
 traffic while ambiguous. `hello` (agentd → hub) identifies the host only.
+An unbound manual Claude shim with an explicit vendor ID may wait up to 250 ms for
+already accepted matching hook registrations when its exact owner record is absent.
+Completion is not identity authority: saved and freshly probed process birth must
+match, and fresh registry generation/retirement/ambiguity checks still apply. No new
+registration, retry or fallback identity is created; hook deadlines are unchanged.
+See DESIGN §19 for the bounded recovery contract.
 The shared daemon runtime contract is 3; plugin clients reject earlier daemons and request
 an explicit local restart rather than using unsafe old binding behavior.
 Local state schema 3 persists `goneReason` without changing hub records or the runtime
