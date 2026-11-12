@@ -842,3 +842,50 @@ confirms listener absence with fresh non-starting probes and starts exactly one
 replacement. Focused tests also cover persistent listeners, stage-specific failures
 and cancellation of stalled hello/shutdown/confirmation requests. No production
 daemon was interrupted by this diagnostic. Live rollout qualification is separate.
+
+### 2026-11-12 — 0.12.3 publication and ordinary local rollout
+
+Release tag v0.12.3 is 6d7f76f638a5e0ca0fc6458d9c524096835207f5; PR #17 merged.
+One full Linux x64 qualification passed: 571 workspace tests and 134 script tests,
+export integrity, clean-PATH smoke and synthetic client E2E. Independent correctness,
+security, external review and QA approved. Branch, PR and tag CI passed. Source/history
+secret scans passed; export manifest digest matches were independently verified.
+Fresh final export manifests matched the staged release payloads.
+
+Anonymous downloads matched SHA-256:
+- Linux tar: `5303d767d77b8aca468e6a1dfdfa69e2644ee798fa8672e4fcf7f85dd65d57b4`.
+- Claude zip: `bd18d880422d03ec3bd0d70dc3fc90bd591af9af229dd7009b03e178842c3bd4`.
+
+Actual Claude 2.1.322 and Codex 0.167.0 installed through the public marketplace in
+clean profiles. Both installed MCP processes reported 0.12.3 and bundled Node 26.13.0;
+private setup returned HTTP 200 and rejected a foreign Origin with 403. These are
+installed-process probes, not real model conversations.
+
+The authorized local updater completed normally without manual recovery: Docker hub
+image kommutator-hub:release-0.12.3 is healthy, actual hub package and daemon are 0.12.3,
+and daemon PID 1939141 uses the private Node 26.13.0 executable. Checkpoint is idle with
+appliedVersion 0.12.3. Both pre-upgrade backups had mode 0600 and SQLite quick_check ok.
+Timer resumed. Fresh MCP status showed healthy connected hub, active caller and empty
+outbox. Current chat MCP remains compatible 0.12.2, runtime contract 3; role and canonical
+feedback subscriptions persisted. Announcement 89b12e89-68e3-48e4-92a6-d5ce2b91433c was
+sent to kommutator-feedback; unread recipient deliveries are not claimed as reads.
+
+Issue #15 is closed. Issue #9 remains open: isolated timing outlier causality is unknown.
+Day-long reliability, Windows reboot, physical-subnet, Work/native wake and other-platform
+acceptance gates remain open.
+
+### 2026-11-12 — subsequent documentation CI registration failure (#19)
+
+After publication, documentation commit 159847a triggered branch run 43129502651,
+which failed the lifecycle fixture's initial paired whoami at line 220: vendor
+session not registered yet. It did not reach the first-shim-exit assertions.
+Parallel PR run 43129509884 passed. No CI rerun was requested. This does not alter
+the earlier successful qualification records or establish a 300 ms timing failure.
+
+A disposable IPC server rejecting ipc.hello deterministically demonstrated that
+the actual hook still exits 0 with empty stdout/stderr and records outcome failed.
+The fixture's original exit assertion therefore does not prove registration. The
+original CI cause and which of the two roots failed remain unknown; issue #19
+tracks this separately from latency #9. Follow-up diagnostic coverage retains
+single attempts, timing budgets and identity assertions, and reports only bounded
+fixture hook outcomes and explicitly selected hub identity fields on failure.
