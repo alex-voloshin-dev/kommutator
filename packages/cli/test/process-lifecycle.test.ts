@@ -1,3 +1,4 @@
+import { withCleanup } from "./fixture-lifecycle.js";
 import { expectHookProcessTime } from "./hook-timing.js";
 import { describe, expect, it } from "vitest";
 import { spawn } from "node:child_process";
@@ -15,6 +16,7 @@ import { PROTOCOL_VERSION, RegisteredSession } from "@kommutator/protocol";
 import { IpcClient } from "../src/ipc-client.js";
 import { readHookObservations } from "../src/hook-observations.js";
 
+const phasePreload = fileURLToPath(new URL("../../../scripts/fixtures/lifecycle-phase-trace.mjs", import.meta.url));
 const entry = fileURLToPath(new URL("../dist/index.js", import.meta.url));
 const ToolReply = z.object({
   isError: z.boolean().optional(),
@@ -67,6 +69,7 @@ async function fixture() {
   let daemon: z.infer<typeof DaemonInfo> | undefined;
   const environment = {
     PATH: process.env.PATH ?? "",
+    ...(process.env.KOM_LIFECYCLE_TRACE === "1" ? { KOM_LIFECYCLE_TRACE: "1", NODE_OPTIONS: `--import=${phasePreload}` } : {}),
     KOM_HOME: home,
     KOM_PROJECT: "process-lifecycle",
     CLAUDE_CODE_SESSION_ID: "",
@@ -118,6 +121,16 @@ async function fixture() {
       if (hub.listening) await new Promise<void>((resolve, reject) => hub.close((error) => error ? reject(error) : resolve()));
     } catch (error) { failures.push(error); }
     db.close();
+    if (process.env.KOM_LIFECYCLE_TRACE === "1") {
+      try {
+        const text = await readFile(join(home, "phase-trace.jsonl"), "utf8");
+        // The preload emits fixed fields and synthetic owner labels only.
+        console.log("[lifecycle-phase-trace]", text);
+        const phases = new Set(text.trim().split("\n").map(line => (JSON.parse(line) as { phase: string }).phase));
+        if (daemon && (!phases.has("instrumentation.core") || phases.has("instrumentation.incomplete")))
+          failures.push(new Error("Diagnostic core instrumentation is incomplete"));
+      } catch (error) { failures.push(error); }
+    }
     await rm(home, { recursive: true, force: true });
     if (failures.length) throw new AggregateError(failures, "process fixture cleanup failed");
   }
@@ -158,6 +171,7 @@ async function fixture() {
         inbox.listen(endpoint, () => { inbox.off("error", reject); resolve(); });
       });
       const started = performance.now();
+      const parentStarted = process.hrtime.bigint();
       const result = await new Promise<{ code: number | null; stdout: string; elapsed: number }>((resolve, reject) => {
         const child = spawn(process.execPath, [entry, "hook", "SessionStart"], {
           cwd, env: { ...environment, CLAUDE_CODE_SESSION_ID: vendorId, CLAUDE_CODE_MESSAGING_SOCKET: endpoint },
@@ -168,7 +182,16 @@ async function fixture() {
         child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
         child.stderr.resume();
         child.once("error", (error) => { clearTimeout(timer); reject(error); });
-        child.once("close", (code) => { clearTimeout(timer); resolve({ code, stdout, elapsed: performance.now() - started }); });
+        child.once("close", (code) => {
+          const parentClosed = process.hrtime.bigint();
+          const elapsed = performance.now() - started;
+          clearTimeout(timer);
+          if (process.env.KOM_LIFECYCLE_TRACE === "1") console.log("[lifecycle-parent-trace]", JSON.stringify({
+            owner: vendorId === "fixture-author" ? "author" : vendorId === "fixture-reviewer" ? "reviewer" : "other",
+            child_pid: child.pid, start_ns: parentStarted.toString(), close_ns: parentClosed.toString(), elapsed_ms: elapsed,
+          }));
+          resolve({ code, stdout, elapsed });
+        });
         child.stdin.end(JSON.stringify({ session_id: vendorId, cwd, permission_mode: "default" }));
       });
       expect({ code: result.code, stdout: result.stdout }).toEqual({ code: 0, stdout: "" });
@@ -242,7 +265,7 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
 
   it.each(["absent", "stale"] as const)("shares one daemon from an initially %s socket and survives the first shim exiting", async (initial) => {
     const setup = await fixture();
-    try {
+    await withCleanup(async () => {
       if (initial === "stale") await staleSocket(join(setup.home, "agentd.sock"));
       const [first, second] = await Promise.all([setup.shim("fixture-author"), setup.shim("fixture-reviewer")]);
       // Both calls fail to connect and may race to spawn the detached singleton.
@@ -291,6 +314,6 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
       expect(await whoami(second.client)).toEqual(reviewer);
       const status = ToolReply.parse(await second.client.callTool({ name: "status", arguments: {} }));
       expect(status.isError).not.toBe(true);
-    } finally { await setup.close(); }
+    }, () => setup.close());
   }, 20_000);
 });

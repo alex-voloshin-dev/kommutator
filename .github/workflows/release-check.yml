@@ -18,3 +18,10 @@ jobs:
       - run: echo "$RUNNER_TEMP/pnpm/bin" >> "$GITHUB_PATH"
       - run: test "$(pnpm --version)" = 12.18.0
       - run: pnpm release:check
+      # Separate instrumented sample: not a retry or an untraced latency gate.
+      - name: Capture bounded lifecycle phases
+        if: ${{ !cancelled() }}
+        run: |
+          if test -f packages/cli/dist/index.js; then
+            KOM_LIFECYCLE_TRACE=1 pnpm --filter kommutator exec vitest run test/process-lifecycle.test.ts --no-file-parallelism --silent=false --testNamePattern 'shares one daemon'
+          fi

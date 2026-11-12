@@ -1649,3 +1649,33 @@ stdout remains protocol-only. This does not shut down the shared daemon or hub,
 send session.gone on behalf of a still-live Claude owner, or acknowledge messages.
 Other MCP processes retain independent connections. The process can exit naturally
 after owned resources close instead of requiring the SDK client's signal fallback.
+
+
+### Await an already accepted manual Claude registration (2026-11-12)
+
+An unbound manual Claude shim with an explicit vendor session ID and no
+owner_generation field may encounter a hook registration accepted by agentd but not yet
+saved locally. Its first process-birth probe pins the owner as before. Only when no
+record exists for that exact vendor ID, PID and pinned birth may binding snapshot
+already accepted manual-hook registration tickets for that vendor ID and parent PID.
+Tickets are completion notifications, never identity authority. A missing ticket,
+existing gone/conflicting/ambiguous record, hook caller, generated plugin context,
+Codex root or fallback binding does not enter this recovery path.
+
+One binding attempt waits at most 250 ms for that fixed snapshot, within the ordinary
+MCP IPC budget. It neither starts registration nor follows later tickets or the global
+registration queue. A failed ticket or elapsed wait cannot establish a binding. The existing hello
+contract may report an unbound pending result; a subsequent identity lookup still
+requires real registration. Shutdown and disconnected callers are rejected. A successful
+ticket must have saved a local record for the pinned process birth; then binding
+rechecks process birth and resolves a fresh registry snapshot using all existing
+owner, generation, retirement and ambiguity fences. It never binds directly to a
+ticket result, revives an ended record or accepts a different owner. Existing bound
+connections retain their current behavior. Timeout does not cancel an accepted hook
+registration; its eventual result can be observed by a later ordinary request.
+
+Wait timers/listeners are removed on settlement, timeout, peer disconnect and daemon
+shutdown. Late registration continuations recheck shutdown before accessing local
+state. The hook's 140 ms entrypoint deadline and 90 ms IPC timeout are unchanged;
+this wait belongs only to unbound manual MCP binding. The mechanism addresses the
+controlled accepted-registration race, not every historical #19 failure or #9 latency.

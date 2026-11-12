@@ -28,6 +28,12 @@ not established. Issues #9 and #19 stay open. The restarted chat MCP is 0.12.3;
 the live chat MCP remains compatible with daemon 0.12.5. Installed-probe MCPs
 are 0.12.5; this does not hot-reload the existing chat process.
 
+Candidate 0.12.6 implements bounded waiting for an already accepted matching manual
+Claude registration. Its baseline-failing regression and real delayed-registration
+control pass, and final qualification passed 603 workspace + 140 script tests plus
+export smokes/E2E. Earlier untraced 375 ms/no-hello failures are retained; #9 and
+unproven #19 triggers remain open. Publication/local rollout are not yet observed.
+
 ## Immediate maintenance
 
 | Priority | Work | Completion evidence |

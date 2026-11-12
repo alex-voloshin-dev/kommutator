@@ -18,6 +18,8 @@ import { Projects } from "./project.js";
 
 export type Hello = z.infer<(typeof Methods)["ipc.hello"]>;
 export interface IpcPeer { hello?: Hello; key?: string; ownerPid?: number; ownerBirth?: string; ownerGeneration?: number; ended?: boolean }
+interface RegistrationOwner { pid: number | undefined; birth: string | undefined; generation: number | undefined }
+interface AcceptedRegistration { vendorId: string; pid: number; settled: Promise<RegistrationOwner | undefined> }
 export interface CoreOptions {
   config: DaemonConfig;
   dbPath: string;
@@ -52,6 +54,8 @@ export class DaemonCore {
   private readonly deliveryRuns = new Map<string, Promise<void>>();
   private closed = false;
   private registrationTail: Promise<void> = Promise.resolve();
+  private readonly acceptedRegistrations = new Set<AcceptedRegistration>();
+  private readonly registrationWaiters = new Map<IpcPeer, Set<() => void>>();
   private readonly codexHookEvents = new Map<string, Set<string>>();
   private readonly projects = new Projects();
 
@@ -69,7 +73,12 @@ export class DaemonCore {
 
   report(message: string): void { this.lastError = message; this.lastErrorAt = this.clock.now(); this.options.onError?.(message); }
   peer(): IpcPeer { const peer: IpcPeer = {}; this.peers.add(peer); return peer; }
-  disconnect(peer: IpcPeer): void { this.peers.delete(peer); }
+  disconnect(peer: IpcPeer): void {
+    this.peers.delete(peer);
+    for (const cancel of this.registrationWaiters.get(peer) ?? []) cancel();
+  }
+
+  private requireOpen(): void { if (this.closed) throw new DaemonStoppingError(); }
 
   async start(): Promise<void> {
     await this.reconcileRetirements();
@@ -167,6 +176,7 @@ export class DaemonCore {
       let ended = false;
       try { ended = await adapter.isEnded(record, home); } catch { /* Missing evidence is not an end. */ }
       if (!ended) continue;
+      this.requireOpen();
       const current = this.registry.get(record.key);
       if (!current || (current.session.state === "gone" && current.goneReason !== "liveness") || current.pid !== record.pid ||
           current.processStartedAt !== record.processStartedAt || current.ownerGeneration !== record.ownerGeneration ||
@@ -200,8 +210,23 @@ export class DaemonCore {
     const previous = this.registrationTail;
     let release!: () => void;
     this.registrationTail = new Promise<void>(resolve => { release = resolve; });
-    await previous;
-    try { return await this.registerOwner(hello, human); } finally { release(); }
+    let complete: ((owner: RegistrationOwner | undefined) => void) | undefined;
+    const ticket: AcceptedRegistration | undefined = !human && hello.client === "hook" && hello.vendor === "claude-code" &&
+      hello.vendor_session_id && hello.ppid && hello.owner_generation === undefined
+      ? { vendorId: hello.vendor_session_id, pid: hello.ppid, settled: new Promise(resolve => { complete = resolve; }) } : undefined;
+    if (ticket) this.acceptedRegistrations.add(ticket);
+    let owner: RegistrationOwner | undefined;
+    try {
+      await previous;
+      this.requireOpen();
+      const record = await this.registerOwner(hello, human);
+      owner = { pid: record.pid, birth: record.processStartedAt, generation: record.ownerGeneration };
+      return record;
+    } finally {
+      if (ticket) this.acceptedRegistrations.delete(ticket);
+      complete?.(owner);
+      release();
+    }
   }
 
   private async registerOwner(hello: Hello, human = false): Promise<LocalRecord> {
@@ -213,10 +238,12 @@ export class DaemonCore {
     try { birth = pid ? await (this.options.processStart ?? processStart)(pid) : undefined; } catch { /* Missing process evidence cannot establish ownership. */ }
     if (vendor === "codex" && (!pid || !birth)) throw new RpcError(-32020, "Codex process ownership unavailable; retry after the process probe recovers.");
     const project = hello.cwd ? await this.projects.key(hello.cwd, this.options.project ?? hello.project_key) : undefined;
+    this.requireOpen();
     let existing = this.registry.get(key);
     if (vendor === "claude-code") {
       if (!vendorId || !pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
       await this.reconcileRetirements(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
+      this.requireOpen();
       const owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
       const latestGeneration = Math.max(0, ...owned.map(record => record.ownerGeneration ?? 0));
       const generation = hello.owner_generation ?? 0;
@@ -253,6 +280,7 @@ export class DaemonCore {
       if (existing) key = existing.key;
       else if (candidates.length) key = `${key}:owner:${createHash("sha256").update(`${pid}:${birth}`).digest("hex")}`;
     }
+    this.requireOpen();
     const record: LocalRecord = existing ?? {
       key, acked: 0, stopBlocked: false,
       session: Session.parse({
@@ -332,7 +360,44 @@ export class DaemonCore {
     return current;
   }
 
+  /** A ticket only delays lookup; it never supplies binding authority. */
+  private async awaitAcceptedRegistration(peer: IpcPeer): Promise<boolean> {
+    const hello = peer.hello;
+    if (!hello || hello.client !== "shim" || hello.vendor !== "claude-code" || !hello.vendor_session_id ||
+      hello.owner_generation !== undefined || !peer.ownerPid || !peer.ownerBirth) return false;
+    if (this.registry.all().some(record => record.session.vendor === "claude-code" &&
+      record.session.vendor_session_id === hello.vendor_session_id && record.pid === peer.ownerPid &&
+      record.processStartedAt === peer.ownerBirth)) return false;
+    const tickets = [...this.acceptedRegistrations].filter(ticket => ticket.vendorId === hello.vendor_session_id && ticket.pid === peer.ownerPid);
+    if (tickets.length === 0) return false;
+    const owners = await new Promise<Array<RegistrationOwner | undefined>>((resolve, reject) => {
+      let finished = false;
+      let timer: unknown;
+      const listeners = this.registrationWaiters.get(peer) ?? new Set<() => void>();
+      this.registrationWaiters.set(peer, listeners);
+      const finish = (error?: Error, result?: Array<RegistrationOwner | undefined>) => {
+        if (finished) return;
+        finished = true;
+        this.clock.clearTimeout(timer);
+        listeners.delete(cancel);
+        if (listeners.size === 0) this.registrationWaiters.delete(peer);
+        if (error) reject(error); else resolve(result ?? []);
+      };
+      const cancel = () => finish(this.closed ? new DaemonStoppingError() : new RpcError(-32020, "session connection closed while registration was pending"));
+      listeners.add(cancel);
+      timer = this.clock.setTimeout(() => finish(new RpcError(-32020, "accepted hook registration is still pending; retry the identity lookup")), 250);
+      void Promise.all(tickets.map(ticket => ticket.settled)).then(result => finish(undefined, result));
+    });
+    this.requireOpen();
+    if (!this.peers.has(peer)) throw new RpcError(-32020, "session connection closed while registration was pending");
+    if (owners.some(owner => !owner || owner.pid !== peer.ownerPid || owner.birth !== peer.ownerBirth || owner.generation !== undefined)) {
+      throw new RpcError(-32020, "accepted hook registration did not establish the pinned Claude owner");
+    }
+    return true;
+  }
+
   private async bind(peer: IpcPeer): Promise<LocalRecord> {
+    this.requireOpen();
     if (!peer.hello || peer.hello.client === "cli") throw new RpcError(-32020, "session requires ipc.hello from its shim or hook");
     if (peer.key !== undefined) {
       const cached = this.registry.get(peer.key);
@@ -342,11 +407,14 @@ export class DaemonCore {
         await (this.options.processStart ?? processStart)(peer.ownerPid) !== peer.ownerBirth)) {
         throw new RpcError(-32020, "bound Claude process owner has changed or exited; open a new session connection");
       }
+      this.requireOpen();
       return this.currentOwner(peer, cached);
     }
     if (peer.hello.vendor === "claude-code") {
       const pid = peer.hello.ppid;
       const birth = pid ? await (this.options.processStart ?? processStart)(pid) : undefined;
+      this.requireOpen();
+      if (!this.peers.has(peer) || peer.ended) throw new RpcError(-32020, "session connection closed while binding Claude owner");
       if (!pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
       if (peer.ownerBirth !== undefined && (peer.ownerPid !== pid || peer.ownerBirth !== birth)) {
         throw new RpcError(-32020, "bound Claude process owner has changed or exited; open a new session connection");
@@ -354,9 +422,17 @@ export class DaemonCore {
       peer.ownerPid = pid;
       peer.ownerBirth = birth;
       if (peer.hello.owner_generation !== undefined) peer.ownerGeneration = peer.hello.owner_generation;
+      if (await this.awaitAcceptedRegistration(peer)) {
+        const currentBirth = await (this.options.processStart ?? processStart)(pid);
+        this.requireOpen();
+        if (!this.peers.has(peer) || peer.ended || currentBirth !== birth) {
+          throw new RpcError(-32020, "bound Claude process owner has changed or exited; open a new session connection");
+        }
+      }
     }
     // Resolve only a fresh snapshot: a hook may have replaced the owner while its
     // process birth was being probed. Even a not-yet-bound peer pins that first birth.
+    this.requireOpen();
     const records = this.registry.all().filter(record => peer.hello?.vendor !== "claude-code" ||
       (record.pid === peer.ownerPid && record.processStartedAt === peer.ownerBirth));
     const bound = new Set([...this.peers].filter((candidate) => candidate !== peer && candidate.hello?.client === "shim").flatMap((candidate) => candidate.key ? [candidate.key] : []));
@@ -396,7 +472,15 @@ export class DaemonCore {
       } else {
         try { await this.bind(peer); } catch (error) { if (!(error instanceof RpcError)) throw error; }
       }
+      this.requireOpen();
+      if (parsed.data.client === "shim" && parsed.data.vendor === "claude-code" && (!this.peers.has(peer) || peer.ended)) {
+        throw new RpcError(-32020, "session connection closed while binding Claude owner");
+      }
       await this.flush();
+      this.requireOpen();
+      if (parsed.data.client === "shim" && parsed.data.vendor === "claude-code" && (!this.peers.has(peer) || peer.ended)) {
+        throw new RpcError(-32020, "session connection closed while binding Claude owner");
+      }
       const found = peer.key ? this.registry.get(peer.key) : undefined;
       const record = found ? this.currentOwner(peer, found) : undefined;
       return record?.session.id ? { bound: true, session: record.session } : { bound: Boolean(record), pending: true };
@@ -811,6 +895,7 @@ export class DaemonCore {
   }
   async close(): Promise<void> {
     this.closed = true;
+    for (const listeners of this.registrationWaiters.values()) for (const cancel of listeners) cancel();
     this.wake.close();
     await this.transport.close();
     if (this.flushing) await this.flushing;

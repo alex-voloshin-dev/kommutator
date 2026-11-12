@@ -1480,3 +1480,293 @@ it("returns a local status snapshot while durable retirement evidence probing st
     await core.flush();
   }
 });
+
+function registrationGate<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(done => { resolve = done; });
+  return { promise, resolve };
+}
+async function drainRegistrationMicrotasks() { for (let i = 0; i < 50; i++) await Promise.resolve(); }
+
+describe("accepted manual Claude registration binding", () => {
+  it("waits for accepted local registration after the hook disconnects, without registering again", async () => {
+    const gate = registrationGate<string | undefined>();
+    let delay = false;
+    const { core, clock, transport } = await fixture({ birth: async () => {
+      if (delay) { delay = false; return gate.promise; }
+      return "birth";
+    } });
+    const peer = await shim(core, "pending");
+    const hookPeer = core.peer();
+    delay = true;
+    const registering = core.request(hookPeer, "ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION,
+      pid: 1000, ppid: 55, vendor: "claude-code", vendor_session_id: "pending", cwd: "/repo" });
+    await drainRegistrationMicrotasks();
+    core.disconnect(hookPeer);
+    let settled = false;
+    const identity = core.request(peer, "whoami").then(value => ({ value }), error => ({ error: error as unknown }))
+      .finally(() => { settled = true; });
+    try {
+      await drainRegistrationMicrotasks();
+      expect(settled).toBe(false);
+      expect(clock.timers.size).toBe(1);
+      gate.resolve("birth");
+      await registering;
+      const result = await identity;
+      if (!("value" in result)) throw result.error;
+      expect(Identity.parse(result.value).session.vendor_session_id).toBe("pending");
+      expect(clock.timers.size).toBe(0);
+      expect(transport.calls.filter(call => call.method === "session.upsert")).toHaveLength(1);
+    } finally {
+      gate.resolve("birth");
+      await registering;
+      await identity;
+    }
+  });
+
+  it.each([{ id: "different", ppid: 55 }, { id: "pending", ppid: 77 }])("does not wait for an unrelated accepted owner $id/$ppid", async ({ id, ppid }) => {
+    const gate = registrationGate<string | undefined>();
+    let delay = false;
+    const { core, clock } = await fixture({ birth: async () => {
+      if (delay) { delay = false; return gate.promise; }
+      return "birth";
+    } });
+    const peer = await shim(core, "pending");
+    delay = true;
+    const registering = hook(core, id, { ppid });
+    await drainRegistrationMicrotasks();
+    await expect(core.request(peer, "whoami")).rejects.toThrow(/not registered/);
+    expect(clock.timers.size).toBe(0);
+    gate.resolve("birth"); await registering;
+  });
+
+  it("bounds the wait without cancelling the accepted registration", async () => {
+    const gate = registrationGate<string | undefined>();
+    let delay = false;
+    const { core, clock } = await fixture({ birth: async () => {
+      if (delay) { delay = false; return gate.promise; }
+      return "birth";
+    } });
+    const peer = await shim(core, "pending"); delay = true;
+    const registering = hook(core, "pending");
+    await drainRegistrationMicrotasks();
+    const identity = expect(core.request(peer, "whoami")).rejects.toThrow(/still pending/);
+    await drainRegistrationMicrotasks();
+    await clock.advance(250); await identity;
+    expect(clock.timers.size).toBe(0);
+    gate.resolve("birth"); await registering;
+    expect(Identity.parse(await core.request(peer, "whoami")).session.vendor_session_id).toBe("pending");
+  });
+
+  it("does not turn a failed hook registration into shim authority", async () => {
+    const gate = registrationGate<string | undefined>();
+    let delay = false;
+    const { core, clock } = await fixture({ birth: async () => {
+      if (delay) { delay = false; return gate.promise; }
+      return "birth";
+    } });
+    const peer = await shim(core, "pending"); delay = true;
+    const registering = expect(hook(core, "pending")).rejects.toThrow(/ownership unavailable/);
+    await drainRegistrationMicrotasks();
+    const identity = expect(core.request(peer, "whoami")).rejects.toThrow(/did not establish/);
+    await drainRegistrationMicrotasks(); gate.resolve(undefined);
+    await registering; await identity;
+    expect(core.registry.all()).toHaveLength(0);
+    expect(clock.timers.size).toBe(0);
+  });
+
+  it("re-probes the pinned birth after completion and rejects PID reuse", async () => {
+    const gate = registrationGate<string | undefined>();
+    let delay = false; let birth = "birth";
+    const { core, clock } = await fixture({ birth: async () => {
+      if (delay) { delay = false; return gate.promise; }
+      return birth;
+    } });
+    const peer = await shim(core, "pending"); delay = true;
+    const registering = hook(core, "pending"); await drainRegistrationMicrotasks();
+    const identity = expect(core.request(peer, "whoami")).rejects.toThrow(/owner has changed/);
+    await drainRegistrationMicrotasks(); birth = "replacement"; gate.resolve("birth");
+    await registering; await identity;
+    expect(clock.timers.size).toBe(0);
+  });
+
+  it.each(["ended", "superseded"] as const)("rechecks a registration %s while its completion is being observed", async terminal => {
+    const registration = registrationGate<string | undefined>();
+    const recheck = registrationGate<string | undefined>();
+    const recheckStarted = registrationGate<void>();
+    let probes = 0;
+    const { core, clock } = await fixture({ birth: async () => {
+      probes++;
+      if (probes === 2) return registration.promise;
+      if (probes === 4) { recheckStarted.resolve(); return recheck.promise; }
+      return "birth";
+    } });
+    const peer = await shim(core, "pending");
+    const registering = hook(core, "pending"); await drainRegistrationMicrotasks();
+    const identity = expect(core.request(peer, "whoami")).rejects.toThrow(/not registered|owner has changed|ended/);
+    await drainRegistrationMicrotasks(); registration.resolve("birth");
+    const registered = await registering; await recheckStarted.promise;
+    if (terminal === "ended") await core.request(registered.peer, "session.gone");
+    else await hook(core, "successor", { owner_generation: 1 });
+    recheck.resolve("birth"); await identity;
+    expect(clock.timers.size).toBe(0);
+  });
+
+  it.each(["disconnect", "shutdown"] as const)("cancels waiters on %s and safely settles late registration", async action => {
+    const gate = registrationGate<string | undefined>(); let delay = false;
+    const { core, clock, close } = await fixture({ birth: async () => {
+      if (delay) { delay = false; return gate.promise; }
+      return "birth";
+    } });
+    const peer = await shim(core, "pending"); delay = true;
+    const registering = hook(core, "pending").then(() => undefined, error => error as unknown);
+    await drainRegistrationMicrotasks();
+    const identity = expect(core.request(peer, "whoami")).rejects.toThrow(action === "shutdown" ? /stopping/ : /connection closed/);
+    await drainRegistrationMicrotasks();
+    if (action === "shutdown") await close(); else core.disconnect(peer);
+    await identity; expect(clock.timers.size).toBe(0);
+    gate.resolve("birth");
+    if (action === "shutdown") expect(await registering).toBeInstanceOf(Error);
+    else expect(await registering).toBeUndefined();
+  });
+});
+
+it("does not await manual tickets for fallback or positive-generation shim identity", async () => {
+  const gate = registrationGate<string | undefined>(); let delay = false;
+  const { core, clock } = await fixture({ birth: async () => {
+    if (delay) { delay = false; return gate.promise; }
+    return "birth";
+  } });
+  const fallback = await shim(core);
+  const generated = core.peer();
+  await core.request(generated, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 3000,
+    ppid: 55, vendor: "claude-code", vendor_session_id: "pending", owner_generation: 1, cwd: "/repo" });
+  delay = true;
+  const registering = hook(core, "pending"); await drainRegistrationMicrotasks();
+  await expect(core.request(fallback, "whoami")).rejects.toThrow(/ambiguous|unknown/);
+  await expect(core.request(generated, "whoami")).rejects.toThrow(/not registered/);
+  expect(clock.timers.size).toBe(0);
+  gate.resolve("birth"); await registering;
+});
+
+it("does not wait on a generated hook ticket for a manual shim", async () => {
+  const gate = registrationGate<string | undefined>(); let delay = false;
+  const { core, clock } = await fixture({ birth: async () => {
+    if (delay) { delay = false; return gate.promise; }
+    return "birth";
+  } });
+  const peer = await shim(core, "pending"); delay = true;
+  const registering = hook(core, "pending", { owner_generation: 1 }); await drainRegistrationMicrotasks();
+  await expect(core.request(peer, "whoami")).rejects.toThrow(/not registered/);
+  expect(clock.timers.size).toBe(0);
+  gate.resolve("birth"); await registering;
+  await expect(core.request(peer, "whoami")).rejects.toThrow(/owner has changed/);
+});
+
+it("rejects queued registration and its waiter safely when shutdown precedes queue release", async () => {
+  const gate = registrationGate<string | undefined>(); let delay = false;
+  const { core, clock, close } = await fixture({ birth: async () => {
+    if (delay) { delay = false; return gate.promise; }
+    return "birth";
+  } });
+  const peer = await shim(core, "pending"); delay = true;
+  const first = hook(core, "other").catch(error => error as unknown);
+  const queued = hook(core, "pending").catch(error => error as unknown);
+  await drainRegistrationMicrotasks();
+  const identity = expect(core.request(peer, "whoami")).rejects.toMatchObject({ code: -32031 });
+  await drainRegistrationMicrotasks(); await close(); await identity;
+  expect(clock.timers.size).toBe(0); gate.resolve("birth");
+  expect(await first).toMatchObject({ code: -32031 });
+  expect(await queued).toMatchObject({ code: -32031 });
+});
+
+it("does not access a closed registry after delayed positive retirement evidence", async () => {
+  const gate = registrationGate<boolean>(); const started = registrationGate<void>();
+  const { core, adapter, close } = await fixture({ dbPath: await retirementHome() });
+  await hook(core, "old");
+  adapter.isEnded = async () => { started.resolve(); return gate.promise; };
+  const registering = expect(hook(core, "pending")).rejects.toMatchObject({ code: -32031 });
+  await started.promise; await close(); gate.resolve(true); await registering;
+});
+
+it.each(["disconnect", "shutdown"] as const)("does not install a registration waiter after %s during its initial birth probe", async action => {
+  const registration = registrationGate<string | undefined>();
+  const binding = registrationGate<string | undefined>();
+  const bindingStarted = registrationGate<void>();
+  let probes = 0;
+  const { core, clock, close } = await fixture({ birth: async () => {
+    probes++;
+    if (probes === 2) return registration.promise;
+    if (probes === 3) { bindingStarted.resolve(); return binding.promise; }
+    return "birth";
+  } });
+  const peer = await shim(core, "pending");
+  const registering = hook(core, "pending").then(() => undefined, error => error as unknown);
+  await drainRegistrationMicrotasks();
+  const identity = expect(core.request(peer, "whoami")).rejects.toThrow(action === "shutdown" ? /stopping/ : /connection closed/);
+  await bindingStarted.promise;
+  if (action === "shutdown") await close(); else core.disconnect(peer);
+  binding.resolve("birth"); await identity;
+  expect(clock.timers.size).toBe(0);
+  registration.resolve("birth");
+  if (action === "shutdown") expect(await registering).toMatchObject({ code: -32031 });
+  else expect(await registering).toBeUndefined();
+});
+
+it.each(["disconnect", "shutdown"] as const)("does not swallow %s while ipc.hello waits for accepted registration", async action => {
+  const registration = registrationGate<string | undefined>(); let delay = true;
+  const { core, clock, close } = await fixture({ birth: async () => {
+    if (delay) { delay = false; return registration.promise; }
+    return "birth";
+  } });
+  const registering = hook(core, "pending").then(() => undefined, error => error as unknown);
+  await drainRegistrationMicrotasks();
+  const peer = core.peer();
+  const hello = expect(core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION,
+    pid: 3000, ppid: 55, vendor: "claude-code", vendor_session_id: "pending", cwd: "/repo" }))
+    .rejects.toThrow(action === "shutdown" ? /stopping/ : /connection closed/);
+  await drainRegistrationMicrotasks(); expect(clock.timers.size).toBe(1);
+  if (action === "shutdown") await close(); else core.disconnect(peer);
+  await hello; expect(clock.timers.size).toBe(0);
+  registration.resolve("birth");
+  if (action === "shutdown") expect(await registering).toMatchObject({ code: -32031 });
+  else expect(await registering).toBeUndefined();
+});
+
+it("does not extend an accepted-registration wait to a matching ticket admitted later", async () => {
+  const firstBirth = registrationGate<string | undefined>();
+  const laterBirth = registrationGate<string | undefined>();
+  const laterStarted = registrationGate<void>();
+  let delay: "first" | "later" | undefined;
+  const { core, clock } = await fixture({ birth: async () => {
+    const selected = delay; delay = undefined;
+    if (selected === "first") return firstBirth.promise;
+    if (selected === "later") { laterStarted.resolve(); return laterBirth.promise; }
+    return "birth";
+  } });
+  const peer = await shim(core, "pending");
+  delay = "first";
+  const first = hook(core, "pending");
+  await drainRegistrationMicrotasks();
+  const identity = core.request(peer, "whoami").then(value => ({ value }), error => ({ error: error as unknown }));
+  let later: ReturnType<typeof hook> | undefined;
+  try {
+    await drainRegistrationMicrotasks();
+    expect(clock.timers.size).toBe(1);
+    later = hook(core, "pending");
+    delay = "later";
+    firstBirth.resolve("birth");
+    await first; await laterStarted.promise; await drainRegistrationMicrotasks();
+    // A faulty wait that joined the later ticket would expire here. The accepted
+    // snapshot must already have allowed identity while that later probe is held.
+    await clock.advance(250);
+    const result = await identity;
+    expect("value" in result).toBe(true);
+    if (!("value" in result)) throw result.error;
+    expect(Identity.parse(result.value).session.vendor_session_id).toBe("pending");
+    expect(clock.timers.size).toBe(0);
+  } finally {
+    firstBirth.resolve("birth"); laterBirth.resolve("birth");
+    await first; await later; await identity;
+  }
+});
