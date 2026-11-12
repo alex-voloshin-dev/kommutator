@@ -1,7 +1,7 @@
 // kommutator protocol — shared between the shim, agentd and the hub.
 // See docs/PROTOCOL.md for the human-readable index.
 
-export const PROTOCOL_VERSION = 1;
+export { PROTOCOL_VERSION } from "./hello.js";
 
 export * from "./ident.js";
 export * from "./address.js";

@@ -889,3 +889,141 @@ original CI cause and which of the two roots failed remain unknown; issue #19
 tracks this separately from latency #9. Follow-up diagnostic coverage retains
 single attempts, timing budgets and identity assertions, and reports only bounded
 fixture hook outcomes and explicitly selected hub identity fields on failure.
+
+### 2026-11-12 — bounded registration reproduction sample (#19)
+
+At unchanged 98ddb0b, Node 26.13.0/pnpm 12.18.0, ten sequential lifecycle runs
+passed all 40 tests; the predeclared stop-on-failure condition was not reached.
+[Sanitized provenance](evidence/2026-11-12-registration-reproduction.json) records
+each run and log digest. Initial invalid package-filter invocations executed no
+tests and are explicitly excluded. Passing console timing output was suppressed,
+so this is lifecycle outcome evidence, not a hook-latency distribution. The original
+CI failure did not reproduce; #19 stays open without a speculative registration fix.
+
+### 2026-11-12 — hook import isolation A/B (#9)
+
+The IPC client imported pathsFor through the agentd barrel. Its built hook graph
+loaded an approximately 85 KB chunk including node:sqlite, ws and daemon schemas.
+The existing /paths export exposes the same function without those dependencies.
+A controlled resolver-denial test fails on the baseline (SQLite import attempted,
+exit 0 but no visible header) and passes after the one-line import change, requiring
+visible output and the exact acknowledgement ID. Candidate IPC chunk is about 9.3 KB.
+
+[Paired measurements](evidence/2026-11-12-hook-import-ab.json) retain artifact hashes
+and the pre-version-bump candidate diff hash. Ten untraced pairs per scenario were
+alternated, plus three traced pairs. Untraced median milliseconds baseline→candidate:
+manual configured-cold SessionStart 160.641→138.933; responsive Codex Stop
+151.998→124.676; Claude plugin SessionStart 184.489→184.260. Each group contains
+ten samples; these are local observations, not CI tail-latency or causal proof for
+the historical outlier. Tracing adds overhead. All six traced Claude-plugin runs
+reached the unchanged 140 ms entrypoint deadline after publishing authority;
+these synthetic owner/probe runs do not prove successful native registration.
+The optimization improves two observed medians; no plugin-path improvement is claimed.
+
+The temporary measurement server aborted on an unhandled socket ECONNRESET after
+59 complete samples. Its missing error handler was corrected to retain socket codes;
+only the remaining 19 planned samples were executed, including the interrupted
+sample whose original outcome was unavailable. Earlier results were retained.
+The error is a fixture observation, not an established product defect. Runtime source
+did not change between measurement segments. All 78 completed samples satisfied
+expected output/exit assertions; their timing values are retained without filtering.
+#9 remains open, with 300 ms cap, 200 ms target and unchanged 140/90 ms timers.
+
+### 2026-11-12 — exported cold authority diagnostic (qualification blocked)
+
+The first full 0.12.4 qualification passed 573 workspace and 134 script tests,
+then failed the first Claude owner's whoami in exported E2E. Five interleaved
+baseline/candidate pairs were run with sanitized authority snapshots and no
+registration retries. [All samples](evidence/2026-11-12-cold-authority-diagnostic.json)
+record baseline 5/5 passing and candidate 4/5 passing. The original first-whoami
+failure did not recur. One candidate failed during its second hook before MCP;
+both owners were alive and both matching generation-1 journals were committed.
+The temporary sanitizer discarded its error message, so its exact cause is
+unavailable and must not be classified as a timeout.
+
+Completed exported wrapper-to-close hook durations ranged 159.714–761.972 ms on
+baseline and 141.294–731.751 ms on candidate. This metric includes the wrapper and
+differs from the earlier direct-Node A/B; no reliable wrapper-latency improvement
+is established. Post-run host load is context only, not evidence of the cause.
+The release remains blocked pending diagnostic qualification; no service update
+or publication occurred during these experiments.
+
+
+## 2026-11-12 — restarted session and blocked 0.12.5 qualification
+
+Observed MCP 0.12.3, daemon 0.12.3 (contract 3 compatible), active caller, connected
+hub and empty outbox. Docker `kommutator-hub:release-0.12.3` is healthy. Canonical
+Kommutator and Agentic Forge feedback memberships are retained. Native hook
+headers were delivered after restart; individual failed hook observations remain,
+so this does not certify every hook invocation or native idle wake.
+
+The staged 0.12.4 branch check 43135901281 failed a rejected-hook observation
+assertion (`attempted` instead of final `failed`). Same-commit PR 43135906663 and
+tag 43135917242 passed; no rerun was requested. Independent review identified
+the test's invalid guarantee of best-effort final persistence. The immutable
+0.12.4 tag/assets remain an unpublished draft. Candidate 0.12.5 separates the
+real-process rejection/zero-registration contract from deterministic final
+observation persistence. Eight focused tests passed, and internal/external
+review approved that correction without findings.
+
+One complete 0.12.5 qualification passed build/typecheck and 573 workspace tests
+but failed `claude-resume-process.test.ts:203`: after SessionEnd with diagnostic
+storage intentionally stalled, `whoami` still succeeded. Initial and resumed
+identities passed. SessionEnd took 208.118 ms, below the 300 ms test cap; this
+is a semantic failure, not a timing assertion failure. Script/export stages were
+not reached. The original cause is unknown; cleanup removed the fixture state
+and the assertion did not print its collected authority evidence. Log retained
+locally at `/tmp/kommutator-v0125-release-check.log`; no credentials are included
+in this report. No production deployment occurred.
+
+Second qualification after reviewed failure-only diagnostics passed 572 workspace
+tests and failed two. Original stalled-observation retirement passed (187.984 ms).
+B-to-A-to-B instead retained A after a 230.683 ms final B SessionStart; recorded
+journals contained only generation 1 B and generation 2 A. Missing next-generation
+publication is observed, but its cause is unknown. A separate delayed-delivery
+retirement fixture reported an IPC timeout with no definitive operation/cleanup
+label. Build/typecheck passed; script/export stages were not reached. Log:
+`/tmp/kommutator-v0125-release-check-round2.log`. No release/deployment occurred.
+
+A bounded follow-up phase diagnostic first failed because its execFile wrapper
+did not preserve Node's promisify metadata; that run is invalid for product
+conclusions. One corrected trace preserved the actual custom-promisify descriptor.
+All four SessionStart generations published, with atomic links completing at
+106.94, 102.02, 102.42 and 117.40 ms after preload. Hook durations were
+172.29–207.35 ms. Three deadline callbacks fired at 143.57, 144.23 and 146.19 ms
+after publication. The later IPC timeout's operation/cleanup phase remains
+unidentified. The preserved descriptor bypassed the ps timing wrapper, so no ps
+duration conclusion is available. Missing publication was not reproduced.
+Logs: `/tmp/kom-v0125-phase-diagnostic.log` (invalid instrumentation) and
+`/tmp/kom-v0125-phase-corrected.log` (corrected trace). No runtime changes followed.
+
+A separate contemporaneous host sample showed six CPUs and high I/O pressure
+(some/full avg10 86.46/81.03 percent). It was not sampled during each failing hook
+and does not establish the historical cause. Other workloads were not stopped.
+Next: label body versus teardown IPC operations and preserve original body errors
+when cleanup fails, then trace publication phases under the failing workload.
+Do not relax timers, identity fences or assertions, or repeat qualification merely
+to obtain a passing result. Both candidate release and local deployment stay held.
+
+
+### 2026-11-12 — final 0.12.5 integrated qualification
+
+MCP EOF cleanup was confirmed by a real-process baseline failure with active IPC
+and private setup resources. The fix and in-flight handler fence passed controlled
+EOF/setup/deferred-resource tests, without stopping the second MCP or shared IPC
+fixture. Source and external reviews approved. Fixture cleanup now labels phases,
+preserves original errors and verifies process ownership before fallback signals.
+The original no-EOF baseline is valid; a later loader negative control failed at
+initialization and is excluded from product conclusions.
+
+Canonical hello extraction retains schema identity and all process/generation
+fences. A bundled-import regression failed on the old build and passed with the
+narrow export. Intermediate six-sample import data is retained in
+[evidence](evidence/2026-11-12-authority-import.json); it is not end-to-end evidence.
+
+One final full release:check passed: 584 workspace tests (39 protocol, 176 hub,
+118 agentd, 251 CLI), 140 script tests, ordered build/typecheck, export verification,
+both clean-PATH smokes and all synthetic exported E2E scenarios. Earlier failed
+qualifications remain above; their original trigger is not established. No live
+model/native wake, day-long, physical subnet, reboot or other-platform acceptance
+is implied. Log: /tmp/kommutator-v0125-final-release-check.log.

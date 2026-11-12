@@ -4,6 +4,7 @@ import { isAbsolute, join } from "node:path";
 import { pathsFor } from "@kommutator/agentd/paths";
 import { processStart } from "@kommutator/agentd/process";
 import * as z from "zod";
+import { IpcHello } from "@kommutator/protocol/hello";
 
 const Context = z.object({ cwd: z.string().min(1).max(1024).refine(isAbsolute) }).strict();
 function contextPath(vendor: string, id: string): string {
@@ -43,14 +44,13 @@ async function latestGeneration(directory: string): Promise<number> {
 export interface ActiveClaudeRegistration { hello: import("./ipc-client.js").Hello; generation: string; birth: string }
 
 export async function saveClaudeRegistration(hello: import("./ipc-client.js").Hello): Promise<ActiveClaudeRegistration | undefined> {
-  const { Methods } = await import("@kommutator/protocol");
-  const parsed = Methods["ipc.hello"].parse(hello);
+  const parsed = IpcHello.parse(hello);
   if (parsed.client !== "hook" || parsed.vendor !== "claude-code" || !parsed.vendor_session_id || !parsed.ppid) return;
   Context.parse({ cwd: parsed.cwd });
   const { file, directory, birth } = await claudeOwnerPaths(parsed.vendor_session_id, parsed.ppid);
   await mkdir(directory, { recursive: true, mode: 0o700 });
   try {
-    const prior = z.object({ hello: Methods["ipc.hello"], birth: z.string() }).parse(JSON.parse(await readFile(file, "utf8")) as unknown);
+    const prior = z.object({ hello: IpcHello, birth: z.string() }).parse(JSON.parse(await readFile(file, "utf8")) as unknown);
     if (prior.hello.ppid !== parsed.ppid || prior.birth !== birth || prior.hello.vendor_session_id !== parsed.vendor_session_id || prior.hello.cwd !== parsed.cwd) throw new Error("Conflicting Claude process context; start a fresh session");
   } catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
   // Immutable, atomically linked generation records need no crash-prone lock file.
@@ -73,17 +73,15 @@ export async function saveClaudeRegistration(hello: import("./ipc-client.js").He
   throw new Error("Concurrent Claude registration changes; resume again");
 }
 export async function claudeRegistration(id: string, ownerPid: number): Promise<import("./ipc-client.js").Hello> {
-  const { Methods } = await import("@kommutator/protocol");
   try {
     const { file, birth } = await claudeOwnerPaths(id, ownerPid);
-    const value = z.object({ hello: Methods["ipc.hello"], birth: z.string().min(1) }).parse(JSON.parse(await readFile(file, "utf8")) as unknown);
+    const value = z.object({ hello: IpcHello, birth: z.string().min(1) }).parse(JSON.parse(await readFile(file, "utf8")) as unknown);
     if (value.hello.client !== "hook" || value.hello.vendor !== "claude-code" || value.hello.vendor_session_id !== id || value.hello.ppid !== ownerPid || value.birth !== birth) throw new Error("expired");
     Context.parse({ cwd: value.hello.cwd });
     return value.hello;
   } catch { throw new Error("Claude root registration unavailable or expired. Trust the plugin hooks and start a fresh session."); }
 }
 export async function activeClaudeRegistration(ownerPid: number, legacyId?: string): Promise<ActiveClaudeRegistration> {
-  const { Methods } = await import("@kommutator/protocol");
   try {
     const { directory, birth } = await claudeOwnerPaths("", ownerPid);
     let generation: number;
@@ -95,7 +93,7 @@ export async function activeClaudeRegistration(ownerPid: number, legacyId?: stri
     if (!generation) throw new Error("incomplete");
     try { await readFile(join(directory, `${generation}.ended`)); throw new Error("ended"); }
     catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
-    const value = z.object({ hello: Methods["ipc.hello"], birth: z.string(), generation: z.number().int().positive() }).strict().parse(JSON.parse(await readFile(join(directory, `${generation}.json`), "utf8")) as unknown);
+    const value = z.object({ hello: IpcHello, birth: z.string(), generation: z.number().int().positive() }).strict().parse(JSON.parse(await readFile(join(directory, `${generation}.json`), "utf8")) as unknown);
     if (value.generation !== generation || value.hello.owner_generation !== generation || value.birth !== birth || value.hello.ppid !== ownerPid || value.hello.client !== "hook" || value.hello.vendor !== "claude-code" || !value.hello.vendor_session_id) throw new Error("expired");
     Context.parse({ cwd: value.hello.cwd });
     if (await processStart(ownerPid) !== birth || await latestGeneration(directory) !== generation) throw new Error("changed");

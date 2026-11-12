@@ -7,15 +7,28 @@ are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/
 
 Issue #15 is complete in 0.12.3: deterministic reset regression, independent reviews,
 full release qualification and ordinary local updater completion are recorded in
-[RESULTS](../spikes/RESULTS.md). The current chat MCP remains compatible 0.12.2;
+[RESULTS](../spikes/RESULTS.md). The previous chat MCP was compatible 0.12.2;
 clean-profile installed MCP probes verified 0.12.3.
+
+## Current release qualification
+
+Candidate 0.12.5 supersedes the unpublished immutable 0.12.4 draft. It fixes MCP
+stdin EOF cleanup, including late resources from in-flight handlers, isolates the
+canonical hello schema for hook authority, and preserves lifecycle test failures
+when cleanup also fails. Independent review and final qualification passed:
+584 workspace tests, 140 script tests, export verification, clean-PATH smokes and
+synthetic E2E. Publication and observed local rollout follow qualification.
+
+Earlier semantic registration failures remain recorded in RESULTS; their cause is
+not established. Issues #9 and #19 stay open. The restarted chat MCP is 0.12.3;
+local hub and daemon remain 0.12.3 until deployment is observed.
 
 ## Immediate maintenance
 
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
-| 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Capture labelled hook outcomes and first failed identity lookup; registration rejection is proven to pass the old fail-open exit assertion, but the original CI trigger remains unknown; preserve deadlines, fences and single attempts |
-| 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Initial 18-sample phase diagnostic recorded in [RESULTS](../spikes/RESULTS.md); capture a traced outlier or CI evidence next; establish a cause before changing behavior; retain the temporary 300 ms full-process cap, 200 ms target and unchanged 140/90 ms internal timers |
+| 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Ten bounded local lifecycle runs passed (40 tests); capture labelled hook outcomes and first failed identity lookup; registration rejection is proven to pass the old fail-open exit assertion, but the original CI trigger remains unknown; preserve deadlines, fences and single attempts |
+| 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Phase diagnostics and hook import A/B recorded in [RESULTS](../spikes/RESULTS.md); capture a traced outlier or CI evidence next; establish a cause before changing behavior; retain the temporary 300 ms full-process cap, 200 ms target and unchanged 140/90 ms internal timers |
 | Ongoing | Feedback and release maintenance | Investigate substantive feedback, preserve receipt semantics, validate fixes and announce qualified releases in `kommutator-feedback`; deploy and verify the local hub and daemon under the existing maintainer authorization |
 
 The earlier unread replay report has no established root cause: the reporter cleared the
@@ -31,7 +44,7 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
 | WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.12.3 deployed; #15 restart fix completed the ordinary updater path without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.2 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.3 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
 | Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.12.3 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |

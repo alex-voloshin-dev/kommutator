@@ -1,0 +1,1159 @@
+{
+  "metadata": {
+    "baseline": {
+      "version": "0.12.3",
+      "runtime_id": "d331d46268cd007aad8f4689e405bb2e9be111ac5aafc5679d15fa508fe010f4",
+      "manifest_sha256": "81384da78b030338b960298ca8386681f7cb62dc6780aff7d0d07615b10b092e"
+    },
+    "candidate": {
+      "version": "0.12.4",
+      "runtime_id": "ca234497fa99344e601be2db7720375f1cbb26567536cd22566d7ae79e39f359",
+      "manifest_sha256": "2098e3f3622109c2f0a788a3ea96b3b3095fec1f3d497a90752a553309dce254"
+    }
+  },
+  "samples": [
+    {
+      "iteration": 0,
+      "artifact": "baseline",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 177.68991,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 168.954121,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 0,
+      "artifact": "candidate",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 496.57607199999995,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 261.426113,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 1,
+      "artifact": "candidate",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 380.089634,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 201.15828999999997,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 1,
+      "artifact": "baseline",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 187.64196700000002,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 193.09422500000002,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 2,
+      "artifact": "baseline",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 761.97199,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 416.952585,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 2,
+      "artifact": "candidate",
+      "exit_code": 1,
+      "result": {
+        "outcome": "failed",
+        "stage": "hook-second",
+        "error_name": "Error",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 570.251371,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "afterFailure": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 3,
+      "artifact": "candidate",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 731.751341,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 164.70714999999996,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 3,
+      "artifact": "baseline",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 162.59331300000002,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 167.255158,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 4,
+      "artifact": "baseline",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 166.97238199999998,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 159.71360900000002,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    },
+    {
+      "iteration": 4,
+      "artifact": "candidate",
+      "exit_code": 0,
+      "result": {
+        "outcome": "passed",
+        "stage": "second-whoami",
+        "hooks": [
+          {
+            "owner": "first",
+            "event": "SessionStart",
+            "elapsed_ms": 146.09894,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          },
+          {
+            "owner": "second",
+            "event": "SessionStart",
+            "elapsed_ms": 141.29387899999998,
+            "code": 0,
+            "stdout_bytes": 0,
+            "stderr_bytes": 0
+          }
+        ],
+        "beforeMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        },
+        "afterMcp": {
+          "owner_count": 2,
+          "owners": [
+            {
+              "label": "first",
+              "alive": true
+            },
+            {
+              "label": "second",
+              "alive": true
+            }
+          ],
+          "journals": [
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "second",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            },
+            {
+              "generation_count": 1,
+              "temp_count": 0,
+              "entries": [
+                {
+                  "generation": 1,
+                  "owner_generation": 1,
+                  "owner": "first",
+                  "birth_matches": true,
+                  "vendor_matches": true,
+                  "cwd_matches": true,
+                  "ended": false
+                }
+              ]
+            }
+          ],
+          "legacy_count": 2
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Original first-whoami qualification failure was not reproduced.",
+    "Candidate second-hook error message was discarded by the temporary sanitizer; exact cause unavailable, not classified as timeout.",
+    "These exported wrapper-to-close durations are not the earlier direct-Node timing metric.",
+    "After-run load context cannot establish per-sample conditions or causality."
+  ]
+}

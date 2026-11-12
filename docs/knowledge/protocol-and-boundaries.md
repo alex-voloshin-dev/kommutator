@@ -8,6 +8,9 @@ tags: [protocol, identity]
 
 [schemas.ts](../../packages/protocol/src/schemas.ts) defines Methods, Notifications,
 Session/Message/StoredMessage/BoardEntry, limits and the 1 MiB frame maximum.
+[hello.ts](../../packages/protocol/src/hello.ts) owns the canonical IPC hello schema,
+vendor enum and protocol version. The root method table references the same schema;
+`@kommutator/protocol/hello` lets early hook authority avoid unrelated RPC schemas.
 [results.ts](../../packages/protocol/src/results.ts) defines selected result schemas;
 it does not yet provide a result for every method. [PROTOCOL.md](../PROTOCOL.md) indexes
 the intended wire contract; [DESIGN](../DESIGN.md) defines behavior.

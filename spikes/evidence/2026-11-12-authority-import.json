@@ -1,0 +1,245 @@
+{
+  "scope": "Six sequential cold Node processes per module, warm OS cache; intermediate hello-extraction candidate before EOF changes, not final-release end-to-end evidence",
+  "baseline_commit": "6fab872",
+  "baseline": {
+    "scope": "six fixed cold-process import attempts per module; warm OS cache; no end-to-end claim",
+    "rows": [
+      {
+        "round": 1,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 70.445297
+      },
+      {
+        "round": 1,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 92.855618
+      },
+      {
+        "round": 1,
+        "exit": 0,
+        "module": "./dist/hook-authority-SR7AKZO4.js",
+        "elapsed": 55.024444
+      },
+      {
+        "round": 2,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 73.535527
+      },
+      {
+        "round": 2,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 86.677557
+      },
+      {
+        "round": 2,
+        "exit": 0,
+        "module": "./dist/hook-authority-SR7AKZO4.js",
+        "elapsed": 47.585671000000005
+      },
+      {
+        "round": 3,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 70.324496
+      },
+      {
+        "round": 3,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 85.875749
+      },
+      {
+        "round": 3,
+        "exit": 0,
+        "module": "./dist/hook-authority-SR7AKZO4.js",
+        "elapsed": 45.83455300000001
+      },
+      {
+        "round": 4,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 63.986333
+      },
+      {
+        "round": 4,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 88.32697399999999
+      },
+      {
+        "round": 4,
+        "exit": 0,
+        "module": "./dist/hook-authority-SR7AKZO4.js",
+        "elapsed": 50.66430100000001
+      },
+      {
+        "round": 5,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 78.48467600000001
+      },
+      {
+        "round": 5,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 105.048539
+      },
+      {
+        "round": 5,
+        "exit": 0,
+        "module": "./dist/hook-authority-SR7AKZO4.js",
+        "elapsed": 62.74712000000001
+      },
+      {
+        "round": 6,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 80.287394
+      },
+      {
+        "round": 6,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 101.87690700000002
+      },
+      {
+        "round": 6,
+        "exit": 0,
+        "module": "./dist/hook-authority-SR7AKZO4.js",
+        "elapsed": 56.524258
+      }
+    ],
+    "medians": {
+      "zod": 71.99041199999999,
+      "@kommutator/protocol": 90.591296,
+      "./dist/hook-authority-SR7AKZO4.js": 52.844372500000006
+    }
+  },
+  "candidate": {
+    "scope": "six fixed cold-process import attempts per module; warm OS cache; sequential baseline then candidate, not randomized; no end-to-end claim",
+    "rows": [
+      {
+        "round": 1,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 67.408162
+      },
+      {
+        "round": 1,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 98.861771
+      },
+      {
+        "round": 1,
+        "exit": 0,
+        "module": "./dist/hook-authority-EXZGFSUA.js",
+        "elapsed": 37.442167999999995
+      },
+      {
+        "round": 2,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 81.759604
+      },
+      {
+        "round": 2,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 94.838333
+      },
+      {
+        "round": 2,
+        "exit": 0,
+        "module": "./dist/hook-authority-EXZGFSUA.js",
+        "elapsed": 38.62748
+      },
+      {
+        "round": 3,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 74.389731
+      },
+      {
+        "round": 3,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 103.093513
+      },
+      {
+        "round": 3,
+        "exit": 0,
+        "module": "./dist/hook-authority-EXZGFSUA.js",
+        "elapsed": 39.578589
+      },
+      {
+        "round": 4,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 77.976073
+      },
+      {
+        "round": 4,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 91.75651300000001
+      },
+      {
+        "round": 4,
+        "exit": 0,
+        "module": "./dist/hook-authority-EXZGFSUA.js",
+        "elapsed": 35.872556
+      },
+      {
+        "round": 5,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 84.773144
+      },
+      {
+        "round": 5,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 97.04086600000001
+      },
+      {
+        "round": 5,
+        "exit": 0,
+        "module": "./dist/hook-authority-EXZGFSUA.js",
+        "elapsed": 49.02468799999999
+      },
+      {
+        "round": 6,
+        "exit": 0,
+        "module": "zod",
+        "elapsed": 80.711903
+      },
+      {
+        "round": 6,
+        "exit": 0,
+        "module": "@kommutator/protocol",
+        "elapsed": 108.150776
+      },
+      {
+        "round": 6,
+        "exit": 0,
+        "module": "./dist/hook-authority-EXZGFSUA.js",
+        "elapsed": 42.98732699999999
+      }
+    ],
+    "medians": {
+      "zod": 79.343988,
+      "@kommutator/protocol": 97.95131850000001,
+      "./dist/hook-authority-EXZGFSUA.js": 39.1030345
+    }
+  },
+  "limits": [
+    "Sequential, not interleaved; independent controls worsened",
+    "Does not establish cause of historical registration failures",
+    "No native model, network, or end-to-end latency guarantee"
+  ]
+}
