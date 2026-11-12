@@ -22,12 +22,18 @@ clean-PATH smokes and synthetic E2E. Independent review and branch/PR/tag CI pas
 Anonymous asset hashes, real clean-profile Claude/Codex installs and installed MCP
 0.12.6 probes passed. Ordinary updater deployed healthy hub and daemon 0.12.6;
 both database backups passed quick_check, current caller is active, hub connected,
-outbox empty, timer active. This chat's existing MCP remains compatible 0.12.3.
+outbox empty, timer active. After the chat restart, loaded MCP 0.12.6 and an active caller were verified.
 
 An earlier untraced gate failed with zero hello and a 375 ms cold hook. Its cause
 remains unknown. Diagnostic passes and final qualification do not close #9 or prove
 all historical #19 triggers resolved. CI now retains queue/birth/local-save/flush
 phases and parent/child timing; the first four CI samples measured 89–115 ms.
+
+A [follow-up investigation](sdlc/runtime-reliability-followup/research-brief.md) found
+additional green CI samples, an observability gap between the release gate and its
+separate phase run, and recurrent local/remote availability failures correlated with
+WSL kernel allocation warnings. The [availability incident](sdlc/runtime-reliability-followup/incident.md)
+remains open; a healthy short probe is not a root-cause fix.
 
 ## Immediate maintenance
 
@@ -35,6 +41,7 @@ phases and parent/child timing; the first four CI samples measured 89–115 ms.
 | --- | --- | --- |
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
+| 1 | [#22: recurrent hub availability](https://github.com/alex-voloshin-dev/kommutator/issues/22) and ambiguous timeout outcomes | Correlate simultaneous endpoint/resource/kernel observations; define request-specific reconciliation before retries or blocked-outbox disposition. No blanket queue deletion or kernel tuning |
 | Ongoing | Feedback and release maintenance | Investigate substantive feedback, preserve receipt semantics, validate fixes and announce qualified releases in `kommutator-feedback`; deploy and verify the local hub and daemon under the existing maintainer authorization |
 
 The earlier unread replay report has no established root cause: the reporter cleared the
@@ -50,7 +57,7 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
 | WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.12.6 deployed; #15 restart fix completed the ordinary updater path without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.3 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.6 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
 | Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.12.6 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
