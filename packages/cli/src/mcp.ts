@@ -23,22 +23,39 @@ const Send = OutboundMessage.pick({ to: true, body: true, subject: true, kind: t
 
 type ClientSource = RpcClient | ((meta: unknown) => RpcClient | Promise<RpcClient>);
 
-export function createMcpServer(client: ClientSource, diagnosticsClient?: ClientSource): McpServer {
+/** EOF may arrive while a tool is awaiting identity or opening private setup resources. */
+export class McpLifecycle {
+  private closing = false;
+  constructor(private readonly cleanup: () => void) {}
+  assertOpen(): void { if (this.closing) throw new Error("MCP connection closed; inspect pending operation outcomes before retrying"); }
+  close(): void { this.closing = true; this.cleanup(); }
+  async run<T>(operation: () => Promise<T>): Promise<T> {
+    this.assertOpen();
+    try { return await operation(); }
+    finally { if (this.closing) this.cleanup(); }
+  }
+}
+
+export function createMcpServer(client: ClientSource, diagnosticsClient?: ClientSource, lifecycle?: McpLifecycle): McpServer {
   const server = new McpServer({ name: "kommutator", version: RELEASE_VERSION });
   function tool(name: string, description: string, schema: z.ZodObject, method: string,
     map: (args: Record<string, unknown>) => Record<string, unknown> = (args) => args,
     project: (result: unknown, args: Record<string, unknown>) => unknown = (result) => result): void {
-    server.registerTool(name, { description, inputSchema: schema.shape }, async (raw: unknown, extra: { _meta?: unknown }) => {
+    const handler = async (raw: unknown, extra: { _meta?: unknown }) => {
       try {
         const args = schema.parse(raw) as Record<string, unknown>;
         const source = method === "daemon.status" && diagnosticsClient ? diagnosticsClient : client;
         const caller = typeof source === "function" ? await source(extra._meta) : source;
+        lifecycle?.assertOpen();
         const result = await caller.call(method, map(args));
         return { content: [{ type: "text" as const, text: JSON.stringify(project(result, args)) }] };
       } catch (error) {
         return { isError: true, content: [{ type: "text" as const, text: error instanceof Error ? error.message : "kommutator request failed" }] };
       }
-    });
+    };
+    server.registerTool(name, { description, inputSchema: schema.shape }, (raw, extra) =>
+      lifecycle ? lifecycle.run(() => handler(raw, extra)).catch(error => ({ isError: true,
+        content: [{ type: "text" as const, text: error instanceof Error ? error.message : "kommutator request failed" }] })) : handler(raw, extra));
   }
   const empty = z.object({}).strict();
   tool("whoami", "Your session identity, host, project, topics, capability and wake policy. Ambiguous binding is an error; never guess a session.", empty, "whoami");
@@ -84,6 +101,11 @@ export async function runMcp(): Promise<void> {
     shim: (observed) => new IpcClient({ lazyStart: true, hello: () => ({ ...shimHello(server.server.getClientVersion()), vendor_session_id: observed.vendor_session_id, owner_generation: observed.owner_generation, cwd: observed.cwd }) }),
     hook: (observed) => new IpcClient({ hello: () => observed, lazyStart: false }),
   });
+  const pluginClients = new Map<string, IpcClient>();
+  const lifecycle = new McpLifecycle(() => {
+    client.close(); diagnosticsClient.close(); codex.close(); claude.close(); setup.close();
+    for (const pinned of pluginClients.values()) pinned.close();
+  });
   server = createMcpServer(async (meta) => {
     const info = server.server.getClientVersion();
     if (profile) {
@@ -112,16 +134,30 @@ export async function runMcp(): Promise<void> {
     if (isCodexClient(info)) return new CodexStatusClient(diagnosticsClient, codexSessionId(meta));
     if (profile === "claude-code") return claudeDiagnostics;
     return diagnosticsClient;
-  });
-  const pluginClients = new Map<string, IpcClient>();
+  }, lifecycle);
   for (const name of ["setup_status", "setup_start"] as const) server.registerTool(name, {
     description: name === "setup_status" ? "Check private configuration, client/daemon versions and runtime compatibility, with local recovery guidance. Does not verify session registration or MCP binding." : "Open a short-lived private loopback setup form. Enter the hub key only in that browser form, never in chat or tool arguments.",
     inputSchema: {},
-  }, async () => {
+  }, () => lifecycle.run(async () => {
     try { return { content: [{ type: "text" as const, text: JSON.stringify(await (name === "setup_status" ? setup.status() : setup.start())) }] }; }
     catch { return { isError: true, content: [{ type: "text" as const, text: "Local setup unavailable; inspect existing private configuration locally." }] }; }
-  });
+  }).catch(() => ({ isError: true, content: [{ type: "text" as const, text: "MCP connection closed; setup unavailable." }] })));
   server.server.onerror = (error) => console.error("kom mcp:", error.message);
-  server.server.onclose = () => { client.close(); diagnosticsClient.close(); codex.close(); claude.close(); setup.close(); for (const pinned of pluginClients.values()) pinned.close(); };
+  let closing = false;
+  const closeOnInputEnd = () => {
+    if (closing) return;
+    closing = true;
+    void server.close().catch(() => { console.error("kom mcp: failed to close after stdin ended"); });
+  };
+  server.server.onclose = () => {
+    closing = true;
+    process.stdin.off("end", closeOnInputEnd);
+    process.stdin.off("close", closeOnInputEnd);
+    lifecycle.close();
+  };
   await server.connect(new StdioServerTransport());
+  // The SDK stdio transport does not translate EOF into onclose itself.
+  process.stdin.once("end", closeOnInputEnd);
+  process.stdin.once("close", closeOnInputEnd);
+  if (process.stdin.readableEnded || process.stdin.destroyed) closeOnInputEnd();
 }

@@ -9,7 +9,7 @@
       "source": {
         "source": "archive",
         "url": "https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.12.5/kommutator-v0.12.5-claude-linux-x64.zip",
-        "sha256": "1ae6c02cc48599e943f94af061869a0e67d9de166d9ccd60c3bb8c7471821f85"
+        "sha256": "2845472a39cee6034f59ec63e41c9ce3ffc5b29238aeccf71231713b6efc3876"
       },
       "version": "0.12.5"
     }

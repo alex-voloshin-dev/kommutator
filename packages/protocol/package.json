@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./hello": {
+      "types": "./dist/hello.d.ts",
+      "import": "./dist/hello.js"
     }
   },
   "files": ["dist"],

@@ -3,7 +3,7 @@
 set -eu
 umask 077
 vendor='codex'
-expected='457a85ec7d2810a4764beed97afc2e85c390e4a66a4ce7ed34c729947e2f8d21'
+expected='93b564874adf1b8bb2d3621214da1cb9c62eda3fc399c44a0f3d7a874dc8fe63'
 url='https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.12.5/kommutator-v0.12.5-linux-x64.tar.gz'
 mode=${1:-mcp}
 [ "$#" -eq 0 ] || shift

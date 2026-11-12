@@ -12,24 +12,16 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
 
-The unpublished 0.12.4 draft is superseded by candidate 0.12.5; its tag and assets
-remain unchanged. Independent review identified an invalid test assumption that a
-best-effort hook diagnostic always persists before the hard deadline. Candidate
-0.12.5 separates real-process rejection/no-registration checks from deterministic
-final-outcome persistence.
+Candidate 0.12.5 supersedes the unpublished immutable 0.12.4 draft. It fixes MCP
+stdin EOF cleanup, including late resources from in-flight handlers, isolates the
+canonical hello schema for hook authority, and preserves lifecycle test failures
+when cleanup also fails. Independent review and final qualification passed:
+584 workspace tests, 140 script tests, export verification, clean-PATH smokes and
+synthetic E2E. Publication and observed local rollout follow qualification.
 
-The first 0.12.5 full qualification is blocked: 573 workspace tests passed and one
-Claude resume test failed because `whoami` still succeeded after `SessionEnd` with
-diagnostic storage intentionally stalled. Its 208.118 ms duration was below the
-300 ms cap. The cause is unknown, and script/export checks were not reached.
-A second qualification with reviewed failure diagnostics passed 572 tests and
-failed two: a final resumed SessionStart did not publish its next generation, and
-a separate retirement fixture reported a daemon IPC timeout. No cause is proven.
-A bounded corrected trace published all four generations before the deadline,
-then hit an unlabelled IPC timeout. Next distinguish body/teardown failures and
-preserve the original error during cleanup before tracing publication again.
-Do not repeat qualification merely to obtain a passing result. Local hub and daemon remain 0.12.3; the restarted chat MCP is now
-0.12.3 with an active caller and both feedback subscriptions.
+Earlier semantic registration failures remain recorded in RESULTS; their cause is
+not established. Issues #9 and #19 stay open. The restarted chat MCP is 0.12.3;
+local hub and daemon remain 0.12.3 until deployment is observed.
 
 ## Immediate maintenance
 

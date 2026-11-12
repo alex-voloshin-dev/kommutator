@@ -1,7 +1,10 @@
 # kommutator protocol (draft)
 
-One JSON-RPC 2.0 schema serves both hops. The zod schemas in `packages/protocol/src/schemas.ts`
-are the source of truth; this file is the human-readable index.
+One JSON-RPC 2.0 schema serves both hops. The Zod schemas in `packages/protocol/src/`
+are the source of truth; this file is the human-readable index. `hello.ts` owns the
+canonical IPC hello schema, vendor enum and protocol version; `schemas.ts` references
+that exact schema in `Methods["ipc.hello"]`. The narrow `/hello` export preserves
+wire validation while keeping unrelated RPC schemas out of early hook authority.
 
 | Hop | Transport | Framing |
 |---|---|---|

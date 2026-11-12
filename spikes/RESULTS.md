@@ -1004,3 +1004,26 @@ Next: label body versus teardown IPC operations and preserve original body error
 when cleanup fails, then trace publication phases under the failing workload.
 Do not relax timers, identity fences or assertions, or repeat qualification merely
 to obtain a passing result. Both candidate release and local deployment stay held.
+
+
+### 2026-11-12 — final 0.12.5 integrated qualification
+
+MCP EOF cleanup was confirmed by a real-process baseline failure with active IPC
+and private setup resources. The fix and in-flight handler fence passed controlled
+EOF/setup/deferred-resource tests, without stopping the second MCP or shared IPC
+fixture. Source and external reviews approved. Fixture cleanup now labels phases,
+preserves original errors and verifies process ownership before fallback signals.
+The original no-EOF baseline is valid; a later loader negative control failed at
+initialization and is excluded from product conclusions.
+
+Canonical hello extraction retains schema identity and all process/generation
+fences. A bundled-import regression failed on the old build and passed with the
+narrow export. Intermediate six-sample import data is retained in
+[evidence](evidence/2026-11-12-authority-import.json); it is not end-to-end evidence.
+
+One final full release:check passed: 584 workspace tests (39 protocol, 176 hub,
+118 agentd, 251 CLI), 140 script tests, ordered build/typecheck, export verification,
+both clean-PATH smokes and all synthetic exported E2E scenarios. Earlier failed
+qualifications remain above; their original trigger is not established. No live
+model/native wake, day-long, physical subnet, reboot or other-platform acceptance
+is implied. Log: /tmp/kommutator-v0125-final-release-check.log.

@@ -1523,6 +1523,9 @@ second generation. The hard fail-open deadline remains unchanged; interrupted de
 be recovered by the existing MCP replay of this exact committed authority. No launch
 environment ID, cwd inference, diagnostic record or later prompt can replace SessionStart.
 Malformed input, incomplete journals and ended generations retain their existing fences.
+The canonical `ipc.hello` schema, vendor enum and protocol version are exposed by
+`@kommutator/protocol/hello`; the root method table references that same schema.
+Authority imports use this narrow export without changing wire validation or identity fences.
 This reduces import contention; it does not guarantee registration when OS scheduling or
 filesystem latency exhausts the hook budget before journal publication.
 
@@ -1635,3 +1638,14 @@ lock path only after confirmed absence, using one lazy-start attempt rather than
 explicit spawn followed by another lazy spawn. A successful status reply confirms the
 replacement is serving; no socket/lock files are removed by the CLI.
 This does not alter message replay, IPC wire schemas or the hook timers.
+
+
+### MCP stdin EOF lifecycle (2026-11-12)
+
+The MCP stdio process treats stdin EOF as client transport closure. It closes the
+MCP server and runs its existing per-process IPC clients and private setup-server
+idempotent cleanup, removing its stdin listeners. Shutdown starts once; admitted tool handlers repeat cleanup on settlement so resources created after EOF cannot remain open. New handlers are rejected after closure, and delayed client resolution is fenced before starting its RPC. Already submitted operations are never replayed. Closure diagnostics use stderr;
+stdout remains protocol-only. This does not shut down the shared daemon or hub,
+send session.gone on behalf of a still-live Claude owner, or acknowledge messages.
+Other MCP processes retain independent connections. The process can exit naturally
+after owned resources close instead of requiring the SDK client's signal fallback.

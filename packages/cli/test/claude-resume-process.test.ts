@@ -1,3 +1,5 @@
+import { phase, withCleanup, matchesFixtureDaemon } from "./fixture-lifecycle.js";
+import { processStart } from "@kommutator/agentd/process";
 import { expectHookProcessTime } from "./hook-timing.js";
 import { readHookObservations } from "../src/hook-observations.js";
 import { expect, it } from "vitest";
@@ -75,7 +77,7 @@ async function fixture() {
   const client = new Client({ name: "claude-code", version: "synthetic-resume" });
   await client.connect(transport);
   async function call(name: string, args: Record<string, unknown> = {}) {
-    const reply = Reply.parse(await client.callTool({ name, arguments: args }));
+    const reply = Reply.parse(await phase(`MCP ${name}`, () => client.callTool({ name, arguments: args })));
     const text = reply.content[0]?.text;
     if (!text) throw new Error("missing tool reply");
     return { error: reply.isError === true, text };
@@ -119,24 +121,94 @@ async function fixture() {
       return elapsed;
     },
     async close() {
-      await client.close();
+      const failures: unknown[] = [];
+      async function step(label: string, run: () => Promise<unknown>, timeoutMs = 1500) {
+        try { await phase(`cleanup ${label}`, run, timeoutMs); } catch (error) { failures.push(error); }
+      }
+      let daemon: { pid: number; birth: string | undefined } | undefined;
+      let safeToRemoveHome = false;
+      await step("capture owned daemon", async () => {
+        try {
+          const info = z.object({ pid: z.number().int().positive(), endpoint: z.literal(join(home, "agentd.sock")) })
+            .parse(JSON.parse(await readFile(join(home, "agentd.json"), "utf8")) as unknown);
+          safeToRemoveHome = false;
+          daemon = { pid: info.pid, birth: undefined };
+          daemon.birth = await processStart(info.pid);
+        } catch (error) {
+          if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
+          safeToRemoveHome = true;
+        }
+      });
+      // SDK close has two 2-second grace periods before killing its owned child.
+      await step("MCP close", () => client.close(), 5000);
       const management = new IpcClient({ endpoint: join(home, "agentd.sock"), timeoutMs: 1000, lazyStart: false,
         hello: () => ({ client: "cli", protocol_version: PROTOCOL_VERSION, pid: process.pid, cwd }) });
-      try { await management.call("daemon.shutdown"); }
-      catch (error) {
-        const code = error instanceof Error && "code" in error ? error.code : undefined;
-        if (code !== "ENOENT" && code !== "ECONNREFUSED") throw error;
+      try {
+        await step("daemon.shutdown", async () => {
+          try { await management.call("daemon.shutdown"); }
+          catch (error) {
+            const code = error instanceof Error && "code" in error ? error.code : undefined;
+            if (code !== "ENOENT" && code !== "ECONNREFUSED") throw error;
+          }
+        });
       } finally { management.close(); }
-      await new Promise<void>((resolve, reject) => hub.close(error => error ? reject(error) : resolve()));
-      db.close();
-      await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+      await step("owned daemon termination", async () => {
+        if (!daemon) return;
+        const owned = daemon;
+        const alive = () => {
+          try { process.kill(owned.pid, 0); return true; }
+          catch (error) {
+            if (error instanceof Error && "code" in error && error.code === "ESRCH") return false;
+            throw error;
+          }
+        };
+        // daemon.shutdown schedules its exit; give that normal path a bounded grace period.
+        const graceEnd = performance.now() + 500;
+        while (alive() && performance.now() < graceEnd) await new Promise(resolve => setTimeout(resolve, 20));
+        if (!alive()) { safeToRemoveHome = true; return; }
+        const birth = await processStart(owned.pid);
+        if (!owned.birth || !birth || birth !== owned.birth) throw new Error("Live daemon ownership is unverified; preserving fixture home");
+        if (process.platform !== "linux") throw new Error("Owned daemon did not exit; safe fallback verification requires Linux");
+        // Never signal from a PID file alone: verify this fixture's private home and command.
+        let environment: string, command: string;
+        try {
+          [environment, command] = await Promise.all([
+            readFile(`/proc/${owned.pid}/environ`, "utf8"), readFile(`/proc/${owned.pid}/cmdline`, "utf8"),
+          ]);
+        } catch (error) {
+          if (!alive()) { safeToRemoveHome = true; return; }
+          throw error;
+        }
+        if (!matchesFixtureDaemon(command, environment, process.execPath, entry, home)) {
+          throw new Error("Refusing to terminate a process without matching fixture ownership");
+        }
+        if (!alive()) { safeToRemoveHome = true; return; }
+        if (await processStart(owned.pid) !== owned.birth) throw new Error("Daemon birth changed or is unavailable; preserving fixture home");
+        try { process.kill(owned.pid, "SIGKILL"); }
+        catch (error) {
+          if (!(error instanceof Error && "code" in error && error.code === "ESRCH")) throw error;
+        }
+        const exitEnd = performance.now() + 500;
+        while (alive() && performance.now() < exitEnd) await new Promise(resolve => setTimeout(resolve, 20));
+        if (alive()) throw new Error("Daemon exit unconfirmed; preserving fixture home");
+        safeToRemoveHome = true;
+      }, 3500);
+      await step("hub close", async () => {
+        hub.closeAllConnections();
+        await new Promise<void>((resolve, reject) => hub.close(error => error ? reject(error) : resolve()));
+      });
+      try { db.close(); } catch (error) { failures.push(new Error("Fixture phase: cleanup database close", { cause: error })); }
+      if (safeToRemoveHome) await step("remove fixture home", () => rm(home, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 }));
+      else failures.push(new Error("Fixture home preserved because daemon exit or ownership is unconfirmed"));
+      if (failures.length) throw new AggregateError(failures, "Fixture cleanup failed");
+
     },
   };
 }
 
 it("a running MCP resolves resumed hook identity despite its stale launch ID, then follows B to A to B", async () => {
   const f = await fixture();
-  try {
+  await withCleanup(async () => {
     const pid = f.transport.pid;
     expect(JSON.parse((await f.call("setup_status")).text)).toMatchObject({ configured: true });
     const unregistered = await f.call("whoami");
@@ -188,12 +260,12 @@ it("a running MCP resolves resumed hook identity despite its stale launch ID, th
     expect(JSON.parse(status.text)).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
     expect((await f.call("whoami")).error).toBe(true);
     expect(JSON.parse((await f.call("setup_status")).text)).toMatchObject({ configured: true });
-  } finally { await f.close(); }
+  }, () => f.close());
 }, 20_000);
 
 it("malformed or missing active authority cannot fall back to a fenced launch registration", async () => {
   const f = await fixture();
-  try {
+  await withCleanup(async () => {
     await f.hook("launch-a");
     await f.whoami();
     const contexts = join(f.home, "contexts");
@@ -215,12 +287,12 @@ it("malformed or missing active authority cannot fall back to a fenced launch re
     expect((await f.whoami()).vendor_session_id).toBe("launch-a");
     await rm(path);
     expect((await f.call("whoami")).error).toBe(true);
-  } finally { await f.close(); }
+  }, () => f.close());
 }, 15_000);
 
 it("publishes resumed authority and ends it even when diagnostic storage never completes", async () => {
   const f = await fixture();
-  try {
+  await withCleanup(async () => {
     await f.hook("launch-a");
     expect((await f.whoami()).vendor_session_id).toBe("launch-a");
     const preload = join(f.home, "stall-observations.mjs");
@@ -245,12 +317,12 @@ it("publishes resumed authority and ends it even when diagnostic storage never c
         ...await retirementEvidence(f.home, f.cwd, reply, resumed.id) }));
     }
     expect(reply.error).toBe(true);
-  } finally { await f.close(); }
+  }, () => f.close());
 }, 15_000);
 
 it("commits SessionStart authority before a delayed delivery-module import reaches the hook deadline", async () => {
   const f = await fixture();
-  try {
+  await withCleanup(async () => {
     const preload = join(f.home, "delay-hook-delivery.mjs");
     const marker = join(f.home, "delivery-import-started");
     await writeFile(preload, `
@@ -277,12 +349,12 @@ it("commits SessionStart authority before a delayed delivery-module import reach
     const next = f.hookEvidence[1] as { authority: Array<{ generation: number; root: string }> };
     expect(next.authority.map(row => row.generation).sort()).toEqual([1, 2]);
     expect((await f.whoami()).id).toBe(session.id);
-  } finally { await f.close(); }
+  }, () => f.close());
 }, 15_000);
 
 it("retires only the current SessionEnd authority before a delayed delivery import", async () => {
   const f = await fixture();
-  try {
+  await withCleanup(async () => {
     await f.hook("end-after-import");
     const session = await f.whoami();
     const preload = join(f.home, "delay-hook-delivery.mjs");
@@ -310,12 +382,12 @@ it("retires only the current SessionEnd authority before a delayed delivery impo
     expect((await f.call("status")).error).toBe(false);
     await expect.poll(() => f.db.prepare("SELECT state FROM sessions WHERE id = ?").get(session.id),
       { timeout: 1_000 }).toEqual({ state: "gone" });
-  } finally { await f.close(); }
+  }, () => f.close());
 }, 15_000);
 
 it("an invalid SessionStart cannot replace previously observed conversation authority", async () => {
   const f = await fixture();
-  try {
+  await withCleanup(async () => {
     await f.hook("valid-conversation");
     const original = await f.whoami();
     await f.hook("");
@@ -324,5 +396,5 @@ it("an invalid SessionStart cannot replace previously observed conversation auth
     expect(current.vendor_session_id).toBe("valid-conversation");
     const evidence = f.hookEvidence[1] as { authority: Array<{ generation: number; root: string }> };
     expect(evidence.authority).toEqual([{ generation: 1, root: "valid-conversation" }]);
-  } finally { await f.close(); }
+  }, () => f.close());
 }, 15_000);
