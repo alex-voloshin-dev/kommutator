@@ -13,6 +13,7 @@ import { createHubServer } from "@kommutator/hub";
 import { openDatabase } from "@kommutator/hub/db";
 import { PROTOCOL_VERSION, RegisteredSession } from "@kommutator/protocol";
 import { IpcClient } from "../src/ipc-client.js";
+import { readHookObservations } from "../src/hook-observations.js";
 
 const entry = fileURLToPath(new URL("../dist/index.js", import.meta.url));
 const ToolReply = z.object({
@@ -171,14 +172,15 @@ async function fixture() {
         child.stdin.end(JSON.stringify({ session_id: vendorId, cwd, permission_mode: "default" }));
       });
       expect({ code: result.code, stdout: result.stdout }).toEqual({ code: 0, stdout: "" });
-      return result;
+      const observations = (await readHookObservations(vendorId, home)).map(({ event, outcome, at }) => ({ event, outcome, at }));
+      return { ...result, vendorId, observations };
     },
   };
 }
 
-async function whoami(client: Client) {
+async function whoami(client: Client, failureContext?: () => string) {
   const reply = ToolReply.parse(await client.callTool({ name: "whoami", arguments: {} }));
-  expect(reply.isError, reply.content[0]?.text).not.toBe(true);
+  expect(reply.isError, reply.isError ? `${reply.content[0]?.text}\n${failureContext?.() ?? ""}` : undefined).not.toBe(true);
   const text = reply.content[0]?.text;
   if (!text) throw new Error("whoami returned no text");
   const value: unknown = JSON.parse(text);
@@ -186,6 +188,43 @@ async function whoami(client: Client) {
 }
 
 describe("built CLI process lifecycle with fake vendor sessions (not live vendor E2E)", () => {
+  it("does not mistake a rejected hook's fail-open exit for successful registration", async () => {
+    const setup = await fixture();
+    const sockets = new Set<import("node:net").Socket>();
+    let hellos = 0;
+    const listener = createServer(socket => {
+      sockets.add(socket);
+      socket.once("close", () => sockets.delete(socket));
+      let buffer = "";
+      socket.on("data", chunk => {
+        buffer += String(chunk);
+        let end: number;
+        while ((end = buffer.indexOf("\n")) >= 0) {
+          const frame = z.object({ id: z.number(), method: z.string() }).parse(JSON.parse(buffer.slice(0, end)));
+          buffer = buffer.slice(end + 1);
+          if (frame.method === "ipc.hello") hellos++;
+          socket.write(JSON.stringify({ jsonrpc: "2.0", id: frame.id,
+            error: { code: -32020, message: "Synthetic process ownership unavailable" } }) + "\n");
+        }
+      });
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        listener.once("error", reject);
+        listener.listen(join(setup.home, "agentd.sock"), () => { listener.off("error", reject); resolve(); });
+      });
+      const hook = await setup.register("fixture-rejected", "rejected");
+      expect({ code: hook.code, stdout: hook.stdout }).toEqual({ code: 0, stdout: "" });
+      expect(hellos).toBe(1);
+      expect(hook.observations).toEqual([expect.objectContaining({ event: "SessionStart", outcome: "failed" })]);
+      expect(setup.db.prepare("SELECT COUNT(*) AS count FROM sessions").get()).toEqual({ count: 0 });
+    } finally {
+      for (const socket of sockets) socket.destroy();
+      await closeServer(listener);
+      await setup.close();
+    }
+  }, 10_000);
+
   it("returns a valid cold SessionStart within the temporary 300ms process limit and leaves its detached daemon running", async () => {
     const setup = await fixture();
     try {
@@ -215,9 +254,15 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
       expect(initialDaemon.pid).not.toBe(first.transport.pid);
       expect(initialDaemon.pid).not.toBe(second.transport.pid);
 
-      await setup.register("fixture-author", "author");
-      await setup.register("fixture-reviewer", "reviewer");
-      const [author, reviewer] = await Promise.all([whoami(first.client), whoami(second.client)]);
+      const authorHook = await setup.register("fixture-author", "author");
+      const reviewerHook = await setup.register("fixture-reviewer", "reviewer");
+      const diagnostic = (hook: typeof authorHook) => () => JSON.stringify({
+        vendorId: hook.vendorId, hookElapsedMs: hook.elapsed, hookObservations: hook.observations,
+        hubSessions: setup.db.prepare("SELECT vendor_session_id, state FROM sessions ORDER BY vendor_session_id").all(),
+      });
+      const [author, reviewer] = await Promise.all([
+        whoami(first.client, diagnostic(authorHook)), whoami(second.client, diagnostic(reviewerHook)),
+      ]);
       expect(author.vendor_session_id).toBe("fixture-author");
       expect(reviewer.vendor_session_id).toBe("fixture-reviewer");
       expect(author.cwd).toBe(setup.cwd);

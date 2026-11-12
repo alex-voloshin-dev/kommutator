@@ -873,3 +873,19 @@ sent to kommutator-feedback; unread recipient deliveries are not claimed as read
 Issue #15 is closed. Issue #9 remains open: isolated timing outlier causality is unknown.
 Day-long reliability, Windows reboot, physical-subnet, Work/native wake and other-platform
 acceptance gates remain open.
+
+### 2026-11-12 — subsequent documentation CI registration failure (#19)
+
+After publication, documentation commit 159847a triggered branch run 43129502651,
+which failed the lifecycle fixture's initial paired whoami at line 220: vendor
+session not registered yet. It did not reach the first-shim-exit assertions.
+Parallel PR run 43129509884 passed. No CI rerun was requested. This does not alter
+the earlier successful qualification records or establish a 300 ms timing failure.
+
+A disposable IPC server rejecting ipc.hello deterministically demonstrated that
+the actual hook still exits 0 with empty stdout/stderr and records outcome failed.
+The fixture's original exit assertion therefore does not prove registration. The
+original CI cause and which of the two roots failed remain unknown; issue #19
+tracks this separately from latency #9. Follow-up diagnostic coverage retains
+single attempts, timing budgets and identity assertions, and reports only bounded
+fixture hook outcomes and explicitly selected hub identity fields on failure.
