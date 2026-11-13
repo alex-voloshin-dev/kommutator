@@ -1194,3 +1194,27 @@ See [versioned evidence](evidence/2026-11-13-mutation-reconciliation.json) and
 installation and production deployment are not claimed by this candidate qualification.
 Availability #22, historical #9/#19 triggers and day-long/subnet/reboot/native-wake gates
 remain open. Source schemas, replay authority and hook 140/90 ms deadlines remain intact.
+
+## 2026-11-13: 0.13.0 publication and local rollout
+
+Release source 983df24aa9c6d0361a81e6ebf495397263f73a3a passed branch, PR and tag CI;
+PR #24 merged at 92246f06bfe33a64b9a570e58c8b581aa714c15d. Exact archives were published
+before catalog merge and downloaded anonymously with matching SHA-256 sidecars. Real
+clean-profile Claude Code 2.1.323 and Codex CLI 0.167.2 installations launched MCP 0.13.0,
+exposed operation_status, used Node 26.13.0 and passed private setup/origin rejection probes.
+The Codex CLI reported its expected temporary-home helper-alias warning; installation and
+MCP probes succeeded. These are synthetic installation probes, not real model conversations.
+
+The updater timer was stopped, active updater drained and exclusive lock verified free
+before publication. Ordinary deployment completed without manual recovery: hub package
+and daemon 0.13.0, healthy container, connected hub, active caller and empty outbox. The
+hub restarted at 00:20:53 UTC and agentd at 00:20:59 UTC. Both pre-upgrade backups passed
+quick_check with mode 0600; live daemon schema 4 also passed quick_check. Checkpoint is
+idle/applied 0.13.0, timer active. The existing chat MCP remains compatible 0.12.6; no hot
+update or new-tool availability in that old process is claimed.
+
+The release was announced in kommutator-feedback. Main was fast-forwarded after a fresh
+backup; all three user-local files remained byte-identical. The merged feature worktree
+was removed; the retained deployment checkout remains in place. See
+[rollout evidence](evidence/2026-11-13-mutation-reconciliation-rollout.json). Issues
+#9, #19, #22 and #25 remain open with the qualification limits recorded above.

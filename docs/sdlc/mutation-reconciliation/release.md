@@ -53,8 +53,13 @@ Independent correctness/security and external review approved the implementation
 Independent QA passed ordered build/typecheck and 647 workspace tests. The final 0.13.0
 release gate passed ordered build/typecheck, 647 workspace and 140 script tests, dependency
 audit, export integrity, both clean-PATH smokes and synthetic exported E2E. Generated
-catalog hashes match the prepared archives. Public installation and deployment are
-recorded separately after publication.
+catalog hashes match the published archives. Branch/PR/tag CI and anonymous downloads
+passed. Real clean-profile Claude Code 2.1.323 and Codex CLI 0.167.2 installs launched MCP
+0.13.0 with bundled Node 26.13.0, the new tool and private setup/origin protection.
+The ordinary updater deployed hub and daemon 0.13.0; both database backups passed
+quick_check with mode 0600, live daemon schema 4 passed quick_check, health is green,
+caller active, hub connected and outbox empty. Checkpoint is idle/applied 0.13.0 and
+timer restored. The live chat MCP remains compatible 0.12.6; no hot client update is claimed.
 The first release gate passed 647 workspace and 140 script tests, integrity and clean-PATH
 smokes, then timed out on owner-2 set_status in exported E2E. Both hook registrations were
 intact. A bounded diagnostic replay passed 61 calls but did not establish the cause;

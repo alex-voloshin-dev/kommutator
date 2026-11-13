@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-12. Released baseline: [0.12.6](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.12.6).
+Updated 2026-11-13. Released baseline: [0.13.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.13.0).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -12,14 +12,16 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
 
-Candidate 0.13.0 adds durable owner-scoped send/ack outcome lookup without resubmission.
-Independent review and QA passed; final local qualification passed 647 workspace and
-140 script tests, integrity, clean-PATH and exported E2E checks. Publication, public
-installation and deployment are still separate gates at this candidate commit. See
-[release notes](sdlc/mutation-reconciliation/release.md). The first exported E2E timeout
-is retained in #25; a successful diagnostic replay and final gate do not establish its cause.
+Published 0.13.0 adds durable owner-scoped send/ack outcome lookup without resubmission.
+Independent review and QA, 647 workspace and 140 script tests, integrity, clean-PATH and
+exported E2E checks passed. Branch/PR/tag CI, anonymous public downloads/hashes and real
+clean-profile Claude/Codex installations passed. Local hub and daemon 0.13.0 are healthy;
+backups and schema-4 migration verified, caller active, outbox empty, updater timer active.
+The current live MCP remains compatible 0.12.6; installed clean-profile MCP 0.13.0 was
+verified separately. See [release notes](sdlc/mutation-reconciliation/release.md).
+The first exported E2E timeout is retained in #25; successful repeats do not establish its cause.
 
-Published 0.12.6 fixes the demonstrated accepted-registration race for unbound manual
+Previous 0.12.6 qualification (historical): the release fixes the demonstrated accepted-registration race for unbound manual
 Claude shims using a bounded exact-owner wait. It also fences shutdown/disconnect
 continuations and adds a separate synthetic CI phase sample. Baseline negative
 control fails; the original delayed-registration process control passes without
@@ -48,7 +50,7 @@ remains open; a healthy short probe is not a root-cause fix.
 | --- | --- | --- |
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
-| 1 | [#22: recurrent hub availability](https://github.com/alex-voloshin-dev/kommutator/issues/22) and ambiguous timeout outcomes | Correlate simultaneous endpoint/resource/kernel observations; define request-specific reconciliation before retries or blocked-outbox disposition. No blanket queue deletion or kernel tuning |
+| 1 | [#22: recurrent hub availability](https://github.com/alex-voloshin-dev/kommutator/issues/22) | 0.13.0 adds request-specific send/ack reconciliation, not an availability fix. Correlate simultaneous endpoint/resource/kernel observations; blocked-outbox disposition still needs separate design. No blanket queue deletion or kernel tuning |
 | 2 | [#25: exported E2E status timeout](https://github.com/alex-voloshin-dev/kommutator/issues/25) | First 0.13.0 candidate gate timed out on owner-2 set_status despite intact registration. One diagnostic replay passed; retain failed IPC dispatch/response phases before assigning a cause or linking it to #19/#22 |
 | Ongoing | Feedback and release maintenance | Investigate substantive feedback, preserve receipt semantics, validate fixes and announce qualified releases in `kommutator-feedback`; deploy and verify the local hub and daemon under the existing maintainer authorization |
 
@@ -64,10 +66,10 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Core and identity | Hub, daemon, MCP/hooks, boards and dashboard; live macOS two-Claude native exchange; same-host identity and resume fencing; 0.12.2 durable retirement recovery and pre-enqueue address validation | Preserve these contracts; synthetic recovery coverage is separate from every vendor/environment combination |
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
-| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.12.6 deployed; #15 restart fix completed the ordinary updater path without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
+| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.13.0 deployed; ordinary updater completed without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
 | Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.12.6 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
-| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.12.6 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
+| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.13.0 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
 
 ## Acceptance work that needs a suitable environment

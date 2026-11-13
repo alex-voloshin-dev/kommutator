@@ -1,0 +1,112 @@
+{
+  "date_utc": "2026-11-13",
+  "version": "0.13.0",
+  "release_commit": "983df24aa9c6d0361a81e6ebf495397263f73a3a",
+  "merge_commit": "92246f06bfe33a64b9a570e58c8b581aa714c15d",
+  "pr": 24,
+  "published_at": "2026-11-13T00:18:29Z",
+  "ci": {
+    "branch_release": 43335552565,
+    "pr_release": 43335560748,
+    "tag_release": 43335556324,
+    "branch_secrets": 43335552592,
+    "pr_secrets": 43335560965,
+    "tag_secrets": 43335556476,
+    "result": "all passed"
+  },
+  "public_assets": [
+    {
+      "asset": "kommutator-v0.13.0-linux-x64.tar.gz",
+      "anonymous_download": true,
+      "sha256": "63f054a262c0cfef28ffc3168ada128c29084723d7e0b3f6fde004799a65780d",
+      "verified": true
+    },
+    {
+      "asset": "kommutator-v0.13.0-claude-linux-x64.zip",
+      "anonymous_download": true,
+      "sha256": "c910f2d55497702b1fc532dc0446aee9af0c60c79a20e5993a8b719033011293",
+      "verified": true
+    }
+  ],
+  "native_installs": [
+    {
+      "vendor": "claude",
+      "nativeInstaller": "2.1.323 (Claude Code)",
+      "plugin": "0.13.0",
+      "mcp": "0.13.0",
+      "node": "v26.13.0",
+      "privateSetup": true,
+      "originRejected": true,
+      "realConversation": false
+    },
+    {
+      "vendor": "codex",
+      "nativeInstaller": "codex-cli 0.167.2",
+      "plugin": "0.13.0",
+      "mcp": "0.13.0",
+      "node": "v26.13.0",
+      "privateSetup": true,
+      "originRejected": true,
+      "realConversation": false
+    }
+  ],
+  "local_hub": {
+    "image": "kommutator-hub:release-0.13.0",
+    "state": "running",
+    "health": "healthy",
+    "started_at": "2026-11-13T00:20:53.557144874Z",
+    "package_version": "0.13.0"
+  },
+  "local_daemon": {
+    "pid": 1207987,
+    "version": "0.13.0",
+    "started_at": "2026-11-13T00:20:59.692Z",
+    "runtime_contract": 3,
+    "health": "healthy",
+    "hub_connected": true,
+    "caller": "active",
+    "outbox_depth": 0
+  },
+  "loaded_chat_mcp": {
+    "version": "0.12.6",
+    "compatible": true,
+    "hot_update": false
+  },
+  "checkpoint": {
+    "status": "idle",
+    "applied_version": "0.13.0",
+    "release_commit": "983df24aa9c6d0361a81e6ebf495397263f73a3a"
+  },
+  "database_checks": [
+    {
+      "kind": "daemon_backup",
+      "mode": "0o600",
+      "quick_check": "ok",
+      "schema": 3
+    },
+    {
+      "kind": "hub_backup",
+      "mode": "0o600",
+      "quick_check": "ok",
+      "schema": 6
+    },
+    {
+      "kind": "daemon_current",
+      "mode": "0o600",
+      "quick_check": "ok",
+      "schema": 4
+    }
+  ],
+  "updater_timer": "active",
+  "announcement_message_id": "9a804a54-7eb8-4147-8c4d-caec1523d3ac",
+  "not_proven": [
+    "cause of initial exported E2E timeout (#25)",
+    "underlying hub availability fix (#22)",
+    "all historical #9/#19 triggers",
+    "day-long reliability",
+    "physical subnet allow/deny",
+    "Windows unattended reboot",
+    "native Work/idle wake",
+    "other target platforms"
+  ]
+}
