@@ -24,6 +24,7 @@ it.each([
   ["ECONNRESET", undefined, "ECONNRESET", "ENOENT"],
   [undefined, "ECONNRESET", "ECONNREFUSED"],
   [-32031, -32031, "ENOENT"],
+  [undefined, -32032, "ENOENT"],
 ])("confirms absence after reset without replaying shutdown", async (...responses) => {
   const f = fixture(responses);
   await confirmDaemonStopped(f.request, f.timing);
@@ -32,7 +33,7 @@ it.each([
   expect(f.calls.every(c => c.budget > 0 && c.budget <= 2_000)).toBe(true);
 });
 
-it.each([undefined, "ECONNRESET", -32031])("refuses a listener that keeps responding/resetting (%s)", async response => {
+it.each([undefined, "ECONNRESET", -32031, -32032])("refuses a listener that keeps responding/resetting (%s)", async response => {
   const f = fixture(Array.from({ length: 100 }, () => response));
   await expect(confirmDaemonStopped(f.request, f.timing)).rejects.toThrow("not confirmed within 2 seconds");
   expect(f.calls.filter(c => c.method === "daemon.shutdown")).toHaveLength(1);

@@ -142,7 +142,7 @@ async function fixture() {
       // SDK close has two 2-second grace periods before killing its owned child.
       await step("MCP close", () => client.close(), 5000);
       const management = new IpcClient({ endpoint: join(home, "agentd.sock"), timeoutMs: 1000, lazyStart: false,
-        hello: () => ({ client: "cli", protocol_version: PROTOCOL_VERSION, pid: process.pid, cwd }) });
+        hello: () => ({ client: "cli", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: process.pid, cwd }) });
       try {
         await step("daemon.shutdown", async () => {
           try { await management.call("daemon.shutdown"); }
@@ -257,7 +257,7 @@ it("a running MCP resolves resumed hook identity despite its stale launch ID, th
     await expect.poll(() => f.db.prepare("SELECT state FROM sessions WHERE id = ?").get(back.id),
       { timeout: 1_000 }).toEqual({ state: "gone" });
     expect(status.error, status.text).toBe(false);
-    expect(JSON.parse(status.text)).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
+    expect(JSON.parse(status.text)).toMatchObject({ runtime_contract: 4, daemon: { running: true } });
     expect((await f.call("whoami")).error).toBe(true);
     expect(JSON.parse((await f.call("setup_status")).text)).toMatchObject({ configured: true });
   }, () => f.close());

@@ -3,7 +3,7 @@ import * as z from "zod";
 import { Session, Notifications } from "@kommutator/protocol";
 import type { LocalSession } from "./adapters/types.js";
 
-export const STATE_SCHEMA_VERSION = 4;
+export const STATE_SCHEMA_VERSION = 5;
 
 export { processStart, processExists } from "./process.js";
 
@@ -43,7 +43,7 @@ export class Registry {
     this.db = new DatabaseSync(path);
     this.db.exec("PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     const version = z.object({ user_version: z.number() }).parse(this.db.prepare("PRAGMA user_version").get()).user_version;
-    if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== STATE_SCHEMA_VERSION) { this.db.close(); throw new Error("unsupported agentd state schema"); }
+    if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== STATE_SCHEMA_VERSION) { this.db.close(); throw new Error("unsupported agentd state schema"); }
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS sessions (local_key TEXT PRIMARY KEY, record TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS outbox (

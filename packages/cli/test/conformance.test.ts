@@ -25,7 +25,7 @@ async function fixture() {
   await core.start();
   async function session(id: string) {
     const hookPeer = core.peer();
-    const hello = { protocol_version: PROTOCOL_VERSION, pid: 8001, ppid: 8000, cwd: "/same/project", vendor: "claude-code", vendor_session_id: id };
+    const hello = { protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 8001, ppid: 8000, cwd: "/same/project", vendor: "claude-code", vendor_session_id: id };
     await core.request(hookPeer, "ipc.hello", { ...hello, client: "hook" });
     const shim = core.peer();
     await core.request(shim, "ipc.hello", { ...hello, pid: 8002, client: "shim" });
@@ -95,7 +95,7 @@ it("recovers a retired ClaudePluginClient through real daemon and hub handlers w
     dbPath: ":memory:", transport, processStart: async () => birth, processExists: () => false,
     adapters: [{ vendor: "claude-code", capability: "hook", isAlive: async () => true, deliver: async () => ({ outcome: "inbox" }) }] });
   cleanup.push(() => core.close()); await core.start();
-  const hello: Hello = { client: "hook", protocol_version: PROTOCOL_VERSION, pid: 8001, ppid: 8000,
+  const hello: Hello = { client: "hook", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 8001, ppid: 8000,
     cwd: "/same/project", vendor: "claude-code", vendor_session_id: "recover-composed", owner_generation: 1 };
   const first = core.peer(); await core.request(first, "ipc.hello", hello);
   await core.request(first, "session.upsert", { op: "update", session: { role: "reviewer" } });

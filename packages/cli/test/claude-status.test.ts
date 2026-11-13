@@ -4,7 +4,7 @@ import type { ActiveClaudeRegistration } from "../src/plugin-context.js";
 
 const registration = (generation = 1): ActiveClaudeRegistration => ({
   birth: "process-birth", generation: `process-birth:${generation}`,
-  hello: { client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: "conversation",
+  hello: { client: "hook", protocol_version: 1, runtime_contract: 4, vendor: "claude-code", vendor_session_id: "conversation",
     pid: 456, ppid: 123, owner_generation: generation, cwd: "/project", token: "never-forward-this" },
 });
 const healthy = { health: { state: "healthy", issues: [] }, hub: { connected: true }, outbox_depth: 0 };

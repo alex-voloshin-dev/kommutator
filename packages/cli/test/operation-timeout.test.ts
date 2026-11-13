@@ -22,7 +22,7 @@ it("reconciles send and ack after the real IPC client times out without resubmit
   } };
   const daemon = await startDaemon({ home: directory, config: { host: "host", hub: "http://localhost:8787", key: "fixture-test-key-long" }, transport, processStart: async () => "birth", isAlive: async () => true });
   const core = daemon.core;
-  const client = new IpcClient({ endpoint: daemon.paths.ipc, timeoutMs: 100, retries: 0, hello: () => ({ client: "shim", vendor: "codex", vendor_session_id: "root", pid: 123, cwd: "/repo", protocol_version: PROTOCOL_VERSION }) });
+  const client = new IpcClient({ endpoint: daemon.paths.ipc, timeoutMs: 100, retries: 0, hello: () => ({ client: "shim", vendor: "codex", vendor_session_id: "root", pid: 123, cwd: "/repo", protocol_version: PROTOCOL_VERSION, runtime_contract: 4 }) });
   try {
     const identity = z.object({ session: RegisteredSession }).parse(await client.call("whoami"));
     const sendId = randomUUID(); delay = "message.send";
@@ -55,10 +55,10 @@ it("prepares a fresh bound Claude hello after late hook registration before send
     for (const [index, method] of ["message.send", "receipt.mark"].entries()) {
       const id = `late-${index}`; const pid = 123 + index;
       const client = new IpcClient({ endpoint: daemon.paths.ipc, timeoutMs: 500, retries: 0,
-        hello: () => ({ client: "shim", vendor: "claude-code", vendor_session_id: id, pid: 1000 + index, ppid: pid, cwd: "/repo", protocol_version: PROTOCOL_VERSION }) }); clients.push(client);
+        hello: () => ({ client: "shim", vendor: "claude-code", vendor_session_id: id, pid: 1000 + index, ppid: pid, cwd: "/repo", protocol_version: PROTOCOL_VERSION, runtime_contract: 4 }) }); clients.push(client);
       await expect(client.call("whoami")).rejects.toThrow(/binding|owner|session/i);
       const hook = daemon.core.peer();
-      await daemon.core.request(hook, "ipc.hello", { client: "hook", vendor: "claude-code", vendor_session_id: id, pid: 2000 + index, ppid: pid, cwd: "/repo", protocol_version: PROTOCOL_VERSION });
+      await daemon.core.request(hook, "ipc.hello", { client: "hook", vendor: "claude-code", vendor_session_id: id, pid: 2000 + index, ppid: pid, cwd: "/repo", protocol_version: PROTOCOL_VERSION, runtime_contract: 4 });
       await client.call("whoami"); // Existing legacy path binds, but cannot mutate its original immutable snapshot.
       const operation_id = randomUUID();
       const params = method === "message.send" ? { message: { to: ["all"], body: "late owner", origin: "agent", force_wake: false } } : { ids: ["unknown-message"], state: "read" };

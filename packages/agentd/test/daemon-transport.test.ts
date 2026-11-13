@@ -73,8 +73,8 @@ describe("production IPC and hub link", () => {
     await until(() => daemon.core.transport.connected);
     const first = await ipc(daemon.paths.ipc);
     const second = await ipc(daemon.paths.ipc);
-    await first.call("ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, pid: 1000, ppid: 55, vendor: "claude-code", vendor_session_id: "a", cwd: "/repo" });
-    await second.call("ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 1001, ppid: 55, vendor: "claude-code", vendor_session_id: "a", cwd: "/repo" });
+    await first.call("ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 1000, ppid: 55, vendor: "claude-code", vendor_session_id: "a", cwd: "/repo" });
+    await second.call("ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 1001, ppid: 55, vendor: "claude-code", vendor_session_id: "a", cwd: "/repo" });
     const identity = z.object({ session: z.object({ id: z.string(), handle: z.string() }) }).parse(await second.call("whoami"));
     expect(identity.session.handle).toMatch(/@mac$/);
     await closeSocket(first.socket);
@@ -98,7 +98,7 @@ describe("production IPC and hub link", () => {
     const winner = winners[0];
     if (winner?.status !== "fulfilled") throw new Error("no winning daemon");
     const client = await ipc(winner.value.paths.ipc);
-    await client.call("ipc.hello", { client: "cli", protocol_version: PROTOCOL_VERSION, pid: process.pid });
+    await client.call("ipc.hello", { client: "cli", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: process.pid });
     expect(await client.call("daemon.status")).toBeDefined();
   });
   it("concurrent stale-socket reclaimers do not unlink the winning socket", async () => {
@@ -115,7 +115,7 @@ describe("production IPC and hub link", () => {
     const winner = winners[0];
     if (winner?.status !== "fulfilled") throw new Error("no winning daemon");
     const client = await ipc(endpoint);
-    await client.call("ipc.hello", { client: "cli", protocol_version: PROTOCOL_VERSION, pid: process.pid });
+    await client.call("ipc.hello", { client: "cli", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: process.pid });
     expect(await client.call("daemon.status")).toBeDefined();
   });
   it("authenticates with Bearer, correlates replies, and repeats hello before reconnect sync", async () => {

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { IpcHello, PROTOCOL_VERSION } from "@kommutator/protocol/hello";
+import { IpcHello, PROTOCOL_VERSION, RUNTIME_CONTRACT } from "@kommutator/protocol/hello";
 import { saveClaudeRegistration, activeClaudeRegistration, forgetClaudeRegistration, type ActiveClaudeRegistration } from "./plugin-context.js";
 import type { Hello } from "./ipc-client.js";
 
@@ -11,7 +11,7 @@ export const Payload = z.object({
 });
 export function hookHello(payload: z.infer<typeof Payload>, env: NodeJS.ProcessEnv = process.env, vendor?: "codex"): Hello {
   return IpcHello.parse({
-    client: "hook", protocol_version: PROTOCOL_VERSION, pid: process.pid, ppid: process.ppid,
+    client: "hook", protocol_version: PROTOCOL_VERSION, runtime_contract: RUNTIME_CONTRACT, pid: process.pid, ppid: process.ppid,
     cwd: payload.cwd ?? process.cwd(), vendor_session_id: payload.session_id,
     vendor: vendor ?? (env.CLAUDE_CODE_MESSAGING_SOCKET || env.CLAUDE_CODE_SESSION_ID ? "claude-code" : "other"),
     ...(!vendor && env.CLAUDE_CODE_MESSAGING_SOCKET ? { endpoint: env.CLAUDE_CODE_MESSAGING_SOCKET } : {}),

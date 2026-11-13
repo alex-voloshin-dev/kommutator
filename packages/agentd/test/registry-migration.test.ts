@@ -61,6 +61,22 @@ it.each([1, 2, 3])("creates schema4 observations from schema%i without rewriting
     const current = new Registry(path);
     expect(current.outbox()).toEqual(before);
     expect(current.db.prepare("SELECT * FROM mutation_observations").all()).toEqual([]);
-    expect(current.db.prepare("PRAGMA user_version").get()).toMatchObject({ user_version: 4 }); current.close();
+    expect(current.db.prepare("PRAGMA user_version").get()).toMatchObject({ user_version: STATE_SCHEMA_VERSION }); current.close();
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+it("preserves schema4 owner, outbox and observation bytes when installing schema5 fence", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "kom-birth-migration-")); const path = join(directory, "state.db");
+  try {
+    const old = new Registry(path);
+    old.save({ key: "legacy", session: Session.parse({ id: "history", host: "host", name: "legacy", vendor: "claude-code" }), pid: 42, processStartedAt: "Tue Nov 10 07:01:09 2026", acked: 12, stopBlocked: true });
+    const id = old.enqueue("legacy", "message.send", { idempotency_key: "same-replay", message: { body: "keep" } }, 1);
+    old.db.prepare("INSERT INTO mutation_observations VALUES (?,?,?,?,?,?,?,?,?,?)").run("operation", "owner", "history", "message.send", id, 1, 1, "queued", null, null);
+    const before = { records: old.all(), outbox: old.outbox(), operations: old.db.prepare("SELECT * FROM mutation_observations").all() };
+    old.db.exec("PRAGMA user_version=4"); old.close();
+    const current = new Registry(path);
+    expect(current.all()).toEqual(before.records); expect(current.outbox()).toEqual(before.outbox);
+    expect(current.db.prepare("SELECT * FROM mutation_observations").all()).toEqual(before.operations);
+    expect(current.db.prepare("PRAGMA user_version").get()).toMatchObject({ user_version: 5 }); current.close();
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

@@ -308,7 +308,7 @@ it("answers strict CLI runtime compatibility without reconciliation, flush or ow
   f.transport.connected = false; await f.submit(shim); f.transport.connected = true;
   const before = f.core.registry.outbox(); const calls = f.calls.length;
   const cli = f.core.peer(); await f.core.request(cli, "ipc.hello", { client: "cli", pid: 456, cwd: "/repo", protocol_version: PROTOCOL_VERSION });
-  expect(await f.core.request(cli, "daemon.runtime", {})).toMatchObject({ runtime_contract: 3, daemon: { version: expect.any(String) } });
+  expect(await f.core.request(cli, "daemon.runtime", {})).toMatchObject({ runtime_contract: 4, daemon: { version: expect.any(String) } });
   await expect(f.core.request(cli, "daemon.runtime", { caller: "other" })).rejects.toThrow(/invalid/);
   await expect(f.core.request(shim, "daemon.runtime", {})).rejects.toThrow(/CLI/);
   expect(f.calls).toHaveLength(calls); expect(f.core.registry.outbox()).toEqual(before);

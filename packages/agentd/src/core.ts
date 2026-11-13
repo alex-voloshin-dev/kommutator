@@ -1,4 +1,4 @@
-import { DaemonRuntimeParams, OperationSubmit, OperationStatusParams } from "@kommutator/protocol";
+import { RUNTIME_CONTRACT, DaemonRuntimeParams, OperationSubmit, OperationStatusParams } from "@kommutator/protocol";
 import { Operations, operationOwner, matchesOwner, type OperationOwner } from "./operations.js";
 import { RELEASE_VERSION, DaemonStatusParams } from "@kommutator/protocol";
 import { randomUUID, createHash } from "node:crypto";
@@ -16,6 +16,7 @@ import { DaemonStoppingError, OfflineError, RpcError } from "./errors.js";
 import type { HubTransport } from "./hub-link.js";
 import { Registry, processStart, processExists, type GoneReason, type LocalRecord, type Delivery, type OutboxEntry } from "./registry.js";
 import { realClock, WakeScheduler, type Clock } from "./wake.js";
+import { compareProcessBirth } from "./process.js";
 import { Projects } from "./project.js";
 
 export type Hello = z.infer<(typeof Methods)["ipc.hello"]>;
@@ -135,7 +136,9 @@ export class DaemonCore {
       this.diagnostic("session.liveness-unverified", record, "process-birth-unavailable");
       return { alive: undefined, reason: "process-birth-unavailable" };
     }
-    if (birth !== record.processStartedAt) return { alive: false, reason: "process-birth-changed" };
+    const comparison = compareProcessBirth(birth, record.processStartedAt);
+    if (comparison === "different") return { alive: false, reason: "process-birth-changed" };
+    if (comparison === "unverified") return { alive: undefined, reason: "process-birth-format-unverified" };
     try { if (await this.adapter(record).isAlive(record)) return { alive: true, reason: "verified-owner" }; }
     catch { /* Adapter unavailability alone cannot retire an OS process. */ }
     if ((this.options.processExists ?? processExists)(record.pid) === false) return { alive: false, reason: "process-exited" };
@@ -248,6 +251,10 @@ export class DaemonCore {
       if (!vendorId || !pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
       await this.reconcileRetirements(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
       this.requireOpen();
+      if (this.registry.all().some(record => record.session.vendor === vendor && record.pid === pid &&
+        compareProcessBirth(record.processStartedAt, birth) === "unverified")) {
+        throw new RpcError(-32020, "Legacy Claude owner requires a new OS process after upgrading all hooks and MCP; use /exit, then claude --resume");
+      }
       const owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
       const latestGeneration = Math.max(0, ...owned.map(record => record.ownerGeneration ?? 0));
       const generation = hello.owner_generation ?? 0;
@@ -273,12 +280,8 @@ export class DaemonCore {
         const prior = candidates[0];
         if (prior?.pid && prior.processStartedAt && prior.session.cwd === hello.cwd && prior.session.project_key === project) {
           const observedBirth = await (this.options.processStart ?? processStart)(prior.pid);
-          let provenDead = false;
-          if (observedBirth === undefined) {
-            try { process.kill(prior.pid, 0); }
-            catch (error) { provenDead = Boolean(error && typeof error === "object" && "code" in error && error.code === "ESRCH"); }
-          }
-          if (provenDead || (observedBirth !== undefined && observedBirth !== prior.processStartedAt)) existing = prior;
+          const provenDead = observedBirth === undefined && (this.options.processExists ?? processExists)(prior.pid) === false;
+          if (provenDead || compareProcessBirth(observedBirth, prior.processStartedAt) === "different") existing = prior;
         }
       }
       if (existing) key = existing.key;
@@ -451,6 +454,9 @@ export class DaemonCore {
       if (peer.hello) throw new RpcError(-32600, "ipc.hello may only be sent once per connection");
       const parsed = Methods["ipc.hello"].safeParse(value);
       if (!parsed.success) throw new RpcError(-32602, "invalid ipc.hello parameters");
+      if (parsed.data.vendor === "claude-code" && parsed.data.client !== "cli" && parsed.data.runtime_contract !== RUNTIME_CONTRACT) {
+        throw new RpcError(-32601, `Incompatible Claude runtime contract: expected ${RUNTIME_CONTRACT}, observed ${parsed.data.runtime_contract ?? "missing"}; upgrade all hooks/MCP and restart the client process`);
+      }
       peer.hello = parsed.data;
       if (parsed.data.protocol_version !== PROTOCOL_VERSION) this.report("IPC protocol version differs from daemon");
       if (parsed.data.client === "cli") return { bound: false };
@@ -499,7 +505,7 @@ export class DaemonCore {
     if (method === "daemon.runtime") {
       this.requireCli(peer);
       if (!DaemonRuntimeParams.safeParse(value).success) throw new RpcError(-32602, "invalid daemon.runtime parameters");
-      return { runtime_contract: 3, daemon: { version: RELEASE_VERSION } };
+      return { runtime_contract: RUNTIME_CONTRACT, daemon: { version: RELEASE_VERSION } };
     }
     if (method === "daemon.status" || method === "status") {
       const parsed = DaemonStatusParams.safeParse(value);
@@ -881,8 +887,13 @@ export class DaemonCore {
       if (!page.more) break;
       cursor = page.cursor;
     }
+    // Retained unknown legacy owners are not authority to use a native endpoint.
+    // Probe after hub I/O and re-read the generation before any delivery bookkeeping.
+    let birth: string | undefined;
+    try { birth = expected.pid ? await (this.options.processStart ?? processStart)(expected.pid) : undefined; }
+    catch { /* Unavailable process evidence leaves delivery pending and unread. */ }
     record = this.registry.get(key);
-    if (!sameGeneration(record) || record.session.wake !== "on") return;
+    if (!sameGeneration(record) || record.session.wake !== "on" || compareProcessBirth(birth, expected.birth) !== "same") return;
     for (const delivery of pending) if (!unread.has(delivery.message.id)) this.registry.acted(record, delivery.seq);
     const qualifying = pending.filter((delivery) => unread.has(delivery.message.id));
     const selected = qualifying[0];
@@ -919,7 +930,7 @@ export class DaemonCore {
       record.ownerGeneration === caller.owner_generation);
     let state: "active" | "gone" | "unavailable" | "conflicting" | "unverified" = "unavailable";
     let record: LocalRecord | undefined;
-    if (birth === undefined) state = "unverified";
+    if (compareProcessBirth(birth, caller.process_started_at) === "unverified") state = "unverified";
     else if (birth !== caller.process_started_at || matching.length > 1 ||
       records.some(item => (item.ownerGeneration ?? 0) > (caller.owner_generation ?? 0))) state = "conflicting";
     else if (matching.length === 1) {
@@ -945,7 +956,7 @@ export class DaemonCore {
       ...(outbox.some((entry) => entry.error) ? ["Outbox has blocked entries; inspect their error before deciding whether to resend."] : []),
     ];
     return {
-      runtime_contract: 3, daemon: { pid: process.pid, version: RELEASE_VERSION, running: true }, hub: { connected: this.transport.connected },
+      runtime_contract: RUNTIME_CONTRACT, daemon: { pid: process.pid, version: RELEASE_VERSION, running: true }, hub: { connected: this.transport.connected },
       health: { state: issues.length ? "degraded" : "healthy", issues },
       outbox_depth: outbox.length,
       outbox: outbox.map((entry) => ({ id: entry.id, method: entry.method, age_ms: Math.max(0, this.clock.now() - entry.created_at), error: entry.error })),

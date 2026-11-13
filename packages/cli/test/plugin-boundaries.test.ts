@@ -49,7 +49,7 @@ it("never follows an authenticated setup redirect or writes a rejected configura
   expect(forwarded).toBe(0); expect(await readdir(home)).not.toContain("config.json");
 });
 it("two independent setup servers commit one complete config and never overwrite the winner", async () => {
-  const hub = await fakeHub((_req, res) => { res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify({ protocol_version: 1, sessions: [] })); });
+  const hub = await fakeHub((_req, res) => { res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify({ protocol_version: 1, runtime_contract: 4, sessions: [] })); });
   const [a, b] = await Promise.all([form(), form()]);
   const results = await Promise.all([post(a, hub, "first-private-key"), post(b, hub, "second-private-key")]);
   expect(results.map(result => result.status).sort()).toEqual([200, 400]);
@@ -58,7 +58,7 @@ it("two independent setup servers commit one complete config and never overwrite
   expect((await readdir(home)).filter(path => path.endsWith(".tmp"))).toEqual([]);
 });
 it("preserves a malformed config created while a setup form is open", async () => {
-  const hub = await fakeHub((_req, res) => { res.end(JSON.stringify({ protocol_version: 1, sessions: [] })); });
+  const hub = await fakeHub((_req, res) => { res.end(JSON.stringify({ protocol_version: 1, runtime_contract: 4, sessions: [] })); });
   const url = await form();
   await writeFile(join(home, "config.json"), "malformed concurrent file");
   expect((await post(url, hub, "private-fixture-key")).status).toBe(400);
@@ -78,7 +78,7 @@ it("concurrent root context writers cannot replace an established root and leave
 it("never returns a Claude registration for another root and removes replay authority on SessionEnd", async () => {
   const { saveClaudeRegistration, claudeRegistration, forgetClaudeRegistration } = await import("../src/plugin-context.js");
   await savePluginContext("claude-code", "root-a", "/project");
-  await saveClaudeRegistration({ client: "hook", protocol_version: 1, pid: process.pid, ppid: process.pid, vendor: "claude-code", vendor_session_id: "root-a", cwd: "/project" });
+  await saveClaudeRegistration({ client: "hook", protocol_version: 1, runtime_contract: 4, pid: process.pid, ppid: process.pid, vendor: "claude-code", vendor_session_id: "root-a", cwd: "/project" });
   expect(await claudeRegistration("root-a", process.pid)).toMatchObject({ vendor_session_id: "root-a", ppid: process.pid, cwd: "/project" });
   await expect(claudeRegistration("root-b", process.pid)).rejects.toThrow("unavailable or expired");
   await forgetClaudeRegistration("root-a", process.pid);
@@ -93,7 +93,7 @@ it("rejects saved registration after its observed owner exits", async () => {
   try {
     if (!child.pid) throw new Error("missing child pid");
     await savePluginContext("claude-code", "dead-owner", "/project");
-    await saveClaudeRegistration({ client: "hook", protocol_version: 1, pid: process.pid, ppid: child.pid, vendor: "claude-code", vendor_session_id: "dead-owner", cwd: "/project" });
+    await saveClaudeRegistration({ client: "hook", protocol_version: 1, runtime_contract: 4, pid: process.pid, ppid: child.pid, vendor: "claude-code", vendor_session_id: "dead-owner", cwd: "/project" });
     expect((await claudeRegistration("dead-owner", child.pid)).ppid).toBe(child.pid);
     const ended = new Promise<void>(resolve => child.once("close", () => resolve()));
     child.kill("SIGTERM"); await ended;

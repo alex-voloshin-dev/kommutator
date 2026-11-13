@@ -6,7 +6,7 @@ it("shares the canonical hello schema and constants between both entrypoints", (
   expect(Methods["ipc.hello"]).toBe(IpcHello);
   expect(Vendor).toBe(HelloVendor);
   expect(PROTOCOL_VERSION).toBe(HelloVersion);
-  const minimal = { client: "hook", protocol_version: 1, pid: 1 };
+  const minimal = { client: "hook", protocol_version: 1, runtime_contract: 4, pid: 1 };
   expect(IpcHello.parse({ ...minimal, unknown: true })).toEqual(minimal);
   expect(IpcHello.parse({ ...minimal, owner_generation: Number.MAX_SAFE_INTEGER })).toMatchObject({ owner_generation: Number.MAX_SAFE_INTEGER });
   for (const invalid of [

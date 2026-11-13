@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-13",
+  "node": "26.13.0",
+  "baseline_source": "99fd84c02c3e485d785d83302b1516952c688bef",
+  "authority_artifact": {
+    "version": "0.14.0",
+    "commit": "63ffa4bd5ed7213c1b706511e60ea7d3b2c04033",
+    "embedded_version_verified": true,
+    "controls": [
+      {
+        "injection": "none",
+        "elapsed_ms": 142,
+        "exit": 0,
+        "committed_generations": 1
+      },
+      {
+        "injection": "ps delayed 500 ms",
+        "elapsed_ms": 187,
+        "exit": 0,
+        "committed_generations": 0
+      },
+      {
+        "injection": "async generation link delayed 500 ms",
+        "elapsed_ms": 191,
+        "exit": 0,
+        "committed_generations": 0
+      }
+    ],
+    "stdout": "empty",
+    "stderr": "empty"
+  },
+  "startup": {
+    "node": "v26.13.0",
+    "startupDelayMs": 2200,
+    "configuredTimeoutMs": 5000,
+    "spawnCount": 1,
+    "results": [
+      {
+        "attempt": 1,
+        "elapsedMs": 1761,
+        "ok": false,
+        "message": "Daemon unavailable; check kom init and kom daemon run"
+      },
+      {
+        "attempt": 2,
+        "elapsedMs": 2211,
+        "ok": true,
+        "value": {
+          "runtime_contract": 3,
+          "hub": {
+            "connected": true
+          }
+        }
+      }
+    ]
+  },
+  "shutdown": {
+    "node": "v26.13.0",
+    "baseline": "99fd84c02c3e485d785d83302b1516952c688bef",
+    "sourceVerified": true,
+    "shutdownCount": 1,
+    "methods": [
+      "ipc.hello",
+      "daemon.shutdown",
+      "ipc.hello",
+      "daemon.status"
+    ],
+    "errors": [
+      {
+        "method": "daemon.status",
+        "message": "Daemon disconnected; delivery state may be uncertain; do not resend blindly",
+        "code": null
+      }
+    ],
+    "result": {
+      "ok": false,
+      "message": "Daemon stop confirmation failed; no replacement started"
+    },
+    "elapsedMs": 9,
+    "independentProbe": {
+      "code": "ENOENT"
+    }
+  },
+  "correction": "Initial authority probe used stale 0.12.3 main-checkout dist; not valid 0.14.0 qualification. Values above use verified retained 0.14.0 build.",
+  "limitations": [
+    "Synthetic isolated fixtures, not actual vendor conversation acceptance",
+    "No causal attribution to every historical failure",
+    "No production service changes",
+    "Candidate and full gates pending"
+  ]
+}
