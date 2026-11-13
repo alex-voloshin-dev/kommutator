@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
 import { createConformanceHarness, RemoteRpcError } from "@kommutator/hub/testing";
-import { PROTOCOL_VERSION, Results, RegisteredSession } from "@kommutator/protocol";
+import { PROTOCOL_VERSION, Results, RegisteredSession, Methods } from "@kommutator/protocol";
 import { DaemonCore, type IpcPeer } from "../src/core.js";
 import { OfflineError, RpcError } from "../src/errors.js";
 import type { HubTransport } from "../src/hub-link.js";
@@ -1326,7 +1326,7 @@ it.each([true, false])("rejects malformed agent and human sends before enqueue, 
 it("preserves valid address forms and payload bytes in offline outbox entries", async () => {
   const { core } = await fixture({ online: false });
   const agent = await hook(core, "sender");
-  const to = [" Reviewer@Laptop ", "@ROLE:executor", "topic:project:github.com/team/repo", "all", "topic:legacy name"];
+  const to = [" Reviewer@Laptop ", "@ROLE:executor", "topic:project:github.com/team/repo", "all", "topic:legacy name", " @PROJECT "];
   expect(await core.request(agent.peer, "message.send", { message: { to, body: "offline" } })).toMatchObject({ status: "queued" });
   const entries = core.registry.outbox().filter(entry => entry.method === "message.send");
   expect(entries).toHaveLength(1);
@@ -1769,4 +1769,41 @@ it("does not extend an accepted-registration wait to a matching ticket admitted 
     firstBirth.resolve("birth"); laterBirth.resolve("birth");
     await first; await later; await identity;
   }
+});
+
+
+it("keeps offline project shorthand and selects peers only when the hub first accepts it", async () => {
+  const { core, transport, hub } = await fixture();
+  const sender = await hook(core, "project-sender", { project_key: "same" });
+  transport.disconnect();
+  expect(await send(core, sender.peer, "@project")).toMatchObject({ status: "queued" });
+  const queued = core.registry.outbox().find(entry => entry.method === "message.send");
+  expect(queued).toBeDefined();
+  expect(JSON.parse(queued!.params).message.to).toEqual(["@project"]);
+  const external = hub.connect("later");
+  const late = Results["session.upsert"].parse(external.request("session.upsert", Methods["session.upsert"].parse({ op: "register", reg_id: "register-late",
+    session: { host: "later", name: "late", vendor: "other", project_key: "same" } }))).session;
+  await transport.reconnect();
+  const inbox = Results["inbox.list"].parse(external.request("inbox.list", { session_id: late.id }));
+  expect(inbox.headers).toHaveLength(1);
+  expect(core.registry.outbox()).toHaveLength(0);
+  expect(transport.calls.filter(call => call.method === "message.send")).toHaveLength(1);
+});
+
+it("retains the same blocked project entry and replay key after an old hub rejects the syntax", async () => {
+  const { core, transport } = await fixture();
+  const sender = await hook(core, "project-blocked", { project_key: "same" });
+  transport.disconnect();
+  await send(core, sender.peer, "@project");
+  const queued = core.registry.outbox().find(entry => entry.method === "message.send");
+  const request = transport.request.bind(transport);
+  transport.request = async (method, params) => {
+    if (method === "message.send") throw new RpcError(-32602, "old hub rejects @project");
+    return request(method, params);
+  };
+  await transport.reconnect();
+  expect(core.registry.outbox().find(entry => entry.id === queued?.id)).toMatchObject({ params: queued?.params, error: expect.any(String) });
+  transport.request = request;
+  await core.flush();
+  expect(core.registry.outbox().find(entry => entry.id === queued?.id)).toMatchObject({ params: queued?.params, error: expect.any(String) });
 });

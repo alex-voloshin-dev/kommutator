@@ -57,6 +57,7 @@ function targetsFor(ctx: HubContext, id: string): string[] {
     .all(id) as unknown as TargetRow[];
   return rows.map((target) => {
     switch (target.target_type) {
+      case "project": return "@project";
       case "all": return "all";
       case "role": return `@role:${target.target_id}`;
       case "topic": return `topic:${target.target_id}`;
@@ -96,7 +97,7 @@ function parseTargets(message: Message): Address[] {
   }
 }
 
-function resolveRecipients(ctx: HubContext, sender: SessionRow, targets: Address[]): SessionRow[] {
+function resolveRecipients(ctx: HubContext, sender: SessionRow, targets: Address[], acceptedAt: string): SessionRow[] {
   const recipients = new Map<string, SessionRow>();
   const visible = `SELECT s.* FROM sessions s WHERE s.ended_at IS NULL AND s.state != 'gone'
     AND EXISTS (SELECT 1 FROM memberships theirs JOIN memberships ours ON ours.topic_id = theirs.topic_id
@@ -116,6 +117,17 @@ function resolveRecipients(ctx: HubContext, sender: SessionRow, targets: Address
         // A subscription survives absence; authorization is captured at send time.
         rows = ctx.db.prepare(`SELECT s.* FROM sessions s JOIN memberships m ON m.session_id = s.id WHERE m.topic_id = ?`)
           .all(topicId) as unknown as SessionRow[];
+        break;
+      }
+      case "project": {
+        if (sender.project_key == null) throw new RpcFault(errors.invalidParams,
+          "@project requires a registered project; inspect whoami and correct the session project registration");
+        const topicId = requireMembership(ctx, sender.id, `project:${sender.project_key}`);
+        const cutoff = Date.parse(acceptedAt) - 60_000;
+        rows = (ctx.db.prepare(`SELECT s.* FROM sessions s JOIN memberships m ON m.session_id = s.id
+          WHERE m.topic_id = ? AND s.project_key = ? AND s.id != ? AND s.ended_at IS NULL
+          AND s.state IN ('active', 'idle')`).all(topicId, sender.project_key, sender.id) as unknown as SessionRow[])
+          .filter(row => Number.isFinite(Date.parse(row.last_seen_at)) && Date.parse(row.last_seen_at) >= cutoff);
         break;
       }
       case "all":
@@ -172,7 +184,8 @@ export function sendMessage(
         .get(params.message.reply_to, sender.id, sender.id) as MessageRow | undefined;
       if (!parent) throw new RpcFault(errors.notFound, "reply parent is not accessible; use the full message ID returned by inbox or read (prefixes are not supported)");
     }
-    const recipients = resolveRecipients(ctx, sender, targets);
+    const acceptedAt = ctx.now();
+    const recipients = resolveRecipients(ctx, sender, targets, acceptedAt);
     if (parent && targets.some(target => target.kind === "session" && formatAddress(target) === parent.from_handle)
       && !recipients.some(recipient => recipient.handle === parent.from_handle && recipient.id === parent.from_session)) {
       throw new RpcFault(errors.conflict, "reply author handle no longer belongs to the original session");
@@ -186,7 +199,7 @@ export function sendMessage(
       thread_id: parent?.thread_id ?? id,
       reply_to: parent?.id ?? null,
       hops: parent ? parent.hops + 1 : 0,
-      created_at: ctx.now(),
+      created_at: acceptedAt,
     });
     ctx.db.prepare(`INSERT INTO messages
       (id, idempotency_key, from_session, from_handle, kind, priority, subject, body, thread_id, reply_to, hops, origin, force_wake, created_at)
@@ -198,6 +211,7 @@ export function sendMessage(
     const insertTarget = ctx.db.prepare("INSERT INTO message_targets(message_id, target_type, target_id) VALUES (?, ?, ?)");
     for (const target of targets) {
       const targetId = target.kind === "session" ? formatAddress(target)
+        : target.kind === "project" ? sender.project_key
         : target.kind === "topic" ? target.topic : target.kind === "role" ? target.role : "all";
       insertTarget.run(message.id, target.kind, targetId);
     }

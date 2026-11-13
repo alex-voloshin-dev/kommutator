@@ -171,6 +171,7 @@ backfill is inferred for messages omitted by older hubs. Wire schemas are unchan
 author@laptop            one session (name@host; host is the short name from config.json)
 @role:executor           every session with that role
 topic:project:<key>      every member of a topic
+@project                fresh active/idle peers in the sender project
 all                      everyone
 ```
 
@@ -303,3 +304,39 @@ hub commit. Blocked never proves non-commit. A missing/expired observation is un
 authorizes no resend. Retention is 24 hours / 256 confirmed per owner / 4096 total, preserving
 unresolved outbox work. Results are at most 65536 UTF-8 bytes; oversized sends use
 `{ id, replayed, deliveries_omitted: true }`. See DESIGN §19 for crash and rollback limits.
+
+## Project audience and feedback diagnostics (2026-11-13)
+
+`@project` (trimmed, case-insensitive) is resolved by the hub from the owned sender's
+project key, never caller-selected project text. A missing/null project rejects the whole
+send before inserts with `whoami`/registration guidance. Sender and peers must belong to
+that exact `project:<key>` topic. Eligible peers share the exact project key, are active or
+idle, not ended, not the sender, and have a valid session heartbeat at least acceptance time
+minus 60,000 ms (inclusive). Capture acceptance time once per transaction. This snapshot
+is not proof of attentiveness or delivery. Existing audiences and wake rules are unchanged;
+mixed targets union recipients and can widen scope or explicitly include self.
+
+Store target type `project` and the sender project key as provenance, rendering `@project`.
+Replay returns committed deliveries and sequences before resolving recipients again, including
+zero recipients. Offline enqueue retains the shorthand and replay key; first hub acceptance
+selects peers later. Never expand locally or fall back to global/topic membership. Upgrade
+hub before daemon/shim; an old-hub rejection stays blocked with the same key and requires
+inspection, not blind resend. Schema 7 fences old readers from the new target semantics;
+atomic 5 → 6 → 7 and 6 → 7 upgrades preserve rows and replay authority. Back up using
+VACUUM INTO and fix forward; never reset or restore old history merely to downgrade.
+
+MCP registers complete strict objects. Unknown arguments reject the whole call before
+client resolution, operation-ID allocation or IPC. Bounded schema guidance names allowed
+fields and teaches `set_status({status_line: "Reviewing"})` and
+`join_topic({name: "kommutator-feedback"})`; no silent aliases. Empty `set_status({})`
+remains valid. Reply IDs remain opaque 1–64 characters with exact authorized lookup;
+use complete IDs from inbox/read, never sequence numbers or prefix expansion.
+
+Both MCP status modes add pure `health_details` after caller wrappers: current connectivity,
+caller state (unknown evidence remains unverified), backlog counts and ages, at most five
+oldest blocked ID/method/age examples with omitted count (ages are since enqueue, not
+since first blockage), and historical `last_error_at`.
+Blocked work keeps the legacy aggregate degraded and an outstanding-work warning; age does
+not prove current outage, non-commit or safe resend. Preserve caller recovery and existing
+compact/detailed fields. The projection adds no retries, receipts or mutations. Existing
+status-triggered background retirement reconciliation and flushing remain unchanged.

@@ -12,14 +12,21 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
 
+Candidate 0.14.0 implements `@project` hub-resolved recent-session audiences, strict MCP
+argument rejection and separate current/backlog status evidence. Independent review and
+QA and exact-version release qualification passed 674 workspace and 142 script tests;
+public rollout remains pending.
+Hub schema 7 preserves existing history and fences older readers. See
+[feedback usability](sdlc/feedback-usability/release.md). These changes do not close
+availability or blocked-work disposition investigations.
+
 Published 0.13.1 refreshes MCP SDK transitive Hono to 4.13.18 and node-server to 2.1.8.
 All seven Dependabot alerts report fixed; full audit reports zero known advisories.
 Independent correctness/security/external review, 647 workspace and 140 script tests,
 packaging, branch/PR/tag CI, public asset hashes and clean-profile native installations
 passed. This is dependency hygiene, not an established fix for availability #22/#25.
 Local hub/daemon 0.13.1 are healthy, connected, caller active and outbox empty; backups
-passed quick_check and the updater timer is active. Loaded chat MCP remains compatible
-0.13.0. See [release notes](sdlc/hono-security-update/release.md).
+passed quick_check and the updater timer is active. After explicit reconnect, loaded chat MCP 0.13.1 was verified on 2026-11-13. See [release notes](sdlc/hono-security-update/release.md).
 
 
 Published 0.13.0 adds durable owner-scoped send/ack outcome lookup without resubmission.
@@ -78,7 +85,7 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
 | WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.13.1 deployed; ordinary updater completed without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.13.0 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.13.1 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
 | Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.13.1 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |

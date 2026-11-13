@@ -1249,3 +1249,7 @@ that mechanism does not prove why a particular response was missing. Remote daem
 cannot retrospectively provide the operation ID added in 0.13.0. Idle delivery measurements
 were from capability hook; the reporter confirmed fallback policy. Native-wake setup
 clarity is tracked separately, without globally enabling inbound acceptance.
+
+## 2026-11-13 — Feedback usability 0.14.0 candidate
+
+Independent architecture, correctness/integration, security and QA qualified @project snapshot routing, strict MCP schemas and additive health_details. Exact-version build/typecheck, 674 workspace and 142 script tests, release packaging, clean-PATH and synthetic exported E2E passed. Actual schema-6 reader rejected an isolated schema-7 database without losing its retirement record. Source secret scan clean; two runtime manifest findings verified as payload hashes. Public installation and local rollout pending. External code lens was not retried after prior worker transmission denial; internal reviews are recorded, not substituted claims of external approval. Earlier implementation gate initialwhoami Shared daemon unavailable remains unexplained; later passes do not close issues9/19/22/25 or environmental gates. See [evidence](evidence/2026-11-13-feedback-usability.json) and [review](../docs/sdlc/feedback-usability/review-change-2.md).

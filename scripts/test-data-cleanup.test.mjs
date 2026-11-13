@@ -82,11 +82,11 @@ test('lost-ACK retries of retired registration, message and board keys cannot re
 test('schema 5 upgrades additively and idempotently; unknown versions remain refused', async t => {
   const f = await fixture(t), db = new DatabaseSync(f.database);
   db.exec('DROP TABLE retired_operations; PRAGMA user_version=5'); const before = db.prepare('SELECT * FROM messages').all(); db.close();
-  const upgraded = openDatabase(f.database); assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 6);
+  const upgraded = openDatabase(f.database); assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 7);
   assert.deepEqual(upgraded.prepare('SELECT * FROM messages').all(), before); upgraded.close();
   openDatabase(f.database).close();
   const unknown = new DatabaseSync(f.database); unknown.exec('PRAGMA user_version=4'); unknown.close();
-  assert.throws(() => openDatabase(f.database), /supports only/);
+  assert.throws(() => openDatabase(f.database), /Supported upgrades/);
 });
 
 test('fingerprint changes, active sessions, omitted reference closure and protected boards refuse before mutation', async t => {
@@ -136,7 +136,7 @@ test('closed isolated host/project closure is removed while global and real subs
 test('dry run does not migrate an old database and apply never overwrites a backup', async t => {
   const f = await fixture(t), db = new DatabaseSync(f.database);
   db.exec('DROP TABLE retired_operations; PRAGMA user_version=5'); db.close();
-  await assert.rejects(cleanupTestData(f), /already upgraded/);
+  await assert.rejects(cleanupTestData(f), /requires hub schema 6 or 7/);
   assert.equal(query(f.database, 'PRAGMA user_version')[0].user_version, 5);
   openDatabase(f.database).close();
   const plan = await cleanupTestData(f); f.manifest.expected_sha256 = plan.fingerprint;
@@ -222,4 +222,27 @@ test('unrelated real messages, receipts and board history remain byte-for-byte u
   for (const [key, sql] of Object.entries(queries)) assert.deepEqual(query(f.database, sql), before[key], key);
   assert.equal(query(f.database, 'SELECT count(*) AS count FROM messages')[0].count, 1);
   assert.deepEqual(query(f.database, 'PRAGMA foreign_key_check'), []);
+});
+
+
+test('cleanup inspection supports schema 6 and 7 without upgrading the database', async t => {
+  const f = await fixture(t), db = new DatabaseSync(f.database);
+  t.after(() => db.close());
+  for (const version of [6, 7]) {
+    db.exec(`PRAGMA user_version=${version}`);
+    assert.equal(inspectCleanup(db, f.manifest).replayed, false);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, version);
+  }
+});
+
+test('retained project target provenance prevents removing its project topic', async t => {
+  const f = await fixture(t, true), db = new DatabaseSync(f.database);
+  t.after(() => db.close());
+  const kept = db.prepare("SELECT * FROM messages LIMIT 1").get();
+  db.prepare("UPDATE messages SET idempotency_key='retained-project', from_session=?, from_handle=? WHERE id=?").run(f.owner.id, f.owner.handle, kept.id);
+  db.prepare('DELETE FROM deliveries WHERE message_id=?').run(kept.id);
+  db.prepare('DELETE FROM message_targets WHERE message_id=?').run(kept.id);
+  db.prepare("INSERT INTO message_targets(message_id,target_type,target_id) VALUES (?, 'project', 'test-project')").run(kept.id);
+  const manifest = { ...f.manifest, messages: [] };
+  assert.throws(() => inspectCleanup(db, manifest), /retained message targets/);
 });

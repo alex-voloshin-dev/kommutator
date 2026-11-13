@@ -69,7 +69,7 @@ export const Message = z.object({
   subject: z.string().max(LIMITS.subject).optional(),
   body: z.string().max(LIMITS.body),
   thread_id: MessageId.optional(),
-  reply_to: MessageId.nullable().optional(),
+  reply_to: MessageId.nullable().optional().describe("Complete message ID from inbox/read; sequence numbers and prefixes are unsupported."),
   hops: z.number().int().nonnegative().default(0),
   origin: Origin.default("agent"),
   /** Set by `kom send --wake`; honoured only when origin is `human` (DESIGN.md §6). */
@@ -84,7 +84,7 @@ export const SendAddress = z.string().max(300).superRefine((value, ctx) => {
   try { parseAddress(value); }
   catch (error) {
     if (!(error instanceof AddressError)) throw error;
-    ctx.addIssue({ code: "custom", message: "bad address; use topic:<name>, <name>@<host>, @role:<role>, or all" });
+    ctx.addIssue({ code: "custom", message: "bad address; use topic:<name>, <name>@<host>, @role:<role>, @project, or all" });
   }
 });
 export const OutboundMessage = Message.extend({

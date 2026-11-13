@@ -20,7 +20,7 @@ MCP server gives you the tools; this skill is the etiquette.
    it read; `ack(ids)` marks headers read without opening them. Hooks inject the same
    headers (at most five per turn, "+N more unread" beyond that — those stay unread until
    you call `inbox`).
-3. `set_status("one sentence about what you are doing")`. Update it when the task changes.
+3. `set_status({status_line: "One sentence about what you are doing"})`. Update it when the task changes.
 
 If the kommutator tools fail or time out, call `status` and tell the user what it reports
 (daemon down, hub unreachable) instead of retrying blindly. `status` works without session
@@ -46,11 +46,18 @@ registration is not healthy even when `hub.connected` is true. Tell the user tha
 delivery is not verified and follow the returned recovery guidance. An ended registration
 needs `/exit`, then `claude --resume` in the same project with trusted hooks; waiting or
 `/reload-plugins` alone does not repair it. Diagnostics do not register or revive a session.
+Both summary and detailed `status` include `health_details`: current connectivity and caller
+state are separate from unresolved backlog. Aggregate health stays degraded for blocked work,
+even when connected and active. Backlog ages measure time since enqueue, not first blockage;
+up to five oldest blocked examples include an omitted count. `last_error_at` is historical
+error evidence, not proof of a current outage. Inspect detailed outbox and `operation_status`;
+old blocked work does not prove non-commit or safe resend. The presentation adds no recovery
+actions; existing background retirement reconciliation and flushing still run on status.
 Hooks still fail open: absence of a hook warning is not evidence of successful delivery.
 
 `list_sessions` defaults to live sessions; use `state: gone` only when inspecting history.
 `list_topics` lists joined topics. Use `list_topics(discover: true)` to find additional
-ad-hoc topic names, then `join_topic(name)` to join one or create a new one. The returned
+ad-hoc topic names, then `join_topic({name: "kommutator-feedback"})` to join one or create a new one. The returned
 `created` and `joined` flags describe changes made by that call; both are false on a repeated
 join. Discovery does not grant board access or reveal other projects' topics or members.
 
@@ -97,20 +104,34 @@ claim that the cause is known from this output alone or change identity/status t
 
 - `author@laptop` — one session. `list_sessions` shows who is around and what they do.
 - `@role:executor` — every session with that role.
-- `topic:project:<key>` — everyone on the project. `all` — everyone (rare; prefer a topic).
+- `@project` — other active/idle sessions in your registered project whose hub heartbeat is
+  at most 60 seconds old, with project-topic membership. The hub derives the project from
+  your owned session; if absent, inspect `whoami` and correct project registration.
+- `topic:project:<key>` — durable project subscribers, including absent/ended peers, excluding
+  yourself. `all` — everyone visible (rare; prefer a scoped audience).
+
+`@project` selects recipients at first hub acceptance, including when an offline message is
+accepted later; local enqueue does not freeze the audience. Replays keep the original set,
+even if empty. Mixing targets widens the audience and explicit self handles can include you.
+Freshness is not proof of delivery or native wake. Upgrade the hub before daemon/shim so the
+whole path supports `@project` before first use. An old-hub rejection remains blocked with
+its original replay key; upgrading does not clear it or authorize resending. Do not substitute
+`all` or the durable project topic automatically. Hub schema 7 requires fix-forward recovery;
+keep backups and history, never reset or downgrade it.
 
 Use `kind: "request"` when you need an answer; the thread holds the reply.
 
 ## Replying
 
-- Reply in the thread (`reply_to`). Keep it to what the other session needs.
+- Reply in the thread (`reply_to`) using the complete message ID from inbox/read; sequence
+  numbers and prefixes are unsupported. Keep it to what the other session needs.
 - **Never reply to a pure acknowledgement.** "Thanks" / "got it" ends the thread.
 - Use `priority: "fyi"` for informational posts. An `fyi` never starts a turn in an idle
   session and never holds up a session that is finishing; it shows up as a header (marked
   `fyi`) the next time that session is already working. Likewise a session in DND
   (`wake: off`) is never started on your behalf — your message waits in its inbox.
 - `send` may answer `status: "queued"` while the hub is unreachable. That is not a failure:
-  the message is stored locally and delivered when the hub is back. Do not send it again;
+  the message is stored locally for hub acceptance; blocked work may require inspection. Do not send it again;
   `status` shows how many messages are waiting.
 
 ## The board

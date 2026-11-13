@@ -1,6 +1,7 @@
 import { afterEach, expect, it } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { statusHealthDetails } from "../src/mcp-projections.js";
 import { createMcpServer } from "../src/mcp.js";
 
 const close: (() => Promise<void>)[] = [];
@@ -38,11 +39,11 @@ it("summarizes large status lists while retaining caller failure, health and las
   };
   const { call, calls } = await setup(result);
   const { sessions: _sessions, outbox: _outbox, ...retained } = result;
-  expect(await call("status")).toEqual({ ...retained,
+  expect(await call("status")).toEqual({ ...retained, health_details: expect.any(Object),
     session_counts: { total: 124, by_state: { active: 1, gone: 123 } },
     outbox_summary: { total: 2, blocked: 1, oldest_age_ms: 10 },
   });
-  expect(await call("status", { detailed: true })).toEqual(result);
+  expect(await call("status", { detailed: true })).toEqual(statusHealthDetails(result));
   expect(calls).toEqual(Array.from({ length: 2 }, () => ({ method: "daemon.status", params: {} })));
   expect(result.sessions).toHaveLength(124);
 });
@@ -98,13 +99,43 @@ it("keeps unavailable-daemon diagnostics and empty queue counts without changing
   });
   const { call } = await setup(empty);
   expect(await call("status")).toEqual({
-    daemon: { running: true }, outbox_depth: 0,
+    daemon: { running: true }, outbox_depth: 0, health_details: expect.any(Object),
     caller: { state: "unavailable", recovery: "Resume with trusted hooks" },
     session_counts: { total: 0, by_state: {} },
     outbox_summary: { total: 0, blocked: 0, oldest_age_ms: 0 },
   });
-  expect(await call("status", { detailed: true })).toEqual(empty);
+  expect(await call("status", { detailed: true })).toEqual(statusHealthDetails(empty));
   const unavailable = Object.freeze({ daemon: Object.freeze({ running: false }), last_error: "ECONNREFUSED" });
   const stopped = await setup(unavailable);
-  expect(await stopped.call("status")).toEqual(unavailable);
+  expect(await stopped.call("status")).toEqual(statusHealthDetails(unavailable));
+});
+
+it("projects connected active evidence without hiding old blocked work or mutating frozen input", async () => {
+  const outbox = Object.freeze(Array.from({ length: 7 }, (_, i) => Object.freeze({
+    id: i + 1, method: "message.send", age_ms: 1000 * i, error: "private error", body: "secret", idempotency_key: "secret",
+  })));
+  const source = Object.freeze({ hub: Object.freeze({ connected: true }), caller: Object.freeze({ state: "active", recovery: "keep" }),
+    health: Object.freeze({ state: "degraded", issues: Object.freeze(["Blocked outbox"]) }), outbox, last_error_at: 123 });
+  const { call, calls } = await setup(source);
+  for (const detailed of [false, true]) {
+    const result = await call("status", { detailed });
+    expect(result).toMatchObject({ health: source.health, caller: source.caller, health_details: {
+      connectivity: "connected", caller: "active", last_error_at: 123, last_error_evidence: "historical",
+      backlog: { total: 7, blocked: 7, oldest_age_ms: 6000, oldest_blocked_age_ms: 6000, omitted: 2,
+        warning: expect.stringContaining("remains unresolved"), examples: [6, 5, 4, 3, 2].map(i => ({ id: i + 1, method: "message.send", age_ms: 1000 * i })) },
+    } });
+    const details = (result as { health_details: unknown }).health_details;
+    expect(JSON.stringify(details)).not.toContain("secret"); expect(JSON.stringify(details)).not.toContain("private error");
+  }
+  expect(calls.map(c => c.method)).toEqual(["daemon.status", "daemon.status"]);
+  expect(statusHealthDetails(source)).toEqual(statusHealthDetails(source));
+  expect(source.outbox).toBe(outbox);
+});
+
+it("keeps missing old-daemon evidence unknown and reports empty ages as unavailable", () => {
+  expect(statusHealthDetails({})).toMatchObject({ health_details: { connectivity: "unknown", caller: "unverified",
+    backlog: { total: null, blocked: null, oldest_age_ms: null, oldest_blocked_age_ms: null, examples: [], omitted: 0 }, last_error_at: null } });
+  expect(statusHealthDetails({ hub: { connected: false }, caller: { state: "conflict" }, outbox: [] })).toMatchObject({
+    health_details: { connectivity: "disconnected", caller: "conflict", backlog: { total: 0, blocked: 0, oldest_age_ms: null, warning: null } },
+  });
 });
