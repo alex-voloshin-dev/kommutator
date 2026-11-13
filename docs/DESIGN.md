@@ -845,6 +845,109 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### MCP send and acknowledgement outcome reconciliation (2026-11-13)
+
+The [mutation reconciliation design](sdlc/mutation-reconciliation/tech-design.md) defines
+a local durable observation journal for MCP send and explicit ack only. This contract was
+recorded and reviewed before implementation. A fresh shim-generated
+operation UUID correlates one invocation; it is never a caller-selected hub replay key
+or an instruction to resubmit. Agentd retains authority over send idempotency keys.
+Admission atomically stores the outbox work and its owner-scoped observation. Successful
+settlement atomically stores the validated hub response and removes the outbox row.
+An IPC timeout, disconnect, missing observation or blocked row never proves non-commit.
+
+Tracked operations require an immutable connection owner snapshot captured at original
+`ipc.hello` admission/binding before its asynchronous flush, plus successful completed
+hello with unchanged authority. Existing `currentOwner` pins process ownership only for
+Claude; a Codex peer's local key alone cannot authorize tracking after another shim
+replaces that root's record. Compare PID, observed process birth, generation, lifecycle
+epoch, root/conversation identity and local key at tracked submit admission, after flush
+and at status lookup. Failed/incomplete hello cannot track; never lazily pin on a later
+query or re-pin an old peer to a successor. Legacy methods retain their existing behavior.
+
+The proposed local `operation.status` query uses these connection owner checks and
+the admitted owner snapshot and session UUID, never a caller-selected session. It makes no hub request,
+flush or mutation. The Claude wrapper retains local generation checks while skipping
+remote `whoami` preflight for this query only; no registration/revival recovery is added.
+A missing hub UUID in a connection/observation snapshot may attach exactly once from
+daemon-owned registration of the same key only while every pinned owner fact still
+matches; this covers offline hello followed by registration. A later UUID change fails.
+Normal same-owner daemon restart may recover observations despite a hub incarnation
+increment; retired/replaced process owners, lifecycle epochs and conversations cannot.
+Unknown and foreign IDs provide no existence distinction.
+
+Queued requires the exact operation's outbox row to still exist, with hub outcome
+potentially uncertain. If a shared flush outlives result retention and both the observation
+and response cache are evicted after dequeue, submit returns unknown with its operation
+UUID, never queued. Confirmed means
+a validated hub result was durably recorded, not that the recipient read a send. Blocked
+means existing outbox progress is stopped, not that no prior attempt committed. Receipt
+counts describe the last confirmed hub attempt: after response loss/replay, original
+`marked_read` versus `already_read` counts cannot be reconstructed. Absent old-hub counts
+remain unknown. No state authorizes a blind retry, queue deletion or new replay key.
+
+Bound the new observation store to 4,096 records, retaining confirmed observations for
+24 hours and at most 256 per owner. Evict only terminal observations; never delete linked
+unresolved outbox work or replay authority. If unresolved observations fill the cap,
+reject new tracked admission before enqueue. Expiry yields unknown, not proof of failure.
+Stored result JSON is limited to 65,536 UTF-8 bytes; oversized send results retain typed
+`{ id, replayed, deliveries_omitted: true }` instead of a delivery map. No JSON is truncated
+and omitted deliveries remain unknown.
+Phase one has no caller-reusable correlation input, no resubmission endpoint and no claim
+to recover a lost outer MCP response before the caller learned its operation UUID.
+Local state schema advances to 4 when implemented; old queued rows remain untracked and
+unchanged. Preserve the current database and fix forward with a schema-4-compatible
+runtime after an upgrade failure. Restoring a pre-upgrade snapshot requires proof of
+no post-snapshot admissions or a separately reviewed lossless reconciliation; a backup
+alone is not proof of safe rollback. No automatic restore or schema downgrade. New shims use dedicated local `operation.submit` and `operation.status` methods;
+old daemons reject them as unsupported and shims never fall back by resubmitting. Old
+clients retain their original methods and old hubs remain compatible. A fresh lookup
+connection can still time out in existing `ipc.hello`; no hard lookup availability or
+identity bypass is promised. Existing hook timers, receipt meaning, retirement
+fences, board CAS, hub replay retention and disabled pruning are unchanged.
+
+### Pure plugin compatibility preparation for lookup (2026-11-12)
+
+`operation_status` passes its method context through the actual MCP client source and
+Claude preparation path. Both plugin profiles validate compatibility with the additive
+CLI-only `daemon.runtime` RPC: strict empty params, bounded version and runtime-contract
+fields only. This RPC performs no retirement reconciliation, flush, hub request or
+registration. Its client disables lazy startup and hub waiting. Unsupported old daemons
+fail clearly without falling back to `daemon.status` or submitting a mutation.
+Normal plugin preparation keeps its existing diagnostics/startup behavior. Lookup still
+checks local conflicts, Codex call-root metadata and Claude on-disk generation. An
+`operation.status` socket reconnect also suppresses lazy daemon startup, including clients
+originally constructed for ordinary mutations. Existing hello ownership rules still apply;
+a fresh bound connection can await ordinary hello work, with no availability guarantee.
+
+### Local lookup scheduling and initially unbound connections (2026-11-12)
+
+After a successful `ipc.hello` response, production IPC dispatches only
+`operation.status` on a separate per-socket serial lookup lane, bounded to 16 outstanding
+lookups. All mutations and other methods retain their existing ordered queue. Before
+hello completes or after it fails, lookup cannot bypass that queue. Each lookup still
+runs normal binding and immutable tracked-owner checks, including retirement fences;
+transport scheduling supplies no identity authority. This lets a timed-out submit remain
+pending while the same connection observes its queued state. Lookup overflow fails with
+a fixed error, without dispatch or mutation.
+
+The client remembers an explicit `bound: false` hello result. Before sending a tracked
+submit only, a single-flight preparation can replace that idle unbound connection with
+one fresh hello. It never changes a peer's pinned owner or replays a submitted mutation.
+If another RPC is pending, any RPC timed out on this connection, or the fresh hello
+remains unbound, fail before dispatch. A bounded per-connection timeout fence is
+conservative even after a late reply; it resets only on socket closure. All calls await
+shared preparation, and the idle check and connection replacement are synchronous.
+An absent legacy `bound` field does not trigger this recovery; dedicated operation
+methods still report unsupported-daemon errors without fallback. Closing an idle shim
+connection uses existing disconnect behavior and does not retire its logical owner.
+`operation.status` never triggers this preparation or registration/revival recovery.
+
+Retention and capacity queries inspect indexed metadata only, never materialize stored
+result blobs. Confirmation pruning runs only for tracked settlement, not legacy hook
+receipts or lifecycle settlement. Expired lookups remain unknown even when no admission
+or settlement has triggered physical eviction.
+
 ### Explicit CLI board reads (2026-11-08)
 
 `kom board get --session <hub-session-id> --topic <name> --key <key>` reads one

@@ -3,7 +3,7 @@ import * as z from "zod";
 import { Session, Notifications } from "@kommutator/protocol";
 import type { LocalSession } from "./adapters/types.js";
 
-export const STATE_SCHEMA_VERSION = 3;
+export const STATE_SCHEMA_VERSION = 4;
 
 export { processStart, processExists } from "./process.js";
 
@@ -43,7 +43,7 @@ export class Registry {
     this.db = new DatabaseSync(path);
     this.db.exec("PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     const version = z.object({ user_version: z.number() }).parse(this.db.prepare("PRAGMA user_version").get()).user_version;
-    if (version !== 0 && version !== 1 && version !== 2 && version !== STATE_SCHEMA_VERSION) { this.db.close(); throw new Error("unsupported agentd state schema"); }
+    if (version !== 0 && version !== 1 && version !== 2 && version !== 3 && version !== STATE_SCHEMA_VERSION) { this.db.close(); throw new Error("unsupported agentd state schema"); }
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS sessions (local_key TEXT PRIMARY KEY, record TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS outbox (
@@ -54,6 +54,14 @@ export class Registry {
         session_id TEXT NOT NULL, seq INTEGER NOT NULL, notification TEXT NOT NULL,
         acted INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (session_id, seq)
       );
+      CREATE TABLE IF NOT EXISTS mutation_observations (
+        operation_id TEXT PRIMARY KEY, owner TEXT NOT NULL, session_id TEXT,
+        method TEXT NOT NULL, outbox_id INTEGER NOT NULL UNIQUE,
+        created_at INTEGER NOT NULL, observed_at INTEGER NOT NULL,
+        outcome TEXT NOT NULL, result TEXT, error TEXT
+      );
+      CREATE INDEX IF NOT EXISTS mutation_owner ON mutation_observations(owner, observed_at);
+      CREATE INDEX IF NOT EXISTS mutation_terminal ON mutation_observations(outcome, observed_at, outbox_id);
       PRAGMA user_version = ${STATE_SCHEMA_VERSION};
     `);
   }

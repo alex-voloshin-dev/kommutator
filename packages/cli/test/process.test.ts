@@ -95,7 +95,7 @@ describe("production entrypoints", () => {
     const client = new Client({ name: "test-agent", version: "1" });
     try {
       await client.connect(transport);
-      expect((await client.listTools()).tools).toHaveLength(16);
+      expect((await client.listTools()).tools).toHaveLength(17);
     } finally { await client.close(); }
   });
 });

@@ -141,3 +141,20 @@ it("does not retry a mutation that fails ambiguously after successful retired-pe
   expect(calls).toEqual(["shim:1:whoami", "hook:whoami", "shim:2:message.send"]);
   client.close();
 });
+
+it("looks up an operation locally without whoami or registration recovery and fences generation changes", async () => {
+  await saveClaudeRegistration(hello("A"));
+  const calls: string[] = [];
+  let change = false;
+  const client = new ClaudePluginClient({
+    resolve: () => activeClaudeRegistration(process.pid, "A"), prepare: async () => {},
+    shim: () => ({ close() {}, async call(method) { calls.push(method); if (change) await saveClaudeRegistration(hello("B")); return { outcome: "unknown" }; } }),
+    hook() { throw new Error("local lookup must never recover registration"); },
+  });
+  expect(await client.call("operation.status", { operation_id: "local-id" })).toEqual({ outcome: "unknown" });
+  expect(calls).toEqual(["operation.status"]);
+  change = true;
+  await expect(client.call("operation.status", { operation_id: "local-id" })).rejects.toThrow(/conversation changed/);
+  expect(calls).toEqual(["operation.status", "operation.status"]);
+  client.close();
+});

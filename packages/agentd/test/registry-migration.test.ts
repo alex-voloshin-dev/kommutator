@@ -46,7 +46,21 @@ it("upgrades schema 2 conservatively and persists retirement reasons through reo
     record.goneReason = "session-end"; upgraded.save(record); upgraded.close();
     const reopened = new Registry(path);
     expect(reopened.get("claude-code:old")?.goneReason).toBe("session-end");
-    expect(reopened.db.prepare("PRAGMA user_version").get()).toMatchObject({ user_version: 3 });
+    expect(reopened.db.prepare("PRAGMA user_version").get()).toMatchObject({ user_version: STATE_SCHEMA_VERSION });
     reopened.close();
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+it.each([1, 2, 3])("creates schema4 observations from schema%i without rewriting legacy outbox", async version => {
+  const directory = await mkdtemp(join(tmpdir(), "kom-observation-migration-")); const path = join(directory, "state.db");
+  try {
+    const old = new Registry(path);
+    old.enqueue("old", "message.send", { idempotency_key: "keep-key", message: { body: "legacy" } }, 10);
+    const before = old.outbox();
+    old.db.exec(`DROP TABLE mutation_observations; PRAGMA user_version=${version}`); old.close();
+    const current = new Registry(path);
+    expect(current.outbox()).toEqual(before);
+    expect(current.db.prepare("SELECT * FROM mutation_observations").all()).toEqual([]);
+    expect(current.db.prepare("PRAGMA user_version").get()).toMatchObject({ user_version: 4 }); current.close();
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

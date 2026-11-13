@@ -1168,3 +1168,29 @@ See [research](../docs/sdlc/runtime-reliability-followup/research-brief.md),
 [evidence](evidence/2026-11-12-runtime-reliability-followup.json). No runtime code,
 identity fences, queue contents, hook timers, kernel settings or network exposure
 changed. No new release or code-test pass is claimed for this documentation work.
+
+## 2026-11-13: mutation reconciliation qualification
+
+Candidate 0.13.0 implements a bounded schema-4 local observation journal and operation_status
+for MCP send/explicit ack. Independent correctness/security, external review and QA passed.
+Final ordered build/typecheck and release qualification passed 647 workspace and 140 script
+tests, dependency audit, export integrity, clean-PATH startup/setup and synthetic exported
+E2E. Actual built MCP tests exercise Claude and Codex production preparation paths and
+production IPC, including lookup while a timed-out mutation remains pending.
+
+The first release gate passed tests and smokes but failed exported owner-2 set_status with
+an IPC timeout. Both Claude registrations were intact. One diagnostic replay passed 61
+tool calls (set_status 95.0–121.0 ms); a subsequent full release gate passed. Neither pass
+establishes the original cause. Issue #25 retains the missing per-IPC failure evidence.
+No timeout increase, blind mutation replay or code workaround was applied for that failure.
+
+New implementation-history secret scan had no findings. Export scanning flagged two
+release.json manifests; both contain only validated runtime metadata and content hashes,
+verified against their 191 payload files. No credential fields were present. These were
+triaged explicitly rather than treated as a clean raw scanner exit.
+
+See [versioned evidence](evidence/2026-11-13-mutation-reconciliation.json) and
+[review](../docs/sdlc/mutation-reconciliation/review-change-3.md). Public download/native
+installation and production deployment are not claimed by this candidate qualification.
+Availability #22, historical #9/#19 triggers and day-long/subnet/reboot/native-wake gates
+remain open. Source schemas, replay authority and hook 140/90 ms deadlines remain intact.

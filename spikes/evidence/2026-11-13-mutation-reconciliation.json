@@ -1,0 +1,585 @@
+{
+  "date_utc": "2026-11-13",
+  "candidate_version": "0.13.0",
+  "implementation_commit": "fa09971419a5e64f61d9c2c1c30c94a9b609da87",
+  "node": "26.13.0",
+  "pnpm": "12.18.0",
+  "independent_qa": {
+    "ordered_build_typecheck_test": "passed",
+    "workspace_tests": 647,
+    "by_package": {
+      "protocol": 39,
+      "hub": 176,
+      "agentd": 167,
+      "cli": 265
+    }
+  },
+  "release_gate_first_attempt": {
+    "workspace_tests": 647,
+    "script_tests": 140,
+    "export_integrity": "passed",
+    "clean_path_profiles": [
+      "claude-code",
+      "codex"
+    ],
+    "e2e": "failed",
+    "error": "owner-2 set_status IPC request timeout; underlying IPC method and cause unknown",
+    "diagnostic": {
+      "stage": "tool:claude-code:owner-2:set_status",
+      "hooks": [
+        {
+          "owner": "owner-1",
+          "event": "SessionStart",
+          "outcome": "success",
+          "elapsed_ms": 136,
+          "exit_code": 0,
+          "signal": null,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "error_code": null
+        },
+        {
+          "owner": "owner-2",
+          "event": "SessionStart",
+          "outcome": "success",
+          "elapsed_ms": 132,
+          "exit_code": 0,
+          "signal": null,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "error_code": null
+        }
+      ],
+      "authority": {
+        "context": "present",
+        "owners": [
+          {
+            "label": "owner-1",
+            "alive": true,
+            "birth_available": true
+          },
+          {
+            "label": "owner-2",
+            "alive": true,
+            "birth_available": true
+          }
+        ],
+        "journal_count": 2,
+        "truncated": false,
+        "journals": [
+          {
+            "generation_count": 1,
+            "temporary_count": 0,
+            "truncated": false,
+            "entries": [
+              {
+                "generation": 1,
+                "owner_generation": 1,
+                "owner": "owner-2",
+                "birth_matches": true,
+                "vendor_matches": true,
+                "cwd_matches": true,
+                "ended": false
+              }
+            ]
+          },
+          {
+            "generation_count": 1,
+            "temporary_count": 0,
+            "truncated": false,
+            "entries": [
+              {
+                "generation": 1,
+                "owner_generation": 1,
+                "owner": "owner-1",
+                "birth_matches": true,
+                "vendor_matches": true,
+                "cwd_matches": true,
+                "ended": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "bounded_diagnostic_replay": {
+    "completed": true,
+    "timings": [
+      {
+        "vendor": "claude-code",
+        "owner": "standalone",
+        "name": "setup_status",
+        "elapsed_ms": 6.801351999999952,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "standalone",
+        "name": "setup_start",
+        "elapsed_ms": 5.24503999999979,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "standalone",
+        "name": "setup_status",
+        "elapsed_ms": 6.064947000000302,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 405.5044069999999,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "whoami",
+        "elapsed_ms": 205.40576299999975,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "set_status",
+        "elapsed_ms": 109.71173500000077,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "set_status",
+        "elapsed_ms": 116.57518399999935,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 97.09883399999944,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "whoami",
+        "elapsed_ms": 92.75610200000028,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "set_status",
+        "elapsed_ms": 99.17374999999993,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "set_status",
+        "elapsed_ms": 96.64353100000062,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 89.10367399999996,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "whoami",
+        "elapsed_ms": 89.7716789999995,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "set_status",
+        "elapsed_ms": 98.26574299999993,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "set_status",
+        "elapsed_ms": 95.00341800000024,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 86.33135200000015,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "whoami",
+        "elapsed_ms": 88.68386999999984,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "send",
+        "elapsed_ms": 126.50625099999979,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "send",
+        "elapsed_ms": 116.79257700000016,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "inbox",
+        "elapsed_ms": 90.48268000000007,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "inbox",
+        "elapsed_ms": 89.16506899999968,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "read",
+        "elapsed_ms": 105.18188999999984,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "read",
+        "elapsed_ms": 97.69303400000081,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 110.42083099999945,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "whoami",
+        "elapsed_ms": 107.0109020000018,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 134.5148279999994,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "list_sessions",
+        "elapsed_ms": 109.35941699999967,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "whoami",
+        "elapsed_ms": 109.77072000000044,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "set_status",
+        "elapsed_ms": 120.97801400000026,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 112.25024100000155,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 101.12434300000314,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "list_sessions",
+        "elapsed_ms": 89.98365000000194,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-3",
+        "name": "setup_status",
+        "elapsed_ms": 19.40016100000139,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-3",
+        "name": "whoami",
+        "elapsed_ms": 28.89774000000034,
+        "error": true
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-3",
+        "name": "whoami",
+        "elapsed_ms": 232.2354239999986,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-3",
+        "name": "whoami",
+        "elapsed_ms": 10.671088000002783,
+        "error": true
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "list_sessions",
+        "elapsed_ms": 100.00782400000026,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 102.60314600000129,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-2",
+        "name": "whoami",
+        "elapsed_ms": 8.947774000000209,
+        "error": true
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 92.26715999999942,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "whoami",
+        "elapsed_ms": 58.82406099999935,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "whoami",
+        "elapsed_ms": 62.92970699999569,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "whoami",
+        "elapsed_ms": 11.249325999997382,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "send",
+        "elapsed_ms": 105.01907499999652,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "inbox",
+        "elapsed_ms": 10.032613000003039,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "read",
+        "elapsed_ms": 14.852866000001086,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "send",
+        "elapsed_ms": 23.295161000001826,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "read",
+        "elapsed_ms": 93.91395100000227,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "join_topic",
+        "elapsed_ms": 96.65698200000043,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "join_topic",
+        "elapsed_ms": 14.398061000007147,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "board_put",
+        "elapsed_ms": 100.9783299999981,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "board_get",
+        "elapsed_ms": 12.4762400000036,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "send",
+        "elapsed_ms": 110.14353300000221,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "read",
+        "elapsed_ms": 15.297471999998379,
+        "error": false
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 18.959011999999348,
+        "error": true
+      },
+      {
+        "vendor": "claude-code",
+        "owner": "owner-1",
+        "name": "whoami",
+        "elapsed_ms": 93.2486440000066,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "whoami",
+        "elapsed_ms": 2.681329999999434,
+        "error": true
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "whoami",
+        "elapsed_ms": 10.24581500000204,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "whoami",
+        "elapsed_ms": 9.645508000001428,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "whoami",
+        "elapsed_ms": 457.796205000006,
+        "error": false
+      },
+      {
+        "vendor": "codex",
+        "owner": "standalone",
+        "name": "send",
+        "elapsed_ms": 1041.9559909999953,
+        "error": false
+      }
+    ]
+  },
+  "final_release_gate": {
+    "result": "passed",
+    "workspace_tests": 647,
+    "script_tests": 140,
+    "ordered_build_typecheck": true,
+    "dependency_audit": true,
+    "export_integrity": true,
+    "clean_path_profiles": [
+      "claude-code",
+      "codex"
+    ],
+    "synthetic_export_e2e": true,
+    "prior_failure_cause": "unknown; issue25 remains open"
+  },
+  "assets": {
+    "kommutator-v0.13.0-linux-x64.tar.gz": "63f054a262c0cfef28ffc3168ada128c29084723d7e0b3f6fde004799a65780d",
+    "kommutator-v0.13.0-claude-linux-x64.zip": "c910f2d55497702b1fc532dc0446aee9af0c60c79a20e5993a8b719033011293"
+  },
+  "secret_scan": {
+    "implementation_history": "no findings",
+    "export_findings": [
+      {
+        "file": "plugins/codex/runtime/release.json",
+        "classification": "verified content-hash metadata; no credential fields",
+        "verified_files": 191
+      },
+      {
+        "file": "plugins/claude-code/runtime/release.json",
+        "classification": "verified content-hash metadata; no credential fields",
+        "verified_files": 191
+      }
+    ]
+  },
+  "open_issues": [
+    9,
+    19,
+    22,
+    25
+  ],
+  "not_validated": [
+    "day-long reliability",
+    "independent physical subnet allow/deny",
+    "unattended Windows reboot",
+    "native Work/idle wake",
+    "other target platforms",
+    "real model conversation after migration"
+  ]
+}

@@ -6,7 +6,7 @@ export class ClaudePluginClient implements RpcClient {
   private pinned: { generation: string; client: RpcClient } | undefined;
   constructor(private readonly options: {
     resolve: () => Promise<ActiveClaudeRegistration>;
-    prepare: (hello: Hello) => Promise<void>;
+    prepare: (hello: Hello, method: string) => Promise<void>;
     shim: (hello: Hello) => RpcClient;
     hook: (hello: Hello) => RpcClient;
   }) {}
@@ -15,13 +15,18 @@ export class ClaudePluginClient implements RpcClient {
   }
   async call(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
     const observed = await this.options.resolve();
-    await this.options.prepare(observed.hello);
+    await this.options.prepare(observed.hello, method);
     await this.unchanged(observed.generation);
     if (this.pinned?.generation !== observed.generation) {
       this.pinned?.client.close();
       this.pinned = { generation: observed.generation, client: this.options.shim(observed.hello) };
     }
     let client = this.pinned.client;
+    if (method === "operation.status") {
+      const result = await client.call(method, params);
+      await this.unchanged(observed.generation);
+      return result;
+    }
     try { await client.call("whoami"); }
     catch (error) {
       if (!(error instanceof IpcError) || error.code !== -32020) throw error;

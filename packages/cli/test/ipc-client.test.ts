@@ -84,3 +84,47 @@ describe("IPC client", () => {
     expect(calls).toBe(2);
   });
 });
+
+it("shares fresh unbound preparation with concurrent calls without dispatching before hello", async () => {
+  const methods: string[] = []; let hellos = 0; let ready: (() => void) | undefined;
+  const f = await fixture((socket, request) => {
+    methods.push(request.method);
+    if (request.method === "ipc.hello") {
+      hellos++;
+      if (hellos === 1) response(socket, request.id, { bound: false });
+      else ready = () => response(socket, request.id, { bound: true });
+    } else response(socket, request.id, { ok: true });
+  });
+  const client = new IpcClient({ endpoint: f.endpoint, hello: cliHello, timeoutMs: 500 }); cleanup.push(() => client.close());
+  await client.call("whoami");
+  const submit = client.call("operation.submit"); const other = client.call("whoami");
+  for (let i = 0; i < 50 && !ready; i++) await new Promise(resolve => setTimeout(resolve, 2));
+  expect(methods).toEqual(["ipc.hello", "whoami", "ipc.hello"]);
+  if (!ready) throw new Error("missing fresh hello"); ready(); await Promise.all([submit, other]);
+  expect(methods.filter(method => method === "operation.submit")).toHaveLength(1);
+  expect(hellos).toBe(2);
+});
+
+it("never treats a timed-out call as idle for unbound connection preparation", async () => {
+  const methods: string[] = [];
+  const f = await fixture((socket, request) => {
+    methods.push(request.method);
+    if (request.method === "ipc.hello") response(socket, request.id, { bound: false });
+  });
+  const client = new IpcClient({ endpoint: f.endpoint, hello: cliHello, timeoutMs: 30 }); cleanup.push(() => client.close());
+  await expect(client.call("whoami")).rejects.toThrow(/timed out/);
+  await expect(client.call("operation.submit")).rejects.toThrow(/pending work/);
+  expect(methods).toEqual(["ipc.hello", "whoami"]);
+});
+
+it("never starts a daemon for lookup when a pooled lazy-start client loses its socket after runtime preparation", async () => {
+  const f = await fixture((socket, request) => response(socket, request.id, request.method === "ipc.hello" ? { bound: true } : { runtime_contract: 3, daemon: { version: "0.0.0" } }));
+  let starts = 0;
+  const client = new IpcClient({ endpoint: f.endpoint, hello: cliHello, timeoutMs: 100, lazyStart: true, spawn: () => { starts++; } }); cleanup.push(() => client.close());
+  await client.call("daemon.runtime");
+  for (const socket of f.sockets) socket.destroy();
+  await rm(f.endpoint);
+  await new Promise(resolve => setTimeout(resolve, 10));
+  await expect(client.call("operation.status", { operation_id: "known" })).rejects.toThrow();
+  expect(starts).toBe(0);
+});

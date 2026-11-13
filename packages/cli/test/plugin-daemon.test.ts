@@ -31,7 +31,9 @@ async function daemon(status: unknown) {
 it("reports stopped without starting a daemon", async () => { expect(await pluginDaemonStatus()).toBe("stopped"); });
 it("rejects a legacy daemon without shutdown or session registration", async () => {
   const calls = await daemon({ daemon: { version: "0.0.0" } });
-  await expect(requirePluginDaemon()).rejects.toThrow("No restart was performed");
+  const preparation = requirePluginDaemon();
+  await expect(preparation).rejects.toThrow("No restart was performed");
+  await expect(preparation).rejects.toMatchObject({ code: -32601 });
   expect(calls).toEqual(["ipc.hello", "daemon.status"]);
 });
 it("supports concurrent root preflights against one compatible daemon", async () => {

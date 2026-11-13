@@ -1,6 +1,6 @@
-import { RELEASE_VERSION } from "@kommutator/protocol";
+import { DaemonRuntimeResult, RELEASE_VERSION } from "@kommutator/protocol";
 import * as z from "zod";
-import { IpcClient, cliHello } from "./ipc-client.js";
+import { IpcError, IpcClient, cliHello } from "./ipc-client.js";
 
 const expectedRuntimeContract = 3;
 const Version = z.string().max(64).regex(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/).nullable().catch(null);
@@ -47,7 +47,23 @@ export async function pluginDaemonStatus(lazyStart = false, timeoutMs = 500, wai
 }
 export async function requirePluginDaemon(): Promise<void> {
   const state = await pluginDaemonStatus(true, 5000, 1000);
-  if (state !== "compatible") throw new Error(state === "incompatible"
-    ? "The running shared daemon predates this plugin runtime contract. After ending active sessions, use the installed plugin's bin/manage daemon restart command locally. No restart was performed."
-    : "Shared daemon unavailable; inspect the private local configuration and daemon log.");
+  if (state === "incompatible") throw new IpcError(
+    "The running shared daemon predates this plugin runtime contract. After ending active sessions, use the installed plugin's bin/manage daemon restart command locally. No restart was performed.", -32601);
+  if (state !== "compatible") throw new Error("Shared daemon unavailable; inspect the private local configuration and daemon log.");
+}
+
+/** Pure lookup preparation; never replace this with daemon.status diagnostics. */
+export async function requirePluginDaemonForLookup(): Promise<void> {
+  const client = new IpcClient({ hello: cliHello, lazyStart: false, timeoutMs: 5000, retries: 0 });
+  try {
+    const observed = DaemonRuntimeResult.parse(await client.call("daemon.runtime", {}));
+    if (observed.runtime_contract !== expectedRuntimeContract) {
+      throw new IpcError("Local daemon upgrade required for operation lookup; no fallback or restart was performed", -32601);
+    }
+  } catch (error) {
+    if (error instanceof IpcError && error.code === -32020) {
+      throw new IpcError("Local daemon upgrade required for operation lookup; no fallback or restart was performed", -32601);
+    }
+    throw error;
+  } finally { client.close(); }
 }

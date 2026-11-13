@@ -179,3 +179,27 @@ Explicit `kom doctor` and MCP caller `status` include private `hook_observations
 writes or overwritten slots mean **unknown**, not successful delivery. A hook which never
 runs cannot report itself. `output-written-ack-unverified` distinguishes visible output
 from a failed acknowledgement. No observation is identity authority or a read receipt.
+
+## Reconcile an uncertain MCP send or ack
+
+Keep the returned `operation_id`, including when the tool reports a timeout. Call
+`operation_status({ operation_id })` from the same session owner. The lookup is local;
+Claude skips its remote identity preflight but still checks local generation and ownership.
+A new IPC connection may still wait for ordinary hello work.
+
+- `confirmed`: the daemon durably observed a successful hub response. For sends this
+  confirms storage/routing, not recipient read. Ack counts describe the last confirmed
+  attempt; counts from a lost original response cannot be reconstructed.
+- `queued`: this exact outbox entry remains; a previous hub attempt may have committed.
+- `blocked`: progress is stopped under existing outbox rules; prior commit remains possible.
+- `unknown`: no authorized retained evidence. It does not establish non-admission or failure.
+
+Do not blindly resend, clear the queue, or infer an operation outcome from queue depth.
+Old daemons require an explicit compatible local upgrade; there is no fallback submission.
+Confirmed observations expire after 24 hours and are capped at 256 per owner, with 4096
+rows globally. An unresolved full journal rejects new tracked admissions before enqueue.
+A lost outer MCP response can lose its UUID; no content matching or global listing exists.
+
+Schema4 rollback must preserve the current state database. Prefer a compatible fix forward.
+A pre-upgrade backup alone is insufficient if any work was admitted after the snapshot;
+restoration needs proof of no such work or separately reviewed lossless reconciliation.
