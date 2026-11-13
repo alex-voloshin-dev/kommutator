@@ -17,7 +17,9 @@ async function fixture(request: (method: string, params: unknown) => Promise<unk
   const home = await mkdtemp(join(tmpdir(), "kom-ipc-errors-"));
   cleanup.push(() => rm(home, { recursive: true, force: true }));
   const path = join(home, "agentd.sock");
-  const ipc = await startIpc({ path, peer: () => ({}), disconnect() {}, request: (_peer, method, params) => request(method, params) });
+  let signalDisconnect!: () => void;
+  const disconnected = new Promise<void>(resolve => { signalDisconnect = resolve; });
+  const ipc = await startIpc({ path, peer: () => ({}), disconnect() { signalDisconnect(); }, request: (_peer, method, params) => request(method, params) });
   cleanup.push(ipc.close);
   const socket = connect(path);
   cleanup.push(() => { socket.destroy(); });
@@ -43,7 +45,7 @@ async function fixture(request: (method: string, params: unknown) => Promise<unk
     }
   }
   const send = (id: number | string, method: string) => socket.write(JSON.stringify({ jsonrpc: "2.0", id, method }) + "\n");
-  return { socket, replies, frames, until, send };
+  return { socket, replies, frames, until, send, disconnected };
 }
 
 describe("local IPC response and envelope boundaries", () => {
@@ -101,4 +103,60 @@ it("keeps IPC usable through hub outage and distinguishes shutdown without expos
   expect(client.replies[3]?.result).toEqual({ healthy: true });
   expect(client.frames.join("")).not.toContain("secret");
   expect(client.frames.join("")).not.toContain("queued");
+});
+
+it("allows only bounded status lookups past a held mutation after successful hello", async () => {
+  let releaseMutation!: () => void; const mutation = new Promise<void>(resolve => { releaseMutation = resolve; });
+  let releaseLookup!: () => void; const lookup = new Promise<void>(resolve => { releaseLookup = resolve; });
+  const calls: string[] = [];
+  const client = await fixture(async method => {
+    calls.push(method);
+    if (method === "operation.submit") await mutation;
+    if (method === "operation.status") await lookup;
+    return { ok: true };
+  });
+  client.send("hello", "ipc.hello"); await client.until(1);
+  client.send("mutation", "operation.submit"); client.send("next-mutation", "receipt.mark");
+  for (let i = 0; i < 17; i++) client.send(`lookup-${i}`, "operation.status");
+  await client.until(2);
+  expect(client.replies[1]).toMatchObject({ id: "lookup-16", error: { code: -32024 } });
+  expect(calls).toEqual(["ipc.hello", "operation.submit", "operation.status"]);
+  releaseLookup(); await client.until(18);
+  expect(calls.filter(method => method === "operation.status")).toHaveLength(16);
+  expect(calls).not.toContain("receipt.mark");
+  releaseMutation(); await client.until(20);
+  expect(calls.at(-1)).toBe("receipt.mark");
+});
+
+it.each([false, true])("never bypasses pending or failed hello when failed=%s", async failed => {
+  let release!: () => void; const gate = new Promise<void>(resolve => { release = resolve; });
+  const calls: string[] = [];
+  const client = await fixture(async method => {
+    calls.push(method);
+    if (method === "ipc.hello") { await gate; if (failed) throw new RpcError(-32020, "hello failed"); }
+    return { ok: true };
+  });
+  client.send("hello", "ipc.hello"); client.send("lookup", "operation.status");
+  await new Promise(resolve => setTimeout(resolve, 10));
+  expect(calls).toEqual(["ipc.hello"]);
+  release(); await client.until(2);
+  expect(calls).toEqual(["ipc.hello", "operation.status"]);
+  expect(client.replies[0]?.id).toBe("hello");
+});
+
+it("drops queued lookup dispatches when their socket closes", async () => {
+  let release!: () => void; const gate = new Promise<void>(resolve => { release = resolve; });
+  let entered!: () => void; const started = new Promise<void>(resolve => { entered = resolve; });
+  let lookups = 0;
+  const client = await fixture(async method => {
+    if (method === "operation.status") { lookups++; entered(); await gate; }
+    return { ok: true };
+  });
+  client.send("hello", "ipc.hello"); await client.until(1);
+  for (let i = 0; i < 8; i++) client.send(i, "operation.status");
+  await started;
+  const closed = once(client.socket, "close"); client.socket.destroy(); await closed; await client.disconnected;
+  release();
+  await new Promise(resolve => setTimeout(resolve, 10));
+  expect(lookups).toBe(1);
 });

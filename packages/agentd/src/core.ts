@@ -1,3 +1,5 @@
+import { DaemonRuntimeParams, OperationSubmit, OperationStatusParams } from "@kommutator/protocol";
+import { Operations, operationOwner, matchesOwner, type OperationOwner } from "./operations.js";
 import { RELEASE_VERSION, DaemonStatusParams } from "@kommutator/protocol";
 import { randomUUID, createHash } from "node:crypto";
 import { basename, dirname, isAbsolute } from "node:path";
@@ -17,7 +19,7 @@ import { realClock, WakeScheduler, type Clock } from "./wake.js";
 import { Projects } from "./project.js";
 
 export type Hello = z.infer<(typeof Methods)["ipc.hello"]>;
-export interface IpcPeer { hello?: Hello; key?: string; ownerPid?: number; ownerBirth?: string; ownerGeneration?: number; ended?: boolean }
+export interface IpcPeer { hello?: Hello; key?: string; ownerPid?: number; ownerBirth?: string; ownerGeneration?: number; ended?: boolean; operationOwner?: OperationOwner; operationsReady?: boolean }
 interface RegistrationOwner { pid: number | undefined; birth: string | undefined; generation: number | undefined }
 interface AcceptedRegistration { vendorId: string; pid: number; settled: Promise<RegistrationOwner | undefined> }
 export interface CoreOptions {
@@ -41,6 +43,7 @@ const WRITE_METHODS = new Set(["message.send", "board.put", "receipt.mark", "top
 
 export class DaemonCore {
   readonly registry: Registry;
+  readonly operations: Operations;
   readonly transport: HubTransport;
   readonly config: DaemonConfig;
   readonly clock: Clock;
@@ -61,6 +64,7 @@ export class DaemonCore {
 
   constructor(private readonly options: CoreOptions) {
     this.registry = new Registry(options.dbPath);
+    this.operations = new Operations(this.registry);
     this.transport = options.transport;
     this.config = options.config;
     this.clock = options.clock ?? realClock;
@@ -455,6 +459,7 @@ export class DaemonCore {
         if (parsed.data.client === "shim") {
           const record = await this.register(parsed.data);
           peer.key = record.key;
+          if (record.pid && record.processStartedAt) peer.operationOwner = operationOwner(record);
         } else {
           // Hooks have no stable PID. Only the MCP shim may create or revive a root.
           await this.bind(peer);
@@ -469,8 +474,9 @@ export class DaemonCore {
       } else if (!parsed.data.vendor_session_id && (!parsed.data.vendor || parsed.data.vendor === "other")) {
         const record = await this.register(parsed.data);
         peer.key = record.key;
+        if (record.pid && record.processStartedAt) peer.operationOwner = operationOwner(record);
       } else {
-        try { await this.bind(peer); } catch (error) { if (!(error instanceof RpcError)) throw error; }
+        try { const bound = await this.bind(peer); if (bound.pid && bound.processStartedAt) peer.operationOwner = operationOwner(bound); } catch (error) { if (!(error instanceof RpcError)) throw error; }
       }
       this.requireOpen();
       if (parsed.data.client === "shim" && parsed.data.vendor === "claude-code" && (!this.peers.has(peer) || peer.ended)) {
@@ -483,9 +489,18 @@ export class DaemonCore {
       }
       const found = peer.key ? this.registry.get(peer.key) : undefined;
       const record = found ? this.currentOwner(peer, found) : undefined;
+      if (peer.operationOwner && record && matchesOwner(peer.operationOwner, record)) {
+        if (!peer.operationOwner.sessionId && record.session.id) peer.operationOwner.sessionId = record.session.id;
+        peer.operationsReady = true;
+      }
       return record?.session.id ? { bound: true, session: record.session } : { bound: Boolean(record), pending: true };
     }
     if (!peer.hello) throw new RpcError(-32020, "ipc.hello is required before requests");
+    if (method === "daemon.runtime") {
+      this.requireCli(peer);
+      if (!DaemonRuntimeParams.safeParse(value).success) throw new RpcError(-32602, "invalid daemon.runtime parameters");
+      return { runtime_contract: 3, daemon: { version: RELEASE_VERSION } };
+    }
     if (method === "daemon.status" || method === "status") {
       const parsed = DaemonStatusParams.safeParse(value);
       if (!parsed.success) throw new RpcError(-32602, "invalid daemon.status parameters");
@@ -570,6 +585,35 @@ export class DaemonCore {
     }
     if (method === "session.list") await this.reconcileRetirements();
     const record = this.currentOwner(peer, await this.bind(peer));
+    if (method === "operation.status" || method === "operation.submit") {
+      this.trackedOwner(peer, record);
+      if (method === "operation.status") {
+        const parsed = OperationStatusParams.safeParse(value);
+        if (!parsed.success) throw new RpcError(-32602, "invalid operation lookup");
+        return this.operations.status(parsed.data.operation_id, record, this.clock.now());
+      }
+      const parsed = OperationSubmit.safeParse(value);
+      if (!parsed.success) throw new RpcError(-32602, "invalid tracked mutation parameters");
+      const operation = parsed.data;
+      const replay = randomUUID();
+      const params = operation.method === "message.send"
+        ? { message: { ...operation.params.message, from: "" }, idempotency_key: replay }
+        : operation.params;
+      this.validate(operation.method, { ...params, session_id: record.session.id ?? "pending" });
+      const id = this.operations.admit(operation.operation_id, record, operation.method, params, this.clock.now());
+      if (operation.method === "receipt.mark") this.markActedIds(record, operation.params.ids);
+      await this.flush();
+      const current = this.trackedOwner(peer, this.currentOwner(peer, record));
+      const outcome = this.outcomes.get(id); this.outcomes.delete(id);
+      if (outcome?.error) throw outcome.error;
+      const status = this.operations.status(operation.operation_id, current, this.clock.now());
+      if (status.outcome === "confirmed") return { ...status.result, ...(operation.method === "message.send" ? { status: "sent" } : {}), operation_id: operation.operation_id };
+      if (status.outcome === "blocked") throw new RpcError(-32023, "operation is blocked; inspect operation_status without resubmitting");
+      if (outcome?.result) return { ...Results[operation.method].parse(outcome.result), ...(operation.method === "message.send" ? { status: "sent" } : {}), operation_id: operation.operation_id };
+      if (this.registry.outboxEntry(id)) return { status: "queued", operation_id: operation.operation_id,
+        ...(operation.method === "message.send" ? { idempotency_key: replay } : { outbox_id: id }), outbox_depth: this.registry.outbox().length };
+      return { outcome: "unknown", operation_id: operation.operation_id };
+    }
     if (method === "whoami") {
       await this.flush();
       const current = this.currentOwner(peer, record);
@@ -638,6 +682,19 @@ export class DaemonCore {
     throw new RpcError(-32601, "unknown or unavailable IPC method");
   }
 
+  private trackedOwner(peer: IpcPeer, record: LocalRecord): LocalRecord {
+    if (!this.peers.has(peer) || peer.hello?.client !== "shim" || !peer.operationsReady || !peer.operationOwner || !matchesOwner(peer.operationOwner, record)) {
+      throw new RpcError(-32020, "tracked operation owner is unavailable or changed; open a new session connection");
+    }
+    if (!peer.operationOwner.sessionId && record.session.id) peer.operationOwner.sessionId = record.session.id;
+    return record;
+  }
+  private blockOperation(id: number, reason: string, category: "missing-session" | "replay-horizon" | "hub-rpc", code?: number): void {
+    this.registry.transaction(() => {
+      this.registry.fail(id, reason);
+      this.operations.block(id, { category, ...(code !== undefined ? { code } : {}) }, this.clock.now());
+    });
+  }
   private requireCli(peer: IpcPeer): void { if (peer.hello?.client !== "cli") throw new RpcError(-32003, "method requires CLI connection"); }
   private validate(method: string, params: unknown): unknown {
     const schema = Methods[method as MethodName];
@@ -699,9 +756,9 @@ export class DaemonCore {
           continue;
         }
         const record = this.registry.get(entry.local_key);
-        if (!record) { this.registry.fail(entry.id, "local session is missing"); continue; }
+        if (!record) { this.blockOperation(entry.id, "local session is missing", "missing-session"); continue; }
         if (this.clock.now() - entry.created_at > REPLAY_HORIZON) {
-          this.registry.fail(entry.id, "replay horizon exceeded (7 days); manual intervention required");
+          this.blockOperation(entry.id, "replay horizon exceeded (7 days); manual intervention required", "replay-horizon");
           this.report("outbox entry exceeded the seven-day replay horizon");
           blocked.add(entry.local_key);
           continue;
@@ -729,8 +786,11 @@ export class DaemonCore {
               const later = this.registry.outbox().some((pending) => pending.local_key === record.key && pending.id > entry.id && pending.method === "session.upsert");
               newest.session = { ...updated, ...(newest.session.state === "gone" ? { state: "gone" as const } : {}), ...(later ? { wake: newest.session.wake, capability: newest.session.capability } : {}) };
               this.registry.save(newest);
+              if (matchesOwner(operationOwner(record), newest)) this.operations.attach(newest);
             }
+            const tracked = this.operations.confirm(entry.id, result, this.clock.now());
             this.registry.remove(entry.id);
+            if (tracked) this.operations.prune(this.clock.now());
           });
           if (entry.method === "session.upsert" && ["register", "reincarnate"].includes(String(ObjectParams.parse(params)["op"]))) {
             const current = this.registry.get(record.key);
@@ -746,7 +806,7 @@ export class DaemonCore {
           progressed = true;
         } catch (error) {
           if (!(error instanceof RpcError)) { this.report("hub unavailable; commands remain queued"); return; }
-          this.registry.fail(entry.id, `RPC ${error.code}: ${error.message}`);
+          this.blockOperation(entry.id, `RPC ${error.code}: ${error.message}`, "hub-rpc", error.code);
           this.outcomes.set(entry.id, { error });
           this.report(`outbox command failed with RPC ${error.code}`);
           if (entry.method === "session.upsert") blocked.add(entry.local_key);

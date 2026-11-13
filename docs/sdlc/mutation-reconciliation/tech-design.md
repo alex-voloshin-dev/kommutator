@@ -194,6 +194,48 @@ refresh of PID, birth, generation, epoch or root. Once attached, a different UUI
 rejected. No caller-supplied UUID participates. Test initial online registration and
 offline binding followed by registration. Apply the same rule to observation attachment.
 
+### Pure plugin compatibility preparation for lookup (2026-11-12)
+
+`operation_status` passes its method context through the actual MCP client source and
+Claude preparation path. Both plugin profiles validate compatibility with the additive
+CLI-only `daemon.runtime` RPC: strict empty params, bounded version and runtime-contract
+fields only. This RPC performs no retirement reconciliation, flush, hub request or
+registration. Its client disables lazy startup and hub waiting. Unsupported old daemons
+fail clearly without falling back to `daemon.status` or submitting a mutation.
+Normal plugin preparation keeps its existing diagnostics/startup behavior. Lookup still
+checks local conflicts, Codex call-root metadata and Claude on-disk generation. An
+`operation.status` socket reconnect also suppresses lazy daemon startup, including clients
+originally constructed for ordinary mutations. Existing hello ownership rules still apply;
+a fresh bound connection can await ordinary hello work, with no availability guarantee.
+
+### Local lookup scheduling and initially unbound connections (2026-11-12)
+
+After a successful `ipc.hello` response, production IPC dispatches only
+`operation.status` on a separate per-socket serial lookup lane, bounded to 16 outstanding
+lookups. All mutations and other methods retain their existing ordered queue. Before
+hello completes or after it fails, lookup cannot bypass that queue. Each lookup still
+runs normal binding and immutable tracked-owner checks, including retirement fences;
+transport scheduling supplies no identity authority. This lets a timed-out submit remain
+pending while the same connection observes its queued state. Lookup overflow fails with
+a fixed error, without dispatch or mutation.
+
+The client remembers an explicit `bound: false` hello result. Before sending a tracked
+submit only, a single-flight preparation can replace that idle unbound connection with
+one fresh hello. It never changes a peer's pinned owner or replays a submitted mutation.
+If another RPC is pending, any RPC timed out on this connection, or the fresh hello
+remains unbound, fail before dispatch. A bounded per-connection timeout fence is
+conservative even after a late reply; it resets only on socket closure. All calls await
+shared preparation, and the idle check and connection replacement are synchronous.
+An absent legacy `bound` field does not trigger this recovery; dedicated operation
+methods still report unsupported-daemon errors without fallback. Closing an idle shim
+connection uses existing disconnect behavior and does not retire its logical owner.
+`operation.status` never triggers this preparation or registration/revival recovery.
+
+Retention and capacity queries inspect indexed metadata only, never materialize stored
+result blobs. Confirmation pruning runs only for tracked settlement, not legacy hook
+receipts or lifecycle settlement. Expired lookups remain unknown even when no admission
+or settlement has triggered physical eviction.
+
 ## Crash and timeout cases
 
 | Interruption | Result on authorized lookup |
@@ -274,6 +316,7 @@ An already bound read-only lookup must remain local while the hub is offline.
   no automatic resubmission and unchanged legacy mutation behavior.
 
 Then run the repository's ordered build, typecheck and tests and `pnpm release:check`.
-No tests were executed for this document. Day-long, independent subnet, Windows reboot,
-vendor wake and availability incident gates remain open. This artifact requires independent
-review before implementation; `review_decision: proceed` intentionally records that state.
+The design was independently reviewed before implementation. Implementation review and QA
+are recorded in [review-change-3](review-change-3.md); release qualification is a separate gate.
+Day-long, independent subnet, Windows reboot, vendor wake and availability incident gates
+remain open. `review_decision: proceed` records the approved design boundary.

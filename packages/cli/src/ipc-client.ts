@@ -74,11 +74,33 @@ export class IpcClient implements RpcClient {
   private pending = new Map<number, { resolve(value: unknown): void; reject(error: Error): void; timer: NodeJS.Timeout }>();
   private buffer = "";
   private closed = false;
+  private helloBound: boolean | undefined;
+  private timedOutOnConnection = false;
+  private trackedPreparation: Promise<void> | undefined;
   constructor(private readonly options: Options) {}
 
   async call(method: string, params: Record<string, unknown> = {}): Promise<unknown> {
-    await this.ensureConnected();
-    return this.request(method, params);
+    if (method === "operation.submit") await this.prepareTrackedSubmission();
+    for (;;) {
+      if (this.trackedPreparation) await this.trackedPreparation;
+      await this.ensureConnected(method !== "operation.status");
+      // A concurrent preparation may have started while this call awaited hello.
+      if (this.trackedPreparation || this.connecting) continue;
+      return this.request(method, params);
+    }
+  }
+
+  private async prepareTrackedSubmission(): Promise<void> {
+    if (this.trackedPreparation) return this.trackedPreparation;
+    this.trackedPreparation = (async () => {
+      await this.ensureConnected();
+      if (this.helloBound !== false) return;
+      if (this.pending.size > 0 || this.timedOutOnConnection) throw new IpcError("unbound connection has pending work; tracked mutation was not dispatched", -32020);
+      this.disconnect(new IpcError("preparing a fresh bound connection before tracked submission"));
+      await this.ensureConnected();
+      if (this.helloBound === false) throw new IpcError("session remains unbound; tracked mutation was not dispatched", -32020);
+    })();
+    try { await this.trackedPreparation; } finally { this.trackedPreparation = undefined; }
   }
 
   close(): void {
@@ -89,33 +111,37 @@ export class IpcClient implements RpcClient {
   private disconnect(error: Error): void {
     const socket = this.socket;
     this.socket = undefined;
+    this.helloBound = undefined;
+    this.timedOutOnConnection = false;
     socket?.destroy();
     for (const waiter of this.pending.values()) { clearTimeout(waiter.timer); waiter.reject(error); }
     this.pending.clear();
     this.buffer = "";
   }
 
-  private async ensureConnected(): Promise<void> {
+  private async ensureConnected(allowStart = true): Promise<void> {
     if (this.closed) throw new IpcError("IPC client closed");
     if (this.connecting) return this.connecting;
     if (this.socket && !this.socket.destroyed) return;
-    this.connecting = this.open();
+    this.connecting = this.open(allowStart);
     try { await this.connecting; } finally { this.connecting = undefined; }
   }
 
-  private async open(): Promise<void> {
+  private async open(allowStart: boolean): Promise<void> {
     const retries = this.options.retries ?? 6;
     for (let attempt = 0; ; attempt++) {
       if (this.closed) throw new IpcError("IPC client closed");
       try {
         await this.openSocket();
-        await this.request("ipc.hello", this.options.hello());
+        const hello: unknown = await this.request("ipc.hello", this.options.hello());
+        const binding = z.object({ bound: z.boolean().optional() }).safeParse(hello);
+        this.helloBound = binding.success ? binding.data.bound : undefined;
         return;
       } catch (error) {
         this.disconnect(error instanceof Error ? error : new IpcError("IPC connection failed"));
         const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
         if (code !== "ENOENT" && code !== "ECONNREFUSED") throw error;
-        if (!this.options.lazyStart) throw error;
+        if (!this.options.lazyStart || !allowStart) throw error;
         if (attempt === 0) (this.options.spawn ?? spawnDaemon)();
         if (attempt >= retries || this.closed) throw new IpcError("Daemon unavailable; check kom init and kom daemon run");
         await new Promise((resolve) => setTimeout(resolve, Math.min(50 * 2 ** attempt, 500)));
@@ -163,6 +189,7 @@ export class IpcClient implements RpcClient {
     if (Buffer.byteLength(frame) > MAX_FRAME_BYTES) return Promise.reject(new IpcError("Oversized IPC request"));
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
+        this.timedOutOnConnection = true;
         this.pending.delete(id);
         reject(new IpcError("Daemon request timed out; delivery state may be uncertain; do not resend blindly"));
       }, this.options.timeoutMs ?? 5_000);

@@ -70,7 +70,7 @@ registration, retry or fallback identity is created; hook deadlines are unchange
 See DESIGN §19 for the bounded recovery contract.
 The shared daemon runtime contract is 3; plugin clients reject earlier daemons and request
 an explicit local restart rather than using unsafe old binding behavior.
-Local state schema 3 persists `goneReason` without changing hub records or the runtime
+Local state schema 4 adds bounded owner-scoped mutation observations and preserves `goneReason` without changing hub records or the runtime
 contract. A current positive-generation hook can revive only a liveness-retired matching
 owner. Explicit SessionEnd, superseded and legacy unknown retirements require a newer
 SessionStart or proven replacement process. Unavailable process probes do not establish
@@ -134,11 +134,14 @@ Local IPC helpers are not forwarded verbatim to the hub:
 
 | Method | Local behavior |
 |---|---|
+| `operation.submit` | Strict `{ operation_id: UUID, method: "message.send" | "receipt.mark", params }`; shim-generated correlation, daemon-owned authorship/replay keys. Atomic observation/outbox admission. Success adds `operation_id`; compact send confirmation may omit deliveries explicitly. Never resubmit the same invocation |
+| `operation.status` | Strict `{ operation_id: UUID }`; pinned shim owner only, no hub request or flush. Returns `unknown`, `queued`, `confirmed` with bounded typed result, or `blocked` with safe category/code. Unknown and foreign IDs are indistinguishable |
 | `whoami` | Returns `{ session, topics }` after registration; missing/ambiguous binding is an error |
 | `hook.poll` | `{ event, stop_hook_active? }` → `{ headers, cursor, more, block, session }`; Stop uses current wake policy and its one-shot latch |
 | `hook.ack` | `{ ids }` → queued read receipts for headers already flushed to stdout |
 | `daemon.status` / `status` | Local daemon/queue health and hub reachability; optional CLI-only `caller` selector adds read-only exact-owner registration health; excludes vendor credentials |
 | `daemon.diagnostics` | CLI-only read-only checks of live registered Claude socket presence and Codex shim liveness/observed hook polls; returns `claude_sessions` and `codex_sessions` (`id`, `shim_alive` as true/false/null for alive/dead/unverified, `hook_events`), never socket paths or tokens |
+| `daemon.runtime` | CLI-only strict `{}`; pure bounded version/runtime-contract check used by plugin lookup preparation, with no reconciliation, flush or hub work |
 | `daemon.shutdown` | CLI-only graceful shutdown; CLI restart confirms listener absence after a reset before spawning (DESIGN §19) |
 | `session.dnd` | CLI-only `{ wake, session? }`; target local ID/handle or all live local sessions |
 | `human.send` | CLI-only `{ message }`; human origin requires the CLI's stdin TTY, otherwise agent origin and no force wake |
@@ -280,3 +283,23 @@ agentd or the hub. Wire method parameters and result schemas above remain unchan
   `unread_only: false` and pass the returned cursor as the next `since_seq`.
 
 No projection prunes history, changes membership, authorizes offline reads or creates receipts.
+
+## Tracked MCP mutation observations
+
+MCP send and explicit ack generate a fresh operation UUID before resolving the client.
+Transport errors expose that UUID with `outcome: unknown` and lookup guidance. Old daemons
+reject the dedicated local methods; the shim requests a local upgrade and never falls back
+by sending an untracked mutation. Legacy clients and hub methods remain unchanged.
+
+The immutable owner snapshot is captured during the original shim hello before its flush,
+covering local key, vendor/root, PID/birth, generation and lifecycle epoch. A daemon-assigned
+hub session UUID attaches once; neither replacement Codex shims nor retired Claude owners
+can use predecessor observations. Failed hello cannot track operations.
+
+Confirmed send evidence means hub storage/routing, not recipient read. Ack counts belong
+to the last confirmed hub attempt, not necessarily the original attempt; old-hub absent
+counts remain unknown. Queued requires the exact outbox row; response loss can still mean
+hub commit. Blocked never proves non-commit. A missing/expired observation is unknown and
+authorizes no resend. Retention is 24 hours / 256 confirmed per owner / 4096 total, preserving
+unresolved outbox work. Results are at most 65536 UTF-8 bytes; oversized sends use
+`{ id, replayed, deliveries_omitted: true }`. See DESIGN §19 for crash and rollback limits.

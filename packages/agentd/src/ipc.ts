@@ -69,6 +69,9 @@ export async function startIpc(options: {
     try { peer = options.peer(); } catch { sockets.delete(socket); socket.destroy(); return; }
     let buffer = Buffer.alloc(0);
     let queue = Promise.resolve();
+    let lookupQueue = Promise.resolve();
+    let lookupPending = 0;
+    let helloCompleted = false;
     socket.on("error", () => { socket.destroy(); });
     socket.once("close", () => { sockets.delete(socket); options.disconnect(peer); });
     const reply = (value: Response) => {
@@ -90,18 +93,19 @@ export async function startIpc(options: {
         if (newline > MAX_FRAME_BYTES) { socket.destroy(); return; }
         const line = buffer.subarray(0, newline).toString("utf8");
         buffer = buffer.subarray(newline + 1);
-        queue = queue.then(async () => {
+        let decoded: unknown;
+        try { decoded = JSON.parse(line); }
+        catch { reply({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "parse error" } }); continue; }
+        const envelope = Request.safeParse(decoded);
+        if (!envelope.success) { reply({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "invalid JSON-RPC frame" } }); continue; }
+        const parsed = envelope.data;
+        const id = parsed.id;
+        const notification = id === undefined || id === null;
+        const dispatch = async () => {
           if (socket.destroyed) return;
-          let decoded: unknown;
-          try { decoded = JSON.parse(line); }
-          catch { reply({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "parse error" } }); return; }
-          const envelope = Request.safeParse(decoded);
-          if (!envelope.success) { reply({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "invalid JSON-RPC frame" } }); return; }
-          const parsed = envelope.data;
-          const id = parsed.id;
-          const notification = id === undefined || id === null;
           try {
             const result = await options.request(peer, parsed.method, parsed.params ?? {});
+            if (parsed.method === "ipc.hello") helloCompleted = true;
             if (!notification) reply({ jsonrpc: "2.0", id, result });
           } catch (error) {
             if (!notification) reply({ jsonrpc: "2.0", id, error: {
@@ -109,7 +113,15 @@ export async function startIpc(options: {
               message: error instanceof RpcError ? error.message : error instanceof OfflineError ? "Hub unavailable or request timed out; inspect status before retrying a mutation." : error instanceof z.ZodError ? "invalid method parameters" : "daemon request failed",
             } });
           }
-        });
+        };
+        if (helloCompleted && parsed.method === "operation.status") {
+          if (lookupPending >= 16) {
+            if (!notification) reply({ jsonrpc: "2.0", id, error: { code: -32024, message: "too many pending operation lookups" } });
+            continue;
+          }
+          lookupPending++;
+          lookupQueue = lookupQueue.then(dispatch).finally(() => { lookupPending--; });
+        } else queue = queue.then(dispatch);
       }
       if (buffer.length > MAX_FRAME_BYTES) socket.destroy();
     });

@@ -9,3 +9,5 @@ export * from "./schemas.js";
 export * from "./headers.js";
 export * from "./results.js";
 export { RELEASE_VERSION } from "./release.js";
+
+export * from "./operations.js";

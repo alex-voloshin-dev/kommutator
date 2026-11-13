@@ -845,11 +845,11 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
-### MCP send and acknowledgement outcome reconciliation (planned, 2026-11-12)
+### MCP send and acknowledgement outcome reconciliation (2026-11-13)
 
-The [mutation reconciliation design](sdlc/mutation-reconciliation/tech-design.md) proposes
-a local durable observation journal for MCP send and explicit ack only. This contract is
-recorded before implementation and remains subject to review. A fresh shim-generated
+The [mutation reconciliation design](sdlc/mutation-reconciliation/tech-design.md) defines
+a local durable observation journal for MCP send and explicit ack only. This contract was
+recorded and reviewed before implementation. A fresh shim-generated
 operation UUID correlates one invocation; it is never a caller-selected hub replay key
 or an instruction to resubmit. Agentd retains authority over send idempotency keys.
 Admission atomically stores the outbox work and its owner-scoped observation. Successful
@@ -905,6 +905,48 @@ clients retain their original methods and old hubs remain compatible. A fresh lo
 connection can still time out in existing `ipc.hello`; no hard lookup availability or
 identity bypass is promised. Existing hook timers, receipt meaning, retirement
 fences, board CAS, hub replay retention and disabled pruning are unchanged.
+
+### Pure plugin compatibility preparation for lookup (2026-11-12)
+
+`operation_status` passes its method context through the actual MCP client source and
+Claude preparation path. Both plugin profiles validate compatibility with the additive
+CLI-only `daemon.runtime` RPC: strict empty params, bounded version and runtime-contract
+fields only. This RPC performs no retirement reconciliation, flush, hub request or
+registration. Its client disables lazy startup and hub waiting. Unsupported old daemons
+fail clearly without falling back to `daemon.status` or submitting a mutation.
+Normal plugin preparation keeps its existing diagnostics/startup behavior. Lookup still
+checks local conflicts, Codex call-root metadata and Claude on-disk generation. An
+`operation.status` socket reconnect also suppresses lazy daemon startup, including clients
+originally constructed for ordinary mutations. Existing hello ownership rules still apply;
+a fresh bound connection can await ordinary hello work, with no availability guarantee.
+
+### Local lookup scheduling and initially unbound connections (2026-11-12)
+
+After a successful `ipc.hello` response, production IPC dispatches only
+`operation.status` on a separate per-socket serial lookup lane, bounded to 16 outstanding
+lookups. All mutations and other methods retain their existing ordered queue. Before
+hello completes or after it fails, lookup cannot bypass that queue. Each lookup still
+runs normal binding and immutable tracked-owner checks, including retirement fences;
+transport scheduling supplies no identity authority. This lets a timed-out submit remain
+pending while the same connection observes its queued state. Lookup overflow fails with
+a fixed error, without dispatch or mutation.
+
+The client remembers an explicit `bound: false` hello result. Before sending a tracked
+submit only, a single-flight preparation can replace that idle unbound connection with
+one fresh hello. It never changes a peer's pinned owner or replays a submitted mutation.
+If another RPC is pending, any RPC timed out on this connection, or the fresh hello
+remains unbound, fail before dispatch. A bounded per-connection timeout fence is
+conservative even after a late reply; it resets only on socket closure. All calls await
+shared preparation, and the idle check and connection replacement are synchronous.
+An absent legacy `bound` field does not trigger this recovery; dedicated operation
+methods still report unsupported-daemon errors without fallback. Closing an idle shim
+connection uses existing disconnect behavior and does not retire its logical owner.
+`operation.status` never triggers this preparation or registration/revival recovery.
+
+Retention and capacity queries inspect indexed metadata only, never materialize stored
+result blobs. Confirmation pruning runs only for tracked settlement, not legacy hook
+receipts or lifecycle settlement. Expired lookups remain unknown even when no admission
+or settlement has triggered physical eviction.
 
 ### Explicit CLI board reads (2026-11-08)
 
