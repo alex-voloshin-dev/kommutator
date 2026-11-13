@@ -12,6 +12,16 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
 
+The urgent [reconnect candidate](sdlc/reconnect-authority/tech-design.md) repairs
+timezone-dependent process birth, interrupted pre-delivery authority publication,
+premature lazy-start exhaustion and ordinary-close shutdown confirmation. Independent
+implementation reviews, independent QA and exact-version packaging pass; publication
+and deployment are pending.
+Legacy history is retained conservatively, and unverified native owners cannot receive
+delivery. Contract 4/schema 5 require per-owner client upgrade and a new process;
+service health alone does not prove a client has reconnected. Historical #9/#19/#22/#25
+causes are not collectively resolved by these controlled repairs.
+
 Published 0.14.0 implements `@project` hub-resolved recent-session audiences, strict MCP
 argument rejection and separate current/backlog status evidence. Independent review and
 QA and exact-version release qualification passed 674 workspace and 142 script tests;
@@ -72,6 +82,7 @@ remains open; a healthy short probe is not a root-cause fix.
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
 | 1 | [#22: recurrent hub availability](https://github.com/alex-voloshin-dev/kommutator/issues/22) | 0.13.0 adds request-specific send/ack reconciliation, not an availability fix. Correlate simultaneous endpoint/resource/kernel observations; blocked-outbox disposition still needs separate design. No blanket queue deletion or kernel tuning |
 | 2 | [#25: exported E2E status timeout](https://github.com/alex-voloshin-dev/kommutator/issues/25) | First 0.13.0 candidate gate timed out on owner-2 set_status despite intact registration. One diagnostic replay passed; retain failed IPC dispatch/response phases before assigning a cause or linking it to #19/#22 |
+| 3 | Claude conversation context prevalidation | The reconnect candidate rejects a changed project at daemon binding, but A(cwd1) → B(cwd2) → A(cwd3) can publish conflicting journal authority first. Add bounded per-conversation validation before publication without weakening the hook deadline. Same-project resume is the current supported path |
 | 2 | Claude native-wake setup clarity | Field measurements on capability `hook` describe polling latency, not a demonstrated wake regression. Clarify the two per-session policy gates and what accept permits; do not globally enable inbound delivery |
 | Ongoing | Feedback and release maintenance | Investigate substantive feedback, preserve receipt semantics, validate fixes and announce qualified releases in `kommutator-feedback`; deploy and verify the local hub and daemon under the existing maintainer authorization |
 

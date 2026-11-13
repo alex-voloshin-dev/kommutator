@@ -1823,3 +1823,38 @@ Blocked work keeps the legacy aggregate degraded and an outstanding-work warning
 not prove current outage, non-commit or safe resend. Preserve caller recovery and existing
 compact/detailed fields. The projection adds no retries, receipts or mutations. Existing
 status-triggered background retirement reconciliation and flushing remain unchanged.
+
+### Stable process birth and restart authority (2026-11-13)
+
+Local state schema 5 and runtime contract 4 introduce tagged process-birth evidence.
+Linux uses `/proc` boot ID and exact start ticks (`linux-v1`), independent of timezone;
+other POSIX probes use tagged `ps-utc-v1` under UTC/C locale. Failed probes are unknown.
+Only comparable tagged values prove birth replacement; legacy versus tagged evidence
+never proves death. Preserve legacy rows, outbox, deliveries and end markers. Same-live-PID
+legacy adoption is unsupported: before reconnecting an affected owner, upgrade that
+client's MCP and all lifecycle hooks, exit its old process, then launch a new OS process
+with a compatible daemon. Service activation may leave unrelated old clients alive but
+unavailable; no host-wide process shutdown is required. A unique matching conversation/cwd/project predecessor may
+retain identity, memberships and history only after positive old-owner exit (or proven
+replacement for comparable tagged births). Ambiguous owners retain separate identities.
+Unknown retained owners cannot receive native delivery: immediately before endpoint use,
+fresh birth must match and the saved generation/epoch must still be current. Unverified
+owners retain unread pending deliveries without receipt advancement.
+Old daemons refuse schema 5. Claude hook/shim hello requires `runtime_contract: 4`, even
+for manual generation-zero hooks; management and non-Claude rules remain unchanged.
+Mixed old lifecycle writers and hot downgrade are unsupported; IPC cannot fence their
+pre-IPC filesystem writes. See the approved reconnect-authority design and ADRs.
+
+Plugin SessionStart publishes its bounded immutable generation synchronously after input
+validation and Linux birth observation, before delivery imports or async work. The journal
+is the only replay authority; temporary files never establish registration. No legacy alias
+is needed for upgraded readers. A committed event survives interrupted delivery; interruption
+before commit still requires genuine SessionStart. The 140/90 ms deadlines remain unchanged.
+Synchronous blocked kernel I/O can delay timer execution; this is not a guarantee against
+filesystem hangs or scheduler starvation. SessionEnd fences the exact generation captured;
+pre-capture A → B → A ambiguity from a session-ID-only vendor event remains a limitation.
+
+Unexpected IPC transport closure has its own code and remains uncertain. Shutdown sends
+once, then probes fresh nonstarting connections within two seconds; only absent-listener
+ENOENT/ECONNREFUSED authorizes replacement. Lazy startup uses one monotonic connection/hello
+budget, spawns at most once, supports cancellation, and never replays an application RPC.

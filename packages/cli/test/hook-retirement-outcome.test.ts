@@ -16,7 +16,7 @@ vi.mock("../src/hook-observations.js", () => ({ recordHookObservation: mocks.obs
 import { runHook } from "../src/hooks.js";
 
 const active = {
-  hello: { client: "hook" as const, protocol_version: 1, pid: 100, ppid: process.ppid,
+  hello: { client: "hook" as const, protocol_version: 1, runtime_contract: 4, pid: 100, ppid: process.ppid,
     vendor: "claude-code" as const, vendor_session_id: "ended-conversation", owner_generation: 3, cwd: "/repo" },
   generation: "birth:3", birth: "birth",
 };

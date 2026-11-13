@@ -19,7 +19,7 @@ async function fixture() {
   await writeFile(claudeSettings, JSON.stringify(mergeClaudeHooks({})));
   const codexHooks = join(home, "codex.json");
   const client = { call: vi.fn(async () => ({ claude_sessions: [{ id: "registered", endpoint_configured: true, socket_present: true }] })), close: vi.fn() };
-  const fetchProbe = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ protocol_version: PROTOCOL_VERSION, hosts: [], sessions: [], deliveries: [] })));
+  const fetchProbe = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ protocol_version: PROTOCOL_VERSION, runtime_contract: 4, hosts: [], sessions: [], deliveries: [] })));
   return { home, bin, claudeSettings, codexHooks, client, fetchProbe,
     options: { home, cwd: home, userHome: home, claudeSettings, codexHooks, platform: "darwin" as const, env: { PATH: bin }, timeoutMs: 500 },
     probes: { client: () => client, fetch: fetchProbe, guiPath: async () => bin },

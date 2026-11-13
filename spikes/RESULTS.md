@@ -1257,3 +1257,37 @@ Independent architecture, correctness/integration, security and QA qualified @pr
 ## 2026-11-13 — Feedback usability 0.14.0 public/local rollout
 
 Release 63ffa4b and PR #28 merge 4e23603 passed all six branch/PR/tag checks. Anonymous public archive hashes matched. Real clean-profile Claude 2.1.323 and Codex 0.167.2 installs launched MCP 0.14.0 and passed strict-argument and private-setup/origin probes. The ordinary updater completed without manual recovery: hub/daemon 0.14.0 healthy, connected, caller active, queue empty; checkpoint idle, timer active. All backup/current DB quick_checks passed with mode0600; hub schema6→7 and daemon schema4 observed. Existing chat MCP remains compatible0.13.1. Release announcement sent once. See [rollout evidence](evidence/2026-11-13-feedback-usability-rollout.json). No real model/native wake or unresolved issue acceptance is inferred.
+
+## 2026-11-13 — Reconnect baseline failure mechanisms
+
+Verified deployed 0.14.0 hooks lose committed authority when either external ps or
+async generation-link publication is delayed 500 ms: exit 0 and empty output remain,
+but no generation is available for MCP replay. The initial probe mistakenly used
+stale main-checkout 0.12.3 dist and is not 0.14.0 qualification; corrected controls
+used the verified retained release artifact. Separately, actual baseline source
+fails first connection after 1,761 ms despite a 5,000 ms budget and a listener ready
+at 2,200 ms. An actual IPC normal close after one shutdown request also aborts
+stop confirmation after 9 ms, although a fresh independent probe returns ENOENT.
+These isolated controls establish distinct failure mechanisms, not all historical
+incident causes or real Claude recovery. Candidate qualification remains pending.
+See [baseline evidence](evidence/2026-11-13-reconnect-baseline.json) and
+[reproduction details](../docs/sdlc/reconnect-authority/reproduction.md).
+
+## 2026-11-13 — Reconnect implementation qualification
+
+Independent correctness, security, integration and external reviews approved; QA
+passed ordered build/typecheck and 697 workspace tests. Actual retained 0.14.0
+negative controls lose authority under delayed ps/link; candidate controls commit
+exact authority in 136/134/144 ms without invoking those obsolete paths. The real
+old schema-4 Registry rejects the candidate schema5 while preserving queued work.
+Native delivery requires fresh birth and generation evidence before bookkeeping.
+Previous IPC, missing manual registration and restart-test timeouts remain unexplained;
+diagnostic and green repeats are not causal fixes. Changed-cwd A→B→A remains a
+fail-closed availability limitation. Packaging/public/local rollout remain pending.
+See [qualification evidence](evidence/2026-11-13-reconnect-qualification.json).
+
+Exact-version 0.15.0 build/typecheck and 697 tests passed. Full release:check passed
+on its first invocation (697 workspace, 142 script tests, audit, export integrity,
+clean-PATH and synthetic exported E2E). Source/history secret scans were clean;
+export warnings were two hash manifests with all 191 payload hashes each verified.
+Public installation and deployment remain separate gates.

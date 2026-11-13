@@ -1,10 +1,11 @@
-import { mkdir, readFile, link, rename, unlink, writeFile, readdir } from "node:fs/promises";
+import { mkdir, readFile, link, unlink, writeFile, readdir } from "node:fs/promises";
+import { mkdirSync, opendirSync, openSync, fstatSync, readSync, closeSync, writeFileSync, linkSync, unlinkSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute, join } from "node:path";
 import { pathsFor } from "@kommutator/agentd/paths";
-import { processStart } from "@kommutator/agentd/process";
+import { processStart, processStartSync } from "@kommutator/agentd/process";
 import * as z from "zod";
-import { IpcHello } from "@kommutator/protocol/hello";
+import { IpcHello, RUNTIME_CONTRACT } from "@kommutator/protocol/hello";
 
 const Context = z.object({ cwd: z.string().min(1).max(1024).refine(isAbsolute) }).strict();
 function contextPath(vendor: string, id: string): string {
@@ -43,58 +44,83 @@ async function latestGeneration(directory: string): Promise<number> {
 }
 export interface ActiveClaudeRegistration { hello: import("./ipc-client.js").Hello; generation: string; birth: string }
 
+const MAX_REGISTRATION_BYTES = 16_384;
+function readRegistration(path: string): string {
+  const fd = openSync(path, "r");
+  try {
+    const stat = fstatSync(fd);
+    if (!stat.isFile() || stat.size > MAX_REGISTRATION_BYTES) throw new Error("invalid registration file");
+    const buffer = Buffer.alloc(MAX_REGISTRATION_BYTES + 1);
+    let length = 0;
+    for (;;) {
+      const count = readSync(fd, buffer, length, buffer.length - length, null);
+      length += count;
+      if (length > MAX_REGISTRATION_BYTES) throw new Error("invalid registration file");
+      if (!count) return buffer.toString("utf8", 0, length);
+    }
+  } finally { closeSync(fd); }
+}
+function currentGeneration(directory: string): number {
+  const dir = opendirSync(directory);
+  let count = 0; let generations = 0; let latest = 0;
+  try {
+    for (;;) {
+      const entry = dir.readSync(); if (!entry) break;
+      if (++count > 20_000) throw new Error("invalid generation journal");
+      if (!/^[1-9][0-9]*\.json$/.test(entry.name)) continue;
+      const generation = Number(entry.name.slice(0, -5));
+      if (!Number.isSafeInteger(generation) || ++generations >= 10_000) throw new Error("invalid generation journal");
+      latest = Math.max(latest, generation);
+    }
+  } finally { dir.closeSync(); }
+  return latest;
+}
 export async function saveClaudeRegistration(hello: import("./ipc-client.js").Hello): Promise<ActiveClaudeRegistration | undefined> {
   const parsed = IpcHello.parse(hello);
   if (parsed.client !== "hook" || parsed.vendor !== "claude-code" || !parsed.vendor_session_id || !parsed.ppid) return;
+  if (parsed.runtime_contract !== RUNTIME_CONTRACT) throw new Error("Incompatible Claude hook runtime");
   Context.parse({ cwd: parsed.cwd });
-  const { file, directory, birth } = await claudeOwnerPaths(parsed.vendor_session_id, parsed.ppid);
-  await mkdir(directory, { recursive: true, mode: 0o700 });
-  try {
-    const prior = z.object({ hello: IpcHello, birth: z.string() }).parse(JSON.parse(await readFile(file, "utf8")) as unknown);
-    if (prior.hello.ppid !== parsed.ppid || prior.birth !== birth || prior.hello.vendor_session_id !== parsed.vendor_session_id || prior.hello.cwd !== parsed.cwd) throw new Error("Conflicting Claude process context; start a fresh session");
-  } catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
-  // Immutable, atomically linked generation records need no crash-prone lock file.
-  // The directory itself fences legacy fallback even if a hook dies before publication.
+  // No asynchronous boundary between the Linux birth read and immutable publication.
+  const birth = process.platform === "linux" ? processStartSync(parsed.ppid) : await processStart(parsed.ppid);
+  if (!birth) throw new Error("Claude root registration unavailable or expired");
+  const directory = contextPath("claude-active", JSON.stringify([parsed.ppid, birth])) + ".d";
+  mkdirSync(directory, { recursive: true, mode: 0o700 });
   for (let attempt = 0; attempt < 8; attempt++) {
-    const generation = await latestGeneration(directory) + 1;
+    const previous = currentGeneration(directory);
+    if (previous) {
+      const prior = z.object({ hello: IpcHello, birth: z.string(), generation: z.number().int().positive() }).strict()
+        .parse(JSON.parse(readRegistration(join(directory, `${previous}.json`))) as unknown);
+      if (prior.birth !== birth || prior.hello.ppid !== parsed.ppid || prior.generation !== previous || prior.hello.owner_generation !== previous) throw new Error("Conflicting Claude process context");
+      if (prior.hello.vendor_session_id === parsed.vendor_session_id && prior.hello.cwd !== parsed.cwd) throw new Error("Conflicting Claude project context");
+    }
+    const generation = previous + 1;
     const value = { hello: { ...parsed, owner_generation: generation }, birth, generation };
+    const text = JSON.stringify(value);
+    if (Buffer.byteLength(text) > MAX_REGISTRATION_BYTES) throw new Error("invalid registration file");
     const temp = join(directory, `${randomUUID()}.tmp`);
     try {
-      await writeFile(temp, JSON.stringify(value), { mode: 0o600, flag: "wx" });
-      try { await link(temp, join(directory, `${generation}.json`)); }
+      writeFileSync(temp, text, { mode: 0o600, flag: "wx" });
+      try { linkSync(temp, join(directory, `${generation}.json`)); }
       catch (error) { if (error && typeof error === "object" && "code" in error && error.code === "EEXIST") continue; throw error; }
-      // Exact legacy lookup remains for old readers; new readers use the journal only.
-      const legacyTemp = `${file}.${randomUUID()}.tmp`;
-      try { await writeFile(legacyTemp, JSON.stringify({ hello: parsed, birth }), { mode: 0o600, flag: "wx" }); await rename(legacyTemp, file); }
-      finally { await unlink(legacyTemp).catch(() => undefined); }
       return { hello: value.hello, generation: `${birth}:${generation}`, birth };
-    } finally { await unlink(temp).catch(() => undefined); }
+    } finally { try { unlinkSync(temp); } catch { /* The immutable publication is authoritative. */ } }
   }
   throw new Error("Concurrent Claude registration changes; resume again");
 }
 export async function claudeRegistration(id: string, ownerPid: number): Promise<import("./ipc-client.js").Hello> {
-  try {
-    const { file, birth } = await claudeOwnerPaths(id, ownerPid);
-    const value = z.object({ hello: IpcHello, birth: z.string().min(1) }).parse(JSON.parse(await readFile(file, "utf8")) as unknown);
-    if (value.hello.client !== "hook" || value.hello.vendor !== "claude-code" || value.hello.vendor_session_id !== id || value.hello.ppid !== ownerPid || value.birth !== birth) throw new Error("expired");
-    Context.parse({ cwd: value.hello.cwd });
-    return value.hello;
-  } catch { throw new Error("Claude root registration unavailable or expired. Trust the plugin hooks and start a fresh session."); }
+  const active = await activeClaudeRegistration(ownerPid);
+  if (active.hello.vendor_session_id !== id) throw new Error("Claude root registration unavailable or expired");
+  return active.hello;
 }
 export async function activeClaudeRegistration(ownerPid: number, legacyId?: string): Promise<ActiveClaudeRegistration> {
   try {
     const { directory, birth } = await claudeOwnerPaths("", ownerPid);
-    let generation: number;
-    try { generation = await latestGeneration(directory); }
-    catch (error) {
-      if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT") || !legacyId) throw error;
-      return { hello: await claudeRegistration(legacyId, ownerPid), generation: `legacy:${birth}:${legacyId}`, birth };
-    }
+    const generation = await latestGeneration(directory);
     if (!generation) throw new Error("incomplete");
     try { await readFile(join(directory, `${generation}.ended`)); throw new Error("ended"); }
     catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
-    const value = z.object({ hello: IpcHello, birth: z.string(), generation: z.number().int().positive() }).strict().parse(JSON.parse(await readFile(join(directory, `${generation}.json`), "utf8")) as unknown);
-    if (value.generation !== generation || value.hello.owner_generation !== generation || value.birth !== birth || value.hello.ppid !== ownerPid || value.hello.client !== "hook" || value.hello.vendor !== "claude-code" || !value.hello.vendor_session_id) throw new Error("expired");
+    const value = z.object({ hello: IpcHello, birth: z.string(), generation: z.number().int().positive() }).strict().parse(JSON.parse(readRegistration(join(directory, `${generation}.json`))) as unknown);
+    if (value.hello.runtime_contract !== RUNTIME_CONTRACT || value.generation !== generation || value.hello.owner_generation !== generation || value.birth !== birth || value.hello.ppid !== ownerPid || value.hello.client !== "hook" || value.hello.vendor !== "claude-code" || !value.hello.vendor_session_id) throw new Error("expired");
     Context.parse({ cwd: value.hello.cwd });
     if (await processStart(ownerPid) !== birth || await latestGeneration(directory) !== generation) throw new Error("changed");
     try { await readFile(join(directory, `${generation}.ended`)); throw new Error("ended"); }

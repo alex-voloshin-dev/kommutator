@@ -1,0 +1,157 @@
+{
+  "date": "2026-11-13",
+  "feature": "reconnect-authority",
+  "baseline_commit": "99fd84c02c3e485d785d83302b1516952c688bef",
+  "candidate": "unreleased implementation, before release version bump",
+  "review": "correctness/security/integration/external approved; QA test delta approved",
+  "ordered_gates": {
+    "build": "passed",
+    "typecheck": "passed",
+    "workspace_tests": 697
+  },
+  "authority_controls": {
+    "baselineEmbeddedVersion": "0.14.0",
+    "node": "v26.13.0",
+    "pnpm": "12.18.0",
+    "candidate": [
+      {
+        "invoked": false,
+        "mode": "normal",
+        "code": 0,
+        "elapsedMs": 136,
+        "stdout": "",
+        "stderr": "",
+        "committedGenerations": 1,
+        "journalDirectories": 1,
+        "tempFiles": 0,
+        "recordValidation": "passed",
+        "entrySha256": "6b97abcd6266baf0d659eec9d1b478c7c3512407e8bb06ca7bff6cbcb87db771"
+      },
+      {
+        "invoked": false,
+        "mode": "delayed-ps",
+        "code": 0,
+        "elapsedMs": 134,
+        "stdout": "",
+        "stderr": "",
+        "committedGenerations": 1,
+        "journalDirectories": 1,
+        "tempFiles": 0,
+        "recordValidation": "passed",
+        "entrySha256": "6b97abcd6266baf0d659eec9d1b478c7c3512407e8bb06ca7bff6cbcb87db771"
+      },
+      {
+        "invoked": false,
+        "mode": "delayed-generation-link",
+        "code": 0,
+        "elapsedMs": 144,
+        "stdout": "",
+        "stderr": "",
+        "committedGenerations": 1,
+        "journalDirectories": 1,
+        "tempFiles": 0,
+        "recordValidation": "passed",
+        "entrySha256": "6b97abcd6266baf0d659eec9d1b478c7c3512407e8bb06ca7bff6cbcb87db771"
+      }
+    ],
+    "baseline": [
+      {
+        "invoked": false,
+        "mode": "normal",
+        "code": 0,
+        "elapsedMs": 164,
+        "stdout": "",
+        "stderr": "",
+        "committedGenerations": 1,
+        "journalDirectories": 1,
+        "tempFiles": 0,
+        "recordValidation": "passed",
+        "entrySha256": "954463cc9cb9bb94235d4afebf5b1623ad543d7aded8d5facbc2652838923adf"
+      },
+      {
+        "invoked": true,
+        "mode": "delayed-ps",
+        "code": 0,
+        "elapsedMs": 184,
+        "stdout": "",
+        "stderr": "",
+        "committedGenerations": 0,
+        "journalDirectories": 0,
+        "tempFiles": 0,
+        "recordValidation": "no committed authority",
+        "entrySha256": "954463cc9cb9bb94235d4afebf5b1623ad543d7aded8d5facbc2652838923adf"
+      },
+      {
+        "invoked": true,
+        "mode": "delayed-generation-link",
+        "code": 0,
+        "elapsedMs": 191,
+        "stdout": "",
+        "stderr": "",
+        "committedGenerations": 0,
+        "journalDirectories": 1,
+        "tempFiles": 1,
+        "recordValidation": "no committed authority",
+        "entrySha256": "954463cc9cb9bb94235d4afebf5b1623ad543d7aded8d5facbc2652838923adf"
+      }
+    ]
+  },
+  "old_reader": {
+    "node": "v26.13.0",
+    "oldVersion": "0.14.0",
+    "oldCommit": "63ffa4bd5ed7213c1b706511e60ea7d3b2c04033",
+    "candidate": "unreleased reconnect-authority staged source",
+    "oldSchema": 4,
+    "newSchema": 5,
+    "oldReaderRejected": true,
+    "outboxPreserved": true,
+    "integrity": {
+      "quick_check": "ok"
+    }
+  },
+  "preserved_failures": [
+    {
+      "run": "diagnostic2",
+      "failure": "100ms IPC operation timeout",
+      "cause": "unknown"
+    },
+    {
+      "run": "frozen3",
+      "failure": "manual reviewer SessionStart missing registration; 230.922ms, empty observations, only first owner at hub",
+      "cause": "unknown; traced targeted repeat passed"
+    },
+    {
+      "run": "gate4",
+      "failure": "new test drained valid successor wake before assertion",
+      "cause": "fixture ordering; corrected by holding birth probe after draining current manual clock tasks"
+    },
+    {
+      "run": "gate6",
+      "failure": "existing durable restart replay test exceeded 5000ms",
+      "cause": "unknown; timing diagnostic passed in539ms"
+    }
+  ],
+  "remaining": [
+    "Changed-cwd A\u2192B\u2192A can publish conflict then reject, potentially retiring B; same-project resume supported",
+    "Synchronous kernel I/O may delay timer",
+    "Pre-publication kill cannot fabricate authority",
+    "Historical issues9/19/22/25 not collectively resolved",
+    "Real vendor/native Work, macOS, day-long, subnet and reboot gates remain open"
+  ],
+  "release_candidate": "0.15.0",
+  "exact_version_gates": {
+    "build": "passed",
+    "typecheck": "passed",
+    "workspace_tests": 697,
+    "release_check": "passed first invocation",
+    "script_tests": 142,
+    "clean_path": "passed Claude/Codex",
+    "synthetic_exported_e2e": "passed",
+    "source_history_secrets": "none detected",
+    "export_findings": "two runtime hash manifests; 191 payload hashes each verified"
+  },
+  "assets": {
+    "kommutator-v0.15.0-claude-linux-x64.zip": "32f50983b1595acb2ac0347fb605552272e5f1e369ac8c8f6b1e9f7d8a73e495",
+    "kommutator-v0.15.0-linux-x64.tar.gz": "9f39da581d7a1136d48a90f0eab4aa2e8f58e8d9acd1a743224e77221374d141"
+  }
+}

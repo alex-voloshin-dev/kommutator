@@ -104,6 +104,52 @@ healthcheck with a synthetic key and isolated tmpfs database before any producti
 This catches runtime permission failures that a root build-stage import cannot detect.
 
 
+## Runtime contract 4 and local state schema 5 transition
+
+This transition changes Claude process identity and retirement paths. Service deployment
+and client reconnection are separate: a healthy contract-4 daemon does not prove that an
+already loaded MCP or lifecycle hook has upgraded. Existing authorization to deploy released
+hub and agentd versions remains applicable; this procedure grants no additional authority to
+change vendor settings or terminate client processes.
+
+For the first transition:
+
+1. Stop the updater timer, let any active oneshot finish, verify the updater lock is free,
+   and prevent concurrent manual updater runs. Preserve the checkpoint, retained runtime
+   and backups; inspect and reconcile any blocked attempt before proceeding.
+2. Complete release qualification and publish the matching runtime assets and qualified
+   plugin catalogs before resuming affected clients. Verify the selected release and commit;
+   do not use a partly published catalog or an unrelated newer artifact for the transition.
+3. Deploy the qualified services under the existing service-restart authorization, retaining
+   the ordinary database backups and health checks. Verify the exact expected daemon runtime
+   contract, **4**, alongside actual service versions and hub connectivity. A merely positive
+   contract number is insufficient. This is a required cutover verification; do not assume an
+   installed updater's generic health check already enforces exact-contract equality.
+4. Before reconnecting each affected Claude owner, update its installed MCP and **all**
+   lifecycle-hook wiring to the compatible runtime, exit that owner's old process, and start
+   a new process with trusted hooks. `/reload-plugins` or healthy global status alone does
+   not establish this activation. Verify that new owner's registration and SessionEnd;
+   verify preserved identity/topic memberships only when its unique predecessor is positively
+   proven dead. Do not copy subscriptions from ambiguous or unrelated owners.
+5. Report service deployment and client readiness separately. Resume the updater timer after
+   service qualification or explicit failure reconciliation. Individual unrelated old clients
+   may remain alive but unavailable until their own wiring update and restart; no host-wide
+   client shutdown is required. Record that readiness limit instead of claiming every loaded
+   MCP reconnected.
+
+The safety boundary is enforced per owner: old Claude hello bindings reject, same-live-PID
+legacy adoption rejects, and unverified legacy owners cannot receive native delivery. An old
+hook can still write its legacy-path end marker before IPC rejection; that marker belongs
+to its old PID/birth and cannot retire a different fresh process's journal. Consequently,
+mixed old/new lifecycle hooks **within a reconnecting owner** and hot downgrade remain
+unsupported. Complete that owner's wiring upgrade before its new registration; do not
+attempt to repair it by accepting an old marker in a new namespace.
+
+Older daemons cannot read schema 5. Never roll back the database or runtime automatically
+after migration; retain recovery material and use the existing blocked-attempt inspection
+and reconciliation procedure. Short client checks do not close day-long, reboot or platform
+acceptance gates.
+
 ## Node 26 runtime cutover
 
 The Node 26.13.0 / pnpm 12.18.0 migration uses:

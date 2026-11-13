@@ -1,11 +1,13 @@
 import * as z from "zod";
 
 export const PROTOCOL_VERSION = 1;
+export const RUNTIME_CONTRACT = 4;
 export const Vendor = z.enum(["claude-code", "codex", "chatgpt-work", "other"]);
 
 export const IpcHello = z.object({
   client: z.enum(["shim", "hook", "cli"]),
   protocol_version: z.number().int(),
+  runtime_contract: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
   pid: z.number().int().positive(),
   ppid: z.number().int().positive().optional(),
   cwd: z.string().max(1024).optional(),

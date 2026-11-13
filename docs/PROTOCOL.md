@@ -68,8 +68,13 @@ Completion is not identity authority: saved and freshly probed process birth mus
 match, and fresh registry generation/retirement/ambiguity checks still apply. No new
 registration, retry or fallback identity is created; hook deadlines are unchanged.
 See DESIGN §19 for the bounded recovery contract.
-The shared daemon runtime contract is 3; plugin clients reject earlier daemons and request
+The shared daemon runtime contract is 4; plugin clients reject earlier daemons and request
 an explicit local restart rather than using unsafe old binding behavior.
+Claude hook/shim bindings require local `runtime_contract: 4`, including manual generation-zero
+hooks. Missing or unsupported values fail before binding. Upgrade all lifecycle hooks/MCP and
+start a new OS process; same-live-PID legacy migration and mixed hook writers are unsupported.
+Schema 5 preserves legacy rows without inferring timezone conversion; tagged Linux birth uses
+boot ID and exact start ticks. Cross-format birth differences are unverified, not proof of exit.
 Local state schema 4 adds bounded owner-scoped mutation observations and preserves `goneReason` without changing hub records or the runtime
 contract. A current positive-generation hook can revive only a liveness-retired matching
 owner. Explicit SessionEnd, superseded and legacy unknown retirements require a newer
@@ -211,7 +216,7 @@ in MCP parameters/results. Plugin root identity and project association require 
 vendor selection, exact Codex call metadata and a matching private hook cwd observation;
 missing/ambiguous context is an error. The hub/IPC wire schemas are unchanged.
 
-`daemon.status` reports `runtime_contract: 3` for plugin compatibility preflight. This is
+`daemon.status` reports `runtime_contract: 4` for plugin compatibility preflight. This is
 additive for existing CLI clients. Plugin MCP/hook clients refuse an active daemon missing
 this exact contract; they never infer compatibility from the legacy `0.0.0` version.
 

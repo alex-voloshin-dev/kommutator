@@ -1,8 +1,8 @@
-import { DaemonRuntimeResult, RELEASE_VERSION } from "@kommutator/protocol";
+import { DaemonRuntimeResult, RELEASE_VERSION, RUNTIME_CONTRACT } from "@kommutator/protocol";
 import * as z from "zod";
 import { IpcError, IpcClient, cliHello } from "./ipc-client.js";
 
-const expectedRuntimeContract = 3;
+const expectedRuntimeContract = RUNTIME_CONTRACT;
 const Version = z.string().max(64).regex(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/).nullable().catch(null);
 const ObservedRuntime = z.object({
   runtime_contract: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable().catch(null),
@@ -10,7 +10,7 @@ const ObservedRuntime = z.object({
 });
 type DaemonState = "stopped" | "compatible" | "incompatible" | "unavailable";
 const recovery: Partial<Record<DaemonState, string>> = {
-  incompatible: "After ending active sessions, run the installed plugin's bin/manage daemon restart locally. Then resume your client with trusted SessionStart hooks. No restart was performed; configuration and compatibility do not prove session registration.",
+  incompatible: "Upgrade the affected client's MCP and all lifecycle hook wiring. After ending active sessions in that client, run the installed plugin's bin/manage daemon restart locally, then launch a new client OS process with trusted SessionStart hooks (/exit, then claude --resume for Claude). Reloading plugins in the old process is insufficient. Unrelated old clients may remain unavailable; no host-wide process shutdown is required. No restart was performed; configuration and compatibility do not prove session registration.",
   stopped: "The shared daemon is stopped. Resume your client with trusted SessionStart hooks, then call whoami to register and start the shared daemon. No daemon was started by this check.",
   unavailable: "Shared daemon unavailable; inspect the private local configuration and daemon log. No restart was performed.",
 };
@@ -46,9 +46,10 @@ export async function pluginDaemonStatus(lazyStart = false, timeoutMs = 500, wai
   return (await pluginDaemonDiagnostics(lazyStart, timeoutMs, waitForHubMs)).daemon;
 }
 export async function requirePluginDaemon(): Promise<void> {
-  const state = await pluginDaemonStatus(true, 5000, 1000);
+  const observed = await pluginDaemonDiagnostics(true, 5000, 1000);
+  const state = observed.daemon;
   if (state === "incompatible") throw new IpcError(
-    "The running shared daemon predates this plugin runtime contract. After ending active sessions, use the installed plugin's bin/manage daemon restart command locally. No restart was performed.", -32601);
+    `Incompatible shared daemon runtime contract: expected ${expectedRuntimeContract}, observed ${observed.daemon_runtime_contract ?? "missing"} (daemon ${observed.daemon_version ?? "unknown"}). Upgrade all hooks/MCP and the daemon, then start a new client process with trusted hooks. No restart was performed.`, -32601);
   if (state !== "compatible") throw new Error("Shared daemon unavailable; inspect the private local configuration and daemon log.");
 }
 

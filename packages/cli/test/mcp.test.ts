@@ -210,7 +210,7 @@ it("projects caller ownership failure after the final wrapper in both status mod
     methods.push(method);
     return { health: { state: "healthy", issues: [] }, hub: { connected: true }, caller: { state: "active" }, outbox: [] };
   } }, async () => ({ birth: "birth", generation: `birth:${++generation}`, hello: {
-    client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: "conversation", pid: 456, ppid: 123,
+    client: "hook", protocol_version: 1, runtime_contract: 4, vendor: "claude-code", vendor_session_id: "conversation", pid: 456, ppid: 123,
     owner_generation: generation, cwd: "/project",
   } }));
   const { client, calls } = await setup(true, diagnostics);

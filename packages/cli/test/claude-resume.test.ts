@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,7 +10,7 @@ let home: string;
 const oldHome = process.env.KOM_HOME;
 beforeEach(async () => { home = await mkdtemp(join(tmpdir(), "kom-resume-")); process.env.KOM_HOME = home; });
 afterEach(async () => { if (oldHome === undefined) delete process.env.KOM_HOME; else process.env.KOM_HOME = oldHome; await rm(home, { recursive: true, force: true }); });
-const hello = (id: string): Hello => ({ client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: id, pid: process.pid, ppid: process.pid, cwd: "/project" });
+const hello = (id: string): Hello => ({ client: "hook", protocol_version: 1, runtime_contract: 4, vendor: "claude-code", vendor_session_id: id, pid: process.pid, ppid: process.pid, cwd: "/project" });
 
 it("resolves the hook's current conversation despite stale or absent launch identity", async () => {
   await saveClaudeRegistration(hello("A"));
@@ -26,14 +27,14 @@ it("resolves the hook's current conversation despite stale or absent launch iden
   expect(resumed.generation).not.toBe(b.generation);
 });
 
-it("uses exact legacy authority only when active authority is absent, never ended or malformed", async () => {
+it("requires committed current authority and rejects missing, ended or malformed journals", async () => {
   await saveClaudeRegistration(hello("A"));
   const directoryName = (await readdir(join(home, "contexts"))).find(name => name.endsWith(".d"));
   if (!directoryName) throw new Error("missing active fixture");
   const directory = join(home, "contexts", directoryName);
   const original = await readFile(join(directory, "1.json"), "utf8");
   await rm(directory, { recursive: true });
-  expect((await activeClaudeRegistration(process.pid, "A")).hello.vendor_session_id).toBe("A");
+  await expect(activeClaudeRegistration(process.pid, "A")).rejects.toThrow("unavailable or expired");
   await expect(activeClaudeRegistration(process.pid, "B")).rejects.toThrow("unavailable or expired");
   await saveClaudeRegistration(hello("A"));
   await writeFile(join(directory, "1.json"), "malformed");
@@ -157,4 +158,28 @@ it("looks up an operation locally without whoami or registration recovery and fe
   await expect(client.call("operation.status", { operation_id: "local-id" })).rejects.toThrow(/conversation changed/);
   expect(calls).toEqual(["operation.status", "operation.status"]);
   client.close();
+});
+
+
+it("commits Linux authority synchronously before timers or microtasks can interrupt publication", async () => {
+  if (process.platform !== "linux") return;
+  const pending = saveClaudeRegistration(hello("sync-authority"));
+  // Intentionally inspect before awaiting: baseline first awaits ps and has no journal.
+  const name = readdirSync(join(home, "contexts")).find(item => item.endsWith(".d"));
+  expect(name).toBeDefined();
+  const path = join(home, "contexts", name ?? "missing", "1.json");
+  const value = JSON.parse(readFileSync(path, "utf8")) as { birth: string; hello: { vendor_session_id: string } };
+  expect(value.birth).toMatch(/^linux-v1:/); expect(value.hello.vendor_session_id).toBe("sync-authority");
+  expect(statSync(path).mode & 0o777).toBe(0o600);
+  await pending;
+  expect((await activeClaudeRegistration(process.pid)).hello.vendor_session_id).toBe("sync-authority");
+});
+
+it("rejects oversized committed records without falling back to older authority", async () => {
+  await saveClaudeRegistration(hello("bounded-authority"));
+  const name = (await readdir(join(home, "contexts"))).find(item => item.endsWith(".d"));
+  if (!name) throw new Error("missing journal");
+  await writeFile(join(home, "contexts", name, "1.json"), " ".repeat(16_385));
+  await expect(activeClaudeRegistration(process.pid)).rejects.toThrow("unavailable or expired");
+  await expect(saveClaudeRegistration(hello("bounded-authority"))).rejects.toThrow("invalid registration file");
 });

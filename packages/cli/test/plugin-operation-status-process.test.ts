@@ -33,7 +33,7 @@ it.each(["claude-code", "codex"])("keeps warm %s lookup pure through the built p
   try {
     await savePluginContext(profile, root, cwd);
     if (profile === "claude-code") {
-      await saveClaudeRegistration({ client: "hook", vendor: "claude-code", vendor_session_id: root, protocol_version: 1, pid: process.pid, ppid: process.pid, cwd });
+      await saveClaudeRegistration({ client: "hook", vendor: "claude-code", vendor_session_id: root, protocol_version: 1, runtime_contract: 4, pid: process.pid, ppid: process.pid, cwd });
       const registration = await activeClaudeRegistration(process.pid, root);
       await daemon.core.request(daemon.core.peer(), "ipc.hello", registration.hello);
     }

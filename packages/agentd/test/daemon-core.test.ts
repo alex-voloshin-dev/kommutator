@@ -82,7 +82,7 @@ async function fixture(options: { online?: boolean; dbPath?: string; clock?: Man
     if (wake) attempts.push({ id: message.id, at: clock.time });
     return wake ? { outcome: "written" } : { outcome: "inbox" };
   } };
-  const core = new DaemonCore({ config, dbPath: options.dbPath ?? ":memory:", transport, clock, adapters: [adapter], processStart: options.birth ?? (async () => "birth"), ...(options.exists ? { processExists: options.exists } : {}), ...(options.alive === undefined ? { isAlive: async () => true } : {} ) });
+  const core = new DaemonCore({ config, dbPath: options.dbPath ?? ":memory:", transport, clock, adapters: [adapter], processStart: options.birth ?? (async () => "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"), ...(options.exists ? { processExists: options.exists } : {}), ...(options.alive === undefined ? { isAlive: async () => true } : {} ) });
   let closed = false;
   const close = async () => { if (!closed) { closed = true; await core.close(); } };
   cleanup.push(close);
@@ -92,17 +92,17 @@ async function fixture(options: { online?: boolean; dbPath?: string; clock?: Man
 }
 async function hook(core: DaemonCore, id: string, extra: Record<string, unknown> = {}) {
   const peer = core.peer();
-  const result = HelloReply.parse(await core.request(peer, "ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, pid: 1000, ppid: 55, vendor: "claude-code", vendor_session_id: id, cwd: "/repo", endpoint: "/tmp/fake.sock", permission_mode: "default", ...extra }));
+  const result = HelloReply.parse(await core.request(peer, "ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 1000, ppid: 55, vendor: "claude-code", vendor_session_id: id, cwd: "/repo", endpoint: "/tmp/fake.sock", permission_mode: "default", ...extra }));
   return { peer, session: result.session };
 }
 async function shim(core: DaemonCore, id?: string) {
   const peer = core.peer();
-  await core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 3000, ppid: 55, vendor: "claude-code", cwd: "/repo", ...(id ? { vendor_session_id: id } : {}) });
+  await core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 3000, ppid: 55, vendor: "claude-code", cwd: "/repo", ...(id ? { vendor_session_id: id } : {}) });
   return peer;
 }
 async function cli(core: DaemonCore) {
   const peer = core.peer();
-  await core.request(peer, "ipc.hello", { client: "cli", protocol_version: PROTOCOL_VERSION, pid: 4000, cwd: "/repo" });
+  await core.request(peer, "ipc.hello", { client: "cli", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 4000, cwd: "/repo" });
   return peer;
 }
 async function send(core: DaemonCore, peer: IpcPeer, to: string, body = "message") {
@@ -165,7 +165,7 @@ describe("daemon identity and IPC authorization", () => {
     const [a, b] = await Promise.all([hook(core, "resumed", { ppid: 55 }), hook(core, "resumed", { ppid: 66 })]);
     const connectOwner = async (ppid: number) => {
       const peer = core.peer();
-      await core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: ppid + 1000, ppid, vendor: "claude-code", vendor_session_id: "resumed", cwd: "/repo" });
+      await core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: ppid + 1000, ppid, vendor: "claude-code", vendor_session_id: "resumed", cwd: "/repo" });
       return peer;
     };
     const sa = await connectOwner(55), sb = await connectOwner(66);
@@ -205,7 +205,7 @@ describe("daemon identity and IPC authorization", () => {
   });
   it("does not treat an unavailable process probe as proof that an owner exited", async () => {
     let unavailable = false;
-    const { core } = await fixture({ birth: async pid => unavailable && pid === process.pid ? undefined : "birth" });
+    const { core } = await fixture({ birth: async pid => unavailable && pid === process.pid ? undefined : "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1" });
     const a = await hook(core, "probe-error", { ppid: process.pid });
     unavailable = true;
     const b = await hook(core, "probe-error", { ppid: process.pid + 1 });
@@ -213,30 +213,30 @@ describe("daemon identity and IPC authorization", () => {
     expect(core.registry.all()).toHaveLength(2);
   });
   it("does not inherit a dead owner's project when the resumed process changes cwd", async () => {
-    let birth = "first";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:2";
     const { core } = await fixture({ birth: async () => birth });
     const a = await hook(core, "moved", { cwd: "/old-project" });
     await expect(hook(core, "moved", { cwd: "/other-project" })).rejects.toThrow(/Conflicting project context/);
-    birth = "next";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:3";
     const b = await hook(core, "moved", { cwd: "/other-project" });
     expect(b.session?.id).not.toBe(a.session?.id);
     expect(b.session?.cwd).toBe("/other-project");
     expect(b.session?.project_key).not.toBe(a.session?.project_key);
   });
   it("does not let a pinned Claude peer follow a reused process generation", async () => {
-    let birth = "first";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:2";
     const { core } = await fixture({ birth: async () => birth });
     await hook(core, "generation");
     const old = await shim(core, "generation");
     const first = Identity.parse(await core.request(old, "whoami")).session;
-    birth = "next";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:3";
     const revived = await hook(core, "generation");
     expect(revived.session?.id).toBe(first.id);
     expect(revived.session?.incarnation).toBe(1);
     await expect(core.request(old, "session.upsert", { op: "update", session: { status_line: "stale write" } })).rejects.toThrow(/owner has changed/);
   });
   it.each(["session.upsert", "whoami", "inbox.list", "hook.poll"])("rejects a stale %s after an owner probe races replacement", async method => {
-    let birth = "old";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:4";
     let entered: () => void = () => {};
     const probing = new Promise<void>(resolve => { entered = resolve; });
     let release: () => void = () => {};
@@ -253,7 +253,7 @@ describe("daemon identity and IPC authorization", () => {
     const pending = core.request(peer, method, method === "session.upsert" ? { op: "update", session: { status_line: "stale" } } : method === "hook.poll" ? { event: "Stop" } : {});
     const rejected = expect(pending).rejects.toThrow(/owner has changed/);
     await probing;
-    birth = "new";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:5";
     const successor = await hook(core, "probe-race");
     await core.request(successor.peer, "session.upsert", { op: "update", session: { status_line: "successor" } });
     release();
@@ -263,7 +263,7 @@ describe("daemon identity and IPC authorization", () => {
     expect(current.state).toBe("active");
   });
   it("pins an unbound peer's first observed birth across a registration race", async () => {
-    let birth = "old";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:4";
     let entered: () => void = () => {};
     const probing = new Promise<void>(resolve => { entered = resolve; });
     let release: () => void = () => {};
@@ -278,14 +278,14 @@ describe("daemon identity and IPC authorization", () => {
     pause = true;
     const pending = shim(core, "unbound-race");
     await probing;
-    birth = "new";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:5";
     await hook(core, "unbound-race");
     release();
     const old = await pending;
     await expect(core.request(old, "whoami")).rejects.toThrow(/owner has changed/);
   });
   it.each(["whoami", "inbox.list"])("rechecks %s after flush before querying a successor", async method => {
-    let birth = "old";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:4";
     const { core, transport } = await fixture({ birth: async () => birth });
     await hook(core, "flush-race");
     const peer = await shim(core, "flush-race");
@@ -299,7 +299,7 @@ describe("daemon identity and IPC authorization", () => {
     const pending = core.request(peer, method);
     const rejected = expect(pending).rejects.toThrow(/owner has changed/);
     await flushing;
-    birth = "new";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:5";
     await hook(core, "flush-race");
     const reads = transport.calls.filter(call => call.method === "topic.list" || call.method === "inbox.list").length;
     release();
@@ -307,7 +307,7 @@ describe("daemon identity and IPC authorization", () => {
     expect(transport.calls.filter(call => call.method === "topic.list" || call.method === "inbox.list")).toHaveLength(reads);
   });
   it.each(["whoami", "inbox.list", "hook.poll"])("rejects a stale %s result after a transport await", async method => {
-    let birth = "old";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:4";
     const { core, transport } = await fixture({ birth: async () => birth });
     await hook(core, "result-race");
     const peer = await shim(core, "result-race");
@@ -322,14 +322,14 @@ describe("daemon identity and IPC authorization", () => {
     const pending = core.request(peer, method, method === "hook.poll" ? { event: "Stop" } : {});
     const rejected = expect(pending).rejects.toThrow(/owner has changed/);
     await reading;
-    birth = "new";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:5";
     const successor = await hook(core, "result-race");
     release();
     await rejected;
     expect(Identity.parse(await core.request(successor.peer, "whoami")).session.state).toBe("active");
   });
   it("does not let a delayed dead-process sweep end its replacement", async () => {
-    let birth = "old";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:4";
     let entered: () => void = () => {};
     const probing = new Promise<void>(resolve => { entered = resolve; });
     let release: () => void = () => {};
@@ -343,7 +343,7 @@ describe("daemon identity and IPC authorization", () => {
     pause = true;
     const pending = core.sweep();
     await probing;
-    birth = "new";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:5";
     const successor = await hook(core, "sweep-race");
     release();
     await pending;
@@ -409,13 +409,13 @@ describe("daemon identity and IPC authorization", () => {
     let entered: () => void = () => {};
     const inFlight = new Promise<void>((resolve) => { entered = resolve; });
     transport.afterRequest = async (method) => { if (method === "session.upsert") { entered(); await held; } };
-    const first = hook(core, "same", { permission_mode: "bypassPermissions", token: "old" });
+    const first = hook(core, "same", { permission_mode: "bypassPermissions", token: "linux-v1:01234567-89ab-cdef-0123-456789abcdef:4" });
     await inFlight;
-    const second = hook(core, "same", { permission_mode: "bypassPermissions", token: "new", inbound_policy: "accept" });
+    const second = hook(core, "same", { permission_mode: "bypassPermissions", token: "linux-v1:01234567-89ab-cdef-0123-456789abcdef:5", inbound_policy: "accept" });
     for (let i = 0; i < 30; i++) await Promise.resolve();
     release();
     await Promise.all([first, second]);
-    expect(core.registry.all()[0]?.token).toBe("new");
+    expect(core.registry.all()[0]?.token).toBe("linux-v1:01234567-89ab-cdef-0123-456789abcdef:5");
     expect(core.registry.all()[0]?.session.capability).toBe("native");
   });
   it("clears accepted policy, mode, endpoint and token on revival before applying only current facts", async () => {
@@ -425,7 +425,7 @@ describe("daemon identity and IPC authorization", () => {
     await core.request(old.peer, "session.gone", {});
     const peer = core.peer();
     const revived = HelloReply.parse(await core.request(peer, "ipc.hello", {
-      client: "hook", protocol_version: PROTOCOL_VERSION, pid: 1000, ppid: 55,
+      client: "hook", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 1000, ppid: 55,
       vendor: "claude-code", vendor_session_id: "same", cwd: "/repo", owner_generation: 1,
     }));
     const record = core.registry.get("claude-code:same");
@@ -437,19 +437,19 @@ describe("daemon identity and IPC authorization", () => {
     expect(record?.session.capability).toBe("hook");
   });
   it("resets launch facts when the observed process birth changes but preserves same-process late observations", async () => {
-    let birth = "old-birth";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:6";
     const { core } = await fixture({ birth: async () => birth });
     await hook(core, "same", { permission_mode: "bypassPermissions", inbound_policy: "accept", token: "old-launch-token" });
     const late = core.peer();
-    await core.request(late, "ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, pid: 1001, ppid: 55, vendor: "claude-code", vendor_session_id: "same", cwd: "/repo" });
+    await core.request(late, "ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 1001, ppid: 55, vendor: "claude-code", vendor_session_id: "same", cwd: "/repo" });
     expect(core.registry.get("claude-code:same")?.inboundPolicy).toBe("accept");
     expect(core.registry.get("claude-code:same")?.token).toBe("old-launch-token");
     expect(core.registry.get("claude-code:same")?.session.incarnation).toBe(0);
-    birth = "new-birth";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:7";
     const next = await hook(core, "same", { permission_mode: "bypassPermissions" });
     const record = core.registry.get("claude-code:same");
     expect(next.session?.incarnation).toBe(1);
-    expect(record?.processStartedAt).toBe("new-birth");
+    expect(record?.processStartedAt).toBe("linux-v1:01234567-89ab-cdef-0123-456789abcdef:7");
     expect(record?.permissionMode).toBe("bypassPermissions");
     expect(record?.inboundPolicy).toBeUndefined();
     expect(record?.token).toBeUndefined();
@@ -677,10 +677,10 @@ describe("durable replay and recovery", () => {
     expect(Results["inbox.list"].parse(await core.request(a.peer, "inbox.list", {})).headers).toHaveLength(0);
   });
   it("detects PID reuse by process start time even when adapter existence succeeds", async () => {
-    let birth = "original";
+    let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:8";
     const { core } = await fixture({ alive: false, birth: async () => birth });
     await hook(core, "a");
-    birth = "reused";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:9";
     await core.sweep();
     expect(core.registry.all()[0]?.session.state).toBe("gone");
   });
@@ -808,7 +808,7 @@ describe("wake and receipt boundaries", () => {
 describe("Codex root lifecycle", () => {
   it("registers two same-cwd roots from shims and does not replace liveness or revive from hooks", async () => {
     const { core } = await fixture();
-    const hello = (id: string, client: "shim" | "hook", pid: number) => ({ protocol_version: PROTOCOL_VERSION, vendor: "codex", vendor_session_id: id, client, pid, ppid: 999, cwd: "/same/repo" });
+    const hello = (id: string, client: "shim" | "hook", pid: number) => ({ protocol_version: PROTOCOL_VERSION, runtime_contract: 4, vendor: "codex", vendor_session_id: id, client, pid, ppid: 999, cwd: "/same/repo" });
     const early = core.peer();
     await expect(core.request(early, "ipc.hello", hello("a", "hook", 40))).rejects.toThrow();
     expect(core.registry.all()).toHaveLength(0);
@@ -829,7 +829,7 @@ describe("Codex root lifecycle", () => {
     await expect(core.request(a, "whoami")).rejects.toThrow("bound session has ended");
     await expect(core.request(core.peer(), "ipc.hello", hello("a", "hook", 60))).rejects.toThrow();
     expect(Identity.parse(await core.request(b, "whoami")).session.id).toBe(second.session.id);
-    await expect(core.request(core.peer(), "ipc.hello", { client: "shim", pid: 30, vendor: "codex", protocol_version: PROTOCOL_VERSION, cwd: "/same/repo" })).rejects.toThrow("vendor_session_id");
+    await expect(core.request(core.peer(), "ipc.hello", { client: "shim", pid: 30, vendor: "codex", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, cwd: "/same/repo" })).rejects.toThrow("vendor_session_id");
   });
 });
 
@@ -872,7 +872,7 @@ describe("Claude conversation generation fencing", () => {
     let pause = false;
     const { core } = await fixture({ alive: false, birth: async () => {
       if (pause) { pause = false; enter(); await held; return undefined; }
-      return "birth";
+      return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     } });
     await hook(core, "resume-a", { owner_generation: 1 });
     pause = true;
@@ -915,14 +915,14 @@ describe("Claude conversation generation fencing", () => {
 
 describe("Claude liveness recovery and diagnostics", () => {
   it("retains the mailbox across unavailable birth probes and adapter failures without a new incarnation", async () => {
-    let birth: string | undefined = "birth";
+    let birth: string | undefined = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const { core, adapter } = await fixture({ alive: true, birth: async () => birth, exists: () => true });
     const first = await hook(core, "uncertain", { owner_generation: 1 });
     birth = undefined;
     await core.sweep();
     expect(core.registry.byId(first.session?.id ?? "")?.session.state).toBe("active");
     expect(core.lastError).toContain("process-birth-unavailable");
-    birth = "birth";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     adapter.isAlive = async () => false;
     await core.sweep();
     expect(core.registry.byId(first.session?.id ?? "")?.session.incarnation).toBe(first.session?.incarnation);
@@ -934,14 +934,14 @@ describe("Claude liveness recovery and diagnostics", () => {
   });
 
   it("recovers a proven liveness retirement through a fresh same-generation hook while old peers stay fenced", async () => {
-    let birth: string | undefined = "birth";
+    let birth: string | undefined = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const { core } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
     const first = await hook(core, "recover", { owner_generation: 1 });
     birth = undefined;
     await core.sweep();
     expect(core.registry.byId(first.session?.id ?? "")?.goneReason).toBe("liveness");
     expect(core.lastError).toContain('"event":"session.gone"');
-    birth = "birth";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const revived = await hook(core, "recover", { owner_generation: 1 });
     expect(revived.session?.id).toBe(first.session?.id);
     expect(revived.session?.incarnation).toBe((first.session?.incarnation ?? 0) + 1);
@@ -968,7 +968,7 @@ describe("Claude liveness recovery and diagnostics", () => {
     const { core, transport } = await fixture();
     const first = await hook(core, "diagnostic", { owner_generation: 1, token: "private-token" });
     await core.request(first.peer, "session.gone");
-    const caller = { vendor: "claude-code", vendor_session_id: "diagnostic", pid: 55, process_started_at: "birth", owner_generation: 1 };
+    const caller = { vendor: "claude-code", vendor_session_id: "diagnostic", pid: 55, process_started_at: "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1", owner_generation: 1 };
     const operator = await cli(core);
     const before = core.registry.all(); const pending = core.registry.outbox(); const calls = transport.calls.length;
     const result = await core.request(operator, "daemon.status", { caller });
@@ -976,7 +976,7 @@ describe("Claude liveness recovery and diagnostics", () => {
     expect(JSON.stringify(result)).not.toContain("private-token");
     expect(core.registry.all()).toEqual(before); expect(core.registry.outbox()).toEqual(pending); expect(transport.calls).toHaveLength(calls);
     expect(await core.request(operator, "daemon.status", { caller: { ...caller, pid: 77 } })).toMatchObject({ caller: { state: "unavailable" } });
-    expect(await core.request(operator, "daemon.status", { caller: { ...caller, process_started_at: "reused" } })).toMatchObject({ caller: { state: "conflicting" } });
+    expect(await core.request(operator, "daemon.status", { caller: { ...caller, process_started_at: "linux-v1:01234567-89ab-cdef-0123-456789abcdef:9" } })).toMatchObject({ caller: { state: "conflicting" } });
     await expect(core.request(operator, "daemon.status", { caller: { ...caller, pid: -1 } })).rejects.toThrow("invalid daemon.status");
     await expect(core.request(first.peer, "daemon.status", { caller })).rejects.toThrow();
   });
@@ -998,7 +998,7 @@ describe("Claude recovery QA boundaries", () => {
   it("keeps an owner active when both process probes are unknown or birth probing throws", async () => {
     let uncertain = false;
     const { core } = await fixture({ alive: true, exists: () => undefined,
-      birth: async () => { if (uncertain) throw new Error("ps denied private details"); return "birth"; } });
+      birth: async () => { if (uncertain) throw new Error("ps denied private details"); return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"; } });
     const first = await hook(core, "unknown-probes", { owner_generation: 1 });
     uncertain = true;
     await core.sweep();
@@ -1012,23 +1012,23 @@ describe("Claude recovery QA boundaries", () => {
     let probed!: () => void;
     const probing = new Promise<void>(resolve => { probed = resolve; });
     let delay = false;
-    const { core } = await fixture({ birth: async () => { if (!delay) return "birth"; delay = false; return new Promise<string>(resolve => { release = resolve; probed(); }); } });
+    const { core } = await fixture({ birth: async () => { if (!delay) return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"; delay = false; return new Promise<string>(resolve => { release = resolve; probed(); }); } });
     const first = await hook(core, "status-race", { owner_generation: 1 });
     const operator = await cli(core);
     delay = true;
     const pending = core.request(operator, "daemon.status", { caller: {
       vendor: "claude-code", vendor_session_id: "status-race", pid: 55,
-      process_started_at: "birth", owner_generation: 1,
+      process_started_at: "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1", owner_generation: 1,
     } });
     await probing;
     await core.request(first.peer, "session.gone");
     if (!release) throw new Error("status never probed the owner");
-    release("birth");
+    release("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
     expect(await pending).toMatchObject({ health: { state: "degraded" }, caller: { state: "gone", reason: "session-end" } });
   });
 
   it("preserves unread hub messages and membership across liveness recovery without implicit receipts", async () => {
-    let birth: string | undefined = "birth";
+    let birth: string | undefined = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const { core, transport } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
     const recipient = await hook(core, "recipient-recovery", { owner_generation: 1 });
     const sender = await hook(core, "sender-recovery", { owner_generation: 1, ppid: 77 });
@@ -1037,7 +1037,7 @@ describe("Claude recovery QA boundaries", () => {
     if (sent.status !== "sent") throw new Error("online fixture did not send");
     birth = undefined;
     await core.sweep();
-    birth = "birth";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const revived = await hook(core, "recipient-recovery", { owner_generation: 1 });
     expect(revived.session?.id).toBe(recipient.session?.id);
     expect(Identity.parse(await core.request(revived.peer, "whoami")).topics).toEqual(identity.topics);
@@ -1048,7 +1048,7 @@ describe("Claude recovery QA boundaries", () => {
 
 describe("Same-generation retirement lifecycle fence", () => {
   it.each(["written", "accepted"] as const)("rejects an old %s native completion and reschedules its coalesced wake after recovery", async outcome => {
-    let birth: string | undefined = "birth";
+    let birth: string | undefined = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const { core, adapter, clock, transport } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
     const sender = await hook(core, "epoch-sender", { ppid: 77 });
     const receiver = await hook(core, "epoch-receiver", { owner_generation: 1 });
@@ -1061,7 +1061,7 @@ describe("Same-generation retirement lifecycle fence", () => {
     await clock.advance(0); await entered;
     const before = core.registry.byId(receiver.session?.id ?? "");
     birth = undefined; await core.sweep();
-    birth = "birth";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const revived = await hook(core, "epoch-receiver", { owner_generation: 1 });
     expect(revived.session?.id).toBe(receiver.session?.id);
     expect(core.registry.byId(receiver.session?.id ?? "")?.lifecycleEpoch).toBeGreaterThan(before?.lifecycleEpoch ?? 0);
@@ -1082,7 +1082,7 @@ describe("Same-generation retirement lifecycle fence", () => {
   });
 
   it("does not let an old liveness probe retire a same-generation recovery", async () => {
-    let birth: string | undefined = "birth";
+    let birth: string | undefined = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     let pause = false;
     let enter: () => void = () => {}, release: () => void = () => {};
     const entered = new Promise<void>(resolve => { enter = resolve; });
@@ -1094,7 +1094,7 @@ describe("Same-generation retirement lifecycle fence", () => {
     const original = await hook(core, "epoch-sweep", { owner_generation: 1 });
     pause = true; const delayed = core.sweep(); await entered;
     birth = undefined; await core.sweep();
-    birth = "birth"; await hook(core, "epoch-sweep", { owner_generation: 1 });
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"; await hook(core, "epoch-sweep", { owner_generation: 1 });
     release(); await delayed;
     expect(core.registry.byId(original.session?.id ?? "")?.session.state).toBe("active");
   });
@@ -1102,7 +1102,7 @@ describe("Same-generation retirement lifecycle fence", () => {
 
 describe("Recovered lifecycle pending wake scheduling", () => {
   it.each(["on", "off"] as const)("resumes a canceled cooldown wake after recovery with wake %s", async wake => {
-    let birth: string | undefined = "birth";
+    let birth: string | undefined = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const { core, clock, attempts } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
     const sender = await hook(core, "cooldown-sender", { ppid: 77 });
     const receiver = await hook(core, "cooldown-receiver", { owner_generation: 1 });
@@ -1114,14 +1114,14 @@ describe("Recovered lifecycle pending wake scheduling", () => {
     expect(attempts).toHaveLength(1);
     if (wake === "off") await core.request(receiver.peer, "session.upsert", { op: "update", session: { wake } });
     birth = undefined; await core.sweep();
-    birth = "birth"; await hook(core, "cooldown-receiver", { owner_generation: 1 });
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"; await hook(core, "cooldown-receiver", { owner_generation: 1 });
     await clock.advance(30_000); for (let i = 0; i < 80; i++) await Promise.resolve();
     expect(attempts).toHaveLength(wake === "on" ? 2 : 1);
     expect(core.registry.pending(receiver.session?.id ?? "")).toHaveLength(wake === "on" ? 0 : 1);
   });
 
   it("reschedules retained work when the old run drains before recovery", async () => {
-    let birth: string | undefined = "birth";
+    let birth: string | undefined = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const { core, adapter, clock } = await fixture({ alive: true, birth: async () => birth, exists: () => false });
     const sender = await hook(core, "drain-sender", { ppid: 77 });
     const receiver = await hook(core, "drain-receiver", { owner_generation: 1 });
@@ -1136,7 +1136,7 @@ describe("Recovered lifecycle pending wake scheduling", () => {
     release(); for (let i = 0; i < 80; i++) await Promise.resolve();
     expect(core.registry.byId(receiver.session?.id ?? "")?.acked).toBe(0);
     expect(core.registry.byId(receiver.session?.id ?? "")?.lastWake).toBeUndefined();
-    birth = "birth"; await hook(core, "drain-receiver", { owner_generation: 1 });
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"; await hook(core, "drain-receiver", { owner_generation: 1 });
     await clock.advance(0); for (let i = 0; i < 80; i++) await Promise.resolve();
     expect(attempts).toBe(2);
     expect(core.registry.pending(receiver.session?.id ?? "")).toHaveLength(0);
@@ -1204,10 +1204,10 @@ describe("delivery reliability diagnostics and explicit watch", () => {
   it("defers Codex ownership with missing birth without retiring or mutating an existing root", async () => {
     let birth: string | undefined;
     const { core, transport } = await fixture({ birth: async () => birth, exists: () => true, alive: false });
-    const hello = { client: "shim", protocol_version: 1, vendor: "codex", vendor_session_id: "root-one", pid: 77, cwd: "/shared" };
+    const hello = { client: "shim", protocol_version: 1, runtime_contract: 4, vendor: "codex", vendor_session_id: "root-one", pid: 77, cwd: "/shared" };
     await expect(core.request(core.peer(), "ipc.hello", hello)).rejects.toThrow("ownership unavailable");
     expect(core.registry.all()).toEqual([]);
-    birth = "birth";
+    birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     await core.request(core.peer(), "ipc.hello", hello);
     const before = core.registry.all();
     const count = transport.calls.length;
@@ -1221,11 +1221,11 @@ describe("delivery reliability diagnostics and explicit watch", () => {
   it.each(["missing", "throwing"])("preserves an ended Codex root when its birth probe is %s", async mode => {
     let uncertain = false;
     const { core, transport } = await fixture({ birth: async () => {
-      if (!uncertain) return "birth";
+      if (!uncertain) return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
       if (mode === "throwing") throw new Error("private process-probe details");
       return undefined;
     } });
-    const hello = { client: "shim", protocol_version: 1, vendor: "codex", vendor_session_id: "ended-root", pid: 77, cwd: "/shared" };
+    const hello = { client: "shim", protocol_version: 1, runtime_contract: 4, vendor: "codex", vendor_session_id: "ended-root", pid: 77, cwd: "/shared" };
     const peer = core.peer();
     await core.request(peer, "ipc.hello", hello);
     await core.request(peer, "session.gone");
@@ -1244,14 +1244,14 @@ describe("delivery reliability diagnostics and explicit watch", () => {
   it("reports exact Codex roots sharing a shim without registration or global-health substitution", async () => {
     const { core } = await fixture();
     const first = core.peer(), second = core.peer(), cli = core.peer();
-    for (const [peer, id] of [[first, "first"], [second, "second"]] as const) {
-      await core.request(peer, "ipc.hello", { client: "shim", protocol_version: 1, vendor: "codex", vendor_session_id: id, pid: 77, cwd: "/same" });
+    for (const [peer, id] of [[first, "linux-v1:01234567-89ab-cdef-0123-456789abcdef:2"], [second, "second"]] as const) {
+      await core.request(peer, "ipc.hello", { client: "shim", protocol_version: 1, runtime_contract: 4, vendor: "codex", vendor_session_id: id, pid: 77, cwd: "/same" });
     }
     await core.request(first, "session.gone");
-    await core.request(cli, "ipc.hello", { client: "cli", protocol_version: 1, pid: 88 });
+    await core.request(cli, "ipc.hello", { client: "cli", protocol_version: 1, runtime_contract: 4, pid: 88 });
     const before = core.registry.all();
-    for (const [id, state] of [["first", "gone"], ["second", "active"], ["absent", "unavailable"]]) {
-      expect(await core.request(cli, "daemon.status", { caller: { vendor: "codex", vendor_session_id: id, pid: 77, process_started_at: "birth" } })).toMatchObject({ caller: { state } });
+    for (const [id, state] of [["linux-v1:01234567-89ab-cdef-0123-456789abcdef:2", "gone"], ["second", "active"], ["absent", "unavailable"]]) {
+      expect(await core.request(cli, "daemon.status", { caller: { vendor: "codex", vendor_session_id: id, pid: 77, process_started_at: "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1" } })).toMatchObject({ caller: { state } });
     }
     expect(core.registry.all()).toEqual(before);
   });
@@ -1260,7 +1260,7 @@ describe("delivery reliability diagnostics and explicit watch", () => {
     const { core, transport } = await fixture();
     const { peer, session } = await hook(core, "watch-owner");
     const cli = core.peer();
-    await core.request(cli, "ipc.hello", { client: "cli", protocol_version: 1, pid: 88 });
+    await core.request(cli, "ipc.hello", { client: "cli", protocol_version: 1, runtime_contract: 4, pid: 88 });
     await core.request(peer, "topic.join", { name: "test-feedback" });
     const params = { session_id: session!.id, topic: "test-feedback", since_seq: 0 };
     await expect(core.request(peer, "watch.poll", params)).rejects.toThrow();
@@ -1450,7 +1450,7 @@ it("returns local status while a connected hub stalls an outbox acknowledgement"
       core.request(operator, "daemon.status"),
       new Promise(resolve => { timeout = setTimeout(() => resolve("blocked on hub"), 500); }),
     ]);
-    expect(result).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
+    expect(result).toMatchObject({ runtime_contract: 4, daemon: { running: true } });
     expect(core.registry.outbox()).toHaveLength(1);
   } finally {
     if (timeout) clearTimeout(timeout);
@@ -1472,7 +1472,7 @@ it("returns a local status snapshot while durable retirement evidence probing st
       core.request(operator, "daemon.status"),
       new Promise(resolve => { timeout = setTimeout(() => resolve("blocked on marker"), 500); }),
     ]);
-    expect(result).toMatchObject({ runtime_contract: 3, daemon: { running: true } });
+    expect(result).toMatchObject({ runtime_contract: 4, daemon: { running: true } });
   } finally {
     if (timeout) clearTimeout(timeout);
     release(false);
@@ -1494,12 +1494,12 @@ describe("accepted manual Claude registration binding", () => {
     let delay = false;
     const { core, clock, transport } = await fixture({ birth: async () => {
       if (delay) { delay = false; return gate.promise; }
-      return "birth";
+      return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     } });
     const peer = await shim(core, "pending");
     const hookPeer = core.peer();
     delay = true;
-    const registering = core.request(hookPeer, "ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION,
+    const registering = core.request(hookPeer, "ipc.hello", { client: "hook", protocol_version: PROTOCOL_VERSION, runtime_contract: 4,
       pid: 1000, ppid: 55, vendor: "claude-code", vendor_session_id: "pending", cwd: "/repo" });
     await drainRegistrationMicrotasks();
     core.disconnect(hookPeer);
@@ -1510,7 +1510,7 @@ describe("accepted manual Claude registration binding", () => {
       await drainRegistrationMicrotasks();
       expect(settled).toBe(false);
       expect(clock.timers.size).toBe(1);
-      gate.resolve("birth");
+      gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
       await registering;
       const result = await identity;
       if (!("value" in result)) throw result.error;
@@ -1518,7 +1518,7 @@ describe("accepted manual Claude registration binding", () => {
       expect(clock.timers.size).toBe(0);
       expect(transport.calls.filter(call => call.method === "session.upsert")).toHaveLength(1);
     } finally {
-      gate.resolve("birth");
+      gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
       await registering;
       await identity;
     }
@@ -1529,7 +1529,7 @@ describe("accepted manual Claude registration binding", () => {
     let delay = false;
     const { core, clock } = await fixture({ birth: async () => {
       if (delay) { delay = false; return gate.promise; }
-      return "birth";
+      return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     } });
     const peer = await shim(core, "pending");
     delay = true;
@@ -1537,7 +1537,7 @@ describe("accepted manual Claude registration binding", () => {
     await drainRegistrationMicrotasks();
     await expect(core.request(peer, "whoami")).rejects.toThrow(/not registered/);
     expect(clock.timers.size).toBe(0);
-    gate.resolve("birth"); await registering;
+    gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"); await registering;
   });
 
   it("bounds the wait without cancelling the accepted registration", async () => {
@@ -1545,7 +1545,7 @@ describe("accepted manual Claude registration binding", () => {
     let delay = false;
     const { core, clock } = await fixture({ birth: async () => {
       if (delay) { delay = false; return gate.promise; }
-      return "birth";
+      return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     } });
     const peer = await shim(core, "pending"); delay = true;
     const registering = hook(core, "pending");
@@ -1554,7 +1554,7 @@ describe("accepted manual Claude registration binding", () => {
     await drainRegistrationMicrotasks();
     await clock.advance(250); await identity;
     expect(clock.timers.size).toBe(0);
-    gate.resolve("birth"); await registering;
+    gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"); await registering;
     expect(Identity.parse(await core.request(peer, "whoami")).session.vendor_session_id).toBe("pending");
   });
 
@@ -1563,7 +1563,7 @@ describe("accepted manual Claude registration binding", () => {
     let delay = false;
     const { core, clock } = await fixture({ birth: async () => {
       if (delay) { delay = false; return gate.promise; }
-      return "birth";
+      return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     } });
     const peer = await shim(core, "pending"); delay = true;
     const registering = expect(hook(core, "pending")).rejects.toThrow(/ownership unavailable/);
@@ -1577,7 +1577,7 @@ describe("accepted manual Claude registration binding", () => {
 
   it("re-probes the pinned birth after completion and rejects PID reuse", async () => {
     const gate = registrationGate<string | undefined>();
-    let delay = false; let birth = "birth";
+    let delay = false; let birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     const { core, clock } = await fixture({ birth: async () => {
       if (delay) { delay = false; return gate.promise; }
       return birth;
@@ -1585,7 +1585,7 @@ describe("accepted manual Claude registration binding", () => {
     const peer = await shim(core, "pending"); delay = true;
     const registering = hook(core, "pending"); await drainRegistrationMicrotasks();
     const identity = expect(core.request(peer, "whoami")).rejects.toThrow(/owner has changed/);
-    await drainRegistrationMicrotasks(); birth = "replacement"; gate.resolve("birth");
+    await drainRegistrationMicrotasks(); birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:10"; gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
     await registering; await identity;
     expect(clock.timers.size).toBe(0);
   });
@@ -1599,16 +1599,16 @@ describe("accepted manual Claude registration binding", () => {
       probes++;
       if (probes === 2) return registration.promise;
       if (probes === 4) { recheckStarted.resolve(); return recheck.promise; }
-      return "birth";
+      return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     } });
     const peer = await shim(core, "pending");
     const registering = hook(core, "pending"); await drainRegistrationMicrotasks();
     const identity = expect(core.request(peer, "whoami")).rejects.toThrow(/not registered|owner has changed|ended/);
-    await drainRegistrationMicrotasks(); registration.resolve("birth");
+    await drainRegistrationMicrotasks(); registration.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
     const registered = await registering; await recheckStarted.promise;
     if (terminal === "ended") await core.request(registered.peer, "session.gone");
     else await hook(core, "successor", { owner_generation: 1 });
-    recheck.resolve("birth"); await identity;
+    recheck.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"); await identity;
     expect(clock.timers.size).toBe(0);
   });
 
@@ -1616,7 +1616,7 @@ describe("accepted manual Claude registration binding", () => {
     const gate = registrationGate<string | undefined>(); let delay = false;
     const { core, clock, close } = await fixture({ birth: async () => {
       if (delay) { delay = false; return gate.promise; }
-      return "birth";
+      return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
     } });
     const peer = await shim(core, "pending"); delay = true;
     const registering = hook(core, "pending").then(() => undefined, error => error as unknown);
@@ -1625,7 +1625,7 @@ describe("accepted manual Claude registration binding", () => {
     await drainRegistrationMicrotasks();
     if (action === "shutdown") await close(); else core.disconnect(peer);
     await identity; expect(clock.timers.size).toBe(0);
-    gate.resolve("birth");
+    gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
     if (action === "shutdown") expect(await registering).toBeInstanceOf(Error);
     else expect(await registering).toBeUndefined();
   });
@@ -1635,31 +1635,31 @@ it("does not await manual tickets for fallback or positive-generation shim ident
   const gate = registrationGate<string | undefined>(); let delay = false;
   const { core, clock } = await fixture({ birth: async () => {
     if (delay) { delay = false; return gate.promise; }
-    return "birth";
+    return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
   } });
   const fallback = await shim(core);
   const generated = core.peer();
-  await core.request(generated, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, pid: 3000,
+  await core.request(generated, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: 3000,
     ppid: 55, vendor: "claude-code", vendor_session_id: "pending", owner_generation: 1, cwd: "/repo" });
   delay = true;
   const registering = hook(core, "pending"); await drainRegistrationMicrotasks();
   await expect(core.request(fallback, "whoami")).rejects.toThrow(/ambiguous|unknown/);
   await expect(core.request(generated, "whoami")).rejects.toThrow(/not registered/);
   expect(clock.timers.size).toBe(0);
-  gate.resolve("birth"); await registering;
+  gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"); await registering;
 });
 
 it("does not wait on a generated hook ticket for a manual shim", async () => {
   const gate = registrationGate<string | undefined>(); let delay = false;
   const { core, clock } = await fixture({ birth: async () => {
     if (delay) { delay = false; return gate.promise; }
-    return "birth";
+    return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
   } });
   const peer = await shim(core, "pending"); delay = true;
   const registering = hook(core, "pending", { owner_generation: 1 }); await drainRegistrationMicrotasks();
   await expect(core.request(peer, "whoami")).rejects.toThrow(/not registered/);
   expect(clock.timers.size).toBe(0);
-  gate.resolve("birth"); await registering;
+  gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"); await registering;
   await expect(core.request(peer, "whoami")).rejects.toThrow(/owner has changed/);
 });
 
@@ -1667,7 +1667,7 @@ it("rejects queued registration and its waiter safely when shutdown precedes que
   const gate = registrationGate<string | undefined>(); let delay = false;
   const { core, clock, close } = await fixture({ birth: async () => {
     if (delay) { delay = false; return gate.promise; }
-    return "birth";
+    return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
   } });
   const peer = await shim(core, "pending"); delay = true;
   const first = hook(core, "other").catch(error => error as unknown);
@@ -1675,7 +1675,7 @@ it("rejects queued registration and its waiter safely when shutdown precedes que
   await drainRegistrationMicrotasks();
   const identity = expect(core.request(peer, "whoami")).rejects.toMatchObject({ code: -32031 });
   await drainRegistrationMicrotasks(); await close(); await identity;
-  expect(clock.timers.size).toBe(0); gate.resolve("birth");
+  expect(clock.timers.size).toBe(0); gate.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
   expect(await first).toMatchObject({ code: -32031 });
   expect(await queued).toMatchObject({ code: -32031 });
 });
@@ -1683,7 +1683,7 @@ it("rejects queued registration and its waiter safely when shutdown precedes que
 it("does not access a closed registry after delayed positive retirement evidence", async () => {
   const gate = registrationGate<boolean>(); const started = registrationGate<void>();
   const { core, adapter, close } = await fixture({ dbPath: await retirementHome() });
-  await hook(core, "old");
+  await hook(core, "linux-v1:01234567-89ab-cdef-0123-456789abcdef:4");
   adapter.isEnded = async () => { started.resolve(); return gate.promise; };
   const registering = expect(hook(core, "pending")).rejects.toMatchObject({ code: -32031 });
   await started.promise; await close(); gate.resolve(true); await registering;
@@ -1698,7 +1698,7 @@ it.each(["disconnect", "shutdown"] as const)("does not install a registration wa
     probes++;
     if (probes === 2) return registration.promise;
     if (probes === 3) { bindingStarted.resolve(); return binding.promise; }
-    return "birth";
+    return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
   } });
   const peer = await shim(core, "pending");
   const registering = hook(core, "pending").then(() => undefined, error => error as unknown);
@@ -1706,9 +1706,9 @@ it.each(["disconnect", "shutdown"] as const)("does not install a registration wa
   const identity = expect(core.request(peer, "whoami")).rejects.toThrow(action === "shutdown" ? /stopping/ : /connection closed/);
   await bindingStarted.promise;
   if (action === "shutdown") await close(); else core.disconnect(peer);
-  binding.resolve("birth"); await identity;
+  binding.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"); await identity;
   expect(clock.timers.size).toBe(0);
-  registration.resolve("birth");
+  registration.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
   if (action === "shutdown") expect(await registering).toMatchObject({ code: -32031 });
   else expect(await registering).toBeUndefined();
 });
@@ -1717,18 +1717,18 @@ it.each(["disconnect", "shutdown"] as const)("does not swallow %s while ipc.hell
   const registration = registrationGate<string | undefined>(); let delay = true;
   const { core, clock, close } = await fixture({ birth: async () => {
     if (delay) { delay = false; return registration.promise; }
-    return "birth";
+    return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
   } });
   const registering = hook(core, "pending").then(() => undefined, error => error as unknown);
   await drainRegistrationMicrotasks();
   const peer = core.peer();
-  const hello = expect(core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION,
+  const hello = expect(core.request(peer, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: 4,
     pid: 3000, ppid: 55, vendor: "claude-code", vendor_session_id: "pending", cwd: "/repo" }))
     .rejects.toThrow(action === "shutdown" ? /stopping/ : /connection closed/);
   await drainRegistrationMicrotasks(); expect(clock.timers.size).toBe(1);
   if (action === "shutdown") await close(); else core.disconnect(peer);
   await hello; expect(clock.timers.size).toBe(0);
-  registration.resolve("birth");
+  registration.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
   if (action === "shutdown") expect(await registering).toMatchObject({ code: -32031 });
   else expect(await registering).toBeUndefined();
 });
@@ -1737,15 +1737,15 @@ it("does not extend an accepted-registration wait to a matching ticket admitted 
   const firstBirth = registrationGate<string | undefined>();
   const laterBirth = registrationGate<string | undefined>();
   const laterStarted = registrationGate<void>();
-  let delay: "first" | "later" | undefined;
+  let delay: "linux-v1:01234567-89ab-cdef-0123-456789abcdef:2" | "later" | undefined;
   const { core, clock } = await fixture({ birth: async () => {
     const selected = delay; delay = undefined;
-    if (selected === "first") return firstBirth.promise;
+    if (selected === "linux-v1:01234567-89ab-cdef-0123-456789abcdef:2") return firstBirth.promise;
     if (selected === "later") { laterStarted.resolve(); return laterBirth.promise; }
-    return "birth";
+    return "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
   } });
   const peer = await shim(core, "pending");
-  delay = "first";
+  delay = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:2";
   const first = hook(core, "pending");
   await drainRegistrationMicrotasks();
   const identity = core.request(peer, "whoami").then(value => ({ value }), error => ({ error: error as unknown }));
@@ -1755,7 +1755,7 @@ it("does not extend an accepted-registration wait to a matching ticket admitted 
     expect(clock.timers.size).toBe(1);
     later = hook(core, "pending");
     delay = "later";
-    firstBirth.resolve("birth");
+    firstBirth.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
     await first; await laterStarted.promise; await drainRegistrationMicrotasks();
     // A faulty wait that joined the later ticket would expire here. The accepted
     // snapshot must already have allowed identity while that later probe is held.
@@ -1766,7 +1766,7 @@ it("does not extend an accepted-registration wait to a matching ticket admitted 
     expect(Identity.parse(result.value).session.vendor_session_id).toBe("pending");
     expect(clock.timers.size).toBe(0);
   } finally {
-    firstBirth.resolve("birth"); laterBirth.resolve("birth");
+    firstBirth.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"); laterBirth.resolve("linux-v1:01234567-89ab-cdef-0123-456789abcdef:1");
     await first; await later; await identity;
   }
 });
@@ -1806,4 +1806,83 @@ it("retains the same blocked project entry and replay key after an old hub rejec
   transport.request = request;
   await core.flush();
   expect(core.registry.outbox().find(entry => entry.id === queued?.id)).toMatchObject({ params: queued?.params, error: expect.any(String) });
+});
+
+it.each([undefined, 3, 5])("rejects incompatible Claude hello contract %s before creating authority", async runtime => {
+  const { core } = await fixture();
+  await expect(hook(core, "old-runtime", { runtime_contract: runtime })).rejects.toThrow("Incompatible Claude runtime contract");
+  expect(core.registry.all()).toHaveLength(0);
+});
+
+it("does not retire legacy owners on incomparable birth or adopt them in the same live PID", async () => {
+  const { core } = await fixture({ alive: false, exists: () => true });
+  const initial = await hook(core, "legacy-upgrade");
+  const record = core.registry.all()[0]; if (!record) throw new Error("missing record");
+  record.processStartedAt = "Tue Nov 10 07:01:09 2026"; core.registry.save(record);
+  await core.sweep();
+  expect(core.registry.get(record.key)?.session.state).toBe("active");
+  await expect(hook(core, "legacy-upgrade")).rejects.toThrow("new OS process");
+  expect(core.registry.get(record.key)?.session.id).toBe(initial.session?.id);
+});
+
+it.each([undefined, 1])("adopts a unique dead legacy predecessor retaining topics/history for generation %s", async generation => {
+  let dead = false;
+  const { core } = await fixture({ exists: pid => pid === 55 && dead ? false : true,
+    birth: async pid => pid === 55 && dead ? undefined : "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1" });
+  const first = await hook(core, "legacy-resume");
+  await core.request(first.peer, "topic.join", { name: "retained-topic" });
+  await core.request(first.peer, "session.upsert", { op: "update", session: { name: "retained-name", role: "developer" } });
+  const record = core.registry.all()[0]; if (!record) throw new Error("missing record");
+  record.processStartedAt = "Tue Nov 10 07:01:09 2026"; record.acked = 7; core.registry.save(record);
+  dead = true;
+  const next = await hook(core, "legacy-resume", { ppid: 56, owner_generation: generation });
+  const who = Identity.parse(await core.request(next.peer, "whoami"));
+  expect(who.session.id).toBe(first.session?.id); expect(who.session.name).toBe("retained-name");
+  expect(who.topics.map(topic => topic.name)).toContain("retained-topic");
+  expect(core.registry.all()).toHaveLength(1); expect(core.registry.all()[0]?.acked).toBe(7);
+});
+
+it("retains unread native work for an unverified legacy owner until safe new-process adoption", async () => {
+  let dead = false;
+  const { core, attempts, clock } = await fixture({ exists: pid => pid === 55 && dead ? false : true,
+    birth: async pid => pid === 55 && dead ? undefined : "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1" });
+  const recipient = await hook(core, "native-legacy");
+  const sender = await hook(core, "native-sender", { ppid: 57 });
+  const record = core.registry.all().find(item => item.session.vendor_session_id === "native-legacy");
+  if (!record || !recipient.session) throw new Error("missing recipient");
+  record.processStartedAt = "Tue Nov 10 07:01:09 2026"; core.registry.save(record);
+  await send(core, sender.peer, recipient.session.handle, "private pending body");
+  await clock.advance(30_000);
+  expect(attempts).toHaveLength(0);
+  expect(core.registry.pending(recipient.session.id)).toHaveLength(1);
+  dead = true;
+  const resumed = await hook(core, "native-legacy", { ppid: 56 });
+  expect(resumed.session?.id).toBe(recipient.session.id);
+  await clock.advance(30_000);
+  for (let i = 0; i < 80; i++) await Promise.resolve();
+  expect(attempts).toHaveLength(1);
+  // Socket write is not a read receipt; the body remains unread on the hub.
+  expect(Results["inbox.list"].parse(await core.request(resumed.peer, "inbox.list", { unread_only: true })).headers).toHaveLength(1);
+});
+
+it("rejects a native continuation if generation changes during the final birth probe", async () => {
+  let pause = false; let entered!: () => void; let release!: (birth: string) => void;
+  const probing = new Promise<void>(resolve => { entered = resolve; });
+  const birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
+  const { core, attempts, clock } = await fixture({ birth: async pid => {
+    if (pause && pid === 55) { pause = false; entered(); return new Promise<string>(resolve => { release = resolve; }); }
+    return birth;
+  } });
+  const recipient = await hook(core, "native-generation", { owner_generation: 1 });
+  const sender = await hook(core, "generation-sender", { ppid: 57 });
+  if (!recipient.session) throw new Error("missing recipient");
+  pause = true;
+  await send(core, sender.peer, recipient.session.handle);
+  await clock.advance(30_000); await probing;
+  await hook(core, "native-generation", { owner_generation: 2 });
+  release(birth);
+  // Let only the old continuation drain, without running the newly scheduled wake.
+  for (let i = 0; i < 20; i++) await Promise.resolve();
+  expect(attempts).toHaveLength(0);
+  expect(core.registry.pending(recipient.session.id)).toHaveLength(1);
 });

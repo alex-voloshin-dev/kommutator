@@ -1,6 +1,6 @@
 import { connect, type Socket } from "node:net";
 import { spawn } from "node:child_process";
-import { MAX_FRAME_BYTES, Methods, PROTOCOL_VERSION } from "@kommutator/protocol";
+import { MAX_FRAME_BYTES, Methods, PROTOCOL_VERSION, RUNTIME_CONTRACT } from "@kommutator/protocol";
 import { pathsFor } from "@kommutator/agentd/paths";
 import * as z from "zod";
 import { isCodexClient } from "./codex.js";
@@ -10,6 +10,8 @@ export interface RpcClient {
   call(method: string, params?: Record<string, unknown>): Promise<unknown>;
   close(): void;
 }
+
+export const IPC_TRANSPORT_CLOSED = -32032;
 
 export class IpcError extends Error {
   constructor(message: string, readonly code?: number) { super(message); }
@@ -42,7 +44,7 @@ export function shimHello(clientInfo?: { name: string; version?: string }): Hell
   const claude = !codex && /claude/i.test(clientInfo?.name ?? "");
   const vendorId = claude ? process.env.CLAUDE_CODE_SESSION_ID : undefined;
   return Methods["ipc.hello"].parse({
-    client: "shim", protocol_version: PROTOCOL_VERSION, pid: process.pid, ppid: claude ? claudeOwnerPid() : process.ppid,
+    client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: RUNTIME_CONTRACT, pid: process.pid, ppid: claude ? claudeOwnerPid() : process.ppid,
     cwd: process.cwd(), vendor: codex ? "codex" : claude ? "claude-code" : "other",
     ...(vendorId ? { vendor_session_id: vendorId } : {}),
     ...(process.env.KOM_PROJECT ? { project_key: process.env.KOM_PROJECT } : {}),
@@ -74,6 +76,8 @@ export class IpcClient implements RpcClient {
   private pending = new Map<number, { resolve(value: unknown): void; reject(error: Error): void; timer: NodeJS.Timeout }>();
   private buffer = "";
   private closed = false;
+  private cancelOpening: (() => void) | undefined;
+  private cancelWait: (() => void) | undefined;
   private helloBound: boolean | undefined;
   private timedOutOnConnection = false;
   private trackedPreparation: Promise<void> | undefined;
@@ -105,6 +109,8 @@ export class IpcClient implements RpcClient {
 
   close(): void {
     this.closed = true;
+    this.cancelOpening?.();
+    this.cancelWait?.();
     this.disconnect(new IpcError("IPC client closed"));
   }
 
@@ -128,12 +134,15 @@ export class IpcClient implements RpcClient {
   }
 
   private async open(allowStart: boolean): Promise<void> {
-    const retries = this.options.retries ?? 6;
+    const deadline = performance.now() + (this.options.timeoutMs ?? 5_000);
+    const remaining = () => Math.max(0, deadline - performance.now());
     for (let attempt = 0; ; attempt++) {
       if (this.closed) throw new IpcError("IPC client closed");
       try {
-        await this.openSocket();
-        const hello: unknown = await this.request("ipc.hello", this.options.hello());
+        if (remaining() <= 0) throw new IpcError("Daemon startup timed out; check kom init and kom daemon run");
+        await this.openSocket(remaining());
+        if (this.closed) throw new IpcError("IPC client closed");
+        const hello: unknown = await this.request("ipc.hello", this.options.hello(), remaining());
         const binding = z.object({ bound: z.boolean().optional() }).safeParse(hello);
         this.helloBound = binding.success ? binding.data.bound : undefined;
         return;
@@ -143,21 +152,34 @@ export class IpcClient implements RpcClient {
         if (code !== "ENOENT" && code !== "ECONNREFUSED") throw error;
         if (!this.options.lazyStart || !allowStart) throw error;
         if (attempt === 0) (this.options.spawn ?? spawnDaemon)();
-        if (attempt >= retries || this.closed) throw new IpcError("Daemon unavailable; check kom init and kom daemon run");
-        await new Promise((resolve) => setTimeout(resolve, Math.min(50 * 2 ** attempt, 500)));
+        if ((this.options.retries !== undefined && attempt >= this.options.retries) || remaining() <= 0 || this.closed) throw new IpcError("Daemon unavailable; check kom init and kom daemon run");
+        await new Promise<void>((resolve, reject) => {
+          const finish = () => { this.cancelWait = undefined; resolve(); };
+          const timer = setTimeout(finish, Math.min(50 * 2 ** Math.min(attempt, 4), 500, remaining()));
+          this.cancelWait = () => { clearTimeout(timer); this.cancelWait = undefined; reject(new IpcError("IPC client closed")); };
+        });
       }
     }
   }
 
-  private openSocket(): Promise<void> {
+  private openSocket(timeoutMs: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const socket = connect(this.options.endpoint ?? pathsFor().ipc);
       this.socket = socket;
       socket.setEncoding("utf8");
-      const timer = setTimeout(() => { socket.destroy(); reject(new IpcError("IPC connection timed out")); }, this.options.timeoutMs ?? 5_000);
-      socket.once("connect", () => { clearTimeout(timer); resolve(); });
-      socket.on("error", (error) => { clearTimeout(timer); reject(error); if (this.socket === socket) this.disconnect(error); });
-      socket.on("close", () => { clearTimeout(timer); if (this.socket === socket) this.disconnect(new IpcError("Daemon disconnected; delivery state may be uncertain; do not resend blindly")); });
+      let established = false;
+      const timer = setTimeout(() => { this.cancelOpening = undefined; socket.destroy(); reject(new IpcError("IPC connection timed out")); }, Math.max(1, timeoutMs));
+      this.cancelOpening = () => { clearTimeout(timer); this.cancelOpening = undefined; socket.destroy(); reject(new IpcError("IPC client closed")); };
+      socket.once("connect", () => { established = true; clearTimeout(timer); this.cancelOpening = undefined; resolve(); });
+      socket.on("error", (error) => { clearTimeout(timer); this.cancelOpening = undefined; reject(error); if (this.socket === socket) this.disconnect(error); });
+      socket.on("close", () => {
+        clearTimeout(timer);
+        if (!established) reject(new IpcError("IPC transport closed before connection", IPC_TRANSPORT_CLOSED));
+        if (this.socket === socket) {
+          this.cancelOpening = undefined;
+          this.disconnect(new IpcError("Daemon disconnected; delivery state may be uncertain; do not resend blindly", IPC_TRANSPORT_CLOSED));
+        }
+      });
       socket.on("data", (chunk: string) => {
         if (this.socket !== socket) return;
         this.buffer += chunk;
@@ -181,7 +203,8 @@ export class IpcClient implements RpcClient {
     });
   }
 
-  private request(method: string, params: Record<string, unknown>): Promise<unknown> {
+  private request(method: string, params: Record<string, unknown>, timeoutMs = this.options.timeoutMs ?? 5_000): Promise<unknown> {
+    if (timeoutMs <= 0) return Promise.reject(new IpcError("IPC connection deadline exceeded"));
     const socket = this.socket;
     if (!socket || socket.destroyed) return Promise.reject(new IpcError("Daemon unavailable"));
     const id = this.nextId++;
@@ -192,7 +215,7 @@ export class IpcClient implements RpcClient {
         this.timedOutOnConnection = true;
         this.pending.delete(id);
         reject(new IpcError("Daemon request timed out; delivery state may be uncertain; do not resend blindly"));
-      }, this.options.timeoutMs ?? 5_000);
+      }, timeoutMs);
       this.pending.set(id, { resolve, reject, timer });
       socket.write(frame, (error) => { if (error) this.disconnect(error); });
     });

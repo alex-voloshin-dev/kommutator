@@ -91,7 +91,7 @@ async function fixture() {
     // This endpoint and PID file exist only inside this fixture's private directory.
     const management = new IpcClient({
       endpoint: join(home, "agentd.sock"), timeoutMs: 500, lazyStart: false,
-      hello: () => ({ client: "cli", protocol_version: PROTOCOL_VERSION, pid: process.pid, cwd }),
+      hello: () => ({ client: "cli", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: process.pid, cwd }),
     });
     try { await management.call("daemon.shutdown"); }
     catch (error) {

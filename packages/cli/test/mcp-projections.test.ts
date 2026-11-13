@@ -30,7 +30,7 @@ async function setup(result: unknown) {
 
 it("summarizes large status lists while retaining caller failure, health and last error", async () => {
   const result = {
-    runtime_contract: 3, daemon: { version: "test" }, hub: { connected: false },
+    runtime_contract: 4, daemon: { version: "test" }, hub: { connected: false },
     caller: { state: "gone", recovery: "Run the current hook", session_id: "caller" },
     health: { state: "degraded", issues: ["Hub disconnected"] }, last_error: "Connection reset", last_error_at: 123,
     hook_observations: [{ outcome: "attempted" }], outbox_depth: 2,

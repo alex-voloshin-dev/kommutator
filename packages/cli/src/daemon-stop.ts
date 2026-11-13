@@ -1,6 +1,7 @@
+import { IPC_TRANSPORT_CLOSED } from "./ipc-client.js";
 type Management = (method: "daemon.shutdown" | "daemon.status", timeoutMs: number) => Promise<unknown>;
 const errorCode = (error: unknown): unknown => error && typeof error === "object" && "code" in error ? error.code : undefined;
-const transitioning = (code: unknown) => code === "ECONNRESET" || code === -32031;
+const transitioning = (code: unknown) => code === "ECONNRESET" || code === -32031 || code === IPC_TRANSPORT_CLOSED;
 const absent = (code: unknown) => code === "ENOENT" || code === "ECONNREFUSED";
 
 /** A reset is uncertain; only a fresh absent-listener probe authorizes replacement. */
