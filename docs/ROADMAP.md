@@ -15,7 +15,8 @@ clean-profile installed MCP probes verified 0.12.3.
 The urgent [reconnect candidate](sdlc/reconnect-authority/tech-design.md) repairs
 timezone-dependent process birth, interrupted pre-delivery authority publication,
 premature lazy-start exhaustion and ordinary-close shutdown confirmation. Independent
-implementation reviews approve; final QA, packaging and deployment are pending.
+implementation reviews, independent QA and exact-version packaging pass; publication
+and deployment are pending.
 Legacy history is retained conservatively, and unverified native owners cannot receive
 delivery. Contract 4/schema 5 require per-owner client upgrade and a new process;
 service health alone does not prove a client has reconnected. Historical #9/#19/#22/#25

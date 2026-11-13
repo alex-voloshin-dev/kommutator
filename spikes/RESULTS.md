@@ -1285,3 +1285,9 @@ Previous IPC, missing manual registration and restart-test timeouts remain unexp
 diagnostic and green repeats are not causal fixes. Changed-cwd A→B→A remains a
 fail-closed availability limitation. Packaging/public/local rollout remain pending.
 See [qualification evidence](evidence/2026-11-13-reconnect-qualification.json).
+
+Exact-version 0.15.0 build/typecheck and 697 tests passed. Full release:check passed
+on its first invocation (697 workspace, 142 script tests, audit, export integrity,
+clean-PATH and synthetic exported E2E). Source/history secret scans were clean;
+export warnings were two hash manifests with all 191 payload hashes each verified.
+Public installation and deployment remain separate gates.

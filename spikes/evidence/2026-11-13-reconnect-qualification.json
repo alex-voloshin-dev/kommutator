@@ -137,5 +137,21 @@
     "Pre-publication kill cannot fabricate authority",
     "Historical issues9/19/22/25 not collectively resolved",
     "Real vendor/native Work, macOS, day-long, subnet and reboot gates remain open"
-  ]
+  ],
+  "release_candidate": "0.15.0",
+  "exact_version_gates": {
+    "build": "passed",
+    "typecheck": "passed",
+    "workspace_tests": 697,
+    "release_check": "passed first invocation",
+    "script_tests": 142,
+    "clean_path": "passed Claude/Codex",
+    "synthetic_exported_e2e": "passed",
+    "source_history_secrets": "none detected",
+    "export_findings": "two runtime hash manifests; 191 payload hashes each verified"
+  },
+  "assets": {
+    "kommutator-v0.15.0-claude-linux-x64.zip": "32f50983b1595acb2ac0347fb605552272e5f1e369ac8c8f6b1e9f7d8a73e495",
+    "kommutator-v0.15.0-linux-x64.tar.gz": "9f39da581d7a1136d48a90f0eab4aa2e8f58e8d9acd1a743224e77221374d141"
+  }
 }
