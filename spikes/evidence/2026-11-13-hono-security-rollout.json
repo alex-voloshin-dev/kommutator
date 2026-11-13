@@ -1,0 +1,125 @@
+{
+  "date_utc": "2026-11-13",
+  "version": "0.13.1",
+  "release_commit": "2e64a1bd74be91509120af4326e47b467ceeb46c",
+  "merge_commit": "8ce5a798dbdee2af0e404ec7aaa6b2b8af6f71fb",
+  "ci_runs": [
+    43445023132,
+    43445023176,
+    43444978512,
+    43444978559,
+    43444968157,
+    43444968184
+  ],
+  "ci_result": "all success",
+  "public_assets": [
+    {
+      "asset": "kommutator-v0.13.1-claude-linux-x64.zip",
+      "anonymous_download": true,
+      "sha256": "34a8505e600f5e082fec706db70ebab1f9a6b4834638c4eda31680eb0b471e5f",
+      "verified": true
+    },
+    {
+      "asset": "kommutator-v0.13.1-linux-x64.tar.gz",
+      "anonymous_download": true,
+      "sha256": "3e33cdede27d88ee3175b2479af456661451845ab66b9a52f03ff1376e7f6ae8",
+      "verified": true
+    }
+  ],
+  "native_install_steps": [
+    {
+      "vendor": "claude",
+      "step": 0,
+      "exit": 0
+    },
+    {
+      "vendor": "claude",
+      "step": 1,
+      "exit": 0
+    },
+    {
+      "vendor": "codex",
+      "step": 0,
+      "exit": 0
+    },
+    {
+      "vendor": "codex",
+      "step": 1,
+      "exit": 0
+    }
+  ],
+  "installed_mcp": [
+    {
+      "vendor": "claude",
+      "nativeInstaller": "2.1.323 (Claude Code)",
+      "plugin": "0.13.1",
+      "mcp": "0.13.1",
+      "node": "v26.13.0",
+      "privateSetup": true,
+      "originRejected": true,
+      "realConversation": false
+    },
+    {
+      "vendor": "codex",
+      "nativeInstaller": "codex-cli 0.167.2",
+      "plugin": "0.13.1",
+      "mcp": "0.13.1",
+      "node": "v26.13.0",
+      "privateSetup": true,
+      "originRejected": true,
+      "realConversation": false
+    }
+  ],
+  "database_checks": [
+    {
+      "kind": "daemon_backup",
+      "mode": "0o600",
+      "quick_check": "ok",
+      "schema": 4
+    },
+    {
+      "kind": "hub_backup",
+      "mode": "0o600",
+      "quick_check": "ok",
+      "schema": 6
+    },
+    {
+      "kind": "daemon_current",
+      "mode": "0o600",
+      "quick_check": "ok",
+      "schema": 4
+    }
+  ],
+  "deployment": {
+    "checkpoint": "idle",
+    "applied": "0.13.1",
+    "hub_version": "0.13.1",
+    "hub_started_at": "2026-11-13T14:44:49.785165807Z",
+    "daemon_version": "0.13.1",
+    "daemon_pid": 3752322,
+    "health": "healthy",
+    "caller": "active",
+    "hub_connected": true,
+    "outbox_depth": 0,
+    "timer": "active",
+    "manual_recovery": false
+  },
+  "loaded_chat_mcp": "0.13.0",
+  "dependabot": {
+    "fixed": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "open": 0
+  },
+  "announcement": "fd9a38c0-9593-4fcb-b289-e14936b94d9b",
+  "limits": [
+    "No availability cause established",
+    "Native model/day-long/subnet/reboot/other-platform acceptance remains open"
+  ]
+}

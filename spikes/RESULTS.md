@@ -1230,3 +1230,22 @@ exported E2E gate passed without a failed local run. No application authority/sc
 change or availability-root-cause resolution is claimed. Public installation/deployment
 remain separate gates at this commit. See [evidence](evidence/2026-11-13-hono-security-update.json)
 and [release notes](../docs/sdlc/hono-security-update/release.md).
+
+## 2026-11-13: 0.13.1 publication and local rollout
+
+All exact release-commit branch/PR/tag checks passed. Public archives and hashes were
+verified before catalog merge; clean-profile native Claude/Codex installs launched MCP
+0.13.1 and passed setup/origin probes. All seven Dependabot alerts report fixed.
+The ordinary updater completed without manual recovery after timer stop, updater drain
+and lock verification: hub/daemon 0.13.1 healthy, connected, active caller, empty outbox.
+Backups and live daemon DB passed quick_check; timer restored, checkpoint idle. Loaded
+chat MCP remains compatible 0.13.0. Release announcement sent to kommutator-feedback.
+See [rollout evidence](evidence/2026-11-13-hono-security-rollout.json).
+
+New field reports were reviewed and recorded in issue #22. The 00:20:53 UTC error cluster
+coincides with the previous planned hub restart; other reported heartbeat/ack/send failures
+remain unexplained. Source confirms any hub RPC timeout terminates the shared WebSocket;
+that mechanism does not prove why a particular response was missing. Remote daemon 0.12.5
+cannot retrospectively provide the operation ID added in 0.13.0. Idle delivery measurements
+were from capability hook; the reporter confirmed fallback policy. Native-wake setup
+clarity is tracked separately, without globally enabling inbound acceptance.

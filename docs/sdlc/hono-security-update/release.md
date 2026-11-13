@@ -1,7 +1,7 @@
 ---
 type: release
 feature: hono-security-update
-status: qualified
+status: published
 review_decision: proceed
 version: 0.13.1
 changelog:
@@ -36,3 +36,18 @@ release metadata: all 193 payload hashes in each vendor manifest matched their f
 No native model conversation, additional target platform, day-long reliability, physical
 subnet allow/deny or unattended Windows reboot acceptance is implied. Issues #9, #19,
 #22 and #25 retain their recorded limits; successful repeats do not establish root causes.
+
+## Publication and local deployment
+
+Branch/PR/tag CI passed on release commit 2e64a1bd74be91509120af4326e47b467ceeb46c.
+Exact assets were published and anonymous hashes verified before PR #27 catalog merge.
+Real clean-profile Claude Code 2.1.323 and Codex CLI 0.167.2 installs launched MCP 0.13.1
+with bundled Node 26.13.0 and passed private setup/origin rejection probes. Codex emitted
+its temporary-home helper-alias warning; installation and MCP probes succeeded.
+GitHub now reports all seven dependency alerts fixed; superseded PR #26 is closed.
+
+Ordinary updater deployed hub/daemon 0.13.1 without manual recovery. Both backups and
+live schema-4 daemon database passed quick_check with mode 0600. Hub healthy/connected,
+caller active, outbox empty, checkpoint idle/applied 0.13.1, timer restored. Current chat
+MCP remains compatible 0.13.0; no hot client update is claimed. The release was announced
+in kommutator-feedback. See [rollout evidence](../../../spikes/evidence/2026-11-13-hono-security-rollout.json).
