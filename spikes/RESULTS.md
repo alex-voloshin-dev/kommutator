@@ -1218,3 +1218,15 @@ backup; all three user-local files remained byte-identical. The merged feature w
 was removed; the retained deployment checkout remains in place. See
 [rollout evidence](evidence/2026-11-13-mutation-reconciliation-rollout.json). Issues
 #9, #19, #22 and #25 remain open with the qualification limits recorded above.
+
+## 2026-11-13: Hono dependency refresh qualification
+
+Candidate 0.13.1 updates only the MCP SDK transitive Hono 4.13.13 -> 4.13.18 and
+@hono/node-server 2.1.5 -> 2.1.8 resolutions. Full audit reports zero known advisories.
+Independent correctness, security and external reviewers approved; QA independently
+passed 18 process tests and both exported clean-PATH smokes. Exact-version ordered
+build/typecheck, 647 workspace tests, 140 script tests and the full packaging/synthetic
+exported E2E gate passed without a failed local run. No application authority/schema
+change or availability-root-cause resolution is claimed. Public installation/deployment
+remain separate gates at this commit. See [evidence](evidence/2026-11-13-hono-security-update.json)
+and [release notes](../docs/sdlc/hono-security-update/release.md).

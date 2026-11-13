@@ -1,0 +1,51 @@
+{
+  "date_utc": "2026-11-13",
+  "version": "0.13.1",
+  "base": "9b68a1eec4dfd2a615571d7909be807dfa28da0e",
+  "implementation_commit": "60c4ffa",
+  "dependencies": {
+    "hono": {
+      "before": "4.13.13",
+      "after": "4.13.18"
+    },
+    "@hono/node-server": {
+      "before": "2.1.5",
+      "after": "2.1.8"
+    }
+  },
+  "audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0
+  },
+  "review": {
+    "correctness": "approve",
+    "security": "approve",
+    "external": "approve",
+    "iteration": 1,
+    "decision": "proceed"
+  },
+  "qa": {
+    "targeted_tests": 18,
+    "both_vendor_clean_path": true
+  },
+  "qualification": {
+    "node": "26.13.0",
+    "pnpm": "12.18.0",
+    "workspace_tests": 647,
+    "script_tests": 140,
+    "ordered_build_typecheck_test": true,
+    "packaging": true,
+    "exported_synthetic_e2e": true,
+    "failed_runs": 0
+  },
+  "public_installation": "pending",
+  "deployment": "pending",
+  "limitations": [
+    "Not an established availability fix",
+    "No native vendor model conversation",
+    "Other platforms/day-long/subnet/reboot gates open"
+  ]
+}
