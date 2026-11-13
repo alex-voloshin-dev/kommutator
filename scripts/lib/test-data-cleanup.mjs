@@ -52,7 +52,7 @@ function primarySelection(rows, manifest) {
 }
 export function inspectCleanup(db, input) {
   const manifest = validateManifest(input);
-  assert(db.prepare('PRAGMA user_version').get().user_version === 6, 'cleanup requires a hub already upgraded to schema 6');
+  assert([6, 7].includes(db.prepare('PRAGMA user_version').get().user_version), 'cleanup requires hub schema 6 or 7');
   assert(db.prepare('PRAGMA foreign_key_check').all().length === 0, 'database has foreign-key violations');
   const rows = readRows(db), selected = primarySelection(rows, manifest);
   if (manifest.expected_sha256 && db.prepare("SELECT 1 FROM retired_operations WHERE kind='cleanup' AND operation_key=?").get(receiptKey(manifest))) {
@@ -73,7 +73,7 @@ export function inspectCleanup(db, input) {
   assert(rows.messages.every(row => !sessionIds.has(row.from_session) || messageIds.has(row.id)), 'session authored retained messages');
   assert(rows.messages.every(row => messageIds.has(row.id) || (!messageIds.has(row.thread_id) && !messageIds.has(row.reply_to))), 'message has retained thread or reply references');
   assert(rows.deliveries.every(row => !sessionIds.has(row.session_id) || messageIds.has(row.message_id)), 'session has retained deliveries');
-  assert(rows.message_targets.every(row => messageIds.has(row.message_id) || !(row.target_type === 'topic' && topicNames.has(row.target_id))
+  assert(rows.message_targets.every(row => messageIds.has(row.message_id) || !((row.target_type === 'topic' && topicNames.has(row.target_id) || row.target_type === 'project' && topicNames.has(`project:${row.target_id}`)))
     && !(row.target_type === 'session' && (sessionIds.has(row.target_id) || handles.has(row.target_id)))), 'retained message targets selected topic or session');
   assert(rows.memberships.every(row => !topicIds.has(row.topic_id) || sessionIds.has(row.session_id)), 'topic has retained subscribers');
   assert(rows.board_entries.every(row => !topicIds.has(row.topic_id) && !handles.has(row.author) || boardKeys.has(boardId(row))), 'retained board references selected topic or session');

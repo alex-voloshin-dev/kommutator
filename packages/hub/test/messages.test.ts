@@ -68,6 +68,89 @@ describe("message routing and inbox", () => {
     return message;
   }
 
+  function projectFixture() {
+    db.exec("UPDATE sessions SET project_key = 'private'; INSERT INTO memberships(session_id, topic_id) SELECT s.id, t.id FROM sessions s CROSS JOIN topics t WHERE t.name = 'project:private' AND s.id != 'c'");
+  }
+
+  it("routes project snapshots by exact project membership, active/idle state and inclusive heartbeat boundary", () => {
+    projectFixture();
+    db.prepare("UPDATE sessions SET state = 'idle', last_seen_at = ? WHERE id = 'b'").run("2026-10-25T11:59:00.000Z");
+    db.prepare("UPDATE sessions SET last_seen_at = ? WHERE id = 'c'").run("2026-10-25T11:58:59.999Z");
+    db.exec("UPDATE sessions SET project_key = 'other' WHERE id = 'isolated'");
+    const sent = sendMessage(ctx, peer, params([" @PROJECT "]));
+    expect(sent.deliveries).toEqual({ b: "unread" });
+    expect(stored(sent.id).to).toEqual(["@project"]);
+    expect(db.prepare("SELECT target_type, target_id FROM message_targets WHERE message_id = ?").get(sent.id))
+      .toEqual({ target_type: "project", target_id: "private" });
+    expect(db.prepare("SELECT wake FROM deliveries WHERE message_id = ?").get(sent.id)).toEqual({ wake: 1 });
+  });
+
+  it.each(["active", "idle"])("excludes an otherwise eligible %s project peer exactly one millisecond past the freshness boundary", state => {
+    projectFixture();
+    db.exec("UPDATE sessions SET project_key = 'other' WHERE id NOT IN ('a', 'b')");
+    db.prepare("UPDATE sessions SET state = ?, last_seen_at = ? WHERE id = 'b'")
+      .run(state, "2026-10-25T11:59:00.000Z");
+    expect(sendMessage(ctx, peer, params(["@project"])).deliveries).toEqual({ b: "unread" });
+
+    ctx.now = () => "2026-10-25T12:00:00.001Z";
+    expect(sendMessage(ctx, peer, params(["@project"])).deliveries).toEqual({});
+    expect(sendMessage(ctx, peer, params(["topic:project:private"])).deliveries).toHaveProperty("b");
+    expect(db.prepare("SELECT next_seq FROM sessions WHERE id = 'b'").get()).toEqual({ next_seq: 3 });
+  });
+
+  it.each(["unknown", "gone", "missing-membership", "invalid-time", "ended"])("excludes project peer with %s without changing the durable topic audience", reason => {
+    projectFixture();
+    db.exec("DELETE FROM memberships WHERE session_id IN ('c', 'isolated') AND topic_id = (SELECT id FROM topics WHERE name = 'project:private')");
+    if (reason === "missing-membership") db.exec("DELETE FROM memberships WHERE session_id = 'b' AND topic_id = (SELECT id FROM topics WHERE name = 'project:private')");
+    else if (reason === "invalid-time") db.exec("UPDATE sessions SET last_seen_at = 'bad' WHERE id = 'b'");
+    else if (reason === "ended") db.prepare("UPDATE sessions SET ended_at = ? WHERE id = 'b'").run(NOW);
+    else db.prepare("UPDATE sessions SET state = ? WHERE id = 'b'").run(reason);
+    expect(sendMessage(ctx, peer, params(["@project"])).deliveries).toEqual({});
+    expect(sendMessage(ctx, peer, params(["topic:project:private"])).deliveries).toHaveProperty("gone");
+  });
+
+  it("rejects missing sender project, membership and forged host before any inserts", () => {
+    expect(() => sendMessage(ctx, peer, params(["@project", "all"]))).toThrow("inspect whoami");
+    expect(db.prepare("SELECT count(*) AS n FROM messages").get()).toEqual({ n: 0 });
+    projectFixture();
+    db.exec("DELETE FROM memberships WHERE session_id = 'a' AND topic_id = (SELECT id FROM topics WHERE name = 'project:private')");
+    expect(() => sendMessage(ctx, peer, params(["@project"]))).toThrow("membership required");
+    expect(() => sendMessage(ctx, { host: "server" }, params(["@project"]))).toThrow("does not belong");
+    expect(db.prepare("SELECT count(*) AS n FROM message_targets").get()).toEqual({ n: 0 });
+  });
+
+  it("replays the original project delivery sequences even after membership and heartbeat changes", () => {
+    projectFixture();
+    const input = params(["@project"], {}, "a", "project-replay");
+    const first = sendMessage(ctx, peer, input);
+    const deliveries = db.prepare("SELECT * FROM deliveries").all();
+    db.exec("DELETE FROM memberships WHERE session_id = 'a'; UPDATE sessions SET state = 'gone', last_seen_at = 'bad' WHERE id != 'a'");
+    expect(sendMessage(ctx, peer, input)).toEqual({ ...first, replayed: true });
+    expect(db.prepare("SELECT * FROM deliveries").all()).toEqual(deliveries);
+    expect(() => sendMessage(ctx, peer, { ...input, message: { ...input.message, body: "changed" } })).toThrow("different message");
+  });
+
+  it("keeps zero-recipient replay empty after peers become eligible and unions explicit self targets", () => {
+    projectFixture();
+    db.exec("UPDATE sessions SET state = 'unknown' WHERE id != 'a'");
+    const input = params(["@project"], {}, "a", "empty-project");
+    const first = sendMessage(ctx, peer, input);
+    expect(first.deliveries).toEqual({});
+    db.exec("UPDATE sessions SET state = 'active' WHERE id = 'b'");
+    expect(sendMessage(ctx, peer, input)).toEqual({ ...first, replayed: true });
+    expect(sendMessage(ctx, peer, params(["@project", "b@laptop", "a@laptop"])).deliveries).toEqual({ a: "unread", b: "unread" });
+  });
+
+  it.each([{ kind: "topic", priority: "normal", wake: "on", expected: 0 },
+    { kind: "request", priority: "fyi", wake: "on", expected: 0 },
+    { kind: "request", priority: "normal", wake: "off", expected: 0 },
+    { kind: "request", priority: "normal", wake: "on", expected: 1 }] as const)("preserves project wake policy: %j", rule => {
+    projectFixture();
+    db.prepare("UPDATE sessions SET wake = ? WHERE id = 'b'").run(rule.wake);
+    const sent = sendMessage(ctx, peer, params(["@project"], { kind: rule.kind, priority: rule.priority }));
+    expect(db.prepare("SELECT wake FROM deliveries WHERE message_id = ? AND session_id = 'b'").get(sent.id)).toEqual({ wake: rule.expected });
+  });
+
   it("derives authorship, identity and root metadata and emits valid deliveries after commit", () => {
     const committedCounts: number[] = [];
     ctx.events.subscribe(() => {

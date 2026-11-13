@@ -86,7 +86,7 @@ CREATE INDEX IF NOT EXISTS messages_thread ON messages(thread_id, created_at);
 
 CREATE TABLE IF NOT EXISTS message_targets (
   message_id  TEXT NOT NULL REFERENCES messages(id),
-  target_type TEXT NOT NULL,                   -- session|role|topic|all
+  target_type TEXT NOT NULL,                   -- session|role|topic|project|all
   target_id   TEXT NOT NULL
 );
 

@@ -5,12 +5,12 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 /**
- * Bump when schema.sql changes shape. The hub refuses to open a database whose
+ * Bump when SQL layout or stored semantics change. The hub refuses to open a database whose
  * `PRAGMA user_version` does not match: a database created by an earlier schema has tables
  * that `CREATE TABLE IF NOT EXISTS` would silently leave without the new columns and
  * constraints (R10). Only explicitly supported additive migrations are applied.
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 export class IncompatibleDatabaseError extends Error {
   constructor(
@@ -19,8 +19,8 @@ export class IncompatibleDatabaseError extends Error {
   ) {
     super(
       `database ${path} has schema version ${found}, this hub needs ${SCHEMA_VERSION}. ` +
-        `Back it up with: sqlite3 '${path}' "VACUUM INTO 'backup.db'"  then move the file away; ` +
-        `the hub will create a fresh one. This version supports only the schema 5 to 6 migration.`,
+        `Preserve this database and replay history. Back up using VACUUM INTO, then use a compatible hub ` +
+        `and fix forward; do not reset or downgrade history. Supported upgrades: schema 5 or 6 to 7.`,
     );
     this.name = "IncompatibleDatabaseError";
   }
@@ -37,14 +37,15 @@ export function openDatabase(path: string): DatabaseSync {
   const hasTables = (db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE type = 'table'").get() as { n: number }).n > 0;
 
   if (version === SCHEMA_VERSION) return db;
-  if (version === 5) {
+  if (version === 5 || version === 6) {
     db.exec("BEGIN IMMEDIATE");
     try {
-      db.exec(`CREATE TABLE retired_operations (
+      if (version === 5) db.exec(`CREATE TABLE retired_operations (
         kind TEXT NOT NULL CHECK (kind IN ('registration', 'message', 'board', 'cleanup')),
         operation_key TEXT NOT NULL,
         PRIMARY KEY (kind, operation_key)
       ); PRAGMA user_version = 6;`);
+      db.exec("PRAGMA user_version = 7");
       db.exec("COMMIT");
       return db;
     } catch (error) {

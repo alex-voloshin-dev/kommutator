@@ -15,6 +15,7 @@ describe("parseAddress", () => {
       kind: "topic",
       topic: "project:github.com/avav25/kommutator",
     });
+    expect(parseAddress(" @PROJECT ")).toEqual({ kind: "project" });
     expect(parseAddress("all")).toEqual({ kind: "all" });
   });
 
@@ -28,12 +29,12 @@ describe("parseAddress", () => {
 
   it("explains address syntax without guessing topic or session existence", () => {
     for (const raw of ["kommutator-feedback", "unknown-topic", "author"]) {
-      expect(() => parseAddress(raw)).toThrow("use topic:<name>, <name>@<host>, @role:<role>, or all");
+      expect(() => parseAddress(raw)).toThrow("use topic:<name>, <name>@<host>, @role:<role>, @project, or all");
     }
   });
 
   it("round-trips through formatAddress", () => {
-    for (const raw of ["author@laptop", "@role:executor", "topic:global", "all"]) {
+    for (const raw of ["author@laptop", "@role:executor", "topic:global", "@project", "all"]) {
       expect(formatAddress(parseAddress(raw))).toBe(raw);
     }
   });

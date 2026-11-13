@@ -39,7 +39,8 @@ v0.2.3 (follow-up review, `docs/reviews/PROJECT_REVIEW_FOLLOWUP_2026-10-24.md`):
 WebSocket error handling; `MessageHeader` with a mandatory message id, preview cap and an
 injection budget; `read` transition table; `ipc.hello` for the shim/hook → agentd binding;
 `op_id` on `board.put` instead of a text-comparison replay heuristic; structural reply
-classification; schema version stamp with refuse-and-reset for old databases.
+classification; schema version stamp (historical reset advice is superseded by the
+fix-forward preservation contract in §11/§19).
 
 v0.2.4 (third review, `docs/reviews/PROJECT_REVIEW_FOLLOWUP_2026-10-25.md`): JSON-RPC
 envelope validated before any field access and handler exceptions contained per connection;
@@ -176,7 +177,9 @@ reconnection and the outbox live in one place; the host keeps working while the 
 | `wake` | `on` (default) · `off` | `kom dnd` toggles it from the terminal |
 | `capability` | adapter | `native` · `hook` · `none` (§6) |
 
-Addressing (`to`): `author@laptop` · `@role:executor` · `topic:project:<key>` · `all`.
+Addressing (`to`): `author@laptop` · `@role:executor` · `topic:project:<key>` · `@project` · `all`.
+`@project` selects fresh active/idle peers from the owned sender project; see §19 for
+its exact membership, 60-second snapshot, replay and offline acceptance contract.
 Resolved on the hub; unknown handles are rejected at send time.
 
 ---
@@ -656,9 +659,11 @@ board_versions  (topic_id, key, version, body, author, author_session, protected
 **Schema version.** `openDatabase` stamps `PRAGMA user_version = SCHEMA_VERSION` on a fresh
 file and refuses any file whose version differs, instead of running `CREATE TABLE IF NOT
 EXISTS` over an older shape and returning a database that lacks the new columns and
-constraints. Schema 5 upgrades additively to schema 6; other mismatches are rejected. On an unsupported mismatch, back the file up
-(`kom hub backup`), move it away, and let the hub create a new one. The error message says
-exactly that.
+constraints. Schema 5 upgrades through 6 to 7 atomically, and schema 6 upgrades to 7;
+other mismatches are rejected. Schema 7 also fences old readers from project target semantics.
+On an unsupported mismatch, preserve the database and replay history, back up using
+`VACUUM INTO` (`kom hub backup` with a compatible hub), and fix forward using compatible
+code. Never reset or restore old history just to downgrade.
 
 Identity columns: `messages.from_session` and `deliveries.session_id` hold session ids;
 `board_entries.author` holds the handle, because boards outlive sessions.
@@ -1782,3 +1787,39 @@ shutdown. Late registration continuations recheck shutdown before accessing loca
 state. The hook's 140 ms entrypoint deadline and 90 ms IPC timeout are unchanged;
 this wait belongs only to unbound manual MCP binding. The mechanism addresses the
 controlled accepted-registration race, not every historical #19 failure or #9 latency.
+
+### Project audience and feedback diagnostics (2026-11-13)
+
+`@project` (trimmed, case-insensitive) is resolved by the hub from the owned sender's
+project key, never caller-selected project text. A missing/null project rejects the whole
+send before inserts with `whoami`/registration guidance. Sender and peers must belong to
+that exact `project:<key>` topic. Eligible peers share the exact project key, are active or
+idle, not ended, not the sender, and have a valid session heartbeat at least acceptance time
+minus 60,000 ms (inclusive). Capture acceptance time once per transaction. This snapshot
+is not proof of attentiveness or delivery. Existing audiences and wake rules are unchanged;
+mixed targets union recipients and can widen scope or explicitly include self.
+
+Store target type `project` and the sender project key as provenance, rendering `@project`.
+Replay returns committed deliveries and sequences before resolving recipients again, including
+zero recipients. Offline enqueue retains the shorthand and replay key; first hub acceptance
+selects peers later. Never expand locally or fall back to global/topic membership. Upgrade
+hub before daemon/shim; an old-hub rejection stays blocked with the same key and requires
+inspection, not blind resend. Schema 7 fences old readers from the new target semantics;
+atomic 5 → 6 → 7 and 6 → 7 upgrades preserve rows and replay authority. Back up using
+VACUUM INTO and fix forward; never reset or restore old history merely to downgrade.
+
+MCP registers complete strict objects. Unknown arguments reject the whole call before
+client resolution, operation-ID allocation or IPC. Bounded schema guidance names allowed
+fields and teaches `set_status({status_line: "Reviewing"})` and
+`join_topic({name: "kommutator-feedback"})`; no silent aliases. Empty `set_status({})`
+remains valid. Reply IDs remain opaque 1–64 characters with exact authorized lookup;
+use complete IDs from inbox/read, never sequence numbers or prefix expansion.
+
+Both MCP status modes add pure `health_details` after caller wrappers: current connectivity,
+caller state (unknown evidence remains unverified), backlog counts and ages, at most five
+oldest blocked ID/method/age examples with omitted count (ages are since enqueue, not
+since first blockage), and historical `last_error_at`.
+Blocked work keeps the legacy aggregate degraded and an outstanding-work warning; age does
+not prove current outage, non-commit or safe resend. Preserve caller recovery and existing
+compact/detailed fields. The projection adds no retries, receipts or mutations. Existing
+status-triggered background retirement reconciliation and flushing remain unchanged.

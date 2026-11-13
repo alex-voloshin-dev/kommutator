@@ -79,6 +79,65 @@ describe("hub persistence invariants", () => {
     rmSync(directory, { recursive: true, force: true });
   });
 
+  it.each([5, 6])("upgrades schema %s atomically to 7 without changing delivery or replay history", version => {
+    const sender = register("author");
+    const recipient = register("peer");
+    const input = { session_id: sender.id, idempotency_key: "migration-message", message: { from: "", to: [recipient.handle], body: "preserve" } };
+    const sent = Results["message.send"].parse(call("message.send", input));
+    const before = ["messages", "message_targets", "deliveries", "sessions", "session_registrations"].map(table => db.prepare(`SELECT * FROM ${table}`).all());
+    if (version === 5) db.exec("DROP TABLE retired_operations");
+    db.exec(`PRAGMA user_version = ${version}`);
+    reopen();
+    expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: 7 });
+    expect(["messages", "message_targets", "deliveries", "sessions", "session_registrations"].map(table => db.prepare(`SELECT * FROM ${table}`).all())).toEqual(before);
+    expect(call("message.send", input)).toEqual({ ...sent, replayed: true });
+    expect(db.prepare("SELECT * FROM retired_operations").all()).toEqual([]);
+  });
+
+  it("rolls back the supported migration completely on failure", () => {
+    // A conflicting table models an interrupted/foreign migration, not a valid schema 5 database.
+    db.exec("PRAGMA user_version = 5");
+    expect(() => openDatabase(path)).toThrow();
+    expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: 5 });
+    expect(db.prepare("SELECT count(*) AS n FROM retired_operations").get()).toEqual({ n: 0 });
+  });
+
+  it("preserves schema-6 retirement fences through upgrade and reopen", () => {
+    db.exec("INSERT INTO retired_operations(kind, operation_key) VALUES ('message', 'retired-send'), ('registration', 'retired-registration'); PRAGMA user_version = 6");
+    const before = db.prepare("SELECT * FROM retired_operations ORDER BY kind").all();
+    reopen();
+    expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: 7 });
+    expect(db.prepare("SELECT * FROM retired_operations ORDER BY kind").all()).toEqual(before);
+    reopen();
+    expect(db.prepare("SELECT * FROM retired_operations ORDER BY kind").all()).toEqual(before);
+    expect(() => call("session.upsert", { ...registration("retired"), reg_id: "retired-registration" }))
+      .toThrow(/permanently removed/);
+  });
+
+  it("retains project provenance and its original audience after restart and peer replacement", () => {
+    const sender = Results["session.upsert"].parse(call("session.upsert", {
+      ...registration("author"), session: { ...registration("author").session, project_key: "same" },
+    })).session;
+    const recipient = Results["session.upsert"].parse(call("session.upsert", {
+      ...registration("peer"), session: { ...registration("peer").session, project_key: "same" },
+    })).session;
+    const input = { session_id: sender.id, idempotency_key: "project-restart", message: { from: "", to: ["@project"], body: "original audience" } };
+    const sent = Results["message.send"].parse(call("message.send", input));
+    expect(sent.deliveries).toEqual({ [recipient.id]: "unread" });
+    const deliveries = db.prepare("SELECT * FROM deliveries").all();
+    call("session.gone", { session_id: recipient.id, incarnation: recipient.incarnation });
+    reopen();
+    const late = Results["session.upsert"].parse(call("session.upsert", {
+      ...registration("late"), session: { ...registration("late").session, project_key: "same" },
+    })).session;
+    expect(call("message.send", input)).toEqual({ ...sent, replayed: true });
+    expect(db.prepare("SELECT * FROM deliveries").all()).toEqual(deliveries);
+    expect(() => call("inbox.list", { session_id: recipient.id })).toThrow(/session is gone/);
+    expect(Results["message.read"].parse(call("message.read", { session_id: sender.id, id: sent.id })).message.to).toEqual(["@project"]);
+    expect(Results["inbox.list"].parse(call("inbox.list", { session_id: late.id })).headers).toEqual([]);
+    expect(reported).toEqual([]);
+  });
+
   it("enforces foreign keys on a reopened current-version database", () => {
     const session = register("author");
     expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: SCHEMA_VERSION });

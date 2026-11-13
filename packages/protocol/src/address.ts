@@ -3,6 +3,7 @@
 //   author@laptop            one session by handle
 //   @role:executor           every session with that role
 //   topic:project:<key>      every member of a topic
+//   @project                fresh peers in the sender project
 //   all                      everyone
 //
 // Names, hosts and roles follow the identifier grammar in ident.ts; input is lowercased.
@@ -13,10 +14,12 @@ export type Address =
   | { kind: "session"; name: string; host: string }
   | { kind: "role"; role: string }
   | { kind: "topic"; topic: string }
-  | { kind: "all" };
+  | { kind: "all" }
+  | { kind: "project" };
 
 export function parseAddress(raw: string): Address {
   const s = raw.trim();
+  if (s.toLowerCase() === "@project") return { kind: "project" };
   if (s.toLowerCase() === "all") return { kind: "all" };
 
   if (s.toLowerCase().startsWith("@role:")) {
@@ -39,11 +42,13 @@ export function parseAddress(raw: string): Address {
     return { kind: "session", name, host };
   }
 
-  throw new AddressError(raw, "unrecognized address; use topic:<name>, <name>@<host>, @role:<role>, or all");
+  throw new AddressError(raw, "unrecognized address; use topic:<name>, <name>@<host>, @role:<role>, @project, or all");
 }
 
 export function formatAddress(a: Address): string {
   switch (a.kind) {
+    case "project":
+      return "@project";
     case "all":
       return "all";
     case "role":

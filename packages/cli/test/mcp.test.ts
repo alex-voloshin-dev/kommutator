@@ -2,7 +2,7 @@ import { OperationSubmit } from "@kommutator/protocol";
 import { afterEach, describe, expect, it } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { createMcpServer } from "../src/mcp.js";
+import { createMcpServer, McpLifecycle, registerSetupTools } from "../src/mcp.js";
 import { ClaudeStatusClient } from "../src/claude-status.js";
 import type { RpcClient } from "../src/ipc-client.js";
 
@@ -41,7 +41,7 @@ describe("MCP tool surface", () => {
     const { client, calls } = await setup(true, { close() {}, async call(method) { methods.push(method); return { runtime_contract: 2 }; } });
     const result = await client.callTool({ name: "status", arguments: {} });
     expect(result.isError).not.toBe(true);
-    expect(result.content).toEqual([{ type: "text", text: '{"runtime_contract":2}' }]);
+    expect(result.content).toEqual([{ type: "text", text: expect.stringContaining('"runtime_contract":2') }]);
     expect(calls).toEqual([]);
     expect(methods).toEqual(["daemon.status"]);
     expect((await client.callTool({ name: "whoami", arguments: {} })).isError).toBe(true);
@@ -73,10 +73,8 @@ describe("MCP tool surface", () => {
       { method: "session.list", params: { state: "gone" } },
     ]);
     expect((await client.callTool({ name: "list_topics", arguments: { discover: "yes" } })).isError).toBe(true);
-    await client.callTool({ name: "list_topics", arguments: { session_id: "other" } });
-    // The SDK strips unknown arguments before the handler; caller identity never reaches IPC.
-    expect(calls).toHaveLength(3);
-    expect(calls[2]).toEqual({ method: "topic.list", params: {} });
+    expect((await client.callTool({ name: "list_topics", arguments: { session_id: "other" } })).isError).toBe(true);
+    expect(calls).toHaveLength(2);
   });
 
   it("normalizes an address and never exposes caller identity or replay keys", async () => {
@@ -160,4 +158,68 @@ it("keeps oversized destination errors bounded before IPC", async () => {
     expect(diagnostic.length).toBeLessThan(2_000);
   }
   expect(calls).toEqual([]);
+});
+
+it("rejects aliases and mixed unknown keys on SDK prevalidation before resolving clients", async () => {
+  const resolutions: string[] = [];
+  const server = createMcpServer((_meta, method) => { resolutions.push(method); throw new Error("must not resolve"); });
+  let setupCalls = 0;
+  registerSetupTools(server, { status: async () => { setupCalls++; throw new Error("unexpected setup"); }, start: async () => { setupCalls++; throw new Error("unexpected setup"); } }, new McpLifecycle(() => {}));
+  const client = new Client({ name: "test", version: "test" });
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  await server.connect(b); await client.connect(a);
+  close.push(() => client.close(), () => server.close());
+  const tools = (await client.listTools()).tools;
+  for (const tool of tools) expect(tool.inputSchema.additionalProperties).toBe(false);
+  for (const [name, args, guidance] of [
+    ["set_status", { status: "private" }, "status_line"],
+    ["set_status", { status_line: "valid", status: "private" }, "status_line"],
+    ["join_topic", { topic: "private" }, "Use name"],
+    ["join_topic", { name: "valid", topic: "private" }, "Use name"],
+    ["send", { to: "@project", body: "private", session_id: "forged" }, "Valid parameters"],
+    ["ack", { ids: ["abc"], extra: true }, "Valid parameters"],
+    ["setup_status", { key: "private" }, "none"],
+    ["setup_start", { key: "private" }, "none"],
+    ["set_status", { ["x".repeat(300_000)]: "private" }, "status_line"],
+  ] as const) {
+    const result = await client.callTool({ name, arguments: args });
+    expect(result.isError).toBe(true);
+    const text = JSON.stringify(result.content);
+    expect(text).toContain(guidance);
+    expect(text).not.toContain("private");
+    expect(text).not.toContain("operation_id");
+    expect(text.length).toBeLessThan(2_000);
+  }
+  expect(resolutions).toEqual([]); expect(setupCalls).toBe(0);
+});
+
+it("keeps empty updates and opaque short reply IDs valid through the actual transport", async () => {
+  const { client, calls } = await setup();
+  expect((await client.callTool({ name: "set_status", arguments: {} })).isError).not.toBe(true);
+  expect(calls[0]).toEqual({ method: "session.upsert", params: { op: "update", session: {} } });
+  expect((await client.callTool({ name: "send", arguments: { to: "@project", body: "hello", reply_to: "abc" } })).isError).not.toBe(true);
+  const submit = OperationSubmit.parse(calls[1]?.params);
+  expect(submit.method === "message.send" && submit.params.message.reply_to).toBe("abc");
+  expect((await client.listTools()).tools.find(t => t.name === "send")?.inputSchema.properties?.reply_to).toMatchObject({ description: expect.stringContaining("Complete message ID") });
+});
+
+it("projects caller ownership failure after the final wrapper in both status modes", async () => {
+  let generation = 0;
+  const methods: string[] = [];
+  const diagnostics = new ClaudeStatusClient({ close() {}, async call(method) {
+    methods.push(method);
+    return { health: { state: "healthy", issues: [] }, hub: { connected: true }, caller: { state: "active" }, outbox: [] };
+  } }, async () => ({ birth: "birth", generation: `birth:${++generation}`, hello: {
+    client: "hook", protocol_version: 1, vendor: "claude-code", vendor_session_id: "conversation", pid: 456, ppid: 123,
+    owner_generation: generation, cwd: "/project",
+  } }));
+  const { client, calls } = await setup(true, diagnostics);
+  for (const detailed of [false, true]) {
+    const result = await client.callTool({ name: "status", arguments: { detailed } });
+    expect(result.isError).not.toBe(true);
+    expect(result.content).toEqual([{ type: "text", text: expect.stringContaining('"health_details":{"connectivity":"connected","caller":"conflicting"') }]);
+    expect(result.content).toEqual([{ type: "text", text: expect.stringContaining('"state":"degraded"') }]);
+    expect(result.content).toEqual([{ type: "text", text: expect.stringContaining("Call status again") }]);
+  }
+  expect(calls).toEqual([]); expect(methods).toEqual(["daemon.status", "daemon.status"]);
 });

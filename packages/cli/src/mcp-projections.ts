@@ -47,3 +47,30 @@ export function withoutInboxPreviews(result: unknown): unknown {
     return rest;
   }) };
 }
+
+/** Pure projection of the final wrapper result; it never initiates daemon recovery. */
+export function statusHealthDetails(result: unknown): unknown {
+  if (!record(result)) return result;
+  const outbox = Array.isArray(result.outbox) ? result.outbox : undefined;
+  const age = (entry: unknown): number | null => record(entry) && typeof entry.age_ms === "number"
+    && Number.isFinite(entry.age_ms) && entry.age_ms >= 0 ? entry.age_ms : null;
+  const oldest = (rows: unknown[] | undefined): number | null => {
+    const ages = rows?.map(age).filter((value): value is number => value !== null);
+    return ages?.length ? ages.reduce((maximum, value) => Math.max(maximum, value), 0) : null;
+  };
+  const blocked = outbox?.filter(entry => record(entry) && Boolean(entry.error));
+  const examples = blocked ? [...blocked].sort((a, b) => (age(b) ?? -1) - (age(a) ?? -1)).slice(0, 5)
+    .map(entry => ({ id: record(entry) && typeof entry.id === "number" ? entry.id : null,
+      method: record(entry) && typeof entry.method === "string" ? entry.method.slice(0, 64) : null, age_ms: age(entry) })) : [];
+  return { ...result, health_details: {
+    connectivity: record(result.hub) && typeof result.hub.connected === "boolean"
+      ? result.hub.connected ? "connected" : "disconnected" : "unknown",
+    caller: record(result.caller) && typeof result.caller.state === "string" ? result.caller.state : "unverified",
+    backlog: { total: outbox?.length ?? null, blocked: blocked?.length ?? null,
+      oldest_age_ms: oldest(outbox), oldest_blocked_age_ms: oldest(blocked),
+      warning: blocked?.length ? "Blocked work remains unresolved; inspect the detailed outbox and operation_status. Age does not prove a current outage, non-commit or safe resend." : null,
+      examples, omitted: Math.max(0, (blocked?.length ?? 0) - examples.length) },
+    last_error_at: (typeof result.last_error_at === "string" || typeof result.last_error_at === "number" && Number.isFinite(result.last_error_at)) ? result.last_error_at : null,
+    last_error_evidence: "historical",
+  } };
+}
