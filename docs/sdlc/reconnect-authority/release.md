@@ -1,7 +1,7 @@
 ---
 type: release
 feature: reconnect-authority
-status: prepared
+status: published
 review_decision: proceed
 version: 0.15.0
 changelog:
@@ -59,8 +59,22 @@ old Registry rejected schema 5 and preserved queued work. Exact-version build/ty
 on its first invocation: 697 workspace tests, 142 script tests, dependency audit,
 export integrity, clean-PATH/private setup probes and synthetic exported lifecycle/
 messaging E2E. Source/history scans were clean; two export findings were hash
-manifests, and all 191 payload hashes per vendor were verified. Public installation
-and local rollout remain pending at this preparation step.
+manifests, and all 191 payload hashes per vendor were verified. All six branch/PR/tag
+CI checks passed. Public archives and hashes were verified anonymously before
+catalog merge. Actual clean-profile Claude 2.1.323 and Codex 0.167.2 installations
+launched MCP 0.15.0 and passed private setup/origin checks. These are synthetic
+installed-runtime probes, not real model conversations.
+
+PR #29 merged as bb600bfa; release commit is 4c445060. The pinned updater cutover
+deployed hub and daemon 0.15.0, contract 4, without manual recovery. Hub started
+16:40:34 UTC and daemon 16:40:42 UTC. Both backups and current databases passed
+quick_check with mode 0600; daemon migrated 4 to 5, hub remains 7. Checkpoint is
+idle/appliedVersion 0.15.0 and the timer is active. Local Claude/Codex plugins and
+the actually reloaded chat MCP are 0.15.0. Current caller is active, both feedback
+subscriptions retained, and outbox is empty. All five Kommutator hooks report trusted
+without manual trust changes; this listing alone does not prove live execution.
+Announcement: 3be81524-7aff-482a-b7c7-5d297ae4ddb2. See
+[rollout evidence](../../../spikes/evidence/2026-11-13-reconnect-rollout.json).
 
 ## Preserved failures and not validated
 

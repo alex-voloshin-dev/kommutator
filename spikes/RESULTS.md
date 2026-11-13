@@ -1291,3 +1291,17 @@ on its first invocation (697 workspace, 142 script tests, audit, export integrit
 clean-PATH and synthetic exported E2E). Source/history secret scans were clean;
 export warnings were two hash manifests with all 191 payload hashes each verified.
 Public installation and deployment remain separate gates.
+
+## 2026-11-13 — 0.15.0 publication and local reconnect
+
+All six exact-commit CI checks passed; public archive hashes were verified before
+PR #29 catalog merge. Clean-profile native Claude/Codex installs launched MCP 0.15.0.
+Pinned updater cutover completed without manual recovery: hub and daemon 0.15.0,
+exact contract 4, schema 5 daemon/schema 7 hub, healthy/connected and backups quick_check
+ok at 0600. Local plugins updated and live chat MCP actually reloaded to 0.15.0;
+current owner active, role and feedback subscriptions retained, empty outbox.
+Five hooks report trusted without trust writes; live execution is not inferred.
+Checkpoint idle/applied 0.15.0; timer restored. Release announced once in feedback.
+A separate peer transport-outage recurrence remains under #22 and was not a deployment
+window; it is not claimed fixed by identity recovery. See
+[rollout evidence](evidence/2026-11-13-reconnect-rollout.json).

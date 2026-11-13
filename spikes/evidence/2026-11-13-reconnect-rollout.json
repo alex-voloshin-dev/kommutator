@@ -1,0 +1,107 @@
+{
+  "date": "2026-11-13",
+  "version": "0.15.0",
+  "release_commit": "4c44506053a7d782b5824350bcb714c425cafd4a",
+  "merge_commit": "bb600bfa1c41a00da05ddce07ccb4d7d4e6e66a3",
+  "ci_runs": [
+    43464151317,
+    43464150921,
+    43464130413,
+    43464130445,
+    43464083572,
+    43464083482
+  ],
+  "ci": "all six passed",
+  "public_assets": "anonymous downloads and both SHA256 files verified before catalog merge",
+  "native_installs": {
+    "claude": "2.1.323",
+    "codex": "0.167.2",
+    "loaded_clean_profile_mcp": "0.15.0",
+    "node": "26.13.0",
+    "private_setup_and_origin": "passed",
+    "real_model_conversation": false
+  },
+  "local": {
+    "hub": "0.15.0",
+    "daemon": "0.15.0",
+    "loaded_chat_mcp": "0.15.0",
+    "runtime_contract": 4,
+    "daemon_pid": 2533835,
+    "hub_started_utc": "2026-11-13T16:40:34.19893766Z",
+    "daemon_started_utc": "2026-11-13T16:40:42Z",
+    "hub_health": "healthy",
+    "hub_connected": true,
+    "caller": "active",
+    "role": "kommutator-developer",
+    "feedback_topics": [
+      "kommutator-feedback",
+      "agentic-forge-feedback"
+    ],
+    "outbox_depth": 0,
+    "checkpoint": "idle",
+    "applied_version": "0.15.0",
+    "checkpoint_updated_at": "2026-11-13T16:40:48.269Z",
+    "timer": "active",
+    "hooks": [
+      {
+        "event": "postToolUse",
+        "trust": "trusted"
+      },
+      {
+        "event": "sessionStart",
+        "trust": "trusted"
+      },
+      {
+        "event": "sessionEnd",
+        "trust": "trusted"
+      },
+      {
+        "event": "userPromptSubmit",
+        "trust": "trusted"
+      },
+      {
+        "event": "stop",
+        "trust": "trusted"
+      }
+    ],
+    "trust_config_manually_changed": false,
+    "live_hook_execution_after_reload": "not established by hooks/list",
+    "backups_and_databases": [
+      {
+        "file": "agentd-before.db",
+        "quick_check": "ok",
+        "schema": 4,
+        "mode": "0o600"
+      },
+      {
+        "file": "state.db",
+        "quick_check": "ok",
+        "schema": 5,
+        "mode": "0o600"
+      },
+      {
+        "file": "kommutator.db",
+        "quick_check": "ok",
+        "schema": 7,
+        "mode": "0o600"
+      },
+      {
+        "file": "pre-release-0.15.0-1794588031426.db",
+        "quick_check": "ok",
+        "schema": 7,
+        "mode": "0o600"
+      }
+    ]
+  },
+  "announcement": {
+    "id": "3be81524-7aff-482a-b7c7-5d297ae4ddb2",
+    "operation_id": "e4757bcc-174b-42e3-8bfc-1b23975f7c77",
+    "status": "hub-confirmed, not recipient-read proof"
+  },
+  "retained_deployment_directory": "/home/avav25/.local/state/kommutator-release-deploy/attempts/v0.15.0-1b17cde2-ad53-4f1e-8b6e-dab796f86bf7",
+  "followups": [
+    "Peer reported hub drops at15:53Z/16:09Z; not maintainer deployment windows; cause remains open under#22",
+    "Advance feedback-topic notice before planned maintenance requested; current announcement was post-rollout",
+    "Agentic Forge2026.11.11 unsupported look-ahead warning reported to agentic-forge-feedback"
+  ]
+}
