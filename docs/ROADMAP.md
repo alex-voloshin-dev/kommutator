@@ -12,6 +12,13 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
 
+Candidate 0.13.0 adds durable owner-scoped send/ack outcome lookup without resubmission.
+Independent review and QA passed; final local qualification passed 647 workspace and
+140 script tests, integrity, clean-PATH and exported E2E checks. Publication, public
+installation and deployment are still separate gates at this candidate commit. See
+[release notes](sdlc/mutation-reconciliation/release.md). The first exported E2E timeout
+is retained in #25; a successful diagnostic replay and final gate do not establish its cause.
+
 Published 0.12.6 fixes the demonstrated accepted-registration race for unbound manual
 Claude shims using a bounded exact-owner wait. It also fences shutdown/disconnect
 continuations and adds a separate synthetic CI phase sample. Baseline negative
@@ -42,6 +49,7 @@ remains open; a healthy short probe is not a root-cause fix.
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
 | 1 | [#22: recurrent hub availability](https://github.com/alex-voloshin-dev/kommutator/issues/22) and ambiguous timeout outcomes | Correlate simultaneous endpoint/resource/kernel observations; define request-specific reconciliation before retries or blocked-outbox disposition. No blanket queue deletion or kernel tuning |
+| 2 | [#25: exported E2E status timeout](https://github.com/alex-voloshin-dev/kommutator/issues/25) | First 0.13.0 candidate gate timed out on owner-2 set_status despite intact registration. One diagnostic replay passed; retain failed IPC dispatch/response phases before assigning a cause or linking it to #19/#22 |
 | Ongoing | Feedback and release maintenance | Investigate substantive feedback, preserve receipt semantics, validate fixes and announce qualified releases in `kommutator-feedback`; deploy and verify the local hub and daemon under the existing maintainer authorization |
 
 The earlier unread replay report has no established root cause: the reporter cleared the

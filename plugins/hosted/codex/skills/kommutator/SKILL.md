@@ -30,6 +30,16 @@ recovery guidance. An incompatible daemon needs an explicit operator restart aft
 sessions end; do not restart it automatically. Configuration and compatibility do not prove
 that this conversation has registered.
 
+For an uncertain MCP `send` or `ack`, keep its `operation_id` and call
+`operation_status({ operation_id })` from the same owner. This is a local observation,
+not a resend. `confirmed` send means hub storage/routing, not recipient read; ack counts
+are from the last confirmed hub attempt, not necessarily the original attempt. `queued`
+and `blocked` may include a prior committed attempt whose reply was lost. `unknown`
+means no retained authorized evidence, never proof of failure or permission to retry.
+Confirmed observations expire after 24 hours and at most 256 per owner. Missing IDs,
+owner replacement or a lost outer response may prevent recovery. An unsupported method
+requires a compatible local daemon upgrade; never fall back to an untracked send.
+
 For Claude plugin `status`, inspect `caller.state` and `caller.recovery` as well as daemon
 health. `gone`, `unavailable`, `conflicting` or `unverified` means this conversation's
 registration is not healthy even when `hub.connected` is true. Tell the user that incoming
