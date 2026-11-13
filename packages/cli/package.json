@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "name": "kommutator",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "kommutator \u2014 switchboard for coding agents. CLI, daemon, MCP shim and hooks in one binary: kom",
   "type": "module",
   "bin": {

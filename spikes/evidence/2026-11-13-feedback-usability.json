@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-13",
+  "version": "0.14.0",
+  "implementation_commit": "0a2f84e",
+  "workspace_tests": 674,
+  "script_tests": 142,
+  "build": true,
+  "typecheck": true,
+  "release_gate": "passed first invocation",
+  "exported_e2e": "synthetic passed",
+  "public_installation": "pending",
+  "production_rollout": "pending",
+  "old_reader_probe": {
+    "baseline": "87edea4",
+    "candidate": "0.14.0",
+    "oldSchema": 6,
+    "newSchema": 7,
+    "oldReaderRejected": true,
+    "retiredReplayPreserved": true,
+    "productionDatabase": false
+  },
+  "secret_scan": {
+    "source": "clean",
+    "export": "two generic-api-key false positives in runtime file-hash manifests; all191 payload hashes per vendor verified"
+  },
+  "preserved_failure": "Earlier implementation workspace run: initialwhoami Shared daemon unavailable in delayedSessionEnd fixture; no rootcauseestablished",
+  "external_code_lens": "not retried after automatic worker transmission escalation denied; fresh independent internalreviews+QA passed",
+  "sha256": {
+    "tar": "49be20e35e8b126ac0a0aaf2c95d363e4e7c37aab4399462ad60371db3c98792",
+    "zip": "fa290c3fc285bf2624c2fe6e2e527d617d500f543fcc1e177cdb6cfa3eca3ff9"
+  }
+}
