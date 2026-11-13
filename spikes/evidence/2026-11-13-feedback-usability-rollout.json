@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-13",
+  "version": "0.14.0",
+  "release_commit": "63ffa4bd5ed7213c1b706511e60ea7d3b2c04033",
+  "merge_commit": "4e23603ee5b965e483f517c06175ed8ec273ed47",
+  "ci_runs": [
+    43452710505,
+    43452710393,
+    43452700692,
+    43452700561,
+    43452697244,
+    43452697438
+  ],
+  "ci_result": "all success",
+  "anonymous_assets": "both archive hashes verified",
+  "native_installs": {
+    "claude": "2.1.323",
+    "codex": "0.167.2",
+    "mcp": "0.14.0",
+    "strict_schema": true,
+    "private_setup_origin": true,
+    "real_conversation": false
+  },
+  "local": {
+    "hub": "0.14.0",
+    "daemon": "0.14.0",
+    "daemon_pid": 4126270,
+    "hub_started": "2026-11-13T15:31:53.737723798Z",
+    "daemon_started": "2026-11-13T15:31:59Z",
+    "health": "healthy",
+    "hub_connected": true,
+    "caller": "active",
+    "outbox_depth": 0,
+    "checkpoint": "idle",
+    "timer": "active",
+    "loaded_chat_mcp": "0.13.1",
+    "user_plugins_updated": false
+  },
+  "database_checks": {
+    "hub_backup": {
+      "quick_check": "ok",
+      "schema": 6,
+      "mode": "0o600"
+    },
+    "daemon_backup": {
+      "quick_check": "ok",
+      "schema": 4,
+      "mode": "0o600"
+    },
+    "hub_current": {
+      "quick_check": "ok",
+      "schema": 7,
+      "mode": "0o600"
+    },
+    "daemon_current": {
+      "quick_check": "ok",
+      "schema": 4,
+      "mode": "0o600"
+    }
+  },
+  "announcement": "a1aac823-4db0-4c02-9a9c-beda95be9b6d",
+  "limitations": [
+    "External code lens unavailable after prior worker transmission denial; not retried",
+    "Earlier initialwhoami failure cause unknown",
+    "Day-long, physical subnet, unattended reboot, native Work/wake and other platforms remain open"
+  ]
+}

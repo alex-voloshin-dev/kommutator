@@ -1,7 +1,8 @@
 ---
 type: release
 feature: feedback-usability
-status: draft
+status: published
+review_decision: proceed
 version: 0.14.0
 changelog:
   - "Added: hub-resolved @project audience and current/backlog status evidence"
@@ -27,7 +28,9 @@ Upgrade hub, daemon and client before using `@project`. Unsupported old paths re
 
 Implementation commit 0a2f84e passed independent correctness/integration, security and QA review. Ordered build/typecheck and 674 workspace tests passed; cleanup tests passed 14. Architecture external review approved. The external code lens was not rerun after the automatic worker's transmission escalation was denied; fresh internal reviews cover this feature, and the missing lens remains explicit.
 
-Exact-version ordered build/typecheck and 674 workspace tests passed. The full release gate passed on its first invocation: 674 workspace and 142 script tests, audit, hosted catalog verification, export integrity, clean-PATH/private setup/cache removal, and synthetic exported lifecycle/message E2E. Source scan was clean; export scan flagged only two runtime hash manifests, whose 191 payload checksums each were verified. Generated catalog hashes match prepared assets. CI, public assets/installations and local rollout remain pending.
+Exact-version ordered build/typecheck and 674 workspace tests passed. The full release gate passed on its first invocation: 674 workspace and 142 script tests, audit, hosted catalog verification, export integrity, clean-PATH/private setup/cache removal, and synthetic exported lifecycle/message E2E. Source scan was clean; export scan flagged only two runtime hash manifests, whose 191 payload checksums each were verified. Generated catalog hashes match prepared assets. All six exact-commit branch/PR/tag CI checks passed. Public archives and SHA-256 were verified anonymously before merging catalogs. Actual Claude Code 2.1.323 and Codex CLI 0.167.2 clean-profile installs launched MCP 0.14.0, rejected unknown parameters, exposed @project, and passed private setup/origin checks. These were synthetic MCP probes, not real model conversations.
+
+PR #28 merged as 4e23603ee5b965e483f517c06175ed8ec273ed47; release commit is 63ffa4bd5ed7213c1b706511e60ea7d3b2c04033. The ordinary updater deployed hub and daemon 0.14.0. Hub restart: 2026-11-13 15:31:53 UTC; daemon start: 15:31:59 UTC, observed PID 4126270. Health healthy, hub connected, caller active, outbox empty; checkpoint idle/appliedVersion 0.14.0. Both backups and current databases passed quick_check with mode 0600: hub migrated 6 to 7, daemon remains 4. Timer restored active. The existing chat MCP remains compatible 0.13.1; no user plugin update or new hook approval was implied. Announcement: a1aac823-4db0-4c02-9a9c-beda95be9b6d.
 
 ## Preserved failures and not validated
 

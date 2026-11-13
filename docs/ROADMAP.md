@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-13. Released baseline: [0.13.1](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.13.1).
+Updated 2026-11-13. Released baseline: [0.14.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.14.0).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -12,10 +12,13 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
 
-Candidate 0.14.0 implements `@project` hub-resolved recent-session audiences, strict MCP
+Published 0.14.0 implements `@project` hub-resolved recent-session audiences, strict MCP
 argument rejection and separate current/backlog status evidence. Independent review and
 QA and exact-version release qualification passed 674 workspace and 142 script tests;
-public rollout remains pending.
+public downloads/hashes and actual clean-profile Claude/Codex MCP installations passed.
+The local hub and daemon are healthy on 0.14.0, connected with an active caller and empty
+outbox; backups/current databases pass quick_check, schema migration is verified, and
+the updater timer is active. The existing chat MCP remains compatible 0.13.1.
 Hub schema 7 preserves existing history and fences older readers. See
 [feedback usability](sdlc/feedback-usability/release.md). These changes do not close
 availability or blocked-work disposition investigations.
@@ -84,10 +87,10 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Core and identity | Hub, daemon, MCP/hooks, boards and dashboard; live macOS two-Claude native exchange; same-host identity and resume fencing; 0.12.2 durable retirement recovery and pre-enqueue address validation | Preserve these contracts; synthetic recovery coverage is separate from every vendor/environment combination |
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
-| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.13.1 deployed; ordinary updater completed without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
+| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.14.0 deployed; ordinary updater completed without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
 | Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.13.1 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
-| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.13.1 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
+| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.14.0 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
 
 ## Acceptance work that needs a suitable environment
