@@ -81,3 +81,48 @@ it never uses configured service endpoints or persistent runtime databases.
 
 Remaining qualification includes representative migration duration/disk-size evidence,
 independent review/QA, final packaging, and public release/rollout if approved by gates.
+
+## Review round 1 revisions
+
+Independent review found two real recovery gaps. Both were reproduced with tests
+before changing their implementation:
+
+1. An empty run followed immediately by an owner enqueue, and an enqueue between a
+   terminal response and cleanup, could return success without making the queued request.
+   Both tests failed against the first implementation. The pump now rechecks pending
+   work after drain completion and clears its running state in that same continuation.
+2. An actual Claude hook registration refresh from generation 1 to 2 invalidated a held
+   page but did not request a new page. The core-level regression returned `finished`
+   instead of entering a fresh request. Verified registration now retains an exact
+   refreshed-owner snapshot and queues a fresh pass after policy writes settle. It
+   does not wait behind the old response to acknowledge registration. The test holds
+   both responses: the old response leaves storage empty; only the fresh generation's
+   response creates the delivery, with local acked=0 and hub unread unchanged.
+
+Red logs: `/tmp/kom-bounded-round1-race-red.log` and
+`/tmp/kom-bounded-round1-refresh-red.log`. An intermediate pump draft added an unnecessary
+initial microtask yield, breaking six existing fixture assumptions about an already
+started request; the extra yield was removed and the original tests were retained.
+Targeted green logs: `/tmp/kom-bounded-round1-race-green2.log` and
+`/tmp/kom-bounded-round1-refresh-green.log`. Ordered final validation is recorded below.
+
+## Synthetic migration qualification
+
+[Migration evidence](../../../spikes/evidence/2026-11-14-bounded-resync-migration.json)
+records a disposable schema-7 fixture with 100,000 messages, targets and deliveries,
+99,900 read and 100 unread. Candidate migration took 72.828 ms; checkpointed file size
+changed from 54,665,216 to 57,647,104 bytes. All eleven table hashes/counts and receipts
+were unchanged; quick_check, foreign keys and schema-8 reopen passed. All four query
+chains use the expected indexes without table scans or temporary sorting.
+
+This was one serial nice=10 run on six logical CPUs / about 8.2 GB WSL memory, with
+SQLite cache 4 MiB, bounded seeding batches and memory guards. The 100,000-row fixture
+was removed. This small-body synthetic measurement does not guarantee production
+migration duration, full capacity, physical subnet or day-long behavior. No live
+service/database or deployment configuration was changed.
+
+Round-1 revision validation: recursive build, typecheck and all 770 workspace tests
+passed in the required order (41 protocol, 207 hub, 229 agentd, 293 CLI). Logs:
+`/tmp/kom-bounded-round1-build.log`, `types.log` and `tests.log` with the same prefix.
+The previously passed 14 cleanup tests were not repeated: their code was unchanged.
+Independent round-2 review, QA and packaging remain pending.

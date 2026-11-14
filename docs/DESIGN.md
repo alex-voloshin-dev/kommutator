@@ -866,7 +866,10 @@ flush, checks connection epoch and exact owner/lifecycle before and after each a
 commits deduplicated local deliveries before advancing its transient scan cursor, and
 schedules fresh wake effects only after commit. Lost responses restart from durable
 acted state; scan progress never advances acted flags, acked marks or read receipts.
-Both reconnect and reincarnation use the coordinator, which never calls flush itself.
+Reconnect, reincarnation and verified same-live owner refresh use the coordinator,
+which never calls flush itself. A changed registration fence queues a fresh exact-owner
+snapshot after policy writes settle; old pages remain invalid. The coordinator checks
+pending work before atomically clearing its running state, including empty/terminal runs.
 A legacy hub or daemon retains legacy resync limitations; advertised broken support
 fails rather than silently falling back. Real-time floods remain a separate limitation.
 

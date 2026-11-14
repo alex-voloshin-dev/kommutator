@@ -29,8 +29,16 @@ export class ResyncCoordinator {
     for (const record of records) {
       if (this.current(record)) this.pending.set(record.key, { record, epoch: this.transport.epoch ?? 0, after: record.acked });
     }
-    if (!this.running) this.running = this.drain().finally(() => { this.running = undefined; });
+    if (!this.running) this.running = this.pump();
     return this.running;
+  }
+
+  private async pump(): Promise<void> {
+    // Awaiting even an empty drain installs running before completion. Clear it
+    // in the continuation that observes an empty queue, not a later callback.
+    try {
+      do { await this.drain(); } while (this.open() && this.pending.size > 0);
+    } finally { this.running = undefined; }
   }
 
   private valid(scan: Scan): boolean {

@@ -60,6 +60,7 @@ export class DaemonCore {
   private readonly deliveryRuns = new Map<string, Promise<void>>();
   private closed = false;
   private readonly resync: ResyncCoordinator;
+  private readonly refreshedResyncOwners = new Map<string, LocalRecord>();
   private legacyResyncEpoch: number | undefined;
   private registrationTail: Promise<void> = Promise.resolve();
   private readonly acceptedRegistrations = new Set<AcceptedRegistration>();
@@ -329,6 +330,7 @@ export class DaemonCore {
         capability: vendor === "other" ? "none" : "hook",
       }),
     };
+    const resyncBefore = existing ? structuredClone(existing) : undefined;
     const wasGone = record.session.state === "gone";
     const launchChanged = Boolean(existing && (
       (pid !== undefined && record.pid !== undefined && pid !== record.pid) ||
@@ -390,6 +392,11 @@ export class DaemonCore {
         this.registry.enqueue(key, "session.upsert", { op: "update", session: { capability: record.session.capability } }, this.clock.now());
       }
     });
+    // Registration verified this replacement authority. Never adopt a held page
+    // for the old fence; request a fresh scan after queued policy writes settle.
+    if (resyncBefore && !wasGone && !launchChanged && record.session.id && !this.resync.current(resyncBefore)) {
+      this.refreshedResyncOwners.set(record.key, structuredClone(record));
+    }
     return record;
   }
 
@@ -892,6 +899,19 @@ export class DaemonCore {
         // Lifecycle ACKs are already committed; reconnect retries resync.
         this.report("delivery resync after reincarnation failed; reconnect will retry");
       }
+    }
+    const refreshed: LocalRecord[] = [];
+    for (const [key, expected] of this.refreshedResyncOwners) {
+      const current = this.resync.current(expected);
+      if (!current) { this.refreshedResyncOwners.delete(key); continue; }
+      if (this.registrationPending(key)) continue;
+      this.refreshedResyncOwners.delete(key);
+      refreshed.push(current);
+    }
+    if (refreshed.length > 0 && this.transport.connected) {
+      // Do not make registration wait behind an old held response. The coordinator
+      // serializes this pass and rechecks its exact authority when it runs.
+      void this.resyncOwners(refreshed).catch(() => this.report("delivery resync after owner refresh failed; reconnect will retry"));
     }
     // Outcomes are only a response cache for current calls, not a second durable outbox.
     while (this.outcomes.size > 256) { const key = this.outcomes.keys().next().value; if (key === undefined) break; this.outcomes.delete(key); }

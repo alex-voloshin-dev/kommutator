@@ -91,3 +91,21 @@ it("restarts after a lost response from acted state, without duplicate wake", as
   expect(f.registry.pending("receiver")).toHaveLength(2); expect(f.wakes()).toBe(2);
   expect(f.registry.get("owner")?.acked).toBe(0);
 });
+it("does not strand an owner queued immediately after an empty run", async () => {
+  const f = fixture();
+  const empty = f.coordinator.run([]);
+  const queued = f.coordinator.run([f.record]);
+  await Promise.all([empty, queued]);
+  expect(f.calls).toHaveLength(1);
+});
+it("does not strand an owner queued between a terminal page and completion cleanup", async () => {
+  const f = fixture(); let terminalQueued: Promise<void> | undefined; let requests = 0;
+  f.transport.request = async () => {
+    requests++;
+    if (requests === 1) queueMicrotask(() => queueMicrotask(() => { terminalQueued = f.coordinator.run([f.record]); }));
+    return { session_id: "receiver", through: 0, cursor: 0, more: false, deliveries: [] };
+  };
+  await f.coordinator.run([f.record]);
+  await terminalQueued;
+  expect(requests).toBe(2);
+});

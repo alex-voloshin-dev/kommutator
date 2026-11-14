@@ -38,6 +38,7 @@ class ManualClock implements Clock {
 
 class FakeTransport implements HubTransport {
   connected = false;
+  capabilities: string[] = [];
   peer: ReturnType<ReturnType<typeof createConformanceHarness>["connect"]> | undefined;
   onConnect: (() => Promise<void>) | undefined;
   notify: ((method: string, params: unknown) => void) | undefined;
@@ -1885,4 +1886,44 @@ it("rejects a native continuation if generation changes during the final birth p
   for (let i = 0; i < 20; i++) await Promise.resolve();
   expect(attempts).toHaveLength(0);
   expect(core.registry.pending(recipient.session.id)).toHaveLength(1);
+});
+
+it("recovers unread backlog under a verified Claude refresh after discarding the old generation page", async () => {
+  const { core, transport, hub } = await fixture();
+  const first = await hook(core, "refresh-during-page", { owner_generation: 1 });
+  if (!first.session || !transport.peer) throw new Error("missing fixture registration");
+  transport.capabilities = ["resync-page-v1"];
+  transport.dropDeliver = true;
+  transport.peer.request("message.send", { session_id: first.session.id, idempotency_key: "refresh-page-message",
+    message: { from: "", to: [first.session.handle], body: "retained unread" } });
+  let releaseOld!: () => void;
+  let releaseCurrent!: () => void;
+  let enteredOld!: () => void;
+  let enteredCurrent!: () => void;
+  const oldEntered = new Promise<void>(resolve => { enteredOld = resolve; });
+  const currentEntered = new Promise<void>(resolve => { enteredCurrent = resolve; });
+  const oldHeld = new Promise<void>(resolve => { releaseOld = resolve; });
+  const currentHeld = new Promise<void>(resolve => { releaseCurrent = resolve; });
+  let pages = 0;
+  transport.afterRequest = async method => {
+    if (method !== "deliveries.resync.page") return;
+    pages++;
+    if (pages === 1) { enteredOld(); await oldHeld; }
+    if (pages === 2) { enteredCurrent(); await currentHeld; }
+  };
+  const sync = core.synchronize();
+  await oldEntered;
+  await hook(core, "refresh-during-page", { owner_generation: 2 });
+  releaseOld();
+  // A fixed implementation queues the fresh authorized pass; the old one finishes
+  // with no second request. Promise.race avoids using a timeout as the regression.
+  const outcome = await Promise.race([currentEntered.then(() => "fresh"), sync.then(() => "finished")]);
+  try {
+    expect(outcome).toBe("fresh");
+    expect(core.registry.pending(first.session.id)).toEqual([]);
+  } finally { releaseCurrent(); await sync; }
+  expect(pages).toBe(2);
+  expect(core.registry.pending(first.session.id)).toHaveLength(1);
+  expect(core.registry.byId(first.session.id)).toMatchObject({ ownerGeneration: 2, acked: 0 });
+  expect(hub.db.prepare("SELECT state FROM deliveries").all()).toEqual([{ state: "unread" }]);
 });

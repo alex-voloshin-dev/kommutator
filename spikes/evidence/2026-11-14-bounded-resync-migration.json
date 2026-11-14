@@ -1,0 +1,271 @@
+{
+  "kind": "disposable-synthetic-schema7-to8",
+  "startedAt": "2026-11-14T19:46:40.108Z",
+  "count": 100000,
+  "environment": {
+    "node": "v26.13.0",
+    "arch": "x64",
+    "kernel": "6.18.58.1-microsoft-standard-WSL2",
+    "cpuModel": "Intel(R) Core(TM) i5-9500T CPU @ 2.20GHz",
+    "logicalCpus": 6,
+    "totalMemoryBytes": 8214650880,
+    "freeMemoryBytes": 5816872960
+  },
+  "beforePressure": {
+    "availableMemoryBytes": 5816872960,
+    "loadAverage": [
+      1.97,
+      3.44,
+      3.52
+    ]
+  },
+  "limits": {
+    "maxRows": 100000,
+    "sqliteCacheKiB": 4096,
+    "batchRows": 1000,
+    "batchYieldMs": 10,
+    "minAvailableMemoryBytes": 536870912,
+    "maxFixtureFileBytes": 268435456
+  },
+  "caveats": [
+    "Synthetic small-message fixture; not a production data copy.",
+    "Single local run under observed WSL host load; not capacity or migration-duration guarantee.",
+    "No live runtime database, service or configuration accessed.",
+    "No day-long, reboot, native Work or physical subnet qualification.",
+    "One serial process with nice=10; no concurrent benchmark workers.",
+    "Memory/disk growth checked between batches; migration itself is one atomic synchronous operation."
+  ],
+  "fixtureCreationMs": 3132.659949,
+  "before": {
+    "schema": 7,
+    "tables": {
+      "hosts": {
+        "rows": 1,
+        "sha256": "f245059d953cd429c3222089a655dde3d21940bb3089b47d0f6cc8d4734b85e9"
+      },
+      "sessions": {
+        "rows": 2,
+        "sha256": "afd2d38abd50c8be859f56dda884361509e8842c2334ca12aed6752eac8436cc"
+      },
+      "session_registrations": {
+        "rows": 2,
+        "sha256": "100477eb4d011d09cabc2fcfc6093bbc0a09d8a1549a2f7c4ef93bed0fe7eb01"
+      },
+      "topics": {
+        "rows": 1,
+        "sha256": "d4bd640bbe2db150bf620e791adcd0d680788c064775db877c3c4ae0b4c058f8"
+      },
+      "memberships": {
+        "rows": 2,
+        "sha256": "ed874410874b51122749dab6f63f72ab584bea37ad3b036a1648116b74056c3e"
+      },
+      "messages": {
+        "rows": 100000,
+        "sha256": "d1c8daf46765596583eaf698b47f7b84c89d9f15b08041e78db20f52a8b46797"
+      },
+      "message_targets": {
+        "rows": 100000,
+        "sha256": "2bafe02d4b3321480bdd21d143493447676aee85826b6c2dc8842b8b5a5a972e"
+      },
+      "deliveries": {
+        "rows": 100000,
+        "sha256": "34aedbb9fc219eb0f9e0afa0ae8c305203c401deb5a3a530029a71720116ee7d"
+      },
+      "board_entries": {
+        "rows": 1,
+        "sha256": "913f16eafc6171a35cb2f26477cf3416dc0db1fbeb683a3e53f9387dbd0f8d5c"
+      },
+      "board_versions": {
+        "rows": 2,
+        "sha256": "06ca010ba09bda24d14f9219516f19027d38981d4a3ee581ef8be2103f093abf"
+      },
+      "retired_operations": {
+        "rows": 4,
+        "sha256": "e11f1b564f8894fb4f6a03ed7734e10a6971a6b23a273988f030235e6931b7f8"
+      }
+    },
+    "receipts": [
+      {
+        "state": "read",
+        "n": 99900
+      },
+      {
+        "state": "unread",
+        "n": 100
+      }
+    ],
+    "quickCheck": {
+      "quick_check": "ok"
+    },
+    "fileBytes": 54665216
+  },
+  "migrationStartPressure": {
+    "availableMemoryBytes": 5777563648,
+    "loadAverage": [
+      1.97,
+      3.41,
+      3.51
+    ]
+  },
+  "migrationOpenMs": 72.82823700000063,
+  "after": {
+    "schema": 8,
+    "tables": {
+      "hosts": {
+        "rows": 1,
+        "sha256": "f245059d953cd429c3222089a655dde3d21940bb3089b47d0f6cc8d4734b85e9"
+      },
+      "sessions": {
+        "rows": 2,
+        "sha256": "afd2d38abd50c8be859f56dda884361509e8842c2334ca12aed6752eac8436cc"
+      },
+      "session_registrations": {
+        "rows": 2,
+        "sha256": "100477eb4d011d09cabc2fcfc6093bbc0a09d8a1549a2f7c4ef93bed0fe7eb01"
+      },
+      "topics": {
+        "rows": 1,
+        "sha256": "d4bd640bbe2db150bf620e791adcd0d680788c064775db877c3c4ae0b4c058f8"
+      },
+      "memberships": {
+        "rows": 2,
+        "sha256": "ed874410874b51122749dab6f63f72ab584bea37ad3b036a1648116b74056c3e"
+      },
+      "messages": {
+        "rows": 100000,
+        "sha256": "d1c8daf46765596583eaf698b47f7b84c89d9f15b08041e78db20f52a8b46797"
+      },
+      "message_targets": {
+        "rows": 100000,
+        "sha256": "2bafe02d4b3321480bdd21d143493447676aee85826b6c2dc8842b8b5a5a972e"
+      },
+      "deliveries": {
+        "rows": 100000,
+        "sha256": "34aedbb9fc219eb0f9e0afa0ae8c305203c401deb5a3a530029a71720116ee7d"
+      },
+      "board_entries": {
+        "rows": 1,
+        "sha256": "913f16eafc6171a35cb2f26477cf3416dc0db1fbeb683a3e53f9387dbd0f8d5c"
+      },
+      "board_versions": {
+        "rows": 2,
+        "sha256": "06ca010ba09bda24d14f9219516f19027d38981d4a3ee581ef8be2103f093abf"
+      },
+      "retired_operations": {
+        "rows": 4,
+        "sha256": "e11f1b564f8894fb4f6a03ed7734e10a6971a6b23a273988f030235e6931b7f8"
+      }
+    },
+    "receipts": [
+      {
+        "state": "read",
+        "n": 99900
+      },
+      {
+        "state": "unread",
+        "n": 100
+      }
+    ],
+    "quickCheck": {
+      "quick_check": "ok"
+    },
+    "foreignKeyCheck": [],
+    "indexes": [
+      {
+        "name": "deliveries_unread_session_seq",
+        "sql": "CREATE INDEX deliveries_unread_session_seq ON deliveries(session_id, seq) WHERE state = 'unread'"
+      },
+      {
+        "name": "message_targets_message_id",
+        "sql": "CREATE INDEX message_targets_message_id ON message_targets(message_id)"
+      }
+    ],
+    "fileBytes": 57647104
+  },
+  "queryPlans": {
+    "unreadRange": [
+      "SEARCH deliveries USING INDEX deliveries_unread_session_seq (session_id=? AND seq>? AND seq<?)"
+    ],
+    "highwater": [
+      "SEARCH deliveries USING COVERING INDEX sqlite_autoindex_deliveries_2 (session_id=?)"
+    ],
+    "targets": [
+      "SEARCH message_targets USING INDEX message_targets_message_id (message_id=?)"
+    ],
+    "message": [
+      "SEARCH m USING INDEX sqlite_autoindex_messages_1 (id=?)",
+      "SEARCH s USING INDEX sqlite_autoindex_sessions_1 (id=?)"
+    ]
+  },
+  "selectedUnreadMetadata": [
+    1000,
+    2000,
+    3000,
+    4000,
+    5000,
+    6000,
+    7000,
+    8000,
+    9000,
+    10000,
+    11000,
+    12000,
+    13000,
+    14000,
+    15000,
+    16000,
+    17000,
+    18000,
+    19000,
+    20000,
+    21000,
+    22000,
+    23000,
+    24000,
+    25000,
+    26000,
+    27000,
+    28000,
+    29000,
+    30000,
+    31000,
+    32000,
+    33000
+  ],
+  "indexFileGrowthBytes": 2981888,
+  "contentUnchanged": true,
+  "receiptsUnchanged": true,
+  "schema8ReopenMs": 0.6154070000002321,
+  "reopenQuickCheck": {
+    "quick_check": "ok"
+  },
+  "passed": true,
+  "afterPressure": {
+    "availableMemoryBytes": 5760249856,
+    "loadAverage": [
+      1.97,
+      3.41,
+      3.51
+    ]
+  },
+  "processResourceUsage": {
+    "userCPUTime": 4423637,
+    "systemCPUTime": 457617,
+    "maxRSS": 328088,
+    "sharedMemorySize": 0,
+    "unsharedDataSize": 0,
+    "unsharedStackSize": 0,
+    "minorPageFault": 14857,
+    "majorPageFault": 1,
+    "swappedOut": 0,
+    "fsRead": 72,
+    "fsWrite": 274080,
+    "ipcSent": 0,
+    "ipcReceived": 0,
+    "signalsCount": 0,
+    "voluntaryContextSwitches": 1499,
+    "involuntaryContextSwitches": 231
+  },
+  "finishedAt": "2026-11-14T19:46:46.806Z",
+  "fixtureRemoved": true
+}
