@@ -69,7 +69,7 @@ describe("host and registration", () => {
     now = "2026-10-25T12:01:00.000Z";
     const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
     expect(hello(ctx, peer, { host: "laptop", agentd_version: "next", protocol_version: 99 }))
-      .toEqual({ host: "laptop", protocol_version: PROTOCOL_VERSION });
+      .toEqual({ host: "laptop", protocol_version: PROTOCOL_VERSION, capabilities: ["resync-page-v1"] });
     expect(warning).toHaveBeenCalledOnce();
     expect(ctx.db.prepare("SELECT * FROM hosts").all())
       .toEqual([{ name: "laptop", agentd_version: "next", last_seen_at: now }]);

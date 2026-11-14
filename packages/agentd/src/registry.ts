@@ -106,6 +106,9 @@ export class Registry {
   receive(delivery: Delivery): boolean {
     return this.db.prepare("INSERT OR IGNORE INTO deliveries(session_id,seq,notification) VALUES(?,?,?)").run(delivery.session_id, delivery.seq, JSON.stringify(delivery)).changes === 1;
   }
+  hasPendingWake(id: string): boolean {
+    return this.db.prepare("SELECT 1 FROM deliveries WHERE session_id=? AND acted=0 AND json_extract(notification, '$.wake') = 1 LIMIT 1").get(id) !== undefined;
+  }
   pending(id: string): Delivery[] {
     return this.db.prepare("SELECT notification FROM deliveries WHERE session_id=? AND acted=0 ORDER BY seq").all(id)
       .map((row) => Notifications.deliver.parse(JSON.parse(z.object({ notification: z.string() }).parse(row).notification)));

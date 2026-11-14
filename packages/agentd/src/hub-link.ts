@@ -1,4 +1,4 @@
-import { RELEASE_VERSION } from "@kommutator/protocol";
+import { Results, RELEASE_VERSION } from "@kommutator/protocol";
 import WebSocket from "ws";
 import * as z from "zod";
 import { MAX_FRAME_BYTES, PROTOCOL_VERSION } from "@kommutator/protocol";
@@ -7,6 +7,8 @@ import { OfflineError, RpcError } from "./errors.js";
 
 export interface HubTransport {
   readonly connected: boolean;
+  readonly epoch?: number;
+  readonly capabilities?: readonly string[];
   request(method: string, params: unknown): Promise<unknown>;
   start(onConnect: () => Promise<void>, onNotification: (method: string, params: unknown) => void): void;
   close(): Promise<void>;
@@ -20,8 +22,11 @@ const Envelope = z.object({
 /** Single authenticated WS; every open performs hello before exposing readiness. */
 export class HubLink implements HubTransport {
   connected = false;
+  epoch = 0;
+  capabilities: readonly string[] = [];
   private ws: WebSocket | undefined;
   private stopped = false;
+  private closing: Promise<void> | undefined;
   private nextId = 0;
   private backoff = 100;
   private reconnect: ReturnType<typeof setTimeout> | undefined;
@@ -36,8 +41,13 @@ export class HubLink implements HubTransport {
       url.protocol = url.protocol === "https:" || url.protocol === "wss:" ? "wss:" : "ws:";
       const ws = new WebSocket(url, { headers: { authorization: `Bearer ${this.config.key}` }, maxPayload: MAX_FRAME_BYTES, handshakeTimeout: this.timeoutMs });
       this.ws = ws;
-      ws.on("error", () => this.onError("hub WebSocket connection failed"));
+      this.epoch++;
+      this.capabilities = [];
+      ws.on("error", () => {
+        if (!this.stopped && this.ws === ws) this.onError("hub WebSocket connection failed");
+      });
       ws.on("message", (data) => {
+        if (this.stopped || this.ws !== ws) return;
         let parsed: z.infer<typeof Envelope>;
         try { parsed = Envelope.parse(JSON.parse(data.toString())); }
         catch { this.onError("invalid hub frame"); ws.terminate(); return; }
@@ -56,18 +66,28 @@ export class HubLink implements HubTransport {
       ws.once("open", () => {
         void (async () => {
           try {
+            if (this.stopped || this.ws !== ws) return;
             const response = await this.rawRequest("hello", { host: this.config.host, agentd_version: RELEASE_VERSION, protocol_version: PROTOCOL_VERSION });
-            const version = z.object({ protocol_version: z.number() }).parse(response).protocol_version;
+            const hello = Results.hello.parse(response);
+            if (this.stopped || this.ws !== ws || ws.readyState !== WebSocket.OPEN) return;
+            this.capabilities = hello.capabilities ?? [];
+            const version = hello.protocol_version;
             if (version !== PROTOCOL_VERSION) this.onError("hub protocol version differs from daemon");
             this.connected = true;
             this.backoff = 100;
             this.heartbeat = setInterval(() => { if (ws.readyState === WebSocket.OPEN) ws.ping(); }, 20_000);
             await onConnect();
-          } catch { this.onError("hub synchronization failed"); ws.terminate(); }
+          } catch {
+            if (!this.stopped && this.ws === ws) this.onError("hub synchronization failed");
+            ws.terminate();
+          }
         })();
       });
       ws.once("close", () => {
+        if (this.ws !== ws) return;
         this.connected = false;
+        this.epoch++;
+        this.capabilities = [];
         if (this.heartbeat) clearInterval(this.heartbeat);
         for (const waiter of this.pending.values()) { clearTimeout(waiter.timer); waiter.reject(new OfflineError()); }
         this.pending.clear();
@@ -102,13 +122,21 @@ export class HubLink implements HubTransport {
     });
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
+    if (this.closing) return this.closing;
     this.stopped = true;
+    this.epoch++;
+    this.capabilities = [];
     this.connected = false;
     if (this.reconnect) clearTimeout(this.reconnect);
     if (this.heartbeat) clearInterval(this.heartbeat);
     for (const waiter of this.pending.values()) { clearTimeout(waiter.timer); waiter.reject(new OfflineError()); }
     this.pending.clear();
-    this.ws?.terminate();
+    const ws = this.ws;
+    this.closing = !ws || ws.readyState === WebSocket.CLOSED ? Promise.resolve() : new Promise<void>(resolve => {
+      ws.once("close", () => resolve());
+      ws.terminate();
+    });
+    return this.closing;
   }
 }

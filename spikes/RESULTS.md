@@ -1342,6 +1342,21 @@ Maintenance notices preceded restart. Release announcement
 existing inaccessible observations and blocked-outbox disposition remain separate
 limitations. See the versioned rollout JSON.
 
+
+## 2026-11-14 — bounded resync implementation (not released)
+
+The isolated candidate based on 0.15.2 passed ordered build/typecheck and 767 workspace
+tests, plus 14 cleanup-tool tests. The new real-socket test recovered 200 × 60,000-character
+unread messages without receipt advancement. A separate completion probe observed 3628 ms,
+one connection, all 200 locally retained, acked=0, hub unread=200 and no errors. The initial
+1.8-second observation was partial (112 retained), not a successful completion claim.
+The candidate hub with legacy resync still churned (12 connections, zero syncs, 516 events).
+The original 0.15.1 large failure and small success remain controls. A schema-7 built reader
+rejected schema8. Earlier failed gates and pending qualification are retained in the
+[implementation handoff](../docs/sdlc/bounded-resync/implementation.md) and
+[evidence](evidence/2026-11-14-bounded-resync-implementation.json).
+These controlled results do not establish historical issue22 causes or close field gates.
+
 ## 2026-11-14 — 0.15.2 published and local rollout reconciled
 
 PR #32 and tag 7921086 passed six CI checks, anonymous archive/hash checks and real
@@ -1353,3 +1368,48 @@ checkpoint acceptance and timer restoration. No retry/rollback or queue mutation
 The original 450.480 ms hook failure and post-activation unavailable observation
 remain unexplained. See the [release report](../docs/sdlc/operation-error-diagnostics/release.md)
 and [rollout evidence](evidence/2026-11-14-operation-diagnostics-rollout.json).
+
+## 2026-11-14 — exact-version gate failure and separate shutdown defect
+
+The first 0.16.0 ordered gate passed 781 tests, but subsequent release:check failed
+six agentd tests on unchanged five-second deadlines and produced two ENOENT log
+errors after fixture cleanup. The live unchanged 0.15.2 hub also timed out a Docker
+healthcheck at 20:13:26–20:13:31 UTC. Resource counters support further investigation,
+not a causal conclusion. A later 180-second observation had 90/90 HTTP401 responses.
+See [pressure evidence](evidence/2026-11-14-release-gate-pressure.json).
+
+A separate held-upgrade probe reproduced callbacks after awaited HubLink.close on
+both 0.15.2 and the candidate. The narrow shutdown repair is independently reviewed
+under [hub-link-shutdown](../docs/sdlc/hub-link-shutdown/implementation.md), not asserted
+to explain all test timeouts. No 0.16.0 release was published at this checkpoint;
+old staged archives must be replaced after final qualification. The planned 20:20
+maintenance was cancelled. Historical failure evidence remains retained.
+
+## 2026-11-14 — storage waits captured during the second qualification failure
+
+The second 0.16.0 packaging gate failed two hub tests on existing deadlines.
+During that interval, the separate unchanged live 0.15.2 hub main thread was
+sampled in D state waiting for ext4 journal commit or a folio. Eight HTTP response
+timeouts occurred with successful TCP connects. This directly supports storage
+wait involvement for these live stalls, not the exact candidate-test syscall or
+ultimate virtual-device cause. A concurrent broad /tmp file search by the maintainer
+is an explicit confound; its contribution was not measured. An isolated two-file
+syscall diagnostic passed 11 tests, with maximum observed fsync 111.401 ms; it did
+not reproduce the stall and does not explain the failed gate. See the
+[versioned evidence](evidence/2026-11-14-storage-wait-observation.json).
+No kernel/cache tuning, production tracing or increased test deadlines was applied.
+
+## 2026-11-14 — exported hook diagnostic repair and retained gate failures
+
+The old diagnostic compared ps text with canonical Linux process birth and could
+falsely report mismatches. A real-process regression reproduced it; the narrow
+helper comparison, fixed process categories and bounded pre-timeout sampling now
+pass independent review/security/external review and QA (792 workspace, 151 scripts).
+One instrumented exported E2E passed. The following full gate again passed source,
+script and clean-PATH checks, then a stale PostToolUse after valid resume timed out.
+Spawn/stdin completed in 2 ms; sampling remained pending at the 2,004 ms deadline.
+Birth matches were true; the resumed vendor differs from the original fixture ID
+by design. No 0.16.0 release or service activation occurred. See
+[release evidence and failures](../docs/sdlc/bounded-resync/release.md),
+[diagnostic QA](../docs/sdlc/export-hook-diagnostics/qa.md) and
+[phase evidence](evidence/2026-11-14-post-resume-hook-timeout.json).

@@ -49,3 +49,10 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^scripts/feedback-observer\.test\.mjs$''']
 regexes = ['''^abcdef0123456789$''']
+
+[[rules.allowlists]]
+description = "Synthetic isolated bounded-resync test and probe key"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^packages/agentd/test/resync-transport\.test\.ts$''', '''^spikes/bounded-resync-probe\.mjs$''']
+regexes = ['''^isolated-test-key-12345$''']

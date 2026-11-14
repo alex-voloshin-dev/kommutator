@@ -126,3 +126,6 @@ CREATE TABLE IF NOT EXISTS board_versions (
 );
 
 INSERT OR IGNORE INTO topics (name, kind) VALUES ('global', 'global');
+
+CREATE INDEX deliveries_unread_session_seq ON deliveries(session_id, seq) WHERE state = 'unread';
+CREATE INDEX message_targets_message_id ON message_targets(message_id);

@@ -10,6 +10,7 @@ import { createHubServer } from "@kommutator/hub";
 import { openDatabase } from "@kommutator/hub/db";
 import { PROTOCOL_VERSION, Results } from "@kommutator/protocol";
 import { startDaemon } from "../src/daemon.js";
+import { ownedStartup } from "./fixtures/owned-startup.js";
 import { AlreadyRunningError } from "../src/ipc.js";
 import { pathsFor } from "../src/paths.js";
 import { HubLink } from "../src/hub-link.js";
@@ -68,8 +69,7 @@ async function closeSocket(socket: Socket) {
 describe("production IPC and hub link", () => {
   it("uses one daemon for two clients, persists after one exits, and contains malformed frames", async () => {
     const { home, config } = await environment();
-    const daemon = await startDaemon({ home, config, isAlive: async () => true, processStart: async () => "birth" });
-    cleanup.push(daemon.close);
+    const daemon = await ownedStartup(() => startDaemon({ home, config, isAlive: async () => true, processStart: async () => "birth" }), cleanup);
     await until(() => daemon.core.transport.connected);
     const first = await ipc(daemon.paths.ipc);
     const second = await ipc(daemon.paths.ipc);
@@ -88,12 +88,11 @@ describe("production IPC and hub link", () => {
   });
   it("concurrent fresh starters yield exactly one listening instance", async () => {
     const { home, config } = await environment();
-    const starters = await Promise.allSettled([startDaemon({ home, config }), startDaemon({ home, config })]);
+    const starters = await Promise.allSettled([ownedStartup(() => startDaemon({ home, config }), cleanup), ownedStartup(() => startDaemon({ home, config }), cleanup)]);
     const winners = starters.filter((result) => result.status === "fulfilled");
     expect(winners).toHaveLength(1);
     for (const result of starters) {
-      if (result.status === "fulfilled") cleanup.push(result.value.close);
-      else expect(result.reason).toBeInstanceOf(AlreadyRunningError);
+      if (result.status === "rejected") expect(result.reason).toBeInstanceOf(AlreadyRunningError);
     }
     const winner = winners[0];
     if (winner?.status !== "fulfilled") throw new Error("no winning daemon");
@@ -108,10 +107,10 @@ describe("production IPC and hub link", () => {
     await once(child.stdout, "data");
     child.kill("SIGKILL");
     await once(child, "exit");
-    const starters = await Promise.allSettled([startDaemon({ home, config }), startDaemon({ home, config })]);
+    const starters = await Promise.allSettled([ownedStartup(() => startDaemon({ home, config }), cleanup), ownedStartup(() => startDaemon({ home, config }), cleanup)]);
     const winners = starters.filter((result) => result.status === "fulfilled");
     expect(winners).toHaveLength(1);
-    for (const result of starters) { if (result.status === "fulfilled") cleanup.push(result.value.close); else expect(result.reason).toBeInstanceOf(AlreadyRunningError); }
+    for (const result of starters) { if (result.status === "rejected") expect(result.reason).toBeInstanceOf(AlreadyRunningError); }
     const winner = winners[0];
     if (winner?.status !== "fulfilled") throw new Error("no winning daemon");
     const client = await ipc(endpoint);
@@ -131,7 +130,8 @@ describe("production IPC and hub link", () => {
       socket.on("message", (frame) => {
         const value = z.object({ id: z.number(), method: z.string() }).parse(JSON.parse(frame.toString()));
         calls.push(value.method);
-        socket.send(JSON.stringify({ jsonrpc: "2.0", id: value.id, result: value.method === "hello" ? { host: "mac", protocol_version: PROTOCOL_VERSION } : { ok: true } }));
+        socket.send(JSON.stringify({ jsonrpc: "2.0", id: value.id, result: value.method === "hello" ? { host: "mac", protocol_version: PROTOCOL_VERSION,
+          ...(auth.length === 1 ? { capabilities: ["resync-page-v1"] } : {}) } : { ok: true } }));
       });
     });
     const link = new HubLink({ host: "mac", key, hub: `http://127.0.0.1:${address.port}` });
@@ -139,11 +139,15 @@ describe("production IPC and hub link", () => {
     let syncs = 0;
     link.start(async () => { await link.request("deliveries.resync", { acked: {} }); syncs++; }, () => {});
     await until(() => syncs === 1);
+    expect(link.capabilities).toEqual(["resync-page-v1"]);
+    const firstEpoch = link.epoch;
     const [one, two] = await Promise.all([link.request("one", {}), link.request("two", {})]);
     expect(one).toEqual({ ok: true });
     expect(two).toEqual({ ok: true });
     for (const client of wss.clients) client.terminate();
     await until(() => syncs === 2);
+    expect(link.capabilities).toEqual([]);
+    expect(link.epoch).toBeGreaterThan(firstEpoch);
     expect(auth).toEqual([`Bearer ${key}`, `Bearer ${key}`]);
     expect(calls.slice(0, 2)).toEqual(["hello", "deliveries.resync"]);
     expect(calls.slice(-2)).toEqual(["hello", "deliveries.resync"]);

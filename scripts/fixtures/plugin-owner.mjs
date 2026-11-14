@@ -1,7 +1,8 @@
 // Synthetic vendor parent: real process ancestry for exported hooks and MCP bootstrap.
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
-import { hookDiagnostic } from '../lib/plugin-e2e-diagnostics.mjs';
+import { processStart } from '../../packages/agentd/dist/process.js';
+import { hookDiagnostic, hookProcessDiagnostic } from '../lib/plugin-e2e-diagnostics.mjs';
 const plugin = process.argv[2];
 const children = new Set();
 let stopping = false;
@@ -22,27 +23,45 @@ process.on('message', async message => {
     } else if (message.action === 'inspect') {
       result = { pid: mcp?.pid, launch_session_id: process.env.CLAUDE_CODE_SESSION_ID };
     } else if (message.action === 'hook') {
-      const started = performance.now();
+      const started = performance.now(); const startedAt = new Date().toISOString();
+      const phases = {}; let birth; let sample = { status: 'not-started' };
+      const sampling = new AbortController();
       const child = launch('hook', [message.event], { cwd: '/', env: process.env, stdio: ['pipe', 'pipe', 'pipe'] });
+      child.once('spawn', () => {
+        phases.spawn_ms = performance.now() - started;
+        void processStart(child.pid).then(value => { birth = value; }, () => {});
+      });
+      child.stdin.once('finish', () => { phases.stdin_finish_ms = performance.now() - started; });
+      const sampleTimer = setTimeout(() => {
+        const timing = { sampled_at: new Date().toISOString(), elapsed_ms: performance.now() - started };
+        sample = { status: 'pending', ...timing };
+        void hookProcessDiagnostic(child.pid, birth, sampling.signal).then(value => {
+          if (!sampling.signal.aborted) sample = { ...value, ...timing };
+        }, () => { if (!sampling.signal.aborted) sample = { status: 'unavailable', ...timing }; });
+      }, 1500);
+      const stopSampling = () => { clearTimeout(sampleTimer); sampling.abort(); };
       let stdoutBytes = 0; let stderrBytes = 0;
       child.stdout.on('data', chunk => { stdoutBytes += chunk.length; });
       child.stderr.on('data', chunk => { stderrBytes += chunk.length; });
       const diagnostic = (outcome, error) => hookDiagnostic({ event: message.event, outcome, elapsed_ms: performance.now() - started,
+        started_at: startedAt, phases, ...(outcome === 'success' ? {} : { process_sample: sample }),
         exit_code: child.exitCode, signal: child.signalCode, stdout_bytes: stdoutBytes, stderr_bytes: stderrBytes, error_code: error?.code });
       const failure = (outcome, error) => Object.assign(new Error(`Hook fixture ${outcome}`), { diagnostic: diagnostic(outcome, error) });
       const done = new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
-          const error = failure('timeout');
+          phases.timeout_ms = performance.now() - started;
+          const error = failure('timeout'); stopSampling();
           child.kill('SIGKILL');
           reject(error);
         }, 2000);
-        child.once('error', error => { clearTimeout(timer); reject(failure('spawn-error', error)); });
+        child.once('error', error => { clearTimeout(timer); stopSampling(); reject(failure('spawn-error', error)); });
         child.stdin.once('error', error => {
           const failed = failure('stdin-error', error);
-          clearTimeout(timer); child.kill('SIGKILL'); reject(failed);
+          clearTimeout(timer); stopSampling(); child.kill('SIGKILL'); reject(failed);
         });
         child.once('close', code => {
-          clearTimeout(timer);
+          phases.close_ms = performance.now() - started;
+          clearTimeout(timer); stopSampling();
           code === 0 && stdoutBytes === 0 ? resolve(diagnostic('success')) : reject(failure(code !== 0 ? 'nonzero-exit' : 'unexpected-stdout'));
         });
       });

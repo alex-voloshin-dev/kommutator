@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "name": "@kommutator/protocol",
-  "version": "0.15.2",
+  "version": "0.16.0",
   "description": "kommutator wire protocol: JSON-RPC method schemas, addressing, version",
   "type": "module",
   "main": "./dist/index.js",

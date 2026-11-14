@@ -1,4 +1,4 @@
-import { Methods, PROTOCOL_VERSION, RegisteredSession as RegisteredSessionSchema, TopicName, type Session } from "@kommutator/protocol";
+import { RESYNC_PAGE_CAPABILITY, Methods, PROTOCOL_VERSION, RegisteredSession as RegisteredSessionSchema, TopicName, type Session } from "@kommutator/protocol";
 import type { z } from "zod";
 import {
   errors, rejectRetiredOperation, requireHost, requireMembership, requireSession, RpcFault, transaction,
@@ -45,7 +45,7 @@ export function hello(ctx: HubContext, peer: HubPeer, params: z.output<typeof Me
   if (params.protocol_version !== PROTOCOL_VERSION) {
     console.warn(`hub protocol version ${PROTOCOL_VERSION} differs from host ${params.host}: ${params.protocol_version}`);
   }
-  return { host: params.host, protocol_version: PROTOCOL_VERSION };
+  return { host: params.host, protocol_version: PROTOCOL_VERSION, capabilities: [RESYNC_PAGE_CAPABILITY] };
 }
 
 function availableName(ctx: HubContext, host: string, requested: string, ownId: string | null = null): string {

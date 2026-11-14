@@ -1,0 +1,42 @@
+{
+  "baseline": "0.15.1",
+  "node": "26.13.0",
+  "synthetic": true,
+  "production_touched": false,
+  "large_backlog": {
+    "count": 200,
+    "connects": 12,
+    "completed": 0,
+    "notifications": 516,
+    "connected": false,
+    "serverErrors": 216,
+    "errors": [
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed"
+    ],
+    "unread": 200
+  },
+  "control": {
+    "count": 5,
+    "connects": 1,
+    "completed": 1,
+    "notifications": 5,
+    "connected": true,
+    "serverErrors": 0,
+    "errors": [],
+    "unread": 5
+  },
+  "body_characters_each": 60000,
+  "duration_ms": 1800,
+  "historical_issue22_cause_proven": false
+}

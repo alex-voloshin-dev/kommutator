@@ -1,14 +1,14 @@
 // Result shapes for the methods whose answers clients depend on (DESIGN.md §7).
 import * as z from "zod";
 import { MessageHeader } from "./headers.js";
-import { BoardEntry, LIMITS, MessageId, ReceiptState, Session, SessionId, StoredMessage, TopicName } from "./schemas.js";
+import { BoardEntry, LIMITS, Notifications, RESYNC_PAGE_COUNT, MessageId, ReceiptState, Session, SessionId, StoredMessage, TopicName } from "./schemas.js";
 import { Ident } from "./ident.js";
 
 export const RegisteredSession = Session.extend({ id: SessionId, handle: z.string().min(3).max(127) });
 const Ok = z.object({ ok: z.literal(true) });
 
 export const Results = {
-  "hello": z.object({ host: Ident, protocol_version: z.number().int() }),
+  "hello": z.object({ host: Ident, protocol_version: z.number().int(), capabilities: z.array(z.string().min(1).max(64)).max(32).optional() }),
   "session.upsert": z.object({ session: RegisteredSession, replayed: z.boolean() }),
   "session.heartbeat": Ok,
   "session.gone": Ok,
@@ -24,6 +24,11 @@ export const Results = {
     unmatched: z.number().int().nonnegative().max(LIMITS.receiptIds),
   }).optional() }),
   "deliveries.resync": z.object({ replayed: z.number().int().nonnegative() }),
+  "deliveries.resync.page": z.object({
+    session_id: SessionId, through: z.number().int().nonnegative(),
+    cursor: z.number().int().nonnegative(), more: z.boolean(),
+    deliveries: z.array(Notifications.deliver).max(RESYNC_PAGE_COUNT),
+  }).strict(),
   "board.get": z.object({ entries: z.array(BoardEntry) }),
   "board.history": z.object({
     entries: z.array(BoardEntry), more: z.boolean(),

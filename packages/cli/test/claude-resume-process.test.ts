@@ -2,7 +2,7 @@ import { phase, withCleanup, matchesFixtureDaemon } from "./fixture-lifecycle.js
 import { processStart } from "@kommutator/agentd/process";
 import { expectHookProcessTime } from "./hook-timing.js";
 import { readHookObservations } from "../src/hook-observations.js";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { spawn } from "node:child_process";
 import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -72,23 +72,73 @@ async function fixture() {
     KOM_PLUGIN_PROFILE: "claude-code", KOM_CLAUDE_OWNER_PID: String(process.pid),
     CLAUDE_CODE_SESSION_ID: "launch-a", CLAUDE_CODE_MESSAGING_SOCKET: "",
   };
+  const fixtureStarted = performance.now();
+  const lifecycle: Array<{ phase: string; started_ms: number; elapsed_ms: number; outcome: string; exit_code?: number | null }> = [];
+  const failureEvidence: unknown[] = [];
+  const elapsed = (start: number) => Math.round((performance.now() - start) * 1000) / 1000;
+  const remember = (value: typeof lifecycle[number]) => { lifecycle.push(value); if (lifecycle.length > 64) lifecycle.shift(); };
   const transport = new StdioClientTransport({ command: process.execPath, args: [entry, "mcp"], cwd, env, stderr: "pipe" });
   transport.stderr?.resume();
   const client = new Client({ name: "claude-code", version: "synthetic-resume" });
+  const connecting = performance.now();
   await client.connect(transport);
+  remember({ phase: "MCP connect", started_ms: connecting - fixtureStarted, elapsed_ms: elapsed(connecting), outcome: "connected" });
   async function call(name: string, args: Record<string, unknown> = {}) {
-    const reply = Reply.parse(await phase(`MCP ${name}`, () => client.callTool({ name, arguments: args })));
-    const text = reply.content[0]?.text;
-    if (!text) throw new Error("missing tool reply");
-    return { error: reply.isError === true, text };
+    const started = performance.now();
+    const label = ["whoami", "setup_status", "status", "set_status"].includes(name) ? `MCP ${name}` : "MCP other";
+    try {
+      const reply = Reply.parse(await phase(`MCP ${name}`, () => client.callTool({ name, arguments: args })));
+      const text = reply.content[0]?.text;
+      if (!text) throw new Error("missing tool reply");
+      remember({ phase: label, started_ms: started - fixtureStarted, elapsed_ms: elapsed(started), outcome: reply.isError ? "tool-error" : "reply" });
+      return { error: reply.isError === true, text };
+    } catch (error) {
+      remember({ phase: label, started_ms: started - fixtureStarted, elapsed_ms: elapsed(started), outcome: "threw" });
+      throw error;
+    }
   }
   const hookEvidence: unknown[] = [];
+  // Failure-only, bounded and allowlisted: no payloads, identities, environment, logs or paths.
+  async function captureFailure() {
+    const evidence: Record<string, unknown> = { phase: "required whoami", at: new Date().toISOString(),
+      elapsed_ms: elapsed(fixtureStarted), lifecycle: [...lifecycle], mcpPidAvailable: transport.pid !== undefined };
+    const alive = (pid: number | undefined) => { if (!pid) return false; try { process.kill(pid, 0); return true; } catch { return false; } };
+    evidence.mcpProcessAlive = alive(transport.pid);
+    try {
+      await phase("failure diagnostics", async () => {
+        try {
+          const metadata = z.object({ pid: z.number().int().positive(), endpoint: z.string() })
+            .parse(JSON.parse(await readFile(join(home, "agentd.json"), "utf8")) as unknown);
+          evidence.daemonMetadata = { valid: true, endpointMatches: metadata.endpoint === join(home, "agentd.sock"),
+            pidAlive: alive(metadata.pid) };
+        } catch { evidence.daemonMetadata = { valid: false }; }
+        try { evidence.socketPresent = (await lstat(join(home, "agentd.sock"))).isSocket(); }
+        catch { evidence.socketPresent = false; }
+        const probe = new IpcClient({ endpoint: join(home, "agentd.sock"), timeoutMs: 200, lazyStart: false,
+          hello: () => ({ client: "cli", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: process.pid, cwd }) });
+        try {
+          const runtime = z.object({ daemon: z.object({ version: z.string().max(32).regex(/^\d+\.\d+\.\d+$/) }),
+            runtime_contract: z.number().int().nonnegative() }).safeParse(await probe.call("daemon.runtime"));
+          evidence.daemonProbe = runtime.success ? { outcome: "reply", version: runtime.data.daemon.version,
+            contract: runtime.data.runtime_contract } : { outcome: "invalid-result" };
+        } catch { evidence.daemonProbe = { outcome: "unavailable" }; }
+        finally { probe.close(); }
+      }, 1000);
+    } catch { evidence.captureIncomplete = true; }
+    failureEvidence.push(evidence);
+    console.error("[resume-fixture-failure]", JSON.stringify(evidence));
+  }
   return {
-    home, cwd, db, transport, call, hookEvidence,
+    home, cwd, db, transport, call, hookEvidence, failureEvidence,
     async whoami() {
-      const reply = await call("whoami");
-      expect(reply.error, reply.text).toBe(false);
-      return Identity.parse(JSON.parse(reply.text) as unknown).session;
+      try {
+        const reply = await call("whoami");
+        expect(reply.error, reply.text).toBe(false);
+        return Identity.parse(JSON.parse(reply.text) as unknown).session;
+      } catch (error) {
+        await captureFailure();
+        throw error;
+      }
     },
     async hook(id: string, event = "SessionStart", preload?: string) {
       // Both children have this real test process as owner. MCP retains launch-a forever.
@@ -99,9 +149,12 @@ async function fixture() {
       child.stderr.resume();
       const done = new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
       child.stdin.end(JSON.stringify({ session_id: id, cwd, permission_mode: "default" }));
-      expect(await done).toBe(0);
+      const exitCode = await done;
+      remember({ phase: ["SessionStart", "SessionEnd", "UserPromptSubmit"].includes(event) ? `hook ${event}` : "hook other",
+        started_ms: started - fixtureStarted, elapsed_ms: elapsed(started), outcome: "closed", exit_code: exitCode });
+      expect(exitCode).toBe(0);
       expect(stdout).toBe("");
-      const elapsed = performance.now() - started;
+      const elapsedMs = performance.now() - started;
       const observations = await readHookObservations(undefined, home);
       const authority: unknown[] = [];
       try {
@@ -115,10 +168,10 @@ async function fixture() {
           }
         }
       } catch { /* Absent/partial authority is itself diagnostic evidence. */ }
-      const evidence = { id, event, elapsed, observations, authority };
+      const evidence = { id, event, elapsed: elapsedMs, observations, authority };
       hookEvidence.push(evidence);
       if (process.env.KOM_TEST_HOOK_EVIDENCE) console.error(JSON.stringify(evidence));
-      return elapsed;
+      return elapsedMs;
     },
     async close() {
       const failures: unknown[] = [];
@@ -397,4 +450,26 @@ it("an invalid SessionStart cannot replace previously observed conversation auth
     const evidence = f.hookEvidence[1] as { authority: Array<{ generation: number; root: string }> };
     expect(evidence.authority).toEqual([{ generation: 1, root: "valid-conversation" }]);
   }, () => f.close());
+}, 15_000);
+
+it("captures redacted startup evidence before cleanup without registering or retrying the failed identity", async () => {
+  const f = await fixture();
+  const errorOutput = vi.spyOn(console, "error").mockImplementation(() => {});
+  try {
+    await withCleanup(async () => {
+      await expect(f.whoami()).rejects.toThrow();
+      expect(f.failureEvidence).toHaveLength(1);
+      expect(f.failureEvidence[0]).toMatchObject({ phase: "required whoami", mcpPidAvailable: true,
+        lifecycle: expect.arrayContaining([expect.objectContaining({ phase: "MCP whoami", outcome: "tool-error" })]) });
+      const serialized = JSON.stringify(f.failureEvidence);
+      for (const secret of [f.home, f.cwd, "resume-process-fixture-key", "launch-a", "CLAUDE_CODE_SESSION_ID"]) {
+        expect(serialized).not.toContain(secret);
+      }
+      expect(errorOutput).toHaveBeenCalledWith("[resume-fixture-failure]", expect.any(String));
+      expect(f.db.prepare("SELECT count(*) AS n FROM sessions WHERE vendor='claude-code'").get()).toEqual({ n: 0 });
+      await f.hook("launch-a");
+      expect((await f.whoami()).vendor_session_id).toBe("launch-a");
+      expect(f.failureEvidence).toHaveLength(1);
+    }, () => f.close());
+  } finally { errorOutput.mockRestore(); }
 }, 15_000);

@@ -178,3 +178,15 @@ absolute Node entrypoint and PATH, then daemon-reload while the timer remains st
 Invoke cutover only with the qualified version and commit; keep polling quiescent through
 activation and actual hub/daemon runtime verification. Restore the timer only after success
 or explicit failure reconciliation. This runbook does not grant deployment authorization.
+
+### Hub schema 8 bounded-resync transition
+
+The hub migrates schemas 5, 6 and 7 atomically to 8, including both
+`deliveries_unread_session_seq` and `message_targets_message_id` indexes. Index builds
+read retained history and require disk space; their startup duration is not bounded
+by a resync page. Qualify fresh startup and migration before activation, preserve the
+ordinary VACUUM INTO backups, then verify user_version=8, both indexes and quick_check.
+Verify backup integrity and its original schema separately. Failed index creation
+rolls back the migration; preserve the blocked checkpoint and investigate. Older hub
+binaries reject schema 8: fix forward, never restore old history after new operations.
+Deploy the hub before daemons; old daemons retain legacy burst behavior until upgraded.

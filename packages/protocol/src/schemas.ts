@@ -16,6 +16,10 @@ export const ReceiptState = z.enum(["unread", "read"]);
 
 // Limits (characters, i.e. JS string length — not bytes). Enforced on both the
 // write methods and the records they produce.
+export const RESYNC_PAGE_BYTES = 512 * 1024;
+export const RESYNC_PAGE_COUNT = 32;
+export const RESYNC_PAGE_CAPABILITY = "resync-page-v1";
+
 export const LIMITS = {
   statusLine: 200,
   subject: 200,
@@ -191,6 +195,10 @@ export const Methods = {
     /** Per session id, the highest seq agentd has already acted on (0 if none). */
     acked: z.record(SessionId, z.number().int().nonnegative()),
   }),
+  "deliveries.resync.page": z.object({
+    session_id: SessionId, after: z.number().int().nonnegative(),
+    through: z.number().int().nonnegative().optional(),
+  }).refine(value => value.through === undefined || value.after <= value.through, "after exceeds through"),
   // Authors may read stored messages without a delivery; only actual deliveries get receipts.
   "message.read": z.object({ session_id: SessionId, id: MessageId }),
   "receipt.mark": z.object({

@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "kind": "exported-e2e-hook-timeout-diagnostic",
+  "source_log": "/tmp/kommutator-v0160-release-check-round3.log",
+  "log_mtime_utc": "2026-11-14T20:34:26.571117Z",
+  "exact_hook_interval_known": false,
+  "hooks": [
+    {
+      "owner": "owner-1",
+      "event": "SessionStart",
+      "elapsed_ms": 856,
+      "outcome": "success"
+    },
+    {
+      "owner": "owner-2",
+      "event": "SessionStart",
+      "elapsed_ms": 2005,
+      "outcome": "timeout"
+    }
+  ],
+  "confirmed_diagnostic_bug": {
+    "file": "scripts/lib/plugin-e2e-diagnostics.mjs",
+    "probe": "raw ps lstart string",
+    "runtime_birth": "linux-v1:<boot-id>:<start-ticks>",
+    "result": "birth_matches false is not comparable-format evidence of an actual mismatch"
+  },
+  "observer_envelope": {
+    "from": "2026-11-14T20:34:16.003025+00:00",
+    "to": "2026-11-14T20:34:28.003916+00:00",
+    "sample_count": 7,
+    "http_statuses": [
+      401,
+      401,
+      401,
+      401,
+      401,
+      401,
+      401
+    ],
+    "max_response_ms": 1.328,
+    "main_states": [
+      {
+        "at": "2026-11-14T20:34:16.003025+00:00",
+        "state": "S",
+        "wchan": "do_epoll_wait"
+      },
+      {
+        "at": "2026-11-14T20:34:18.003197+00:00",
+        "state": "S",
+        "wchan": "do_epoll_wait"
+      },
+      {
+        "at": "2026-11-14T20:34:20.003360+00:00",
+        "state": "S",
+        "wchan": "do_epoll_wait"
+      },
+      {
+        "at": "2026-11-14T20:34:22.003504+00:00",
+        "state": "S",
+        "wchan": "do_epoll_wait"
+      },
+      {
+        "at": "2026-11-14T20:34:24.003646+00:00",
+        "state": "S",
+        "wchan": "do_epoll_wait"
+      },
+      {
+        "at": "2026-11-14T20:34:26.003777+00:00",
+        "state": "S",
+        "wchan": "do_epoll_wait"
+      },
+      {
+        "at": "2026-11-14T20:34:28.003916+00:00",
+        "state": "S",
+        "wchan": "do_epoll_wait"
+      }
+    ],
+    "psi_delta_us": {
+      "host.cpu.some": 315688,
+      "host.cpu.full": 0,
+      "host.memory.some": 1775417,
+      "host.memory.full": 1408998,
+      "host.io.some": 6789220,
+      "host.io.full": 5163667,
+      "hub.cpu.some": 7500,
+      "hub.cpu.full": 3048,
+      "hub.memory.some": 2018948,
+      "hub.memory.full": 2018682,
+      "hub.io.some": 2020276,
+      "hub.io.full": 2020011
+    }
+  },
+  "limits": [
+    "Envelope based on failure-log mtime, not absolute child start timestamps.",
+    "Live main sampled healthy does not exclude short unsampled stalls or synthetic child-specific storage waits.",
+    "Published journal proves publication occurred, not daemon registration or hook completion.",
+    "Round2 live-main storage-wait finding does not establish this timeout cause."
+  ]
+}

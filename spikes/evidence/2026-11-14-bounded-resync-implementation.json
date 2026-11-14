@@ -1,0 +1,120 @@
+{
+  "baseline": {
+    "version": "0.15.1",
+    "large": {
+      "count": 200,
+      "connects": 12,
+      "completed": 0,
+      "notifications": 516,
+      "connected": false,
+      "serverErrors": 216,
+      "errors": [
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed",
+        "hub synchronization failed"
+      ],
+      "unread": 200
+    },
+    "small": {
+      "count": 5,
+      "connects": 1,
+      "completed": 1,
+      "notifications": 5,
+      "connected": true,
+      "serverErrors": 0,
+      "errors": [],
+      "unread": 5
+    }
+  },
+  "candidate_short_observation": {
+    "count": 200,
+    "mode": "paged",
+    "connects": 1,
+    "completed": 0,
+    "notifications": 0,
+    "connected": true,
+    "serverErrors": 0,
+    "errors": [],
+    "unread": 200,
+    "retained": 112,
+    "acked": 0
+  },
+  "candidate_completion": {
+    "count": 200,
+    "mode": "paged",
+    "elapsedMs": 3628,
+    "connects": 1,
+    "completed": 1,
+    "notifications": 0,
+    "connected": true,
+    "serverErrors": 0,
+    "errors": [],
+    "unread": 200,
+    "retained": 200,
+    "acked": 0
+  },
+  "candidate_hub_legacy_client": {
+    "count": 200,
+    "mode": "legacy",
+    "connects": 12,
+    "completed": 0,
+    "notifications": 516,
+    "connected": false,
+    "serverErrors": 216,
+    "errors": [
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed",
+      "hub synchronization failed"
+    ],
+    "unread": 200
+  },
+  "old_hub_new_daemon_small": {
+    "count": 5,
+    "mode": "paged",
+    "elapsedMs": 76,
+    "connects": 1,
+    "completed": 1,
+    "notifications": 10,
+    "connected": true,
+    "serverErrors": 0,
+    "errors": [],
+    "unread": 5,
+    "retained": 5,
+    "acked": 0
+  },
+  "old_reader": {
+    "schema": 7,
+    "rejected_schema8": true
+  },
+  "qualification": {
+    "workspace_tests": 767,
+    "cleanup_script_tests": 14,
+    "build": "passed",
+    "typecheck": "passed",
+    "release_check": "not run"
+  },
+  "limits": [
+    "Controlled reproduction is not historical issue22 root cause",
+    "Initial 1800ms observation was incomplete; completion observed at3628ms",
+    "Index migration duration representative qualification still needed",
+    "Independent review and QA pending"
+  ]
+}

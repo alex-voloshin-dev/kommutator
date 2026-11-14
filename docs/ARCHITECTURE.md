@@ -1,6 +1,6 @@
 # Architecture and contributor map
 
-Current map, 2026-11-13. [DESIGN](DESIGN.md) defines behavior and [PROTOCOL](PROTOCOL.md)
+Current map, 2026-11-14. [DESIGN](DESIGN.md) defines behavior and [PROTOCOL](PROTOCOL.md)
 indexes the executable schemas; this guide is an entry point, not a replacement contract.
 
 | Component | Code | Responsibility |
@@ -17,6 +17,12 @@ The MCP shim/hook binds through `ipc.hello` to agentd. The daemon owns caller id
 forwards RPC through one authenticated WebSocket to the hub. The hub derives authorship,
 checks topic membership and commits sequence/replay/board-CAS state transactionally.
 The read-only dashboard consumes an authenticated snapshot and event stream.
+
+Negotiated unread recovery uses `deliveries.resync.page` and the shared coordinator
+in `packages/agentd/src/resync.ts`. Fixed highwaters, encoded page bounds and indexed
+lookups keep each recovery page bounded. Transient scan cursors do not mark messages
+read. Hub schema 8 adds unread-range and target lookup indexes; old peers retain the
+legacy recovery limitation. Exact authority/epoch checks also fence wake rearming.
 
 MCP send/ack outcomes have a separate bounded local observation journal in
 `packages/agentd/src/operations.ts`. It shares atomic admission/settlement with the outbox
