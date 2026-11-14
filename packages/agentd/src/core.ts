@@ -117,10 +117,6 @@ export class DaemonCore {
     if (!this.transport.connected || epoch !== (this.transport.epoch ?? 0)) throw new OfflineError();
     const live = this.registry.all().filter((record) => record.session.id && record.session.state !== "gone");
     await this.resyncOwners(live);
-    for (const record of live) {
-      const current = this.resync.current(record);
-      if (current && current.session.wake === "on" && this.registry.hasPendingWake(current.session.id ?? "")) this.wake.schedule(current.key, current.lastWake);
-    }
   }
 
   private ingest(expected: LocalRecord, deliveries: Delivery[]): void {
@@ -144,6 +140,13 @@ export class DaemonCore {
       this.options.onError?.("hub does not advertise bounded delivery resync; using legacy recovery");
     }
     await this.resync.run(records);
+    if (this.closed || !this.transport.connected || epoch !== (this.transport.epoch ?? 0)) return;
+    for (const expected of records) {
+      const current = this.resync.current(expected);
+      if (current && current.session.wake === "on" && this.registry.hasPendingWake(current.session.id ?? "")) {
+        this.wake.schedule(current.key, current.lastWake);
+      }
+    }
   }
 
   private adapter(record: LocalRecord): Adapter { return this.adapters.get(record.session.vendor) ?? genericAdapter; }
@@ -889,12 +892,17 @@ export class DaemonCore {
     }
     // Flush queued policy updates first: a temporary hub DND value must not become
     // the immutable local wake decision for a newly received delivery.
+    const reincarnated: LocalRecord[] = [];
     for (const key of resyncAfterFlush) {
       const current = this.registry.get(key);
-      if (!current?.session.id || current.session.state === "gone" ||
-        this.registry.outbox().some(entry => entry.local_key === key && entry.method === "session.upsert")) continue;
+      if (!current?.session.id || current.session.state === "gone" || this.registrationPending(key)) continue;
+      reincarnated.push(current);
+    }
+    if (reincarnated.length > 0) {
       try {
-        await this.resyncOwners([current]);
+        // Submit the finite eligible set together so startup recovery round-robins
+        // owners rather than draining the first owner's backlog before its sibling.
+        await this.resyncOwners(reincarnated);
       } catch {
         // Lifecycle ACKs are already committed; reconnect retries resync.
         this.report("delivery resync after reincarnation failed; reconnect will retry");

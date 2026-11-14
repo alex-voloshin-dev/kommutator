@@ -126,3 +126,53 @@ passed in the required order (41 protocol, 207 hub, 229 agentd, 293 CLI). Logs:
 `/tmp/kom-bounded-round1-build.log`, `types.log` and `tests.log` with the same prefix.
 The previously passed 14 cleanup tests were not repeated: their code was unchanged.
 Independent round-2 review, QA and packaging remain pending.
+
+## Review round 2 revisions
+
+Two further integration gaps were reproduced before their fixes:
+
+- Duplicate-only refresh recovery retained unread local work but never rearmed the
+  native wake cancelled by the registration refresh. A core ManualClock test now
+  retains a waking delivery, holds the old resync response, refreshes the actual
+  Claude registration, and holds/releases the fresh duplicate-only response. The
+  active owner makes exactly one native attempt, while ended, replaced-conversation
+  and DND controls make none. No receipt.mark is sent; hub unread state is preserved.
+  Existing native-attempt local ledger semantics are unchanged.
+- Startup reincarnation submitted one owner at a time and drained its entire backlog.
+  A persisted two-owner daemon restart now verifies first-page order large-owner,
+  small-owner before the large owner's second page. Post-policy-flush eligible owners
+  are collected once and submitted together, preserving registration-pending gates.
+
+Successful recovery completion now shares the pending-wake existence check across
+callers, revalidating the captured connection epoch, open/connected state, exact owner
+and current DND policy before scheduling. Duplicate ingestion itself still does not
+schedule a fresh wake. The scheduler retains one timer per owner.
+
+Both substantive regressions failed in `/tmp/kom-bounded-round2-red2.log`; all five
+new cases passed in `/tmp/kom-bounded-round2-green.log`. An earlier test draft omitted
+`op: update` from its DND command and correctly received lifecycle rejection; only
+that fixture was corrected before the product fix. Its log is retained as
+`/tmp/kom-bounded-round2-red.log`. Ordered validation is recorded below.
+
+The first round-2 full gate passed build/typecheck and 41 protocol + 207 hub + 234
+agentd tests, then passed 292/293 CLI tests. The failing existing process test was
+`publishes resumed authority and ends it even when diagnostic storage never completes`:
+its first whoami after initial `launch-a` hook returned `Shared daemon unavailable`
+at line 297, before the diagnostic-stall preload or resumed generation was exercised.
+The cause is not established or equated with historical issues #19/#22/#25. Log:
+`/tmp/kom-bounded-round2-tests.log`. Cleanup already removed this run's fixture home;
+remaining similarly named homes were historical Nov 11/12 fixtures and were not read.
+The fixture drains child stderr, and its optional hook evidence was not enabled for
+the failing run, so the missing startup/probe phases cannot be reconstructed.
+
+An unchanged targeted rerun passed (one selected test); this does not explain the
+failure. Log: `/tmp/kom-bounded-round2-lifecycle-targeted.log`. An earlier mistyped
+package filter matched no projects and is invalid evidence, not a test pass.
+No timeout or assertion was relaxed. Final ordered repeat is recorded below.
+
+Final round-2 ordered repeat passed recursive build, typecheck and all 775 workspace
+tests (41 protocol, 207 hub, 234 agentd, 293 CLI). Logs:
+`/tmp/kom-bounded-round2-build-final.log`, `types-final.log` and `tests-final.log`
+with the same prefix. Source remained unchanged between the failed full run,
+targeted rerun and successful full repeat. The initial availability failure remains
+unexplained. Source is frozen for independent QA and final review.

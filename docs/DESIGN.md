@@ -870,6 +870,9 @@ Reconnect, reincarnation and verified same-live owner refresh use the coordinato
 which never calls flush itself. A changed registration fence queues a fresh exact-owner
 snapshot after policy writes settle; old pages remain invalid. The coordinator checks
 pending work before atomically clearing its running state, including empty/terminal runs.
+Post-flush reincarnations submit the whole eligible owner set together for page fairness.
+After successful recovery, the same exact owner/connection and current DND checks guard
+rearming already-retained wake work; duplicate ingestion alone is not a new wake or receipt.
 A legacy hub or daemon retains legacy resync limitations; advertised broken support
 fails rather than silently falling back. Real-time floods remain a separate limitation.
 

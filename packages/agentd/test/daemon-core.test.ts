@@ -1927,3 +1927,74 @@ it("recovers unread backlog under a verified Claude refresh after discarding the
   expect(core.registry.byId(first.session.id)).toMatchObject({ ownerGeneration: 2, acked: 0 });
   expect(hub.db.prepare("SELECT state FROM deliveries").all()).toEqual([{ state: "unread" }]);
 });
+it.each(["active", "ended", "replaced", "dnd"])("rearms duplicate-only refresh recovery only for the current eligible owner: %s", async mode => {
+  const { core, transport, hub, clock, attempts } = await fixture();
+  const first = await hook(core, "duplicate-refresh", { owner_generation: 1 });
+  if (!first.session || !transport.peer) throw new Error("missing fixture registration");
+  transport.capabilities = ["resync-page-v1"];
+  await send(core, first.peer, first.session.handle, "already retained locally");
+  expect(core.registry.pending(first.session.id)).toHaveLength(1);
+  expect(clock.timers.size).toBe(1);
+  let releaseOld!: () => void; let releaseFresh!: () => void;
+  let oldEntered!: () => void; let freshEntered!: () => void;
+  const oldReady = new Promise<void>(resolve => { oldEntered = resolve; });
+  const freshReady = new Promise<void>(resolve => { freshEntered = resolve; });
+  const oldHeld = new Promise<void>(resolve => { releaseOld = resolve; });
+  const freshHeld = new Promise<void>(resolve => { releaseFresh = resolve; });
+  let pages = 0;
+  transport.afterRequest = async method => {
+    if (method !== "deliveries.resync.page") return;
+    pages++;
+    if (pages === 1) { oldEntered(); await oldHeld; }
+    if (pages === 2) { freshEntered(); await freshHeld; }
+  };
+  const sync = core.synchronize(); await oldReady;
+  const refreshed = await hook(core, "duplicate-refresh", { owner_generation: 2 });
+  expect(clock.timers.size).toBe(0);
+  releaseOld(); await freshReady;
+  try {
+    if (mode === "ended") await core.request(refreshed.peer, "session.gone", {});
+    if (mode === "replaced") await hook(core, "replacement-conversation", { owner_generation: 3 });
+    if (mode === "dnd") await core.request(refreshed.peer, "session.upsert", { op: "update", session: { wake: "off" } });
+    expect(core.registry.byId(first.session.id)?.acked).toBe(0);
+    expect(attempts).toHaveLength(0);
+  } finally { releaseFresh(); await sync; }
+  for (let i = 0; i < 20; i++) await Promise.resolve();
+  await clock.advance(0);
+  expect(attempts).toHaveLength(mode === "active" ? 1 : 0);
+  if (mode === "active") expect(core.registry.byId(first.session.id)?.ownerGeneration).toBe(2);
+  expect(hub.db.prepare("SELECT state FROM deliveries").all()).toEqual([{ state: "unread" }]);
+  expect(transport.calls.filter(call => call.method === "receipt.mark")).toEqual([]);
+  await clock.advance(30_000);
+  expect(attempts).toHaveLength(mode === "active" ? 1 : 0);
+});
+
+it("round-robins startup reincarnation recovery before a large owner's second page", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "kom-startup-fairness-"));
+  cleanup.push(() => rm(directory, { recursive: true, force: true }));
+  const hub = createConformanceHarness(); cleanup.push(async () => hub.close());
+  const dbPath = join(directory, "state.db");
+  const first = await fixture({ hub, dbPath });
+  const large = await hook(first.core, "large-backlog", { owner_generation: 1 });
+  const small = await hook(first.core, "small-backlog", { owner_generation: 1, ppid: 56 });
+  if (!large.session || !small.session || !first.transport.peer) throw new Error("missing startup owners");
+  for (let i = 0; i < 33; i++) first.transport.peer.request("message.send", {
+    session_id: large.session.id, idempotency_key: `large-startup-${i}`,
+    message: { from: "", to: [large.session.handle], body: "large backlog" },
+  });
+  first.transport.peer.request("message.send", { session_id: large.session.id, idempotency_key: "small-startup-message",
+    message: { from: "", to: [small.session.handle], body: "small backlog" } });
+  await first.close();
+  const restarted = await fixture({ hub, dbPath, online: false });
+  restarted.transport.capabilities = ["resync-page-v1"];
+  restarted.transport.dropDeliver = true;
+  await restarted.transport.reconnect();
+  const pages = restarted.transport.calls.filter(call => call.method === "deliveries.resync.page")
+    .map(call => z.object({ session_id: z.string(), after: z.number() }).parse(call.params));
+  expect(pages.slice(0, 2)).toEqual([
+    { session_id: large.session.id, after: 0 }, { session_id: small.session.id, after: 0 },
+  ]);
+  expect(restarted.core.registry.pending(large.session.id)).toHaveLength(33);
+  expect(restarted.core.registry.pending(small.session.id)).toHaveLength(1);
+  expect(hub.db.prepare("SELECT state,count(*) AS n FROM deliveries GROUP BY state").all()).toEqual([{ state: "unread", n: 34 }]);
+});
