@@ -125,7 +125,7 @@ export async function hookProcessDiagnostic(pid, expectedBirth, signal) {
       const birth = stat && linuxProcessBirth(stat, boot);
       if (!birth || (item.label === 'hook' && compareProcessBirth(birth, expectedBirth) !== 'same')) return { status: 'unverified', processes: [] };
       const comm = stat.slice(stat.indexOf('(') + 1, stat.lastIndexOf(')'));
-      const executable = /^node(?:js)?$/.test(comm) ? 'node' : /^python[0-9.]*$/.test(comm) ? 'python' : /^(?:ba|da|z|a)?sh$/.test(comm) ? 'shell' : 'other';
+      const executable = /^(?:node(?:js)?|node-MainThread)$/.test(comm) ? 'node' : /^python[0-9.]*$/.test(comm) ? 'python' : /^(?:ba|da|z|a)?sh$/.test(comm) ? 'shell' : 'other';
       const fields = stat.slice(stat.lastIndexOf(')') + 1).trim().split(/\s+/);
       if (item.parentPid !== null && Number(fields[1]) !== item.parentPid) continue;
       const [wait, scheduling, children, after] = await Promise.all([
