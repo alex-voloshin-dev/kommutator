@@ -619,10 +619,10 @@ export class DaemonCore {
       await this.flushOperation(id, peer);
       const current = this.trackedOwner(peer, this.currentOwner(peer, record));
       const outcome = this.outcomes.get(id); this.outcomes.delete(id);
-      if (outcome?.error) throw outcome.error;
       const status = this.operations.status(operation.operation_id, current, this.clock.now());
       if (status.outcome === "confirmed") return { ...status.result, ...(operation.method === "message.send" ? { status: "sent" } : {}), operation_id: operation.operation_id };
-      if (status.outcome === "blocked") throw new RpcError(-32023, "operation is blocked; inspect operation_status without resubmitting");
+      if (status.outcome === "blocked") return status;
+      if (outcome?.error) throw outcome.error;
       if (outcome?.result) return { ...Results[operation.method].parse(outcome.result), ...(operation.method === "message.send" ? { status: "sent" } : {}), operation_id: operation.operation_id };
       if (this.registry.outboxEntry(id)) return { status: "queued", operation_id: operation.operation_id,
         ...(operation.method === "message.send" ? { idempotency_key: replay } : { outbox_id: id }), outbox_depth: this.registry.outbox().length };
