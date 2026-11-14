@@ -51,7 +51,7 @@ These installed-runtime probes are not real model conversations.
 
 The normal pinned updater deployed local hub/daemon 0.15.1 without manual recovery.
 Hub started 2026-11-14 16:00:12 UTC; daemon started 16:00:18 UTC. Current databases and
-both backups passed quick_check with mode0600, schemas5/7 unchanged. Checkpoint idle,
+both backups passed quick_check with mode 0600, schemas 5/7 unchanged. Checkpoint idle,
 timer active. Local Claude/Codex plugin installations and actually reloaded chat MCP
 are 0.15.1; caller active with both feedback subscriptions and empty outbox. Five
 Kommutator hooks report trusted without any approval-config writes; listing alone is
