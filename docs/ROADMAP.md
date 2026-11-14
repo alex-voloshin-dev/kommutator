@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-14. Released baseline: [0.15.1](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.15.1).
+Updated 2026-11-14. Released baseline: [0.15.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.15.2).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -11,6 +11,18 @@ full release qualification and ordinary local updater completion are recorded in
 clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
+
+Published 0.15.2 [operation diagnostics](sdlc/operation-error-diagnostics/release.md)
+returns retained blocked results with safe allowlisted reasons. Independent reviews,
+740 workspace tests, 142 script tests, packaging, six CI checks, public hashes and
+clean-profile Claude/Codex MCP launches passed. Local hub, daemon and actually reloaded
+MCP are 0.15.2, contract 4, healthy/connected, caller active and outbox empty. Both
+current databases and backups passed quick_check (schemas 5/7 unchanged). The updater
+restart command timed out despite starting the new daemon; actual state was inspected
+and the blocked checkpoint explicitly accepted, then the timer restored. No automatic
+retry or rollback occurred. The first hook 450.480 ms qualification failure remains
+unexplained; #9 is open. #31 bounded resync is under implementation, not in this release.
+See [rollout evidence](../spikes/evidence/2026-11-14-operation-diagnostics-rollout.json).
 
 Published 0.15.1 [operation recovery](sdlc/feedback-operation-recovery/release.md)
 repairs controlled lookup loss across consecutive continuous Claude refreshes, delayed
@@ -96,7 +108,7 @@ remains open; a healthy short probe is not a root-cause fix.
 | --- | --- | --- |
 | 1 | Operation recovery after Claude compaction and unrelated flush work | [Current repair](sdlc/feedback-operation-recovery/feedback-triage.md) released in 0.15.1 after controlled regressions, independent reviews, full qualification and local rollout. Historical inaccessible observations are not retrospectively adopted |
 | 1 | [#31: bounded delivery resync](https://github.com/alex-voloshin-dev/kommutator/issues/31) | Controlled 0.15.1 real-socket reproduction with 200 unread 60 KB bodies repeatedly reconnects without completing synchronization; five-message control passes. Design bounded continuation independent of read receipts. Historical #22 attribution remains unproven |
-| 1 | Blocked operation diagnostics | Confirmed initial-submit exception hides retained blocked evidence; allowlisted reason projection is under implementation and review, not released |
+| 1 | Blocked operation diagnostics | Completed in 0.15.2: retained blocked evidence and allowlisted reasons; safe queue disposition remains separate |
 | 2 | Safe blocked-outbox disposition | Latest remote report lists 93 retained RPC-rejected entries on 0.15.0. Design explicit owner visibility and replay-safe disposition; do not delete rows or infer non-commit from the last rejection |
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Reopened on 2026-11-14 after a 450.480 ms non-stalled IPC Stop in exact-version candidate qualification; original cause remains unproven. Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
