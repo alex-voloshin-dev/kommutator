@@ -1,0 +1,78 @@
+{
+  "baseline": "0.15.1",
+  "local_daemon_events": [
+    {
+      "at": "2026-11-14T15:54:33.077Z",
+      "event": "session.heartbeat-failed:hub-unavailable:"
+    },
+    {
+      "at": "2026-11-14T15:54:33.408Z",
+      "event": "session.heartbeat-failed:hub-unavailable:"
+    },
+    {
+      "at": "2026-11-14T15:58:13.174Z",
+      "event": "session.heartbeat-failed:hub-unavailable:"
+    },
+    {
+      "at": "2026-11-14T15:58:31.013Z",
+      "event": "session.heartbeat-failed:hub-unavailable:"
+    },
+    {
+      "at": "2026-11-14T16:00:12.576Z",
+      "event": "hub WebSocket connection failed"
+    },
+    {
+      "at": "2026-11-14T16:00:12.782Z",
+      "event": "hub WebSocket connection failed"
+    },
+    {
+      "at": "2026-11-14T16:00:13.186Z",
+      "event": "hub WebSocket connection failed"
+    },
+    {
+      "at": "2026-11-14T16:02:36.226Z",
+      "event": "session.gone:liveness:process-exited"
+    },
+    {
+      "at": "2026-11-14T16:05:04.726Z",
+      "event": "session.heartbeat-failed:hub-unavailable:"
+    }
+  ],
+  "hub_start_utc": "2026-11-14T16:00:12.805685515Z",
+  "hub_listening_utc": "2026-11-14T16:00:13.329189534Z",
+  "kernel_vmbus_allocation_warnings_utc": [
+    "2026-11-14T15:42:56Z",
+    "2026-11-14T16:02:14Z",
+    "2026-11-14T16:03:06Z"
+  ],
+  "remote_first_failure_reported_utc": "2026-11-14T15:54:29.191Z",
+  "limitations": [
+    "Remote observations are peer reports, not independent remote probes.",
+    "The current hub container log cannot establish pre-recreation behavior.",
+    "Kernel warning correlation does not establish causality.",
+    "Current hook successes do not explain startup failures."
+  ],
+  "current_hook_evidence": {
+    "startup": "failed SessionStart/UserPromptSubmit around 19:09 UTC",
+    "later": "multiple successful PostToolUse observations from 19:10 UTC"
+  },
+  "current_readonly_backlog_snapshot": {
+    "at": "2026-11-14T19:23:15.897717+00:00",
+    "scope": "unread deliveries for non-gone sessions; body UTF-8 bytes only, not full encoded frames",
+    "hosts": [
+      {
+        "host": "f4ai-think",
+        "deliveries": 49,
+        "body_bytes": 38027,
+        "max_body_bytes": 3922
+      },
+      {
+        "host": "wsl-workstation",
+        "deliveries": 4,
+        "body_bytes": 2908,
+        "max_body_bytes": 988
+      }
+    ],
+    "limitation": "Current small backlog does not establish historical backlog size or attribute issue22 to issue31."
+  }
+}

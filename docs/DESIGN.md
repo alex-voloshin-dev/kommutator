@@ -961,6 +961,26 @@ work. No extra timer, polling, operation resubmission or hub replay key is intro
 An offline flush still returns queued, and an uncertain transport failure still does not
 prove non-commit. All nontracked methods retain their existing flush behavior.
 
+### Blocked operation diagnostic projection (2026-11-14)
+
+A tracked submit whose current pinned owner has a durable blocked observation returns
+that observation, rather than throwing the cached hub error and losing the evidence in
+an unknown MCP result. Lookup and initial submit expose the same category/code and an
+optional finite reason. The reason is derived only from an exact allowlisted RPC code
+and fixed message in that observation's linked outbox row; arbitrary text and mismatched
+codes are never projected. Existing persisted observation errors remain category/code
+only, so this adds no storage schema or runtime-contract migration. The shipped 0.15.1
+IPC/MCP client uses an untyped result envelope and forwards the additive blocked result;
+it does not gain the new MCP error flag/guidance until updated. Consumers explicitly
+validating results with the older strict protocol schemas must update their schemas to
+accept the new reason field and blocked submit branch.
+
+Reasons describe the latest recorded rejection, not proof that earlier attempts did not
+commit. Unknown and foreign IDs remain indistinguishable. No diagnostic joins a topic,
+resubmits, deletes queued work, changes replay keys or grants new ownership. A blocked
+result retains the operation UUID and warns against blind resend; transport and owner
+failures still return unknown without inventing a rejection reason.
+
 ### Pure plugin compatibility preparation for lookup (2026-11-12)
 
 `operation_status` passes its method context through the actual MCP client source and

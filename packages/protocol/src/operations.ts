@@ -14,18 +14,22 @@ export const OperationSendResult = z.union([
   Results["message.send"].strict(),
   Results["message.send"].omit({ deliveries: true }).extend({ deliveries_omitted: z.literal(true) }).strict(),
 ]);
-export const OperationError = z.object({ category: z.enum(["hub-rpc", "missing-session", "replay-horizon"]), code: z.number().int().optional() }).strict();
+export const OperationErrorReason = z.enum(["topic-membership-required", "recipient-not-found", "reply-parent-unavailable", "project-registration-required"]);
+export const OperationError = z.object({ category: z.enum(["hub-rpc", "missing-session", "replay-horizon"]), code: z.number().int().optional(),
+  reason: OperationErrorReason.optional() }).strict().refine(error => error.reason === undefined || error.category === "hub-rpc", { message: "Only hub RPC errors have rejection reasons" });
 const Known = z.object({ operation_id: OperationId, created_at: z.number(), observed_at: z.number() });
 const Method = z.enum(["message.send", "receipt.mark"]);
+export const OperationBlocked = Known.extend({ method: Method, outcome: z.literal("blocked"), error: OperationError }).strict();
 export const OperationStatus = z.union([
   OperationStatusParams.extend({ outcome: z.literal("unknown") }).strict(),
   Known.extend({ method: Method, outcome: z.literal("queued") }).strict(),
-  Known.extend({ method: Method, outcome: z.literal("blocked"), error: OperationError }).strict(),
+  OperationBlocked,
   Known.extend({ method: z.literal("message.send"), outcome: z.literal("confirmed"), result: OperationSendResult }).strict(),
   Known.extend({ method: z.literal("receipt.mark"), outcome: z.literal("confirmed"), result: Results["receipt.mark"].strict() }).strict(),
 ]);
 export type OperationStatus = z.infer<typeof OperationStatus>;
 export const OperationSubmitResult = z.union([
+  OperationBlocked,
   Results["message.send"].extend({ status: z.literal("sent"), operation_id: OperationId }).strict(),
   Results["message.send"].omit({ deliveries: true }).extend({ status: z.literal("sent"), operation_id: OperationId, deliveries_omitted: z.literal(true) }).strict(),
   Results["receipt.mark"].extend({ operation_id: OperationId }),

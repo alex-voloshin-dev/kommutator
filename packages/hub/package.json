@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "name": "@kommutator/hub",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "description": "kommutator hub: sessions, topics, messages, boards; ws + SQLite; read-only dashboard",
   "type": "module",
   "main": "./dist/server.js",

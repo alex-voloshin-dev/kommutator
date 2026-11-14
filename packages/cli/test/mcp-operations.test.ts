@@ -76,3 +76,34 @@ it("keeps trusted directional compatibility recovery through a tracked MCP error
   const result = await client.callTool({ name: "send", arguments: { to: "all", body: "test" } });
   expect(JSON.parse(text(result))).toMatchObject({ error: "runtime-incompatible", guidance: expect.stringContaining("Do not restart the shared daemon") });
 });
+
+
+it.each(["send", "ack", "operation_status"])("reports a durable blocked %s result with safe guidance and no retry", async name => {
+  const calls: string[] = [];
+  const knownId = "05160c0e-a715-4a65-a3b4-5995d960b905";
+  const client = await fixture({ close() {}, async call(method, params) {
+    calls.push(method);
+    return { operation_id: params?.operation_id, outcome: "blocked", method: name === "ack" ? "receipt.mark" : "message.send",
+      created_at: 1, observed_at: 2, error: { category: "hub-rpc", code: -32001, reason: "topic-membership-required" } };
+  } });
+  const result = await client.callTool({ name, arguments: name === "send" ? { to: "topic:unjoined", body: "test" }
+    : name === "ack" ? { ids: ["message"] } : { operation_id: knownId } });
+  expect(result.isError).toBe(name === "operation_status" ? undefined : true);
+  expect(JSON.parse(text(result))).toMatchObject({ outcome: "blocked", error: { reason: "topic-membership-required" },
+    guidance: expect.stringContaining("does not prove earlier attempts did not commit") });
+  expect(calls).toEqual([name === "operation_status" ? "operation.status" : "operation.submit"]);
+});
+
+it.each(["unknown-reason", "extra-field", "wrong-id"])("does not reflect a malformed blocked observation (%s)", async fault => {
+  const client = await fixture({ close() {}, async call(_method, params) {
+    return { operation_id: fault === "wrong-id" ? "05160c0e-a715-4a65-a3b4-5995d960b905" : params?.operation_id,
+      outcome: "blocked", method: "message.send", created_at: 1, observed_at: 2,
+      error: { category: "hub-rpc", code: -32001,
+        ...(fault === "unknown-reason" ? { reason: "private-server-detail" } : {}),
+        ...(fault === "extra-field" ? { message: "private-server-detail" } : {}) } };
+  } });
+  const result = await client.callTool({ name: "send", arguments: { to: "all", body: "test" } });
+  expect(result.isError).toBe(true);
+  expect(JSON.parse(text(result))).toMatchObject({ outcome: "unknown", error: "operation-unavailable" });
+  expect(text(result)).not.toContain("private-server-detail");
+});

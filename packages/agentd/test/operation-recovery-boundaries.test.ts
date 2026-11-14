@@ -62,7 +62,7 @@ async function fixture() {
 
 it("retains blocked observation evidence through refresh without retrying the rejected command", async () => {
   const f = await fixture(), runtime = f.start(), old = await runtime.claude(1), id = randomUUID();
-  await expect(runtime.submit(old, id, "missing@host")).rejects.toMatchObject({ code: -32004 });
+  expect(await runtime.submit(old, id, "missing@host")).toMatchObject({ outcome: "blocked", error: { code: -32004, reason: "recipient-not-found" } });
   const blocked = await runtime.status(old, id), outbox = runtime.core.registry.outbox(), count = f.calls.length;
   expect(blocked).toMatchObject({ outcome: "blocked", error: { category: "hub-rpc", code: -32004 } });
   const fresh = await runtime.claude(2);
