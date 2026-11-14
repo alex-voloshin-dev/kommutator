@@ -1998,3 +1998,32 @@ it("round-robins startup reincarnation recovery before a large owner's second pa
   expect(restarted.core.registry.pending(small.session.id)).toHaveLength(1);
   expect(hub.db.prepare("SELECT state,count(*) AS n FROM deliveries GROUP BY state").all()).toEqual([{ state: "unread", n: 34 }]);
 });
+
+it("rolls back a partially inserted recovery page before wake, then safely replays it", async () => {
+  const { core, transport, hub, clock, attempts } = await fixture();
+  const recipient = await hook(core, "page-rollback", { owner_generation: 1 });
+  if (!recipient.session || !transport.peer) throw new Error("missing rollback fixture registration");
+  transport.capabilities = ["resync-page-v1"];
+  transport.dropDeliver = true;
+  for (const key of ["rollback-first", "rollback-second"]) transport.peer.request("message.send", {
+    session_id: recipient.session.id, idempotency_key: key,
+    message: { from: "", to: [recipient.session.handle], body: "rollback fixture body" },
+  });
+  core.registry.db.exec(`CREATE TRIGGER fail_second_recovery_row BEFORE INSERT ON deliveries
+    WHEN NEW.seq = 2 BEGIN SELECT RAISE(ABORT, 'injected recovery storage failure'); END`);
+  await expect(core.synchronize()).rejects.toThrow("injected recovery storage failure");
+  expect(core.registry.pending(recipient.session.id)).toEqual([]);
+  expect(core.registry.byId(recipient.session.id)?.acked).toBe(0);
+  await clock.advance(30_000);
+  expect(attempts).toEqual([]);
+  expect(clock.timers.size).toBe(0);
+  core.registry.db.exec("DROP TRIGGER fail_second_recovery_row");
+  await core.synchronize();
+  expect(core.registry.pending(recipient.session.id).map(row => row.seq)).toEqual([1, 2]);
+  expect(core.registry.byId(recipient.session.id)?.acked).toBe(0);
+  await clock.advance(0);
+  expect(attempts).toHaveLength(1);
+  expect(hub.db.prepare("SELECT state, count(*) AS n FROM deliveries GROUP BY state").all())
+    .toEqual([{ state: "unread", n: 2 }]);
+  expect(transport.calls.filter(call => call.method === "receipt.mark")).toEqual([]);
+});

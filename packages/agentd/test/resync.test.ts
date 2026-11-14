@@ -109,3 +109,26 @@ it("does not strand an owner queued between a terminal page and completion clean
   await terminalQueued;
   expect(requests).toBe(2);
 });
+
+it.each(["count", "bytes"])("rejects an over-limit %s page without retaining rows or waking", async mode => {
+  const f = fixture();
+  const deliveries = mode === "count"
+    ? Array.from({ length: 33 }, (_, i) => delivery(i + 1))
+    : [1, 2].map(seq => ({ ...delivery(seq), message: { ...delivery(seq).message, body: "\u0000".repeat(60_000) } }));
+  f.transport.request = async () => ({ session_id: "receiver", through: deliveries.length,
+    cursor: deliveries.length, more: false, deliveries });
+  await expect(f.coordinator.run([f.record])).rejects.toThrow("invalid bounded resync page");
+  expect(f.registry.pending("receiver")).toEqual([]);
+  expect(f.registry.get("owner")?.acked).toBe(0);
+  expect(f.wakes()).toBe(0);
+});
+it("rejects a changed highwater without ingesting any part of that continuation", async () => {
+  const f = fixture(); let requests = 0;
+  f.transport.request = async () => ++requests === 1
+    ? { session_id: "receiver", through: 2, cursor: 1, more: true, deliveries: [delivery(1)] }
+    : { session_id: "receiver", through: 3, cursor: 3, more: false, deliveries: [delivery(2), delivery(3)] };
+  await expect(f.coordinator.run([f.record])).rejects.toThrow("invalid bounded resync page");
+  expect(f.registry.pending("receiver").map(row => row.seq)).toEqual([1]);
+  expect(f.registry.get("owner")?.acked).toBe(0);
+  expect(f.wakes()).toBe(1);
+});

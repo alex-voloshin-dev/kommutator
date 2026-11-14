@@ -77,3 +77,19 @@ it("uses indexed range, highwater, message/author and bounded target reconstruct
   const message = plan("SELECT m.*,s.handle FROM messages m JOIN sessions s ON s.id=m.from_session WHERE m.id='x'");
   expect(message).not.toMatch(/SCAN|TEMP B-TREE/);
 });
+
+it("continues the fixed scan across intervening read and DND changes without inventing receipts", () => {
+  const { hub, client, session, page } = fixture();
+  const first = page(0);
+  const newlyRead = hub.db.prepare("SELECT message_id FROM deliveries WHERE session_id = ? AND seq BETWEEN 33 AND 40")
+    .all(session.id).map(row => String(row.message_id));
+  client.request("receipt.mark", { session_id: session.id, ids: newlyRead, state: "read" });
+  client.request("session.upsert", { op: "update", session: { id: session.id, wake: "off" } });
+  const continuation = page(first.cursor, first.through);
+  expect(continuation).toMatchObject({ through: 70, cursor: 70, more: false });
+  expect(continuation.deliveries.map(row => row.seq)).toEqual(Array.from({ length: 30 }, (_, i) => i + 41));
+  expect(continuation.deliveries.every(row => !row.wake)).toBe(true);
+  expect(client.deliveries).toEqual([]);
+  expect(hub.db.prepare("SELECT state, count(*) AS n FROM deliveries GROUP BY state ORDER BY state").all())
+    .toEqual([{ state: "read", n: 8 }, { state: "unread", n: 62 }]);
+});
