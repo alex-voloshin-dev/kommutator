@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "kind": "exported-e2e-stale-hook-timeout",
+  "source_log": "/tmp/kommutator-v0160-release-check-round4.log",
+  "hook": {
+    "owner": "owner-1",
+    "event": "PostToolUse",
+    "purpose": "deliberately stale conversation A after successful resume B",
+    "started_at": "2026-11-14T20:56:47.427Z",
+    "spawn_ms": 2,
+    "stdin_finish_ms": 2,
+    "timeout_ms": 2004,
+    "sample_started_at": "2026-11-14T20:56:48.930Z",
+    "sample_elapsed_ms": 1503,
+    "sample_status": "pending"
+  },
+  "identity_diagnostics": {
+    "birth_matches": true,
+    "old_vendor_vs_current_journal_mismatch": "expected after resume; not evidence of broken registration"
+  },
+  "nearby_live_service_samples": [
+    {
+      "at": "2026-11-14T20:56:44.813461+00:00",
+      "status": 401,
+      "response_ms": 0.985,
+      "main_state": "S",
+      "main_wchan": "do_epoll_wait",
+      "host_io_full_delta_us": 1526
+    },
+    {
+      "at": "2026-11-14T20:56:46.813682+00:00",
+      "status": 401,
+      "response_ms": 0.996,
+      "main_state": "S",
+      "main_wchan": "do_epoll_wait",
+      "host_io_full_delta_us": 0
+    },
+    {
+      "at": "2026-11-14T20:56:48.813780+00:00",
+      "status": 401,
+      "response_ms": 0.791,
+      "main_state": "S",
+      "main_wchan": "do_epoll_wait",
+      "host_io_full_delta_us": 434493
+    },
+    {
+      "at": "2026-11-14T20:56:50.813919+00:00",
+      "status": 401,
+      "response_ms": 0.929,
+      "main_state": "S",
+      "main_wchan": "do_epoll_wait",
+      "host_io_full_delta_us": 66485
+    },
+    {
+      "at": "2026-11-14T20:56:52.814116+00:00",
+      "status": 401,
+      "response_ms": 60.259,
+      "main_state": "D",
+      "main_wchan": "jbd2_log_wait_commit",
+      "host_io_full_delta_us": 44539
+    },
+    {
+      "at": "2026-11-14T20:56:54.814227+00:00",
+      "status": 401,
+      "response_ms": 0.738,
+      "main_state": "S",
+      "main_wchan": "do_epoll_wait",
+      "host_io_full_delta_us": 252308
+    }
+  ],
+  "conclusions": [
+    "Child spawn and stdin completion observed; completion not observed before unchanged 2s deadline.",
+    "In-owner sampler did not settle between its 1503ms start and timeout; specific blocked phase remains unknown.",
+    "Live hub HTTP probes during hook interval succeeded; journal wait at20:56:52 is after this hook deadline and does not prove its cause.",
+    "Need external synthetic tree sample plus bounded syscall trace; no production trace or load injection."
+  ]
+}

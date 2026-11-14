@@ -1,0 +1,236 @@
+{
+  "date": "2026-11-14",
+  "runtime": "0.15.2 (preactivation samples0.15.1)",
+  "issue": 22,
+  "hub_started_at": "2026-11-14T19:37:08.019563855Z",
+  "endpoint_probe": {
+    "method": "unauthenticated GET /, loopback, one-second timeout, two-second interval",
+    "samples": 300,
+    "expected401": 276,
+    "failures": [
+      {
+        "at": "2026-11-14T19:36:23.460232+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.698
+      },
+      {
+        "at": "2026-11-14T19:37:07.766701+00:00",
+        "code": null,
+        "error_class": "URLError",
+        "elapsed_ms": 0.343
+      },
+      {
+        "at": "2026-11-14T19:37:17.623177+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.748
+      },
+      {
+        "at": "2026-11-14T19:37:27.996568+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.634
+      },
+      {
+        "at": "2026-11-14T19:38:28.265723+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.602
+      },
+      {
+        "at": "2026-11-14T19:38:31.311107+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.794
+      },
+      {
+        "at": "2026-11-14T19:38:34.312918+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.631
+      },
+      {
+        "at": "2026-11-14T19:38:37.314919+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.718
+      },
+      {
+        "at": "2026-11-14T19:38:40.316738+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.596
+      },
+      {
+        "at": "2026-11-14T19:38:43.317713+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1000.78
+      },
+      {
+        "at": "2026-11-14T19:38:46.319620+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.696
+      },
+      {
+        "at": "2026-11-14T19:38:49.321371+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.596
+      },
+      {
+        "at": "2026-11-14T19:38:52.323435+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.831
+      },
+      {
+        "at": "2026-11-14T19:38:55.325351+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.738
+      },
+      {
+        "at": "2026-11-14T19:38:58.327252+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.637
+      },
+      {
+        "at": "2026-11-14T19:39:01.329076+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.635
+      },
+      {
+        "at": "2026-11-14T19:39:04.331115+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.807
+      },
+      {
+        "at": "2026-11-14T19:39:07.332877+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.575
+      },
+      {
+        "at": "2026-11-14T19:39:10.334881+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.8
+      },
+      {
+        "at": "2026-11-14T19:39:13.336756+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.719
+      },
+      {
+        "at": "2026-11-14T19:39:26.603788+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.925
+      },
+      {
+        "at": "2026-11-14T19:39:29.605755+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.705
+      },
+      {
+        "at": "2026-11-14T19:39:32.607533+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.607
+      },
+      {
+        "at": "2026-11-14T19:39:35.609743+00:00",
+        "code": null,
+        "error_class": "TimeoutError",
+        "elapsed_ms": 1001.936
+      }
+    ],
+    "limit": "Does not separate TCP connect and response timeout;401 only proves responsive authentication boundary"
+  },
+  "cgroup_snapshot": {
+    "at": "2026-11-14T19:41:50.423916+00:00",
+    "cgroup": {
+      "cpu.stat": "usage_usec 7219267\nuser_usec 5018171\nsystem_usec 2201096\nnice_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "cpu.max": "max 100000\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "memory.events.local": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "memory.current": "73486336\n",
+      "memory.peak": "107745280\n",
+      "memory.max": "max\n",
+      "memory.high": "max\n",
+      "memory.pressure": "some avg10=0.00 avg60=3.48 avg300=5.83 total=28736721\nfull avg10=0.00 avg60=3.47 avg300=5.82 total=28736476\n",
+      "cpu.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=157068\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=92048\n",
+      "io.pressure": "some avg10=0.00 avg60=3.53 avg300=6.03 total=30190823\nfull avg10=0.00 avg60=3.53 avg300=6.02 total=30186752\n",
+      "io.stat": "8:48 rbytes=43474944 wbytes=2613248 rios=4387 wios=412 dbytes=0 dios=0\n",
+      "pids.events": "max 0\n"
+    },
+    "health": {
+      "status": "healthy",
+      "log": [
+        {
+          "Start": "2026-11-14T14:40:45.059942476-05:00",
+          "End": "2026-11-14T14:40:45.365010161-05:00",
+          "ExitCode": 0
+        },
+        {
+          "Start": "2026-11-14T14:41:00.365927598-05:00",
+          "End": "2026-11-14T14:41:00.709008821-05:00",
+          "ExitCode": 0
+        },
+        {
+          "Start": "2026-11-14T14:41:15.710460977-05:00",
+          "End": "2026-11-14T14:41:16.062562219-05:00",
+          "ExitCode": 0
+        },
+        {
+          "Start": "2026-11-14T14:41:31.063138028-05:00",
+          "End": "2026-11-14T14:41:31.397429661-05:00",
+          "ExitCode": 0
+        },
+        {
+          "Start": "2026-11-14T14:41:46.398556573-05:00",
+          "End": "2026-11-14T14:41:46.723320875-05:00",
+          "ExitCode": 0
+        }
+      ]
+    }
+  },
+  "followup": {
+    "condition": "60-second read-only sampler during resync full gates",
+    "samples": 60,
+    "errors": 0,
+    "max_connect_ms": 0.323,
+    "max_http_elapsed_ms": 13.536,
+    "hub_memory_full_delta_us": 9483.0,
+    "hub_io_full_delta_us": 38152.0
+  },
+  "healthcheck_events": [
+    {
+      "start": "2026-11-14T19:38:32.097749Z",
+      "end": "2026-11-14T19:38:56.825202Z",
+      "elapsed_seconds": 24.727453,
+      "exit": 127
+    },
+    {
+      "start": "2026-11-14T19:39:11.825310Z",
+      "end": "2026-11-14T19:39:28.658333Z",
+      "elapsed_seconds": 16.833023,
+      "exit": 127
+    }
+  ],
+  "limits": [
+    "Cumulative pressure includes healthchecks and overlaps; cannot add totals or assign all to hub main",
+    "No CPU throttling, memory limit event, OOM kill or subsequent container restart observed",
+    "One preactivation vmbus allocation warning does not establish historical root cause",
+    "No proven connection to controlled resync31",
+    "No payload or credentials captured; no runtime changes or production stress"
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "candidate": "0.16.0",
+  "live_hub": {
+    "version": "0.15.2",
+    "started_at": "2026-11-14T19:37:08.019563855Z",
+    "restart_count": 0,
+    "oom_killed": false,
+    "checks": [
+      {
+        "start": "2026-11-14T15:13:26.460465036-05:00",
+        "end": "2026-11-14T15:13:31.521124179-05:00",
+        "exit_code": -1
+      },
+      {
+        "start": "2026-11-14T15:13:46.522347124-05:00",
+        "end": "2026-11-14T15:13:46.896862847-05:00",
+        "exit_code": 0
+      },
+      {
+        "start": "2026-11-14T15:14:01.897673746-05:00",
+        "end": "2026-11-14T15:14:02.202459799-05:00",
+        "exit_code": 0
+      },
+      {
+        "start": "2026-11-14T15:14:17.203171663-05:00",
+        "end": "2026-11-14T15:14:17.501927113-05:00",
+        "exit_code": 0
+      },
+      {
+        "start": "2026-11-14T15:14:32.503403976-05:00",
+        "end": "2026-11-14T15:14:32.823654943-05:00",
+        "exit_code": 0
+      }
+    ]
+  },
+  "gate_interval_utc": [
+    "2026-11-14T20:13:10Z",
+    "2026-11-14T20:13:48Z"
+  ],
+  "gate_result": {
+    "package": "agentd",
+    "passed": 232,
+    "failed_timeouts": 6,
+    "unhandled_errors": 2,
+    "error_category": "ENOENT log write after fixture directory cleanup"
+  },
+  "host_snapshot": {
+    "at": "2026-11-14T20:14:54.872990+00:00",
+    "kernel_matching_lines": [],
+    "kernel_exit_code": 0,
+    "host_pressure": {
+      "cpu": "some avg10=2.13 avg60=2.78 avg300=3.41 total=5571743247\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+      "memory": "some avg10=0.00 avg60=0.71 avg300=0.44 total=614903566\nfull avg10=0.00 avg60=0.53 avg300=0.33 total=512579364",
+      "io": "some avg10=0.04 avg60=6.64 avg300=4.41 total=3705686497\nfull avg10=0.03 avg60=4.85 avg300=3.16 total=3070387255"
+    },
+    "meminfo": [
+      "MemTotal:        8022120 kB",
+      "MemAvailable:    5922676 kB",
+      "SwapTotal:       2097152 kB",
+      "SwapFree:        1924720 kB",
+      "Dirty:              1792 kB",
+      "Writeback:           144 kB"
+    ],
+    "vmstat": {
+      "pswpin": 65671,
+      "pswpout": 196976,
+      "allocstall_dma32": 0,
+      "allocstall_normal": 1509,
+      "pgfault": 25585058813,
+      "pgmajfault": 142721,
+      "oom_kill": 0,
+      "compact_stall": 152656
+    },
+    "loadavg": "3.14 3.19 3.03 5/481 2926611"
+  },
+  "gap": {
+    "comparison_from": "2026-11-14T20:08:06.884391+00:00",
+    "comparison_to": "2026-11-14T20:14:40.318119+00:00",
+    "warning": "Cumulative gap includes packaging, build, gate and idle time; not localized to failed tests. PSI categories overlap; do not sum.",
+    "psi_delta_us": {
+      "host.cpu.some": 15525028,
+      "host.cpu.full": 0,
+      "host.memory.some": 2070436,
+      "host.memory.full": 1633594,
+      "host.io.some": 18036705,
+      "host.io.full": 13126522,
+      "hub.cpu.some": 130626,
+      "hub.cpu.full": 72775,
+      "hub.memory.some": 4007126,
+      "hub.memory.full": 4006879,
+      "hub.io.some": 5583986,
+      "hub.io.full": 5580723
+    },
+    "identity_unchanged": true
+  },
+  "postfailure_observation": {
+    "start": "2026-11-14T20:14:40.318040+00:00",
+    "end": "2026-11-14T20:17:40.318088+00:00",
+    "samples": 90,
+    "codes": {
+      "401": 90
+    },
+    "endpoint_errors": 0,
+    "max_connect_ms": 0.282,
+    "max_response_ms": 2.181,
+    "max_measurement_ms": 89.744,
+    "psi_delta_us": {
+      "host.cpu.some": 4948837,
+      "host.cpu.full": 0,
+      "host.memory.some": 6752,
+      "host.memory.full": 5739,
+      "host.io.some": 173771,
+      "host.io.full": 131526,
+      "hub.cpu.some": 39446,
+      "hub.cpu.full": 21472,
+      "hub.memory.some": 9567,
+      "hub.memory.full": 9567,
+      "hub.io.some": 98908,
+      "hub.io.full": 98908
+    },
+    "init_identity_mismatches": 0
+  },
+  "limits": [
+    "No simultaneous per-test IO or scheduling trace was captured during failure",
+    "Later healthy window does not explain failure",
+    "Container State.Pid is docker-init; v1 process counters are not Node main-thread evidence",
+    "Preexisting post-close callback bug reproduced separately on baseline0.15.2; not established as cause of six timeouts",
+    "Fixture startup ownership is a separate cleanup concern",
+    "No kernel/runtime configuration changes or production load injection"
+  ]
+}
