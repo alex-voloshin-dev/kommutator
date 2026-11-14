@@ -1,0 +1,25 @@
+{
+  "version": "0.15.1",
+  "implementation": "c4c117c",
+  "workspace_tests": 724,
+  "script_tests": 142,
+  "ordered_build_typecheck_test": true,
+  "release_check": "passed first invocation",
+  "external_review": "round3 approve",
+  "independent_qa": "passed",
+  "runtime_contract": 4,
+  "daemon_schema": 5,
+  "hub_schema": 7,
+  "public_installation": "pending",
+  "production_rollout": "pending",
+  "logs": [
+    "/tmp/kom-operation-qa-tests2.log",
+    "/tmp/kommutator-v0151-release-check.log"
+  ],
+  "limits": [
+    "synthetic clients; not model-driven conversation",
+    "historical network outages unresolved",
+    "blocked outbox disposition unchanged",
+    "no retrospective observation transfer"
+  ]
+}

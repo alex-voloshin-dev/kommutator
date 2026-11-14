@@ -81,6 +81,8 @@ remains open; a healthy short probe is not a root-cause fix.
 
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
+| 1 | Operation recovery after Claude compaction and unrelated flush work | [Current repair](sdlc/feedback-operation-recovery/feedback-triage.md) passed controlled regressions, independent reviews and 724 workspace tests; release packaging pending. Historical inaccessible observations are not retrospectively adopted |
+| 2 | Safe blocked-outbox disposition | Remote report lists 83 retained RPC-rejected entries. Design explicit owner visibility and replay-safe disposition; do not delete rows or infer non-commit from the last rejection |
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
 | 1 | [#22: recurrent hub availability](https://github.com/alex-voloshin-dev/kommutator/issues/22) | 0.13.0 adds request-specific send/ack reconciliation, not an availability fix. Correlate simultaneous endpoint/resource/kernel observations; blocked-outbox disposition still needs separate design. No blanket queue deletion or kernel tuning |

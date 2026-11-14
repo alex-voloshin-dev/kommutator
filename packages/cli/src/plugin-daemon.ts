@@ -1,4 +1,4 @@
-import { DaemonRuntimeResult, RELEASE_VERSION, RUNTIME_CONTRACT } from "@kommutator/protocol";
+import { RELEASE_VERSION, RUNTIME_CONTRACT } from "@kommutator/protocol";
 import * as z from "zod";
 import { IpcError, IpcClient, cliHello } from "./ipc-client.js";
 
@@ -10,17 +10,30 @@ const ObservedRuntime = z.object({
 });
 type DaemonState = "stopped" | "compatible" | "incompatible" | "unavailable";
 const recovery: Partial<Record<DaemonState, string>> = {
-  incompatible: "Upgrade the affected client's MCP and all lifecycle hook wiring. After ending active sessions in that client, run the installed plugin's bin/manage daemon restart locally, then launch a new client OS process with trusted SessionStart hooks (/exit, then claude --resume for Claude). Reloading plugins in the old process is insufficient. Unrelated old clients may remain unavailable; no host-wide process shutdown is required. No restart was performed; configuration and compatibility do not prove session registration.",
   stopped: "The shared daemon is stopped. Resume your client with trusted SessionStart hooks, then call whoami to register and start the shared daemon. No daemon was started by this check.",
   unavailable: "Shared daemon unavailable; inspect the private local configuration and daemon log. No restart was performed.",
 };
+export class RuntimeCompatibilityError extends IpcError {
+  constructor(readonly recovery: string) { super(recovery, -32601); }
+}
+function compatibilityRecovery(contract: number | null, version: string | null): string {
+  version = Version.parse(version);
+  if (contract !== null && (!Number.isSafeInteger(contract) || contract < 0)) contract = null;
+  const versions = `Client ${RELEASE_VERSION} requires runtime contract ${expectedRuntimeContract}; daemon ${version ?? "unknown"} reports ${contract ?? "missing"}.`;
+  const action = contract !== null && contract > expectedRuntimeContract
+    ? "The client is older. Update this client's MCP and all lifecycle hook wiring, then launch a new client OS process with trusted SessionStart hooks (/exit, then claude --resume for Claude). Do not restart or downgrade the shared daemon."
+    : contract !== null && contract < expectedRuntimeContract
+      ? "The daemon is older. Upgrade all lifecycle hook wiring and MCP for the affected client. After ending active sessions affected by the upgrade, use the upgraded installed plugin's bin/manage daemon restart locally, then launch a new client OS process with trusted SessionStart hooks. Reloading plugins in the old process is insufficient."
+      : "The daemon contract could not be verified. Inspect setup_status and installed versions before choosing which component to update. Do not restart the shared daemon based on missing metadata alone.";
+  return `${versions} ${action} No restart was performed; compatibility does not prove session registration.`;
+}
 function diagnostics(daemon: DaemonState, value?: unknown) {
   const observed = ObservedRuntime.safeParse(value);
   return {
     daemon, client_version: RELEASE_VERSION, expected_runtime_contract: expectedRuntimeContract,
     daemon_version: observed.success ? observed.data.daemon.version : null,
     daemon_runtime_contract: observed.success ? observed.data.runtime_contract : null,
-    ...(recovery[daemon] ? { recovery: recovery[daemon] } : {}),
+    ...(daemon === "incompatible" ? { recovery: compatibilityRecovery(observed.success ? observed.data.runtime_contract : null, observed.success ? observed.data.daemon.version : null) } : recovery[daemon] ? { recovery: recovery[daemon] } : {}),
   };
 }
 
@@ -48,8 +61,7 @@ export async function pluginDaemonStatus(lazyStart = false, timeoutMs = 500, wai
 export async function requirePluginDaemon(): Promise<void> {
   const observed = await pluginDaemonDiagnostics(true, 5000, 1000);
   const state = observed.daemon;
-  if (state === "incompatible") throw new IpcError(
-    `Incompatible shared daemon runtime contract: expected ${expectedRuntimeContract}, observed ${observed.daemon_runtime_contract ?? "missing"} (daemon ${observed.daemon_version ?? "unknown"}). Upgrade all hooks/MCP and the daemon, then start a new client process with trusted hooks. No restart was performed.`, -32601);
+  if (state === "incompatible") throw new RuntimeCompatibilityError(observed.recovery ?? compatibilityRecovery(null, null));
   if (state !== "compatible") throw new Error("Shared daemon unavailable; inspect the private local configuration and daemon log.");
 }
 
@@ -57,13 +69,15 @@ export async function requirePluginDaemon(): Promise<void> {
 export async function requirePluginDaemonForLookup(): Promise<void> {
   const client = new IpcClient({ hello: cliHello, lazyStart: false, timeoutMs: 5000, retries: 0 });
   try {
-    const observed = DaemonRuntimeResult.parse(await client.call("daemon.runtime", {}));
-    if (observed.runtime_contract !== expectedRuntimeContract) {
-      throw new IpcError("Local daemon upgrade required for operation lookup; no fallback or restart was performed", -32601);
+    const observed = ObservedRuntime.safeParse(await client.call("daemon.runtime", {}));
+    if (!observed.success || observed.data.runtime_contract !== expectedRuntimeContract) {
+      throw new RuntimeCompatibilityError(compatibilityRecovery(
+        observed.success ? observed.data.runtime_contract : null,
+        observed.success ? observed.data.daemon.version : null));
     }
   } catch (error) {
     if (error instanceof IpcError && error.code === -32020) {
-      throw new IpcError("Local daemon upgrade required for operation lookup; no fallback or restart was performed", -32601);
+      throw new RuntimeCompatibilityError(compatibilityRecovery(null, null));
     }
     throw error;
   } finally { client.close(); }

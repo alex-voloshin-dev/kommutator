@@ -55,6 +55,7 @@ export class DaemonCore {
   private readonly peers = new Set<IpcPeer>();
   private flushing: Promise<void> | undefined;
   private readonly outcomes = new Map<number, { result?: unknown; error?: RpcError }>();
+  private readonly operationWaiters = new Map<number, { peer: IpcPeer; settle(): void; cancel(error: Error): void }>();
   private readonly deliveryRuns = new Map<string, Promise<void>>();
   private closed = false;
   private registrationTail: Promise<void> = Promise.resolve();
@@ -80,6 +81,7 @@ export class DaemonCore {
   peer(): IpcPeer { const peer: IpcPeer = {}; this.peers.add(peer); return peer; }
   disconnect(peer: IpcPeer): void {
     this.peers.delete(peer);
+    for (const waiter of this.operationWaiters.values()) if (waiter.peer === peer) waiter.cancel(new RpcError(-32020, "IPC peer disconnected; inspect operation status without resubmitting"));
     for (const cancel of this.registrationWaiters.get(peer) ?? []) cancel();
   }
 
@@ -303,6 +305,11 @@ export class DaemonCore {
       (birth !== undefined && record.processStartedAt !== undefined && birth !== record.processStartedAt) ||
       (hello.endpoint !== undefined && record.endpoint !== undefined && hello.endpoint !== record.endpoint)
     ));
+    const refreshOwner = vendor === "claude-code" && existing && !wasGone && !launchChanged &&
+      record.pid === pid && record.processStartedAt === birth && record.ownerGeneration !== undefined &&
+      (hello.endpoint ?? record.endpoint) === record.endpoint &&
+      hello.owner_generation !== undefined && hello.owner_generation === record.ownerGeneration + 1
+      ? operationOwner(record) : undefined;
     if (launchChanged || (hello.owner_generation !== undefined && hello.owner_generation !== record.ownerGeneration)) {
       record.lifecycleEpoch = (record.lifecycleEpoch ?? 0) + 1;
     }
@@ -338,6 +345,7 @@ export class DaemonCore {
     delete record.goneReason;
     this.registry.transaction(() => {
       this.registry.save(record);
+      if (refreshOwner) this.operations.refresh(refreshOwner, record);
       for (const other of endpointPeers) {
         if (other.session.capability === "hook") continue;
         other.session.capability = "hook";
@@ -608,7 +616,7 @@ export class DaemonCore {
       this.validate(operation.method, { ...params, session_id: record.session.id ?? "pending" });
       const id = this.operations.admit(operation.operation_id, record, operation.method, params, this.clock.now());
       if (operation.method === "receipt.mark") this.markActedIds(record, operation.params.ids);
-      await this.flush();
+      await this.flushOperation(id, peer);
       const current = this.trackedOwner(peer, this.currentOwner(peer, record));
       const outcome = this.outcomes.get(id); this.outcomes.delete(id);
       if (outcome?.error) throw outcome.error;
@@ -700,6 +708,7 @@ export class DaemonCore {
       this.registry.fail(id, reason);
       this.operations.block(id, { category, ...(code !== undefined ? { code } : {}) }, this.clock.now());
     });
+    this.operationWaiters.get(id)?.settle();
   }
   private requireCli(peer: IpcPeer): void { if (peer.hello?.client !== "cli") throw new RpcError(-32003, "method requires CLI connection"); }
   private validate(method: string, params: unknown): unknown {
@@ -741,6 +750,15 @@ export class DaemonCore {
       return { ...params, session: { ...ObjectParams.parse(params["session"]), id: record.session.id } };
     }
     return { ...params, session_id: record.session.id };
+  }
+  private async flushOperation(id: number, peer: IpcPeer): Promise<void> {
+    const settled = new Promise<void>((resolve, reject) => {
+      this.operationWaiters.set(id, { peer, settle: resolve, cancel: reject });
+    });
+    try {
+      await Promise.race([settled, this.flush()]);
+      this.requireOpen();
+    } finally { this.operationWaiters.delete(id); }
   }
   async flush(): Promise<void> {
     if (this.flushing) return this.flushing;
@@ -792,7 +810,18 @@ export class DaemonCore {
               const later = this.registry.outbox().some((pending) => pending.local_key === record.key && pending.id > entry.id && pending.method === "session.upsert");
               newest.session = { ...updated, ...(newest.session.state === "gone" ? { state: "gone" as const } : {}), ...(later ? { wake: newest.session.wake, capability: newest.session.capability } : {}) };
               this.registry.save(newest);
-              if (matchesOwner(operationOwner(record), newest)) this.operations.attach(newest);
+              // A pending initial registration may settle after a continuous refresh.
+              // Attach only already-current observations, never transfer predecessor rows here.
+              const refreshedRegistration = lifecycle["op"] === "register" && !record.session.id &&
+                newest.session.id === updated.id && newest.session.state !== "gone" &&
+                record.key === newest.key && record.session.vendor === "claude-code" && newest.session.vendor === "claude-code" &&
+                record.session.vendor_session_id === newest.session.vendor_session_id &&
+                record.pid !== undefined && record.pid === newest.pid && record.processStartedAt !== undefined &&
+                record.processStartedAt === newest.processStartedAt && record.endpoint === newest.endpoint &&
+                record.session.cwd === newest.session.cwd && record.session.project_key === newest.session.project_key &&
+                record.ownerGeneration !== undefined && newest.ownerGeneration !== undefined &&
+                newest.ownerGeneration > record.ownerGeneration;
+              if (matchesOwner(operationOwner(record), newest) || refreshedRegistration) this.operations.attach(newest);
             }
             const tracked = this.operations.confirm(entry.id, result, this.clock.now());
             this.registry.remove(entry.id);
@@ -809,6 +838,7 @@ export class DaemonCore {
             }
           }
           this.outcomes.set(entry.id, { result });
+          this.operationWaiters.get(entry.id)?.settle();
           progressed = true;
         } catch (error) {
           if (!(error instanceof RpcError)) { this.report("hub unavailable; commands remain queued"); return; }
@@ -966,6 +996,7 @@ export class DaemonCore {
   }
   async close(): Promise<void> {
     this.closed = true;
+    for (const waiter of this.operationWaiters.values()) waiter.cancel(new DaemonStoppingError());
     for (const listeners of this.registrationWaiters.values()) for (const cancel of listeners) cancel();
     this.wake.close();
     await this.transport.close();

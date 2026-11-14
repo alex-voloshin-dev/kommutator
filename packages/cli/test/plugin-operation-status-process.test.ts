@@ -58,7 +58,11 @@ it.each(["claude-code", "codex"])("keeps warm %s lookup pure through the built p
       unsupported = code; ipcCalls.length = 0;
       const rejected = Reply.parse(await client.callTool({ name: "operation_status", arguments: { operation_id: randomUUID() }, ...metadata }));
       expect(rejected.isError).toBe(true);
-      expect(rejected.content[0]?.text).toContain("local-daemon-upgrade-required");
+      const error = JSON.parse(rejected.content[0]?.text ?? "{}");
+      expect(error).toMatchObject({ outcome: "unknown", error: code === -32020 ? "runtime-incompatible" : "local-daemon-upgrade-required" });
+      expect(error.guidance).toContain("setup_status");
+      expect(error.guidance).not.toContain("bin/manage daemon restart");
+      expect(error.guidance).not.toContain("Upgrade and restart the local daemon");
       expect(ipcCalls).toEqual(["ipc.hello", "daemon.runtime"]); expect(hubCalls).toEqual([]);
       expect(daemon.core.registry.outbox()).toEqual(queued);
     }

@@ -911,6 +911,56 @@ connection can still time out in existing `ipc.hello`; no hard lookup availabili
 identity bypass is promised. Existing hook timers, receipt meaning, retirement
 fences, board CAS, hub replay retention and disabled pruning are unchanged.
 
+### Continuous Claude operation observation recovery (2026-11-14)
+
+A validated higher-generation hook for the same uninterrupted live Claude conversation
+may transfer its retained operation observations to the refreshed owner. This is a
+narrow exception to the epoch isolation above: the exact local key, vendor conversation,
+PID, observed process birth, project/cwd and hub session remain unchanged, the prior
+positive generation is live, and the new positive generation is exactly the next integer. A gap cannot establish
+uninterrupted continuity because an intervening conversation hook may not have reached
+the daemon. Registration
+saves the new owner and transfers only observations matching the complete previous
+owner tuple and session UUID in one local transaction. No old connection is re-pinned:
+its immutable generation/epoch checks still reject lookup and submission. A newly bound
+current peer can inspect transferred queued, blocked or confirmed observations without
+resubmitting. Repeated continuous refreshes preserve this chain, subject to the existing
+retention and capacity limits.
+
+If the initial registration acknowledgement arrives after a refresh, its assigned UUID
+may attach to NULL observations already matching the exact current tuple. Require the
+captured/current local key, Claude conversation, PID/birth, endpoint and project/cwd to
+match, both generations positive and the current generation newer, and the current owner
+live. This does not transfer an observation: predecessor tuples still do not qualify.
+Only the original initial registration result supplies the UUID; no existing UUID changes.
+
+Ended/superseded/liveness-retired owners, A → B → A, process replacement, legacy identity,
+changed endpoint or changed project do not transfer observations. No retrospective
+adoption of historical inaccessible observations is attempted. Unknown/foreign IDs stay
+indistinguishable. This changes neither hub replay authority nor outbox contents and
+requires no storage-schema change. Existing live-process and generation checks remain
+mandatory before and after asynchronous binding and calls.
+
+Compatibility recovery compares the required and observed runtime contracts, not release
+numbers. A newer daemon requires updating the affected client and its hooks; it must not
+recommend restarting/downgrading the shared daemon. An older daemon requires coordinated
+upgrade under operator authorization. Missing/malformed contracts require inspection,
+not a guessed direction. Setup, ordinary tool preparation and pure lookup preparation
+report the same direction with bounded validated version metadata. MCP tracked-operation
+errors preserve this safe local diagnostic without exposing arbitrary remote error text.
+
+### Tracked submit completion boundary (2026-11-14)
+
+A tracked submit waits for its own durable settlement or the end of the current shared
+flush, whichever comes first. A successful observation commit or blocked-outcome commit
+wakes only the waiter for that outbox entry. Shared flushing continues for other work;
+its continued progress must not hide an already committed result behind the caller's IPC
+deadline. Completion rechecks the unchanged pinned owner before returning. Disconnect
+or daemon shutdown cancels the local waiter without cancelling or replaying admitted
+work. No extra timer, polling, operation resubmission or hub replay key is introduced.
+An offline flush still returns queued, and an uncertain transport failure still does not
+prove non-commit. All nontracked methods retain their existing flush behavior.
+
 ### Pure plugin compatibility preparation for lookup (2026-11-12)
 
 `operation_status` passes its method context through the actual MCP client source and
