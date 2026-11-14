@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-13. Released baseline: [0.15.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.15.0).
+Updated 2026-11-14. Released baseline: [0.15.1](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.15.1).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -11,6 +11,19 @@ full release qualification and ordinary local updater completion are recorded in
 clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
+
+Published 0.15.1 [operation recovery](sdlc/feedback-operation-recovery/release.md)
+repairs controlled lookup loss across consecutive continuous Claude refreshes, delayed
+initial registration attachment and submit completion behind unrelated outbox work.
+Compatibility recovery identifies the outdated runtime side. Independent review and QA,
+724 workspace tests, 142 script tests, packaging, all branch/PR/tag CI and public hashes
+passed. Real clean-profile Claude/Codex installations launched MCP 0.15.1. The local
+hub, daemon and actually reloaded chat MCP are 0.15.1, healthy and connected, caller active,
+outbox empty. Backups/current databases passed quick_check, checkpoint idle, timer active.
+Runtime contract 4 and schemas 5/7 unchanged. Historical inaccessible observations are
+not retrospectively adopted; shared-WebSocket availability and terminal backlog disposal
+remain open. See [rollout evidence](../spikes/evidence/2026-11-14-operation-recovery-rollout.json).
+
 
 Published 0.15.0 [reconnect work](sdlc/reconnect-authority/tech-design.md) repairs
 timezone-dependent process birth, interrupted pre-delivery authority publication,
@@ -81,7 +94,7 @@ remains open; a healthy short probe is not a root-cause fix.
 
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
-| 1 | Operation recovery after Claude compaction and unrelated flush work | [Current repair](sdlc/feedback-operation-recovery/feedback-triage.md) passed controlled regressions, independent reviews and 724 workspace tests; release packaging pending. Historical inaccessible observations are not retrospectively adopted |
+| 1 | Operation recovery after Claude compaction and unrelated flush work | [Current repair](sdlc/feedback-operation-recovery/feedback-triage.md) released in 0.15.1 after controlled regressions, independent reviews, full qualification and local rollout. Historical inaccessible observations are not retrospectively adopted |
 | 2 | Safe blocked-outbox disposition | Remote report lists 83 retained RPC-rejected entries. Design explicit owner visibility and replay-safe disposition; do not delete rows or infer non-commit from the last rejection |
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |

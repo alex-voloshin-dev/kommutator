@@ -1,7 +1,7 @@
 ---
 type: release
 feature: feedback-operation-recovery
-status: prepared
+status: published
 review_decision: proceed
 version: 0.15.1
 changelog:
@@ -44,8 +44,19 @@ review-change-3.md. Exact-version ordered build/typecheck and 724 tests passed. 
 on its first invocation: 724 workspace tests, 142 script tests, dependency audit,
 export integrity, clean-PATH probes and synthetic exported lifecycle/messaging E2E.
 Source/history scans were clean. Two export scanner findings were checksum manifests;
-all 191 payload hashes per vendor were independently verified. Public installation
-and production rollout remain pending, not implied by these checks.
+all 191 payload hashes per vendor were independently verified. All six branch/PR/tag CI checks passed. Anonymous public downloads matched the pinned
+hashes before catalog merge (PR30, aec9b181). Actual clean-profile Claude 2.1.325 and
+Codex 0.167.2 installations launched MCP 0.15.1 and passed private setup/origin checks.
+These installed-runtime probes are not real model conversations.
+
+The normal pinned updater deployed local hub/daemon 0.15.1 without manual recovery.
+Hub started 2026-11-14 16:00:12 UTC; daemon started 16:00:18 UTC. Current databases and
+both backups passed quick_check with mode0600, schemas5/7 unchanged. Checkpoint idle,
+timer active. Local Claude/Codex plugin installations and actually reloaded chat MCP
+are 0.15.1; caller active with both feedback subscriptions and empty outbox. Five
+Kommutator hooks report trusted without any approval-config writes; listing alone is
+not proof of live hook execution. Planned maintenance was announced before switching;
+release announcement is 2066498d-0fd8-4ac3-bd9d-f44b7efc85a4.
 
 ## Not validated and remaining work
 

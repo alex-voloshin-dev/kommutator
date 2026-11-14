@@ -1,0 +1,46 @@
+{
+  "version": "0.15.1",
+  "release_commit": "d490441af433f48f460a0176442b13166216c188",
+  "merge_commit": "aec9b1810c3d54a92e9f37c844b8fc51974c080e",
+  "ci_runs": [
+    43612763847,
+    43612763825,
+    43612755370,
+    43612755363,
+    43612751164,
+    43612751095
+  ],
+  "ci": "all success",
+  "public_hashes": {
+    "zip": "8408366db4d7f29b89be90f61dc00919febc716314fbd3a16d07fbd5ac2a10c6",
+    "tar": "c5d0fa5f6a0a305a71de03a3924b9e712c36ce4cf0ecb823d94a701eba2cd5d9"
+  },
+  "native_installers": {
+    "claude": "2.1.325",
+    "codex": "0.167.2"
+  },
+  "installed_mcp": "0.15.1",
+  "loaded_chat_mcp": "0.15.1",
+  "hub_started_utc": "2026-11-14T16:00:12.805685515Z",
+  "daemon_started_utc": "2026-11-14T16:00:18Z",
+  "daemon_version": "0.15.1",
+  "hub_version": "0.15.1",
+  "runtime_contract": 4,
+  "hub_schema": 7,
+  "daemon_schema": 5,
+  "health": "healthy",
+  "hub_connected": true,
+  "caller": "active",
+  "outbox_depth": 0,
+  "database_quick_check": "both current databases and both backups ok;0600",
+  "updater": "normal completion;idle/applied0.15.1/timeractive",
+  "planned_notice": "d473f642-9c97-4e7c-84f8-3245114b1845",
+  "maintenance_start_notice": "0556afd4-1921-4133-9b6c-3a04baea5d0a",
+  "announcement": "2066498d-0fd8-4ac3-bd9d-f44b7efc85a4",
+  "limits": [
+    "no retrospective transfer",
+    "network outages unresolved",
+    "blocked outbox unchanged",
+    "real model compaction/daylong/subnet/reboot/Work native wake unqualified"
+  ]
+}

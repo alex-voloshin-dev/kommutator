@@ -1319,3 +1319,22 @@ build/typecheck and 724 workspace tests passed (39/196/202/287). Initial failed 
 and a concurrent-build invalid typecheck are retained in the final review. Source and
 history secret scans reported no leaks. Packaging and production rollout are not yet
 claimed. Historical transport failures and blocked-outbox disposal remain unresolved.
+
+
+## 2026-11-14 — Kommutator 0.15.1 published and locally deployed
+
+Release d490441af433f48f460a0176442b13166216c188, PR30 merge aec9b181. Exactversion
+build/typecheck/724 tests and first full release gate passed, including142 script tests,
+audit, export integrity, clean-PATH and synthetic lifecycle/messaging E2E. Six branch/PR/tag
+CI checks passed; anonymous archives matched hashes before catalog merge. Real native
+clean-profile Claude2.1.325/Codex0.167.2 installations launched MCP0.15.1, Node26.13.0,
+private setup/origin checks passed. Not real model conversation acceptance.
+
+Pinned updater completed normally. Hub started16:00:12 UTC, daemon16:00:18 UTC; both
+0.15.1. Actual reloaded chatMCP0.15.1, compatiblecontract4, activecaller, feedback
+subscriptions retained, outbox0, healthyconnected. Both backups/liveDBquick_checkok
+with0600permissions, schemas5/7unchanged. Checkpointidle, timeractive. FiveKommutator
+hooks listedtrusted; no trust configuration writes, not proof of execution.
+Maintenance notices preceded restart and release announcement2066498d-0fd8-4ac3-bd9d-f44b7efc85a4
+was confirmed by hub. Historical outages, existing inaccessible observations and
+blocked-outbox disposition remain separate limitations. See versioned rollout JSON.
