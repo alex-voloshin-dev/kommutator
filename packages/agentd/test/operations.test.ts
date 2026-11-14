@@ -20,11 +20,13 @@ async function fixture(path = ":memory:", sharedHub?: ReturnType<typeof createCo
   let lose: string | undefined;
   let after: ((method: string) => Promise<void>) | undefined;
   let malformed = false;
+  let rejection: RpcError | undefined;
   let legacyReceipts = false;
   const calls: Array<{ method: string; params: unknown }> = [];
   const transport: HubTransport & { connected: boolean } = { connected: true, start() {}, async close() { hubPeer.disconnect(); }, async request(method, params) {
     calls.push({ method, params });
     if (!transport.connected) throw new OfflineError();
+    if (rejection && method === "message.send") throw rejection;
     let result: unknown;
     try { result = hubPeer.request(method, params); } catch (error) {
       if (error instanceof RemoteRpcError) throw new RpcError(error.code, error.message); throw error;
@@ -52,7 +54,7 @@ async function fixture(path = ":memory:", sharedHub?: ReturnType<typeof createCo
     operation_id, method: "message.send", params: { message: { to: [to], body: "private-body", origin: "agent", force_wake: false } },
   });
   const status = async (peer: IpcPeer, operation_id: string) => OperationStatus.parse(await core.request(peer, "operation.status", { operation_id }));
-  return { core, hub, transport, calls, shim, submit, status, close, setTime: (time: number) => { now = time; },
+  return { core, hub, transport, calls, shim, submit, status, close, reject: (error: RpcError) => { rejection = error; }, setTime: (time: number) => { now = time; },
     lose: (method: string) => { lose = method; }, after: (callback: typeof after) => { after = callback; }, malformed: () => { malformed = true; },
     legacyReceipts: () => { legacyReceipts = true; }, setAlive: (value: boolean) => { alive = value; }, setBirth: (value: string | undefined) => { birth = value; } };
 }
@@ -192,7 +194,7 @@ it("never confirms or dequeues a malformed successful hub result", async () => {
 
 it("retains safe blocked evidence for hub errors and replay horizon without raw error text", async () => {
   const f = await fixture(); const peer = await f.shim(); const id = randomUUID();
-  await expect(f.submit(peer, id, "missing@host")).rejects.toBeInstanceOf(RpcError);
+  expect(await f.submit(peer, id, "missing@host")).toMatchObject({ outcome: "blocked", error: { category: "hub-rpc", code: -32004, reason: "recipient-not-found" } });
   expect(await f.status(peer, id)).toMatchObject({ outcome: "blocked", error: { category: "hub-rpc" } });
   const queued = randomUUID(); f.transport.connected = false; await f.submit(peer, queued);
   f.setTime(8 * OBSERVATION_TTL); f.transport.connected = true; await f.core.flush();
@@ -450,4 +452,60 @@ it("does not transfer observations when a refresh first introduces an endpoint",
   const f = await fixture(); const old = await claude(f, 1); const id = randomUUID(); await f.submit(old.peer, id);
   const current = await claude(f, 2, "conversation-a", 321, "/fixture-new-endpoint.sock");
   expect(await f.status(current.peer, id)).toEqual({ operation_id: id, outcome: "unknown" });
+});
+
+
+it("returns the same owner-scoped membership rejection on initial submit and lookup", async () => {
+  const f = await fixture(); const peer = await f.shim(); const id = randomUUID();
+  const result = await f.submit(peer, id, "topic:not-joined");
+  expect(result).toMatchObject({ operation_id: id, outcome: "blocked", method: "message.send",
+    error: { category: "hub-rpc", code: -32001, reason: "topic-membership-required" } });
+  expect(await f.status(peer, id)).toEqual(result);
+  const retained = f.core.registry.outbox();
+  expect(retained).toHaveLength(1);
+  const other = await f.shim("other-root", 456);
+  expect(await f.status(other, id)).toEqual({ operation_id: id, outcome: "unknown" });
+  expect(f.core.registry.outbox()).toEqual(retained);
+});
+
+
+it.each([
+  [-32004, "unknown recipient handle", "recipient-not-found"],
+  [-32004, "reply parent is not accessible; use the full message ID returned by inbox or read (prefixes are not supported)", "reply-parent-unavailable"],
+  [-32602, "@project requires a registered project; inspect whoami and correct the session project registration", "project-registration-required"],
+] as const)("projects only the fixed reason for RPC %s %s", async (code, message, reason) => {
+  const f = await fixture(); const peer = await f.shim(); const id = randomUUID();
+  f.reject(new RpcError(code, message));
+  expect(await f.submit(peer, id)).toMatchObject({ outcome: "blocked", error: { category: "hub-rpc", code, reason } });
+  const stored = f.core.registry.db.prepare("SELECT error FROM mutation_observations WHERE operation_id=?").get(id);
+  expect(stored).toEqual({ error: JSON.stringify({ category: "hub-rpc", code }) });
+  expect(await f.status(peer, id)).toMatchObject({ outcome: "blocked", error: { reason } });
+});
+
+it.each([
+  [-32004, "topic membership required"],
+  [-32001, "topic membership required private-server-detail"],
+  [-32001, "private-server-detail"],
+] as const)("keeps unknown or mismatched RPC %s text out of observations", async (code, message) => {
+  const f = await fixture(); const peer = await f.shim(); const id = randomUUID();
+  f.reject(new RpcError(code, message));
+  const result = await f.submit(peer, id);
+  expect(result).toMatchObject({ outcome: "blocked", error: { category: "hub-rpc", code } });
+  expect(result).not.toHaveProperty("error.reason");
+  expect(JSON.stringify(result)).not.toContain(message);
+  expect(await f.status(peer, id)).toEqual(result);
+});
+
+
+it("retains the original queued command when a later rejection follows a lost commit response", async () => {
+  const f = await fixture(); const peer = await f.shim(); const id = randomUUID();
+  f.lose("message.send"); await f.submit(peer, id);
+  const original = f.core.registry.outbox()[0];
+  if (!original) throw new Error("missing queued command");
+  f.reject(new RpcError(-32001, "topic membership required")); f.transport.connected = true;
+  await f.core.flush();
+  expect(await f.status(peer, id)).toMatchObject({ outcome: "blocked", error: { reason: "topic-membership-required" } });
+  expect(f.core.registry.outbox()[0]).toMatchObject({ id: original.id, params: original.params });
+  const sends = f.calls.filter(call => call.method === "message.send");
+  expect(sends).toHaveLength(2); expect(sends[1]?.params).toEqual(sends[0]?.params);
 });

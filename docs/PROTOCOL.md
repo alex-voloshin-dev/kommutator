@@ -140,7 +140,7 @@ Local IPC helpers are not forwarded verbatim to the hub:
 | Method | Local behavior |
 |---|---|
 | `operation.submit` | Strict `{ operation_id: UUID, method: "message.send" | "receipt.mark", params }`; shim-generated correlation, daemon-owned authorship/replay keys. Atomic observation/outbox admission. Success adds `operation_id`; compact send confirmation may omit deliveries explicitly. Never resubmit the same invocation |
-| `operation.status` | Strict `{ operation_id: UUID }`; pinned shim owner only, no hub request or flush. Returns `unknown`, `queued`, `confirmed` with bounded typed result, or `blocked` with safe category/code. Unknown and foreign IDs are indistinguishable |
+| `operation.status` | Strict `{ operation_id: UUID }`; pinned shim owner only, no hub request or flush. Returns `unknown`, `queued`, `confirmed` with bounded typed result, or `blocked` with safe category/code and optional allowlisted reason. Unknown and foreign IDs are indistinguishable |
 | `whoami` | Returns `{ session, topics }` after registration; missing/ambiguous binding is an error |
 | `hook.poll` | `{ event, stop_hook_active? }` → `{ headers, cursor, more, block, session }`; Stop uses current wake policy and its one-shot latch |
 | `hook.ack` | `{ ids }` → queued read receipts for headers already flushed to stdout |
@@ -310,7 +310,14 @@ outbox work; disconnect does not cancel or replay an admitted operation.
 Confirmed send evidence means hub storage/routing, not recipient read. Ack counts belong
 to the last confirmed hub attempt, not necessarily the original attempt; old-hub absent
 counts remain unknown. Queued requires the exact outbox row; response loss can still mean
-hub commit. Blocked never proves non-commit. A missing/expired observation is unknown and
+hub commit. A tracked submit returns its durable blocked observation instead of an unknown
+transport error when that observation is available for the unchanged owner. Blocked errors
+may include one exact allowlisted `reason`: `topic-membership-required`,
+`recipient-not-found`, `reply-parent-unavailable` or `project-registration-required`.
+Reasons are projected from the linked outbox rejection, not stored as new observation
+fields; unrecognized text retains category/code only. MCP supplies fixed guidance and
+marks a blocked initial mutation as a tool error; lookup remains a successful diagnostic.
+Blocked never proves non-commit. A missing/expired observation is unknown and
 authorizes no resend. Retention is 24 hours / 256 confirmed per owner / 4096 total, preserving
 unresolved outbox work. Results are at most 65536 UTF-8 bytes; oversized sends use
 `{ id, replayed, deliveries_omitted: true }`. See DESIGN §19 for crash and rollback limits.

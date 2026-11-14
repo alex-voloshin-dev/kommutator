@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { OperationStatusParams } from "@kommutator/protocol";
+import { OperationBlocked, OperationStatusParams } from "@kommutator/protocol";
 import { RELEASE_VERSION } from "@kommutator/protocol";
 import { requirePluginDaemon, requirePluginDaemonForLookup, RuntimeCompatibilityError } from "./plugin-daemon.js";
 import { pluginConflicts } from "./plugin-conflicts.js";
@@ -62,6 +62,15 @@ export function createMcpServer(client: ClientSource, diagnosticsClient?: Client
         const caller = typeof source === "function" ? await source(extra._meta, method) : source;
         lifecycle?.assertOpen();
         const result = await caller.call(operationId ? "operation.submit" : method, operationId ? { operation_id: operationId, method, params: map(args) } : map(args));
+        if (operationId || method === "operation.status") {
+          const blocked = OperationBlocked.safeParse(result);
+          if (result !== null && typeof result === "object" && "outcome" in result && result.outcome === "blocked" &&
+            (!blocked.success || blocked.data.operation_id !== (operationId ?? args["operation_id"]))) throw new Error("Invalid blocked operation observation");
+          if (blocked.success) return { ...(operationId ? { isError: true } : {}), content: [{ type: "text" as const, text: JSON.stringify({
+            ...blocked.data,
+            guidance: "The latest recorded attempt was rejected; inspect the error reason and operation_status. Blocked does not prove earlier attempts did not commit. Do not blindly resend or delete queued work.",
+          }) }] };
+        }
         return { content: [{ type: "text" as const, text: JSON.stringify(operationId ? { ...z.record(z.string(), z.unknown()).parse(project(result, args)), operation_id: operationId } : project(result, args)) }] };
       } catch (error) {
         if (operationId || method === "operation.status") {

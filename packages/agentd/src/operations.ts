@@ -21,6 +21,15 @@ const Row = z.object({ operation_id: z.string(), owner: z.string(), session_id: 
   method: z.enum(["message.send", "receipt.mark"]), outbox_id: z.number(), created_at: z.number(), observed_at: z.number(),
   outcome: z.enum(["queued", "blocked", "confirmed"]), result: z.string().nullable(), error: z.string().nullable() });
 
+// Exact code/message pairs project fixed reasons without reflecting remote text.
+function rejectionReason(code: number | undefined, error: string | null): z.infer<typeof OperationError>["reason"] {
+  if (code === -32001 && error === "RPC -32001: topic membership required") return "topic-membership-required";
+  if (code === -32004 && error === "RPC -32004: unknown recipient handle") return "recipient-not-found";
+  if (code === -32004 && error === "RPC -32004: reply parent is not accessible; use the full message ID returned by inbox or read (prefixes are not supported)") return "reply-parent-unavailable";
+  if (code === -32602 && error === "RPC -32602: @project requires a registered project; inspect whoami and correct the session project registration") return "project-registration-required";
+  return undefined;
+}
+
 /** Diagnostic evidence only; the outbox remains the sole replay authority. */
 export class Operations {
   constructor(private readonly registry: Registry) {}
@@ -91,12 +100,17 @@ export class Operations {
     const row = Row.parse(raw);
     if (row.owner !== operationOwner(record).facts || row.session_id !== (record.session.id ?? null)) return unknown;
     if (row.outcome === "confirmed" && now - row.observed_at >= OBSERVATION_TTL) return unknown;
+    let error = row.error ? OperationError.parse(JSON.parse(row.error)) : undefined;
     if (row.outcome !== "confirmed") {
       const queued = this.registry.outboxEntry(row.outbox_id);
       if (!queued || queued.local_key !== record.key || queued.method !== row.method) return unknown;
+      if (row.outcome === "blocked" && error?.category === "hub-rpc") {
+        const reason = rejectionReason(error.code, queued.error);
+        if (reason) error = { ...error, reason };
+      }
     }
     return OperationStatus.parse({ operation_id: id, method: row.method, created_at: row.created_at,
       observed_at: row.observed_at, outcome: row.outcome,
-      ...(row.result ? { result: JSON.parse(row.result) } : {}), ...(row.error ? { error: JSON.parse(row.error) } : {}) });
+      ...(row.result ? { result: JSON.parse(row.result) } : {}), ...(error ? { error } : {}) });
   }
 }
