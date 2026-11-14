@@ -1,0 +1,1905 @@
+{
+  "version": "0.15.2",
+  "traced": true,
+  "rows": [
+    {
+      "n": 0,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 138.923251,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 38.727505
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            37813400,
+            84800,
+            7
+          ],
+          "since_spawn_ms": 40.056318
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 42.504044
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 102.951275
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 103.108477
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 104.128887
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 109.074039
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 132.829987
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            120308000,
+            248500,
+            41
+          ],
+          "since_spawn_ms": 133.040889
+        }
+      ]
+    },
+    {
+      "n": 0,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 194.594119,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 46.22028
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            45983700,
+            213300,
+            5
+          ],
+          "since_spawn_ms": 47.662595
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 52.278743
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 119.249038
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 119.361939
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 120.076446
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 125.480702
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 188.710258
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            131851200,
+            487400,
+            36
+          ],
+          "since_spawn_ms": 189.012762
+        }
+      ]
+    },
+    {
+      "n": 1,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 143.351987,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 42.842145
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            38947400,
+            863100,
+            9
+          ],
+          "since_spawn_ms": 44.095458
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 46.650384
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 108.109922
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 108.223323
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 108.838129
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 113.268475
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 138.294835
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            126361500,
+            1034200,
+            45
+          ],
+          "since_spawn_ms": 138.537438
+        }
+      ]
+    },
+    {
+      "n": 1,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 194.186114,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 44.911866
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            42330500,
+            565400,
+            6
+          ],
+          "since_spawn_ms": 46.226979
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 48.894207
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 123.294679
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 123.457681
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 124.438391
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 130.771156
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 186.717937
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            136344200,
+            1132400,
+            45
+          ],
+          "since_spawn_ms": 187.076541
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 151.556573,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 43.278949
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            41409700,
+            71800,
+            8
+          ],
+          "since_spawn_ms": 44.748064
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 47.561494
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 109.605737
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 109.727239
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 110.340745
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 116.001004
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 146.169417
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            132082800,
+            106600,
+            34
+          ],
+          "since_spawn_ms": 146.541221
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 185.584625,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 38.884503
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            38746600,
+            132700,
+            7
+          ],
+          "since_spawn_ms": 40.271318
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 42.976446
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 108.151922
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 108.262423
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 108.94593
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 113.929482
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 180.046168
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            122300900,
+            222000,
+            31
+          ],
+          "since_spawn_ms": 180.316771
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 139.675447,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 36.408077
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            36061200,
+            85500,
+            7
+          ],
+          "since_spawn_ms": 37.719491
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 40.347818
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 106.510105
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 106.629106
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 107.256413
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 113.666479
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 134.706696
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            126320400,
+            455300,
+            41
+          ],
+          "since_spawn_ms": 134.971499
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 193.09159,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 46.327177
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            43629500,
+            1502000,
+            13
+          ],
+          "since_spawn_ms": 47.788892
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 50.50332
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 111.938054
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 112.053955
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 112.704262
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 116.975206
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 188.069139
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            122278900,
+            1541800,
+            40
+          ],
+          "since_spawn_ms": 188.297841
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 138.870031,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 41.159024
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            38626100,
+            85500,
+            7
+          ],
+          "since_spawn_ms": 42.617739
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 45.283566
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 103.702869
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 103.83467
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 104.404176
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 108.380517
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 134.305084
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            124128900,
+            162200,
+            39
+          ],
+          "since_spawn_ms": 134.520886
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 185.487813,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 37.890991
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            36111600,
+            85600,
+            5
+          ],
+          "since_spawn_ms": 39.198205
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 41.66063
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 102.067753
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 102.190254
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 102.893561
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 107.63041
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 179.42055
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            112292200,
+            138800,
+            33
+          ],
+          "since_spawn_ms": 179.666453
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 123.602975,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 34.632557
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            34413600,
+            195800,
+            6
+          ],
+          "since_spawn_ms": 35.981171
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 38.322096
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 92.204151
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 92.387453
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 93.276862
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 97.401805
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 118.759425
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            110719000,
+            216800,
+            35
+          ],
+          "since_spawn_ms": 118.986527
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 184.665304,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 36.800279
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            34285400,
+            9900,
+            6
+          ],
+          "since_spawn_ms": 38.105993
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 40.520118
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 100.702238
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 100.820439
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 101.508947
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 105.899992
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 178.806943
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            109585500,
+            9900,
+            31
+          ],
+          "since_spawn_ms": 179.014946
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 134.213083,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 33.552446
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            32076100,
+            135900,
+            9
+          ],
+          "since_spawn_ms": 34.769858
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 37.253984
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 100.500036
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 100.611737
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 101.410246
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 105.69749
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 129.411434
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            118930200,
+            146000,
+            37
+          ],
+          "since_spawn_ms": 129.704737
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 197.883028,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 48.926301
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            49106800,
+            645400,
+            8
+          ],
+          "since_spawn_ms": 51.470628
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 54.463058
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 112.17185
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 112.422452
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 113.278661
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 117.525404
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 193.044078
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            124257800,
+            1119300,
+            40
+          ],
+          "since_spawn_ms": 193.25988
+        }
+      ]
+    },
+    {
+      "n": 7,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 137.733912,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 37.592085
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            36897600,
+            88500,
+            5
+          ],
+          "since_spawn_ms": 39.729807
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 43.336144
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 101.384539
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 101.49774
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 102.285248
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 106.821795
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 132.312156
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            120738700,
+            269700,
+            40
+          ],
+          "since_spawn_ms": 132.510558
+        }
+      ]
+    },
+    {
+      "n": 7,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 185.001196,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 36.399673
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            35469700,
+            477900,
+            7
+          ],
+          "since_spawn_ms": 37.763987
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 40.472215
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 100.141626
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 100.259728
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 100.870534
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 105.159978
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 178.833233
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            110742300,
+            488700,
+            34
+          ],
+          "since_spawn_ms": 179.086635
+        }
+      ]
+    },
+    {
+      "n": 8,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 133.74827,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 37.450583
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            35726500,
+            124900,
+            9
+          ],
+          "since_spawn_ms": 38.713496
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 41.141921
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 101.318638
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 101.443639
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 102.086446
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 106.964296
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 128.800519
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            119893300,
+            198900,
+            37
+          ],
+          "since_spawn_ms": 129.081222
+        }
+      ]
+    },
+    {
+      "n": 8,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 183.759883,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 37.820588
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            36336000,
+            107600,
+            7
+          ],
+          "since_spawn_ms": 39.0616
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 41.605327
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 98.048605
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 98.199206
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 98.765512
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 103.010656
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 178.893533
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            108211900,
+            137800,
+            35
+          ],
+          "since_spawn_ms": 179.157136
+        }
+      ]
+    },
+    {
+      "n": 9,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 144.349006,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 49.393543
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            47221600,
+            184700,
+            7
+          ],
+          "since_spawn_ms": 51.376259
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 54.180082
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 111.761945
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 111.879646
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 112.544051
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 116.582283
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 139.152065
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            129299300,
+            184700,
+            35
+          ],
+          "since_spawn_ms": 139.383567
+        }
+      ]
+    },
+    {
+      "n": 9,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 198.16858,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 48.677888
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            48317100,
+            78300,
+            6
+          ],
+          "since_spawn_ms": 51.153007
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 54.089731
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 118.621645
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 118.735646
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 119.307851
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 123.533985
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 191.832429
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            129089600,
+            520900,
+            37
+          ],
+          "since_spawn_ms": 192.074931
+        }
+      ]
+    },
+    {
+      "n": 10,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 139.632413,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 46.300969
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            45924900,
+            212200,
+            8
+          ],
+          "since_spawn_ms": 47.872582
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 50.465202
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 106.241847
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 106.357148
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 106.906652
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 111.051085
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 134.615473
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            127084500,
+            240800,
+            36
+          ],
+          "since_spawn_ms": 134.868475
+        }
+      ]
+    },
+    {
+      "n": 10,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 193.679045,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 46.643772
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            46504000,
+            600300,
+            9
+          ],
+          "since_spawn_ms": 47.966983
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 50.396402
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 110.209379
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 110.32078
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 111.020486
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 115.583322
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 188.936807
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            121741200,
+            611100,
+            32
+          ],
+          "since_spawn_ms": 189.172309
+        }
+      ]
+    },
+    {
+      "n": 11,
+      "stalled": false,
+      "code": 0,
+      "elapsedMs": 129.654734,
+      "methods": [
+        "ipc.hello",
+        "hook.poll",
+        "hook.ack"
+      ],
+      "stdoutBytes": 198,
+      "stderrBytes": 0,
+      "visible": true,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 37.918302
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            37690700,
+            317100,
+            8
+          ],
+          "since_spawn_ms": 39.288113
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 41.732433
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 97.560178
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 97.681779
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 98.235283
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 102.422717
+        },
+        {
+          "phase": "delivery.run.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 124.14819
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            115961200,
+            340000,
+            39
+          ],
+          "since_spawn_ms": 124.383592
+        }
+      ]
+    },
+    {
+      "n": 11,
+      "stalled": true,
+      "code": 0,
+      "elapsedMs": 190.092716,
+      "methods": [
+        "ipc.hello"
+      ],
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "visible": false,
+      "phases": [
+        {
+          "phase": "preload",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 43.464547
+        },
+        {
+          "phase": "entry",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            42570000,
+            1055000,
+            12
+          ],
+          "since_spawn_ms": 45.033159
+        },
+        {
+          "phase": "delivery.import.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 48.116584
+        },
+        {
+          "phase": "delivery.import.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 109.648674
+        },
+        {
+          "phase": "delivery.run.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 109.799676
+        },
+        {
+          "phase": "stdin.started",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 110.507381
+        },
+        {
+          "phase": "stdin.finished",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 115.672022
+        },
+        {
+          "phase": "deadline.fired",
+          "role": "hook",
+          "owner": "other",
+          "since_spawn_ms": 184.772374
+        },
+        {
+          "phase": "exit",
+          "role": "hook",
+          "owner": "other",
+          "scheduler": [
+            124504100,
+            2741700,
+            50
+          ],
+          "since_spawn_ms": 184.985575
+        }
+      ]
+    }
+  ],
+  "original_gate_failure_ms": 450.48,
+  "original_failure_cause": "unestablished",
+  "instrumented_controls_are_not_original_failure_trace": true
+}

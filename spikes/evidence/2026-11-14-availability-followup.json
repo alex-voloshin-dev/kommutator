@@ -55,5 +55,24 @@
   "current_hook_evidence": {
     "startup": "failed SessionStart/UserPromptSubmit around 19:09 UTC",
     "later": "multiple successful PostToolUse observations from 19:10 UTC"
+  },
+  "current_readonly_backlog_snapshot": {
+    "at": "2026-11-14T19:23:15.897717+00:00",
+    "scope": "unread deliveries for non-gone sessions; body UTF-8 bytes only, not full encoded frames",
+    "hosts": [
+      {
+        "host": "f4ai-think",
+        "deliveries": 49,
+        "body_bytes": 38027,
+        "max_body_bytes": 3922
+      },
+      {
+        "host": "wsl-workstation",
+        "deliveries": 4,
+        "body_bytes": 2908,
+        "max_body_bytes": 988
+      }
+    ],
+    "limitation": "Current small backlog does not establish historical backlog size or attribute issue22 to issue31."
   }
 }
