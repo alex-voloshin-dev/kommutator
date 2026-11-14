@@ -10,6 +10,7 @@ import { createHubServer } from "@kommutator/hub";
 import { openDatabase } from "@kommutator/hub/db";
 import { PROTOCOL_VERSION, Results } from "@kommutator/protocol";
 import { startDaemon } from "../src/daemon.js";
+import { ownedStartup } from "./fixtures/owned-startup.js";
 import { AlreadyRunningError } from "../src/ipc.js";
 import { pathsFor } from "../src/paths.js";
 import { HubLink } from "../src/hub-link.js";
@@ -68,8 +69,7 @@ async function closeSocket(socket: Socket) {
 describe("production IPC and hub link", () => {
   it("uses one daemon for two clients, persists after one exits, and contains malformed frames", async () => {
     const { home, config } = await environment();
-    const daemon = await startDaemon({ home, config, isAlive: async () => true, processStart: async () => "birth" });
-    cleanup.push(daemon.close);
+    const daemon = await ownedStartup(() => startDaemon({ home, config, isAlive: async () => true, processStart: async () => "birth" }), cleanup);
     await until(() => daemon.core.transport.connected);
     const first = await ipc(daemon.paths.ipc);
     const second = await ipc(daemon.paths.ipc);
@@ -88,12 +88,11 @@ describe("production IPC and hub link", () => {
   });
   it("concurrent fresh starters yield exactly one listening instance", async () => {
     const { home, config } = await environment();
-    const starters = await Promise.allSettled([startDaemon({ home, config }), startDaemon({ home, config })]);
+    const starters = await Promise.allSettled([ownedStartup(() => startDaemon({ home, config }), cleanup), ownedStartup(() => startDaemon({ home, config }), cleanup)]);
     const winners = starters.filter((result) => result.status === "fulfilled");
     expect(winners).toHaveLength(1);
     for (const result of starters) {
-      if (result.status === "fulfilled") cleanup.push(result.value.close);
-      else expect(result.reason).toBeInstanceOf(AlreadyRunningError);
+      if (result.status === "rejected") expect(result.reason).toBeInstanceOf(AlreadyRunningError);
     }
     const winner = winners[0];
     if (winner?.status !== "fulfilled") throw new Error("no winning daemon");
@@ -108,10 +107,10 @@ describe("production IPC and hub link", () => {
     await once(child.stdout, "data");
     child.kill("SIGKILL");
     await once(child, "exit");
-    const starters = await Promise.allSettled([startDaemon({ home, config }), startDaemon({ home, config })]);
+    const starters = await Promise.allSettled([ownedStartup(() => startDaemon({ home, config }), cleanup), ownedStartup(() => startDaemon({ home, config }), cleanup)]);
     const winners = starters.filter((result) => result.status === "fulfilled");
     expect(winners).toHaveLength(1);
-    for (const result of starters) { if (result.status === "fulfilled") cleanup.push(result.value.close); else expect(result.reason).toBeInstanceOf(AlreadyRunningError); }
+    for (const result of starters) { if (result.status === "rejected") expect(result.reason).toBeInstanceOf(AlreadyRunningError); }
     const winner = winners[0];
     if (winner?.status !== "fulfilled") throw new Error("no winning daemon");
     const client = await ipc(endpoint);

@@ -105,3 +105,40 @@ it("rejects an in-flight request on explicit shutdown without replay or false co
   await new Promise(resolve => setTimeout(resolve, 120));
   expect(connections).toBe(1); expect(methods).toEqual(["hello", "message.send"]); expect(errors).toEqual([]);
 });
+
+it("still reports an active WebSocket handshake failure", async () => {
+  const server = createServer((_request, response) => { response.writeHead(403); response.end(); });
+  server.listen(0, "127.0.0.1"); await once(server, "listening");
+  cleanups.push(async () => { await new Promise<void>(resolve => server.close(() => resolve())); });
+  const address = server.address(); if (!address || typeof address === "string") throw new Error("missing address");
+  const errors: string[] = []; let reported!: () => void;
+  const report = new Promise<void>(resolve => { reported = resolve; });
+  const link = new HubLink(config(address.port), message => { errors.push(message); reported(); });
+  cleanups.push(() => link.close());
+  let callbacks = 0;
+  link.start(async () => { callbacks++; }, () => { callbacks++; });
+  await report;
+  expect(errors).toEqual(["hub WebSocket connection failed"]);
+  await link.close(); await tick();
+  expect(callbacks).toBe(0);
+  expect(errors).toEqual(["hub WebSocket connection failed"]);
+});
+
+it("still reports an active onConnect rejection without exposing its error text", async () => {
+  const wss = new WebSocketServer({ host: "127.0.0.1", port: 0 }); await once(wss, "listening");
+  cleanups.push(async () => { for (const socket of wss.clients) socket.terminate(); await new Promise<void>(resolve => wss.close(() => resolve())); });
+  const address = wss.address(); if (!address || typeof address === "string") throw new Error("missing address");
+  wss.on("connection", socket => socket.on("message", frame => {
+    const request = JSON.parse(frame.toString()) as { id: number };
+    socket.send(JSON.stringify({ jsonrpc: "2.0", id: request.id, result: { host: "shutdown-fixture", protocol_version: PROTOCOL_VERSION } }));
+  }));
+  const errors: string[] = []; let reported!: () => void;
+  const report = new Promise<void>(resolve => { reported = resolve; });
+  const link = new HubLink(config(address.port), message => { errors.push(message); reported(); });
+  cleanups.push(() => link.close());
+  link.start(async () => { throw new Error("synthetic sensitive synchronization detail"); }, () => {});
+  await report;
+  expect(errors).toEqual(["hub synchronization failed"]);
+  await link.close(); await tick();
+  expect(errors).toEqual(["hub synchronization failed"]);
+});
