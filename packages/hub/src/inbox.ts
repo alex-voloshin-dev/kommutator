@@ -1,4 +1,4 @@
-import { makePreview, MessageHeader, type Methods, Notifications, Results } from "@kommutator/protocol";
+import { RESYNC_PAGE_BYTES, RESYNC_PAGE_COUNT, makePreview, MessageHeader, type Methods, Notifications, Results } from "@kommutator/protocol";
 import type { z } from "zod";
 import { errors, requireHost, requireSession, RpcFault, transaction, type HubContext, type HubPeer } from "./context.js";
 import { getStoredMessage } from "./routing.js";
@@ -165,5 +165,38 @@ export function watchTopic(ctx: HubContext, peer: HubPeer,
     }));
     const more = rows.length > params.limit;
     return { headers, cursor: more ? headers.at(-1)!.seq : Math.max(highwater, params.since_seq), more, state: "watching" };
+  });
+}
+
+/** Read-only bounded scan; its cursor is never a read receipt. */
+export function resyncDeliveryPage(ctx: HubContext, peer: HubPeer,
+  params: z.output<(typeof Methods)["deliveries.resync.page"]>): z.output<(typeof Results)["deliveries.resync.page"]> {
+  return transaction(ctx, () => {
+    const session = requireSession(ctx, peer, params.session_id);
+    const through = params.through ?? Math.max(params.after,
+      (ctx.db.prepare("SELECT COALESCE(MAX(seq), 0) AS seq FROM deliveries WHERE session_id = ?")
+        .get(session.id) as { seq: number }).seq);
+    const rows = ctx.db.prepare(`SELECT message_id, seq, wake FROM deliveries
+      WHERE session_id = ? AND state = 'unread' AND seq > ? AND seq <= ? ORDER BY seq LIMIT ?`)
+      .all(session.id, params.after, through, RESYNC_PAGE_COUNT + 1) as unknown as Array<{ message_id: string; seq: number; wake: number }>;
+    const deliveries: z.output<typeof Notifications.deliver>[] = [];
+    let cursor = params.after;
+    for (const row of rows) {
+      if (deliveries.length === RESYNC_PAGE_COUNT) break;
+      const message = getStoredMessage(ctx, row.message_id);
+      if (!message) throw new RpcFault(errors.notFound, "message not found");
+      const delivery = Notifications.deliver.parse({ message, session_id: session.id, seq: row.seq,
+        wake: row.wake === 1 && session.wake === "on" });
+      // Account for the larger terminal cursor and boolean spelling before accepting a row.
+      const candidate = { session_id: session.id, through, cursor: through, more: false, deliveries: [...deliveries, delivery] };
+      if (Buffer.byteLength(JSON.stringify(candidate)) > RESYNC_PAGE_BYTES) {
+        if (deliveries.length === 0) throw new RpcFault(-32011, "delivery exceeds resync page limit");
+        break;
+      }
+      deliveries.push(delivery);
+      cursor = row.seq;
+    }
+    const more = deliveries.length < rows.length;
+    return { session_id: session.id, through, cursor: more ? cursor : through, more, deliveries };
   });
 }

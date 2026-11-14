@@ -357,3 +357,20 @@ Blocked work keeps the legacy aggregate degraded and an outstanding-work warning
 not prove current outage, non-commit or safe resend. Preserve caller recovery and existing
 compact/detailed fields. The projection adds no retries, receipts or mutations. Existing
 status-triggered background retirement reconciliation and flushing remain unchanged.
+
+## Bounded resync capability
+
+Hub hello optionally advertises `capabilities: ["resync-page-v1"]`. Supporting daemons
+use hub-only `deliveries.resync.page {session_id, after, through?}`. Safe nonnegative
+integer cursors require `after <= through`. Result: `{session_id, through, cursor,
+more, deliveries}` with at most 32 notifications and 512 KiB encoded UTF-8 result.
+First-page highwater is captured transactionally; later pages repeat it. Nonterminal
+cursor equals the last included sequence and advances; terminal cursor equals through.
+No notifications or receipts are emitted by the method. Agentd commits deduplicated
+rows under exact lifecycle/connection fences before advancing a transient cursor.
+Legacy resync remains unchanged and retains its large-backlog limitation. Advertised
+broken support is an error, not a reason for silent legacy fallback.
+
+Hub schema 8 adds unread-sequence and message-target indexes atomically from 5/6/7,
+without rewriting history; older hubs reject it. Runtime contract 4/local schema 5
+remain unchanged. Back up and fix forward; see DESIGN §19 and LOCAL_RELEASE_DEPLOY.

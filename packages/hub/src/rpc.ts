@@ -6,7 +6,7 @@ import { hello, upsertSession, heartbeatSession, goneSession, listSessions } fro
 import { joinTopic, leaveTopic, listTopics } from "./topics.js";
 import { getBoard, putBoard, boardHistory } from "./board.js";
 import { sendMessage } from "./routing.js";
-import { watchTopic, listInbox, readMessage, markReceipt, resyncDeliveries } from "./inbox.js";
+import { watchTopic, listInbox, readMessage, markReceipt, resyncDeliveries, resyncDeliveryPage } from "./inbox.js";
 import type { DatabaseSync } from "node:sqlite";
 
 const RpcEnvelope = z.object({
@@ -52,6 +52,7 @@ export function createHubRuntime(opts: HubRuntimeOptions) {
       case "inbox.list": return listInbox(ctx, peer, params(method, input));
       case "message.read": return readMessage(ctx, peer, params(method, input));
       case "receipt.mark": return markReceipt(ctx, peer, params(method, input));
+      case "deliveries.resync.page": return resyncDeliveryPage(ctx, peer, params(method, input));
       case "deliveries.resync": return resyncDeliveries(ctx, peer, params(method, input));
       case "topic.join": return joinTopic(ctx, peer, params(method, input));
       case "topic.leave": return leaveTopic(ctx, peer, params(method, input));

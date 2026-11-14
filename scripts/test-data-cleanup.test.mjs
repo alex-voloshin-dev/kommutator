@@ -81,8 +81,8 @@ test('lost-ACK retries of retired registration, message and board keys cannot re
 
 test('schema 5 upgrades additively and idempotently; unknown versions remain refused', async t => {
   const f = await fixture(t), db = new DatabaseSync(f.database);
-  db.exec('DROP TABLE retired_operations; PRAGMA user_version=5'); const before = db.prepare('SELECT * FROM messages').all(); db.close();
-  const upgraded = openDatabase(f.database); assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 7);
+  db.exec('DROP TABLE retired_operations; DROP INDEX deliveries_unread_session_seq; DROP INDEX message_targets_message_id; PRAGMA user_version=5'); const before = db.prepare('SELECT * FROM messages').all(); db.close();
+  const upgraded = openDatabase(f.database); assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version, 8);
   assert.deepEqual(upgraded.prepare('SELECT * FROM messages').all(), before); upgraded.close();
   openDatabase(f.database).close();
   const unknown = new DatabaseSync(f.database); unknown.exec('PRAGMA user_version=4'); unknown.close();
@@ -135,8 +135,8 @@ test('closed isolated host/project closure is removed while global and real subs
 
 test('dry run does not migrate an old database and apply never overwrites a backup', async t => {
   const f = await fixture(t), db = new DatabaseSync(f.database);
-  db.exec('DROP TABLE retired_operations; PRAGMA user_version=5'); db.close();
-  await assert.rejects(cleanupTestData(f), /requires hub schema 6 or 7/);
+  db.exec('DROP TABLE retired_operations; DROP INDEX deliveries_unread_session_seq; DROP INDEX message_targets_message_id; PRAGMA user_version=5'); db.close();
+  await assert.rejects(cleanupTestData(f), /requires hub schema 6, 7 or 8/);
   assert.equal(query(f.database, 'PRAGMA user_version')[0].user_version, 5);
   openDatabase(f.database).close();
   const plan = await cleanupTestData(f); f.manifest.expected_sha256 = plan.fingerprint;
@@ -225,10 +225,10 @@ test('unrelated real messages, receipts and board history remain byte-for-byte u
 });
 
 
-test('cleanup inspection supports schema 6 and 7 without upgrading the database', async t => {
+test('cleanup inspection supports schema 6, 7 and 8 without upgrading the database', async t => {
   const f = await fixture(t), db = new DatabaseSync(f.database);
   t.after(() => db.close());
-  for (const version of [6, 7]) {
+  for (const version of [6, 7, 8]) {
     db.exec(`PRAGMA user_version=${version}`);
     assert.equal(inspectCleanup(db, f.manifest).replayed, false);
     assert.equal(db.prepare('PRAGMA user_version').get().user_version, version);

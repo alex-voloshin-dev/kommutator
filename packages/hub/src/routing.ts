@@ -1,5 +1,6 @@
 import {
   AddressError,
+  LIMITS,
   formatAddress,
   parseAddress,
   Results,
@@ -53,8 +54,9 @@ export function shouldWake(
 }
 
 function targetsFor(ctx: HubContext, id: string): string[] {
-  const rows = ctx.db.prepare("SELECT target_type, target_id FROM message_targets WHERE message_id = ?")
-    .all(id) as unknown as TargetRow[];
+  const rows = ctx.db.prepare("SELECT target_type, target_id FROM message_targets WHERE message_id = ? LIMIT ?")
+    .all(id, LIMITS.recipients + 1) as unknown as TargetRow[];
+  if (rows.length > LIMITS.recipients) throw new RpcFault(-32603, "invalid stored message targets");
   return rows.map((target) => {
     switch (target.target_type) {
       case "project": return "@project";

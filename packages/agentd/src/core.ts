@@ -1,4 +1,4 @@
-import { RUNTIME_CONTRACT, DaemonRuntimeParams, OperationSubmit, OperationStatusParams } from "@kommutator/protocol";
+import { RESYNC_PAGE_CAPABILITY, RUNTIME_CONTRACT, DaemonRuntimeParams, OperationSubmit, OperationStatusParams } from "@kommutator/protocol";
 import { Operations, operationOwner, matchesOwner, type OperationOwner } from "./operations.js";
 import { RELEASE_VERSION, DaemonStatusParams } from "@kommutator/protocol";
 import { randomUUID, createHash } from "node:crypto";
@@ -17,6 +17,7 @@ import type { HubTransport } from "./hub-link.js";
 import { Registry, processStart, processExists, type GoneReason, type LocalRecord, type Delivery, type OutboxEntry } from "./registry.js";
 import { realClock, WakeScheduler, type Clock } from "./wake.js";
 import { compareProcessBirth } from "./process.js";
+import { ResyncCoordinator } from "./resync.js";
 import { Projects } from "./project.js";
 
 export type Hello = z.infer<(typeof Methods)["ipc.hello"]>;
@@ -58,6 +59,8 @@ export class DaemonCore {
   private readonly operationWaiters = new Map<number, { peer: IpcPeer; settle(): void; cancel(error: Error): void }>();
   private readonly deliveryRuns = new Map<string, Promise<void>>();
   private closed = false;
+  private readonly resync: ResyncCoordinator;
+  private legacyResyncEpoch: number | undefined;
   private registrationTail: Promise<void> = Promise.resolve();
   private readonly acceptedRegistrations = new Set<AcceptedRegistration>();
   private readonly registrationWaiters = new Map<IpcPeer, Set<() => void>>();
@@ -71,6 +74,8 @@ export class DaemonCore {
     this.config = options.config;
     this.clock = options.clock ?? realClock;
     this.adapters = new Map((options.adapters ?? [claudeAdapter, codexAdapter, genericAdapter]).map((adapter) => [adapter.vendor, adapter]));
+    this.resync = new ResyncCoordinator(this.transport, this.registry, () => !this.closed,
+      (record, deliveries) => this.ingest(record, deliveries));
     this.wake = new WakeScheduler(this.clock, async (key) => {
       try { await this.deliverPending(key); }
       catch { this.report("native delivery attempt failed; unread delivery retained"); }
@@ -99,20 +104,45 @@ export class DaemonCore {
       if (method === "deliver") {
         const delivery = Notifications.deliver.parse(params);
         const record = this.registry.byId(delivery.session_id);
-        if (!record || record.session.state === "gone") return;
-        const fresh = this.registry.receive(delivery);
-        if (fresh && delivery.wake && record.session.wake === "on") this.wake.schedule(record.key, record.lastWake);
+        if (record) this.ingest(record, [delivery]);
       } else if (method === "config") this.wake.cooldown = Notifications.config.parse(params).coalesce_ms;
     });
   }
 
   async synchronize(): Promise<void> {
+    const epoch = this.transport.epoch ?? 0;
     await this.flush();
+    if (this.closed) return;
+    if (!this.transport.connected || epoch !== (this.transport.epoch ?? 0)) throw new OfflineError();
     const live = this.registry.all().filter((record) => record.session.id && record.session.state !== "gone");
-    await this.transport.request("deliveries.resync", { acked: Object.fromEntries(live.map((record) => [record.session.id, record.acked])) });
+    await this.resyncOwners(live);
     for (const record of live) {
-      if (this.registry.pending(record.session.id ?? "").some((delivery) => delivery.wake)) this.wake.schedule(record.key, record.lastWake);
+      const current = this.resync.current(record);
+      if (current && current.session.wake === "on" && this.registry.hasPendingWake(current.session.id ?? "")) this.wake.schedule(current.key, current.lastWake);
     }
+  }
+
+  private ingest(expected: LocalRecord, deliveries: Delivery[]): void {
+    const current = this.resync.current(expected);
+    if (!current || this.closed) return;
+    const waking = this.registry.transaction(() => {
+      let waking = false;
+      for (const delivery of deliveries) {
+        const fresh = this.registry.receive(delivery);
+        waking ||= fresh && delivery.wake;
+      }
+      return waking;
+    });
+    if (waking && current.session.wake === "on") this.wake.schedule(current.key, current.lastWake);
+  }
+
+  private async resyncOwners(records: LocalRecord[]): Promise<void> {
+    const epoch = this.transport.epoch ?? 0;
+    if (!this.transport.capabilities?.includes(RESYNC_PAGE_CAPABILITY) && this.legacyResyncEpoch !== epoch) {
+      this.legacyResyncEpoch = epoch;
+      this.options.onError?.("hub does not advertise bounded delivery resync; using legacy recovery");
+    }
+    await this.resync.run(records);
   }
 
   private adapter(record: LocalRecord): Adapter { return this.adapters.get(record.session.vendor) ?? genericAdapter; }
@@ -833,7 +863,7 @@ export class DaemonCore {
             // Retirement cancels timers. Re-arm retained work only after the final
             // lifecycle ACK, including recovery after the old delivery already drained.
             if (current && current.session.state !== "gone" && current.session.wake === "on" &&
-              !this.registrationPending(current.key) && this.registry.pending(current.session.id ?? "").some(delivery => delivery.wake)) {
+              !this.registrationPending(current.key) && this.registry.hasPendingWake(current.session.id ?? "")) {
               this.wake.schedule(current.key, current.lastWake);
             }
           }
@@ -857,7 +887,7 @@ export class DaemonCore {
       if (!current?.session.id || current.session.state === "gone" ||
         this.registry.outbox().some(entry => entry.local_key === key && entry.method === "session.upsert")) continue;
       try {
-        await this.transport.request("deliveries.resync", { acked: { [current.session.id]: current.acked } });
+        await this.resyncOwners([current]);
       } catch {
         // Lifecycle ACKs are already committed; reconnect retries resync.
         this.report("delivery resync after reincarnation failed; reconnect will retry");
@@ -896,7 +926,7 @@ export class DaemonCore {
       // A wake arriving during an old lifecycle's pending delivery joins that run.
       // Once it drains, give the current lifecycle its own attempt without parallel sends.
       if (!this.closed && current && (current.lifecycleEpoch ?? 0) !== epoch && current.session.state !== "gone" &&
-        current.session.wake === "on" && this.registry.pending(current.session.id ?? "").some(delivery => delivery.wake)) {
+        current.session.wake === "on" && this.registry.hasPendingWake(current.session.id ?? "")) {
         this.wake.schedule(key, current.lastWake);
       }
     }

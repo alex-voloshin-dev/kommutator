@@ -1341,3 +1341,18 @@ Maintenance notices preceded restart. Release announcement
 2066498d-0fd8-4ac3-bd9d-f44b7efc85a4 was confirmed by the hub. Historical outages,
 existing inaccessible observations and blocked-outbox disposition remain separate
 limitations. See the versioned rollout JSON.
+
+
+## 2026-11-14 — bounded resync implementation (not released)
+
+The isolated candidate based on 0.15.2 passed ordered build/typecheck and 767 workspace
+tests, plus 14 cleanup-tool tests. The new real-socket test recovered 200 × 60,000-character
+unread messages without receipt advancement. A separate completion probe observed 3628 ms,
+one connection, all 200 locally retained, acked=0, hub unread=200 and no errors. The initial
+1.8-second observation was partial (112 retained), not a successful completion claim.
+The candidate hub with legacy resync still churned (12 connections, zero syncs, 516 events).
+The original 0.15.1 large failure and small success remain controls. A schema-7 built reader
+rejected schema8. Earlier failed gates and pending qualification are retained in the
+[implementation handoff](../docs/sdlc/bounded-resync/implementation.md) and
+[evidence](evidence/2026-11-14-bounded-resync-implementation.json).
+These controlled results do not establish historical issue22 causes or close field gates.

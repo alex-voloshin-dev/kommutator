@@ -131,7 +131,8 @@ describe("production IPC and hub link", () => {
       socket.on("message", (frame) => {
         const value = z.object({ id: z.number(), method: z.string() }).parse(JSON.parse(frame.toString()));
         calls.push(value.method);
-        socket.send(JSON.stringify({ jsonrpc: "2.0", id: value.id, result: value.method === "hello" ? { host: "mac", protocol_version: PROTOCOL_VERSION } : { ok: true } }));
+        socket.send(JSON.stringify({ jsonrpc: "2.0", id: value.id, result: value.method === "hello" ? { host: "mac", protocol_version: PROTOCOL_VERSION,
+          ...(auth.length === 1 ? { capabilities: ["resync-page-v1"] } : {}) } : { ok: true } }));
       });
     });
     const link = new HubLink({ host: "mac", key, hub: `http://127.0.0.1:${address.port}` });
@@ -139,11 +140,15 @@ describe("production IPC and hub link", () => {
     let syncs = 0;
     link.start(async () => { await link.request("deliveries.resync", { acked: {} }); syncs++; }, () => {});
     await until(() => syncs === 1);
+    expect(link.capabilities).toEqual(["resync-page-v1"]);
+    const firstEpoch = link.epoch;
     const [one, two] = await Promise.all([link.request("one", {}), link.request("two", {})]);
     expect(one).toEqual({ ok: true });
     expect(two).toEqual({ ok: true });
     for (const client of wss.clients) client.terminate();
     await until(() => syncs === 2);
+    expect(link.capabilities).toEqual([]);
+    expect(link.epoch).toBeGreaterThan(firstEpoch);
     expect(auth).toEqual([`Bearer ${key}`, `Bearer ${key}`]);
     expect(calls.slice(0, 2)).toEqual(["hello", "deliveries.resync"]);
     expect(calls.slice(-2)).toEqual(["hello", "deliveries.resync"]);

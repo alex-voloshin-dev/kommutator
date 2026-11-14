@@ -79,16 +79,16 @@ describe("hub persistence invariants", () => {
     rmSync(directory, { recursive: true, force: true });
   });
 
-  it.each([5, 6])("upgrades schema %s atomically to 7 without changing delivery or replay history", version => {
+  it.each([5, 6, 7])("upgrades schema %s atomically to 8 without changing delivery or replay history", version => {
     const sender = register("author");
     const recipient = register("peer");
     const input = { session_id: sender.id, idempotency_key: "migration-message", message: { from: "", to: [recipient.handle], body: "preserve" } };
     const sent = Results["message.send"].parse(call("message.send", input));
     const before = ["messages", "message_targets", "deliveries", "sessions", "session_registrations"].map(table => db.prepare(`SELECT * FROM ${table}`).all());
     if (version === 5) db.exec("DROP TABLE retired_operations");
-    db.exec(`PRAGMA user_version = ${version}`);
+    db.exec(`DROP INDEX deliveries_unread_session_seq; DROP INDEX message_targets_message_id; PRAGMA user_version = ${version}`);
     reopen();
-    expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: 7 });
+    expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: 8 });
     expect(["messages", "message_targets", "deliveries", "sessions", "session_registrations"].map(table => db.prepare(`SELECT * FROM ${table}`).all())).toEqual(before);
     expect(call("message.send", input)).toEqual({ ...sent, replayed: true });
     expect(db.prepare("SELECT * FROM retired_operations").all()).toEqual([]);
@@ -103,10 +103,10 @@ describe("hub persistence invariants", () => {
   });
 
   it("preserves schema-6 retirement fences through upgrade and reopen", () => {
-    db.exec("INSERT INTO retired_operations(kind, operation_key) VALUES ('message', 'retired-send'), ('registration', 'retired-registration'); PRAGMA user_version = 6");
+    db.exec("INSERT INTO retired_operations(kind, operation_key) VALUES ('message', 'retired-send'), ('registration', 'retired-registration'); DROP INDEX deliveries_unread_session_seq; DROP INDEX message_targets_message_id; PRAGMA user_version = 6");
     const before = db.prepare("SELECT * FROM retired_operations ORDER BY kind").all();
     reopen();
-    expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: 7 });
+    expect(db.prepare("PRAGMA user_version").get()).toEqual({ user_version: 8 });
     expect(db.prepare("SELECT * FROM retired_operations ORDER BY kind").all()).toEqual(before);
     reopen();
     expect(db.prepare("SELECT * FROM retired_operations ORDER BY kind").all()).toEqual(before);

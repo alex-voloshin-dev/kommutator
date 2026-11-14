@@ -52,7 +52,7 @@ function primarySelection(rows, manifest) {
 }
 export function inspectCleanup(db, input) {
   const manifest = validateManifest(input);
-  assert([6, 7].includes(db.prepare('PRAGMA user_version').get().user_version), 'cleanup requires hub schema 6 or 7');
+  assert([6, 7, 8].includes(db.prepare('PRAGMA user_version').get().user_version), 'cleanup requires hub schema 6, 7 or 8');
   assert(db.prepare('PRAGMA foreign_key_check').all().length === 0, 'database has foreign-key violations');
   const rows = readRows(db), selected = primarySelection(rows, manifest);
   if (manifest.expected_sha256 && db.prepare("SELECT 1 FROM retired_operations WHERE kind='cleanup' AND operation_key=?").get(receiptKey(manifest))) {

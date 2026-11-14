@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
  * that `CREATE TABLE IF NOT EXISTS` would silently leave without the new columns and
  * constraints (R10). Only explicitly supported additive migrations are applied.
  */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 export class IncompatibleDatabaseError extends Error {
   constructor(
@@ -20,7 +20,7 @@ export class IncompatibleDatabaseError extends Error {
     super(
       `database ${path} has schema version ${found}, this hub needs ${SCHEMA_VERSION}. ` +
         `Preserve this database and replay history. Back up using VACUUM INTO, then use a compatible hub ` +
-        `and fix forward; do not reset or downgrade history. Supported upgrades: schema 5 or 6 to 7.`,
+        `and fix forward; do not reset or downgrade history. Supported upgrades: schemas 5, 6 or 7 to 8.`,
     );
     this.name = "IncompatibleDatabaseError";
   }
@@ -37,7 +37,7 @@ export function openDatabase(path: string): DatabaseSync {
   const hasTables = (db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE type = 'table'").get() as { n: number }).n > 0;
 
   if (version === SCHEMA_VERSION) return db;
-  if (version === 5 || version === 6) {
+  if (version === 5 || version === 6 || version === 7) {
     db.exec("BEGIN IMMEDIATE");
     try {
       if (version === 5) db.exec(`CREATE TABLE retired_operations (
@@ -45,7 +45,9 @@ export function openDatabase(path: string): DatabaseSync {
         operation_key TEXT NOT NULL,
         PRIMARY KEY (kind, operation_key)
       ); PRAGMA user_version = 6;`);
-      db.exec("PRAGMA user_version = 7");
+      db.exec(`CREATE INDEX deliveries_unread_session_seq ON deliveries(session_id, seq) WHERE state = 'unread';
+        CREATE INDEX message_targets_message_id ON message_targets(message_id);
+        PRAGMA user_version = 8;`);
       db.exec("COMMIT");
       return db;
     } catch (error) {

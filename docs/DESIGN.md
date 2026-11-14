@@ -850,6 +850,32 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### Bounded delivery resynchronization (2026-11-14)
+
+The approved [bounded resync design](sdlc/bounded-resync/tech-design.md) adds a
+hub-only `deliveries.resync.page` RPC negotiated by hello capability `resync-page-v1`.
+Each authorized session scan fixes a highwater and returns at most 32 deliveries and
+512 KiB of encoded UTF-8 result JSON. Indexed unread metadata selects at most 33 rows;
+message targets use an indexed, 21-row bounded lookup rejecting malformed cardinality.
+Pages emit no notifications and never change receipts. Terminal cursors equal the
+highwater; nonterminal cursors equal the last included sequence and must advance.
+A singleton exceeding the byte bound fails without truncation or advancement.
+
+Agentd serializes and round-robins pages for a finite owner snapshot after lifecycle
+flush, checks connection epoch and exact owner/lifecycle before and after each await,
+commits deduplicated local deliveries before advancing its transient scan cursor, and
+schedules fresh wake effects only after commit. Lost responses restart from durable
+acted state; scan progress never advances acted flags, acked marks or read receipts.
+Both reconnect and reincarnation use the coordinator, which never calls flush itself.
+A legacy hub or daemon retains legacy resync limitations; advertised broken support
+fails rather than silently falling back. Real-time floods remain a separate limitation.
+
+Hub schema 8 atomically upgrades 5/6/7, preserving schema-5 retired-operation migration,
+adding `deliveries_unread_session_seq` and `message_targets_message_id` indexes and
+advancing the version together. No history is rewritten. Old readers reject schema 8;
+back up with VACUUM INTO and fix forward. Runtime contract 4 and local schema 5 stay
+unchanged. Controlled backlog recovery does not establish historical outage causes.
+
 ### MCP send and acknowledgement outcome reconciliation (2026-11-13)
 
 The [mutation reconciliation design](sdlc/mutation-reconciliation/tech-design.md) defines
