@@ -1305,3 +1305,17 @@ Checkpoint idle/applied 0.15.0; timer restored. Release announced once in feedba
 A separate peer transport-outage recurrence remains under #22 and was not a deployment
 window; it is not claimed fixed by identity recovery. See
 [rollout evidence](evidence/2026-11-13-reconnect-rollout.json).
+
+
+## 2026-11-14 — feedback operation recovery candidate
+
+On the 0.15.0 baseline, controlled tests reproduced confirmed/queued lookup loss after
+Claude generation refresh (two failing cases), and completion waiting behind unrelated
+work after its own durable confirmation (one case). Review found and the candidate fixed
+a delayed initial registration attachment race (one failing control). Exact details and
+limits are in [implementation](../docs/sdlc/feedback-operation-recovery/implementation.md).
+Independent correctness/security/external review approved; independent QA's ordered
+build/typecheck and 724 workspace tests passed (39/196/202/287). Initial failed checks
+and a concurrent-build invalid typecheck are retained in the final review. Source and
+history secret scans reported no leaks. Packaging and production rollout are not yet
+claimed. Historical transport failures and blocked-outbox disposal remain unresolved.

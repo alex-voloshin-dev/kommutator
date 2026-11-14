@@ -69,3 +69,10 @@ it("classifies incompatible preparation before dispatch without exposing arbitra
   expect(text(result)).not.toContain("private-fixture-detail");
   expect(preparations).toBe(1);
 });
+
+it("keeps trusted directional compatibility recovery through a tracked MCP error", async () => {
+  const { RuntimeCompatibilityError } = await import("../src/plugin-daemon.js");
+  const client = await fixture(async () => { throw new RuntimeCompatibilityError("The client is older. Do not restart the shared daemon."); });
+  const result = await client.callTool({ name: "send", arguments: { to: "all", body: "test" } });
+  expect(JSON.parse(text(result))).toMatchObject({ error: "runtime-incompatible", guidance: expect.stringContaining("Do not restart the shared daemon") });
+});

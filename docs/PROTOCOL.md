@@ -300,7 +300,12 @@ by sending an untracked mutation. Legacy clients and hub methods remain unchange
 The immutable owner snapshot is captured during the original shim hello before its flush,
 covering local key, vendor/root, PID/birth, generation and lifecycle epoch. A daemon-assigned
 hub session UUID attaches once; neither replacement Codex shims nor retired Claude owners
-can use predecessor observations. Failed hello cannot track operations.
+can use predecessor observations. Failed hello cannot track operations. A consecutive,
+validated refresh of the same uninterrupted live Claude owner atomically transfers its
+observations to the refreshed generation; old connections stay fenced. Gaps, retirement,
+process/project/endpoint replacement and A → B → A do not transfer. See DESIGN §19.
+Tracked submit returns after its own durable settlement without awaiting unrelated
+outbox work; disconnect does not cancel or replay an admitted operation.
 
 Confirmed send evidence means hub storage/routing, not recipient read. Ack counts belong
 to the last confirmed hub attempt, not necessarily the original attempt; old-hub absent

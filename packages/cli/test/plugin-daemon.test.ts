@@ -3,7 +3,7 @@ import { createServer, type Server } from "node:net";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { pluginDaemonDiagnostics, pluginDaemonStatus, requirePluginDaemon } from "../src/plugin-daemon.js";
+import { pluginDaemonDiagnostics, pluginDaemonStatus, requirePluginDaemon, requirePluginDaemonForLookup } from "../src/plugin-daemon.js";
 import { PrivateSetup } from "../src/setup.js";
 import { RELEASE_VERSION } from "@kommutator/protocol";
 let home: string;
@@ -21,7 +21,7 @@ async function daemon(status: unknown) {
       while ((end = buffer.indexOf("\n")) >= 0) {
         const request = JSON.parse(buffer.slice(0,end)); buffer = buffer.slice(end + 1);
         methods.push(request.method);
-        socket.write(JSON.stringify({ jsonrpc: "2.0", id: request.id, result: request.method === "daemon.status" ? (typeof status === "function" ? status() : status) : { bound: false } }) + "\n");
+        socket.write(JSON.stringify({ jsonrpc: "2.0", id: request.id, result: ["daemon.status", "daemon.runtime"].includes(request.method) ? (typeof status === "function" ? status() : status) : { bound: false } }) + "\n");
       }
     });
   });
@@ -78,4 +78,41 @@ it("reports stopped diagnostics without startup and compatible runtime metadata 
   const result = await pluginDaemonDiagnostics();
   expect(result).toMatchObject({ daemon: "compatible", daemon_version: "0.5.0", daemon_runtime_contract: 4 });
   expect(result).not.toHaveProperty("recovery");
+});
+
+it("directs an older client to update itself without restarting the newer shared daemon", async () => {
+  const calls = await daemon({ runtime_contract: 5, daemon: { version: "0.99.0" } });
+  const result = await pluginDaemonDiagnostics();
+  expect(result.recovery).toContain("The client is older");
+  expect(result.recovery).toContain("Do not restart or downgrade the shared daemon");
+  expect(result.recovery).not.toContain("bin/manage daemon restart");
+  await expect(requirePluginDaemon()).rejects.toThrow("The client is older");
+  expect(calls.every(method => ["ipc.hello", "daemon.status"].includes(method))).toBe(true);
+});
+
+it("uses the same directional recovery for pure lookup without leaking malformed daemon versions", async () => {
+  const calls = await daemon({ runtime_contract: 5, daemon: { version: "private-fixture-not-a-version" } });
+  const lookup = requirePluginDaemonForLookup();
+  await expect(lookup).rejects.toThrow("The client is older");
+  await expect(lookup).rejects.not.toThrow("private-fixture");
+  await expect(lookup).rejects.toThrow("daemon unknown reports 5");
+  expect(calls).toEqual(["ipc.hello", "daemon.runtime"]);
+});
+
+
+it.each([undefined, "x".repeat(65)])("retains newer-contract direction when lookup version metadata is %s", async version => {
+  const calls = await daemon({ runtime_contract: 5, daemon: { version } });
+  const lookup = requirePluginDaemonForLookup();
+  await expect(lookup).rejects.toThrow("The client is older");
+  await expect(lookup).rejects.toThrow("daemon unknown reports 5");
+  await expect(lookup).rejects.not.toThrow("x".repeat(65));
+  expect(calls).toEqual(["ipc.hello", "daemon.runtime"]);
+});
+
+it("does not guess lookup recovery direction for malformed contract metadata", async () => {
+  const calls = await daemon({ runtime_contract: "private-fixture-contract", daemon: { version: "0.15.0" } });
+  const lookup = requirePluginDaemonForLookup();
+  await expect(lookup).rejects.toThrow("contract could not be verified");
+  await expect(lookup).rejects.not.toThrow("private-fixture-contract");
+  expect(calls).toEqual(["ipc.hello", "daemon.runtime"]);
 });

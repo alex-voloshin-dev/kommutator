@@ -35,8 +35,10 @@ async function fixture(path = ":memory:", sharedHub?: ReturnType<typeof createCo
     return malformed && method === "message.send" ? { invalid: true } : result;
   } };
   let now = 100;
+  let alive = true;
+  let birth: string | undefined = "birth";
   const core = new DaemonCore({ dbPath: path, transport, config: { host: "host", hub: "http://localhost:8787", key: "test-key-sixteen-characters" },
-    processStart: async () => "birth", isAlive: async () => true,
+    processStart: async () => birth, isAlive: async () => alive,
     clock: { now: () => now, setTimeout: () => 1, clearTimeout() {} } });
   let closed = false;
   const close = async () => { if (!closed) { closed = true; await core.close(); } };
@@ -52,7 +54,7 @@ async function fixture(path = ":memory:", sharedHub?: ReturnType<typeof createCo
   const status = async (peer: IpcPeer, operation_id: string) => OperationStatus.parse(await core.request(peer, "operation.status", { operation_id }));
   return { core, hub, transport, calls, shim, submit, status, close, setTime: (time: number) => { now = time; },
     lose: (method: string) => { lose = method; }, after: (callback: typeof after) => { after = callback; }, malformed: () => { malformed = true; },
-    legacyReceipts: () => { legacyReceipts = true; } };
+    legacyReceipts: () => { legacyReceipts = true; }, setAlive: (value: boolean) => { alive = value; }, setBirth: (value: string | undefined) => { birth = value; } };
 }
 
 it("retains old-hub acknowledgement confirmation without inventing transition counts", async () => {
@@ -197,14 +199,14 @@ it("retains safe blocked evidence for hub errors and replay horizon without raw 
   expect(await f.status(peer, queued)).toMatchObject({ outcome: "blocked", error: { category: "replay-horizon" } });
 });
 
-it("bounds confirmed retention and reports unknown, never queued, after more than 256 shared-flush completions", async () => {
+it("returns before unrelated completions while retaining only 256 confirmed observations", async () => {
   const f = await fixture(); const peer = await f.shim(); const first = randomUUID(); const entered = deferred(), release = deferred();
   f.after(async method => { if (method === "message.send") { entered.resolve(); await release.promise; } });
   const initial = f.submit(peer, first); await entered.promise;
   const pending = Array.from({ length: 257 }, () => f.submit(peer));
   for (let i = 0; i < 50; i++) await Promise.resolve();
   release.resolve(); await Promise.all(pending);
-  expect(await initial).toEqual({ operation_id: first, outcome: "unknown" });
+  expect(await initial).toMatchObject({ operation_id: first, status: "sent" });
   expect(await f.status(peer, first)).toEqual({ operation_id: first, outcome: "unknown" });
   expect(f.core.registry.outbox()).toHaveLength(0);
   expect(f.core.registry.db.prepare("SELECT count(*) AS n FROM mutation_observations").get()).toMatchObject({ n: 256 });
@@ -312,4 +314,140 @@ it("answers strict CLI runtime compatibility without reconciliation, flush or ow
   await expect(f.core.request(cli, "daemon.runtime", { caller: "other" })).rejects.toThrow(/invalid/);
   await expect(f.core.request(shim, "daemon.runtime", {})).rejects.toThrow(/CLI/);
   expect(f.calls).toHaveLength(calls); expect(f.core.registry.outbox()).toEqual(before);
+});
+
+async function claude(f: Awaited<ReturnType<typeof fixture>>, generation: number, vendorId = "conversation-a", pid = 321, endpoint?: string) {
+  const hello = { vendor: "claude-code", vendor_session_id: vendorId, pid: pid + 1, ppid: pid,
+    owner_generation: generation, runtime_contract: 4, cwd: "/repo", protocol_version: PROTOCOL_VERSION, ...(endpoint ? { endpoint } : {}) };
+  const hook = f.core.peer(); await f.core.request(hook, "ipc.hello", { ...hello, client: "hook" });
+  const peer = f.core.peer(); await f.core.request(peer, "ipc.hello", { ...hello, client: "shim" });
+  return { hook, peer };
+}
+
+it("preserves operation lookup through continuous Claude refresh while fencing old peers", async () => {
+  const f = await fixture(); const original = await claude(f, 1); const id = randomUUID();
+  await f.submit(original.peer, id); const before = await f.status(original.peer, id);
+  const refreshed = await claude(f, 2);
+  expect(await f.status(refreshed.peer, id)).toEqual(before);
+  await expect(f.status(original.peer, id)).rejects.toMatchObject({ code: -32020 });
+  await expect(f.submit(original.peer)).rejects.toMatchObject({ code: -32020 });
+  const again = await claude(f, 3);
+  expect(await f.status(again.peer, id)).toEqual(before);
+  expect(f.calls.filter(call => call.method === "message.send")).toHaveLength(1);
+});
+
+it("preserves offline queued operation replay through continuous Claude refresh", async () => {
+  const f = await fixture(); const original = await claude(f, 1); const id = randomUUID();
+  f.transport.connected = false; await f.submit(original.peer, id);
+  const queued = f.core.registry.outbox(); const refreshed = await claude(f, 2);
+  expect(await f.status(refreshed.peer, id)).toMatchObject({ outcome: "queued" });
+  expect(f.core.registry.outbox()).toEqual(queued);
+  f.transport.connected = true; await f.core.flush();
+  expect(await f.status(refreshed.peer, id)).toMatchObject({ outcome: "confirmed" });
+  expect(f.calls.filter(call => call.method === "message.send")).toHaveLength(1);
+});
+
+it.each(["switch-back", "ended", "replacement", "missed-middle-hook"] as const)("does not transfer observations across %s", async boundary => {
+  const f = await fixture(); const original = await claude(f, 1); const id = randomUUID(); await f.submit(original.peer, id);
+  if (boundary === "switch-back") await claude(f, 2, "conversation-b");
+  if (boundary === "ended") await f.core.request(original.hook, "session.gone", {});
+  const fresh = await claude(f, boundary === "switch-back" || boundary === "missed-middle-hook" ? 3 : 2, "conversation-a", boundary === "replacement" ? 654 : 321);
+  expect(await f.status(fresh.peer, id)).toEqual({ operation_id: id, outcome: "unknown" });
+});
+
+it("returns a durable operation settlement without waiting for unrelated queued work", async () => {
+  const f = await fixture(); const peer = await f.shim(); const id = randomUUID();
+  const ownEntered = deferred(), releaseOwn = deferred(), unrelatedEntered = deferred(), releaseUnrelated = deferred();
+  let sends = 0;
+  f.after(async method => {
+    if (method !== "message.send") return;
+    if (++sends === 1) { ownEntered.resolve(); await releaseOwn.promise; }
+    else { unrelatedEntered.resolve(); await releaseUnrelated.promise; }
+  });
+  const pending = f.submit(peer, id); await ownEntered.promise;
+  const other = f.submit(peer); releaseOwn.resolve(); await unrelatedEntered.promise;
+  try {
+    expect(await f.status(peer, id)).toMatchObject({ outcome: "confirmed" });
+    const completion = await Promise.race([pending.then(() => "settled"), new Promise(resolve => setTimeout(() => resolve("still-waiting"), 100))]);
+    expect(completion).toBe("settled");
+  } finally { releaseUnrelated.resolve(); await Promise.all([pending, other]); }
+});
+
+it("transfers pending observation settlement but does not reauthorize its original peer", async () => {
+  const f = await fixture(); const old = await claude(f, 1); const id = randomUUID();
+  const entered = deferred(), release = deferred();
+  f.after(async method => { if (method === "message.send") { entered.resolve(); await release.promise; } });
+  const pending = f.submit(old.peer, id); const fenced = expect(pending).rejects.toMatchObject({ code: -32020 });
+  await entered.promise;
+  const refreshed = claude(f, 2);
+  for (let i = 0; i < 100 && f.core.registry.get(old.peer.key ?? "")?.ownerGeneration !== 2; i++) await Promise.resolve();
+  expect(f.core.registry.get(old.peer.key ?? "")?.ownerGeneration).toBe(2);
+  release.resolve(); await fenced; const current = await refreshed;
+  expect(await f.status(current.peer, id)).toMatchObject({ outcome: "confirmed" });
+  expect(f.calls.filter(call => call.method === "message.send")).toHaveLength(1);
+});
+
+it.each(["disconnect", "shutdown"] as const)("cancels a submit waiter on %s without dropping admitted work", async action => {
+  const f = await fixture(); const peer = await f.shim(); const id = randomUUID();
+  const entered = deferred(), release = deferred();
+  f.after(async method => { if (method === "message.send") { entered.resolve(); await release.promise; } });
+  const pending = f.submit(peer, id); const rejected = expect(pending).rejects.toMatchObject({ code: action === "shutdown" ? -32031 : -32020 });
+  await entered.promise;
+  const close = action === "shutdown" ? f.close() : undefined;
+  if (action === "disconnect") f.core.disconnect(peer);
+  await rejected;
+  expect(f.core.registry.outbox().filter(row => row.method === "message.send")).toHaveLength(1);
+  release.resolve(); if (close) await close; else await f.core.flush();
+});
+
+it("does not transfer observations after a liveness retirement or unavailable birth", async () => {
+  const f = await fixture(); const original = await claude(f, 1); const id = randomUUID(); await f.submit(original.peer, id);
+  f.setBirth(undefined); await expect(claude(f, 2)).rejects.toMatchObject({ code: -32020 });
+  f.setBirth("birth"); f.setAlive(false); await f.core.sweep(); f.setAlive(true);
+  const current = await claude(f, 2);
+  expect(await f.status(current.peer, id)).toEqual({ operation_id: id, outcome: "unknown" });
+});
+
+it("rolls observation transfer and refreshed registration back together on database failure", async () => {
+  const f = await fixture(); const original = await claude(f, 1); const id = randomUUID(); await f.submit(original.peer, id);
+  const before = f.core.registry.get(original.peer.key ?? "");
+  f.core.registry.db.exec("CREATE TRIGGER fail_refresh BEFORE UPDATE OF owner ON mutation_observations BEGIN SELECT RAISE(ABORT, 'fixture rollback'); END");
+  await expect(claude(f, 2)).rejects.toThrow("fixture rollback");
+  expect(f.core.registry.get(original.peer.key ?? "")).toEqual(before);
+  expect(await f.status(original.peer, id)).toMatchObject({ outcome: "confirmed" });
+});
+
+it("attaches the registration UUID when its delayed ACK crosses a continuous refresh", async () => {
+  const f = await fixture(); f.transport.connected = false;
+  const old = await claude(f, 1); const id = randomUUID(); await f.submit(old.peer, id);
+  const entered = deferred(), release = deferred();
+  f.after(async method => { if (method === "session.upsert") { entered.resolve(); await release.promise; } });
+  f.transport.connected = true; const flush = f.core.flush(); await entered.promise;
+  const refreshed = claude(f, 2);
+  for (let i = 0; i < 100 && f.core.registry.get(old.peer.key ?? "")?.ownerGeneration !== 2; i++) await Promise.resolve();
+  expect(f.core.registry.get(old.peer.key ?? "")?.ownerGeneration).toBe(2);
+  release.resolve(); await flush; const current = await refreshed;
+  expect(await f.status(current.peer, id)).toMatchObject({ outcome: "confirmed" });
+  expect(f.calls.filter(call => call.method === "message.send")).toHaveLength(1);
+});
+
+it.each(["switch-back", "missed-middle-hook"] as const)("does not attach predecessor observations after delayed registration with %s", async boundary => {
+  const f = await fixture(); f.transport.connected = false;
+  const old = await claude(f, 1); const id = randomUUID(); await f.submit(old.peer, id);
+  const entered = deferred(), release = deferred();
+  f.after(async method => { if (method === "session.upsert") { entered.resolve(); await release.promise; } });
+  f.transport.connected = true; const flush = f.core.flush(); await entered.promise;
+  const middle = boundary === "switch-back" ? expect(claude(f, 2, "conversation-b")).rejects.toMatchObject({ code: -32020 }) : undefined;
+  if (middle) for (let i = 0; i < 100 && !f.core.registry.all().some(record => record.session.vendor_session_id === "conversation-b"); i++) await Promise.resolve();
+  const refreshed = claude(f, 3);
+  for (let i = 0; i < 100 && f.core.registry.get(old.peer.key ?? "")?.ownerGeneration !== 3; i++) await Promise.resolve();
+  release.resolve(); await flush; await middle; const current = await refreshed;
+  expect(await f.status(current.peer, id)).toEqual({ operation_id: id, outcome: "unknown" });
+});
+
+
+it("does not transfer observations when a refresh first introduces an endpoint", async () => {
+  const f = await fixture(); const old = await claude(f, 1); const id = randomUUID(); await f.submit(old.peer, id);
+  const current = await claude(f, 2, "conversation-a", 321, "/fixture-new-endpoint.sock");
+  expect(await f.status(current.peer, id)).toEqual({ operation_id: id, outcome: "unknown" });
 });

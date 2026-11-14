@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { OperationStatusParams } from "@kommutator/protocol";
 import { RELEASE_VERSION } from "@kommutator/protocol";
-import { requirePluginDaemon, requirePluginDaemonForLookup } from "./plugin-daemon.js";
+import { requirePluginDaemon, requirePluginDaemonForLookup, RuntimeCompatibilityError } from "./plugin-daemon.js";
 import { pluginConflicts } from "./plugin-conflicts.js";
 import { PrivateSetup } from "./setup.js";
 import { pluginContext, activeClaudeRegistration } from "./plugin-context.js";
@@ -68,8 +68,8 @@ export function createMcpServer(client: ClientSource, diagnosticsClient?: Client
           const unsupported = error instanceof IpcError && error.code === -32601;
           return { isError: true, content: [{ type: "text" as const, text: JSON.stringify({
             ...(operationId ? { operation_id: operationId } : {}), outcome: "unknown",
-            error: unsupported ? "local-daemon-upgrade-required" : "operation-unavailable",
-            guidance: unsupported ? "Upgrade and restart the local daemon; never resubmit this mutation automatically."
+            error: error instanceof RuntimeCompatibilityError ? "runtime-incompatible" : unsupported ? "local-daemon-upgrade-required" : "operation-unavailable",
+            guidance: error instanceof RuntimeCompatibilityError ? `${error.recovery} Never resubmit this mutation automatically.` : unsupported ? "The local daemon does not support this operation. Inspect setup_status to determine the required update; never resubmit this mutation automatically."
               : "Call operation_status with the operation_id. If lookup is unavailable, inspect setup_status and whoami to resolve configuration, identity or compatibility prerequisites. Unknown is not proof of failure; do not blindly resend.",
           }) }] };
         }

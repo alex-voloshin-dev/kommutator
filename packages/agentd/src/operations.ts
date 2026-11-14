@@ -55,6 +55,13 @@ export class Operations {
       return outbox;
     });
   }
+  /** Called only inside the validated uninterrupted registration transaction. */
+  refresh(previous: OperationOwner, record: LocalRecord): void {
+    const current = operationOwner(record);
+    if (previous.sessionId !== current.sessionId) throw new Error("operation refresh changed hub identity");
+    this.registry.db.prepare("UPDATE mutation_observations SET owner=? WHERE owner=? AND session_id IS ?")
+      .run(current.facts, previous.facts, previous.sessionId ?? null);
+  }
   attach(record: LocalRecord): void {
     if (!record.session.id) return;
     this.registry.db.prepare("UPDATE mutation_observations SET session_id=? WHERE owner=? AND session_id IS NULL")

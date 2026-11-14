@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { afterEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ call: vi.fn(), close: vi.fn(), spawn: vi.fn() }));
-vi.mock("../src/ipc-client.js", () => ({
+vi.mock("../src/ipc-client.js", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../src/ipc-client.js")>(),
   IpcClient: class { call = mocks.call; close = mocks.close; }, spawnDaemon: mocks.spawn,
 }));
 import { runHook } from "../src/hooks.js";
