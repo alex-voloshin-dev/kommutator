@@ -1341,3 +1341,15 @@ Maintenance notices preceded restart. Release announcement
 2066498d-0fd8-4ac3-bd9d-f44b7efc85a4 was confirmed by the hub. Historical outages,
 existing inaccessible observations and blocked-outbox disposition remain separate
 limitations. See the versioned rollout JSON.
+
+## 2026-11-14 — 0.15.2 published and local rollout reconciled
+
+PR #32 and tag 7921086 passed six CI checks, anonymous archive/hash checks and real
+clean-profile installations launching Claude/Codex MCP 0.15.2. Local hub, shared
+daemon and reloaded chat MCP now report 0.15.2; caller active, contract 4, connected,
+outbox empty, schemas 5/7 and both current/backup integrity checks pass. The updater
+restart IPC timed out despite successful activation; inspection preceded explicit
+checkpoint acceptance and timer restoration. No retry/rollback or queue mutation.
+The original 450.480 ms hook failure and post-activation unavailable observation
+remain unexplained. See the [release report](../docs/sdlc/operation-error-diagnostics/release.md)
+and [rollout evidence](evidence/2026-11-14-operation-diagnostics-rollout.json).

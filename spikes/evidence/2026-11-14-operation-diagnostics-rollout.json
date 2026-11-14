@@ -1,0 +1,48 @@
+{
+  "version": "0.15.2",
+  "release_commit": "792108678e46ec7d54df99d8a7ca5e1b74106047",
+  "merge_commit": "704f66e75da3970a2fbb7e83bed6a95460af744c",
+  "hub_start": "2026-11-14T19:37:08.019563855Z",
+  "daemon_pid": 3434453,
+  "runtime_contract": 4,
+  "mcp": "0.15.2",
+  "health": "healthy",
+  "hub_connected": true,
+  "caller": "active",
+  "outbox_depth": 0,
+  "schemas": {
+    "agentd": 5,
+    "hub": 7
+  },
+  "checks": {
+    "workspace": 740,
+    "scripts": 142,
+    "ci": 6,
+    "public_hashes": true,
+    "native_installed_mcp": [
+      "claude",
+      "codex"
+    ],
+    "current_and_backup_quick_check": "ok"
+  },
+  "retained_failures": [
+    "First gate Codex Stop450.480ms; cause unknown, issue9 reopened",
+    "Updater restart IPC timed out after starting0.15.2; inspected and explicitly reconciled",
+    "Post-activation historical hub unavailable at1794685175688; current healthy does not establish cause"
+  ],
+  "checkpoint": "idle/appliedVersion0.15.2 after explicit accept; result remains prior run",
+  "timer": "active",
+  "announcement_id": "56f8c3e0-d756-404e-a906-61a1fc82b759",
+  "limits": [
+    "Remote clients not updated",
+    "Historical issues19/22/25 not resolved",
+    "Large backlog31 fix still in progress",
+    "Day-long,physical subnet,unattended reboot,native Work unverified"
+  ],
+  "endpoint_probe": {
+    "path": "/tmp/kommutator-v0152-endpoint-probe.jsonl",
+    "method": "unauthenticated GET localhost /, 1s timeout, 2s interval",
+    "observed_timeouts": "2026-11-14T19:36:23Z and multiple samples 19:37:17\u201319:39:35Z",
+    "limit": "401 proves endpoint responsiveness only; local observation does not isolate host, network, scheduler or hub cause"
+  }
+}
