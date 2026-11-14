@@ -1,0 +1,134 @@
+{
+  "startedAt": "2026-11-14T20:15:41.372Z",
+  "node": "v26.13.0",
+  "results": [
+    {
+      "label": "candidate",
+      "builtRelease": "0.16.0",
+      "sourceSha256": "77c61c67a1341ce8611fbb17b33bc882ef896a5b6b756f82e0ae6fedf1485a06",
+      "callbackAfterClose": true,
+      "events": [
+        {
+          "event": "upgrade received; intentionally no handshake response",
+          "ms": 13.312729999999988
+        },
+        {
+          "event": "await close resolved",
+          "ms": 14.133737999999994
+        },
+        {
+          "event": {
+            "kind": "onError",
+            "message": "hub WebSocket connection failed",
+            "afterAwaitClose": true
+          },
+          "ms": 14.396141
+        }
+      ]
+    },
+    {
+      "label": "baseline",
+      "builtRelease": "0.15.2",
+      "sourceSha256": "426e09764fd6f8f038691e298c3202870dc9caaa593b237fe10ac2fabf09538e",
+      "callbackAfterClose": true,
+      "events": [
+        {
+          "event": "upgrade received; intentionally no handshake response",
+          "ms": 3.6756359999999972
+        },
+        {
+          "event": "await close resolved",
+          "ms": 3.9796389999999633
+        },
+        {
+          "event": {
+            "kind": "onError",
+            "message": "hub WebSocket connection failed",
+            "afterAwaitClose": true
+          },
+          "ms": 4.168440999999973
+        }
+      ]
+    }
+  ],
+  "finishedAt": "2026-11-14T20:15:41.713Z",
+  "scope": "Local WebSocket shutdown lifecycle only; no causal attribution for release-gate timeouts or cleanup ENOENT.",
+  "red_tests": {
+    "log": "/tmp/kom-hub-link-shutdown-red.log",
+    "failed": 2,
+    "passed": 2,
+    "cases": [
+      "connecting-socket error callback after awaited close",
+      "late asynchronous onConnect rejection after close"
+    ]
+  },
+  "first_ordered_attempt": {
+    "build": "passed",
+    "typecheck": "failed: three nullable WebSocketServer address guards in new tests",
+    "test": "not started",
+    "fix": "explicit null guards, no assertion or production behavior relaxation"
+  },
+  "after_fix_probe": {
+    "startedAt": "2026-11-14T20:21:56.110Z",
+    "node": "v26.13.0",
+    "results": [
+      {
+        "label": "candidate",
+        "builtRelease": "0.16.0",
+        "sourceSha256": "ca6b8151064c328a5e4c2769b520fb05bcd6e9907d14b92a6d26cf443eab409c",
+        "callbackAfterClose": false,
+        "events": [
+          {
+            "event": "upgrade received; intentionally no handshake response",
+            "ms": 15.156148000000002
+          },
+          {
+            "event": "await close resolved",
+            "ms": 16.697164000000015
+          }
+        ]
+      },
+      {
+        "label": "baseline",
+        "builtRelease": "0.15.2",
+        "sourceSha256": "426e09764fd6f8f038691e298c3202870dc9caaa593b237fe10ac2fabf09538e",
+        "callbackAfterClose": true,
+        "events": [
+          {
+            "event": "upgrade received; intentionally no handshake response",
+            "ms": 3.878438000000017
+          },
+          {
+            "event": "await close resolved",
+            "ms": 4.3675420000000145
+          },
+          {
+            "event": {
+              "kind": "onError",
+              "message": "hub WebSocket connection failed",
+              "afterAwaitClose": true
+            },
+            "ms": 4.534743999999989
+          }
+        ]
+      }
+    ],
+    "finishedAt": "2026-11-14T20:21:56.440Z"
+  },
+  "final_ordered_gate": {
+    "build": "passed",
+    "typecheck": "passed",
+    "tests": {
+      "protocol": 41,
+      "hub": 208,
+      "agentd": 243,
+      "cli": 294,
+      "total": 786
+    },
+    "logs": [
+      "/tmp/kom-hub-link-shutdown-build2.log",
+      "/tmp/kom-hub-link-shutdown-types2.log",
+      "/tmp/kom-hub-link-shutdown-tests2.log"
+    ]
+  }
+}

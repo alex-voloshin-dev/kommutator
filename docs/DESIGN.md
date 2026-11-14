@@ -850,6 +850,20 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### HubLink shutdown completion (2026-11-14)
+
+Awaiting HubLink close completes termination of its current local WebSocket, cancels
+heartbeat/reconnect timers and rejects pending transport requests as unavailable.
+It neither proves a remote operation did not commit nor advances receipts. Repeated
+close calls share the same completion; a never-started or already-closed link closes
+without creating a socket. Stopped or superseded socket callbacks are consumed but
+cannot notify callers, report diagnostic errors, start a new request or reconnect.
+A late rejection of asynchronous hello/synchronization is contained by that lifecycle
+fence. Close does not wait indefinitely for arbitrary application onConnect work;
+its late continuation remains fenced. Active transport/logging failures retain their
+existing behavior. This repairs a reproduced preexisting callback-after-close defect,
+not an established cause of the six qualification timeouts or cleanup ENOENT failures.
+
 ### Bounded delivery resynchronization (2026-11-14)
 
 The approved [bounded resync design](sdlc/bounded-resync/tech-design.md) adds a

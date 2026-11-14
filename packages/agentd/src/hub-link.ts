@@ -26,6 +26,7 @@ export class HubLink implements HubTransport {
   capabilities: readonly string[] = [];
   private ws: WebSocket | undefined;
   private stopped = false;
+  private closing: Promise<void> | undefined;
   private nextId = 0;
   private backoff = 100;
   private reconnect: ReturnType<typeof setTimeout> | undefined;
@@ -42,8 +43,11 @@ export class HubLink implements HubTransport {
       this.ws = ws;
       this.epoch++;
       this.capabilities = [];
-      ws.on("error", () => this.onError("hub WebSocket connection failed"));
+      ws.on("error", () => {
+        if (!this.stopped && this.ws === ws) this.onError("hub WebSocket connection failed");
+      });
       ws.on("message", (data) => {
+        if (this.stopped || this.ws !== ws) return;
         let parsed: z.infer<typeof Envelope>;
         try { parsed = Envelope.parse(JSON.parse(data.toString())); }
         catch { this.onError("invalid hub frame"); ws.terminate(); return; }
@@ -62,6 +66,7 @@ export class HubLink implements HubTransport {
       ws.once("open", () => {
         void (async () => {
           try {
+            if (this.stopped || this.ws !== ws) return;
             const response = await this.rawRequest("hello", { host: this.config.host, agentd_version: RELEASE_VERSION, protocol_version: PROTOCOL_VERSION });
             const hello = Results.hello.parse(response);
             if (this.stopped || this.ws !== ws || ws.readyState !== WebSocket.OPEN) return;
@@ -72,7 +77,10 @@ export class HubLink implements HubTransport {
             this.backoff = 100;
             this.heartbeat = setInterval(() => { if (ws.readyState === WebSocket.OPEN) ws.ping(); }, 20_000);
             await onConnect();
-          } catch { this.onError("hub synchronization failed"); ws.terminate(); }
+          } catch {
+            if (!this.stopped && this.ws === ws) this.onError("hub synchronization failed");
+            ws.terminate();
+          }
         })();
       });
       ws.once("close", () => {
@@ -114,7 +122,8 @@ export class HubLink implements HubTransport {
     });
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
+    if (this.closing) return this.closing;
     this.stopped = true;
     this.epoch++;
     this.capabilities = [];
@@ -123,6 +132,11 @@ export class HubLink implements HubTransport {
     if (this.heartbeat) clearInterval(this.heartbeat);
     for (const waiter of this.pending.values()) { clearTimeout(waiter.timer); waiter.reject(new OfflineError()); }
     this.pending.clear();
-    this.ws?.terminate();
+    const ws = this.ws;
+    this.closing = !ws || ws.readyState === WebSocket.CLOSED ? Promise.resolve() : new Promise<void>(resolve => {
+      ws.once("close", () => resolve());
+      ws.terminate();
+    });
+    return this.closing;
   }
 }
