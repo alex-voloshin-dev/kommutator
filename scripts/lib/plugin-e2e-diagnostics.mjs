@@ -78,7 +78,10 @@ const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2
 const processStates = new Set(['R', 'S', 'D', 'Z', 'T', 't', 'I', 'X']);
 const waits = new Map([['ep_poll', 'event-loop'], ['do_epoll_wait', 'event-loop'], ['do_wait', 'child-wait'],
   ['futex_wait_queue', 'futex-wait'], ['futex_wait_queue_me', 'futex-wait'], ['hrtimer_nanosleep', 'sleep'],
-  ['folio_wait_bit_common', 'io-wait'], ['wait_on_page_bit_common', 'io-wait'], ['io_schedule', 'io-wait'], ['0', 'running-or-unavailable']]);
+  ['folio_wait_bit_common', 'io-wait'], ['wait_on_page_bit_common', 'io-wait'], ['io_schedule', 'io-wait'], ['jbd2_log_wait_commit', 'journal-wait'], ['0', 'running-or-unavailable']]);
+export function hookWaitCategory(value) {
+  return typeof value === 'string' ? waits.get(value.trim()) ?? 'other' : 'unavailable';
+}
 const labels = new Set(['hook', 'child-1', 'child-2', 'child-3', 'child-4']);
 function processSample(value) {
   const states = new Set(['sampled', 'pending', 'not-started', 'unavailable', 'unsupported', 'unverified']);
@@ -132,7 +135,7 @@ export async function hookProcessDiagnostic(pid, expectedBirth, signal) {
       if (signal?.aborted) return { status: 'unavailable', processes: [] };
       if (!after || compareProcessBirth(birth, linuxProcessBirth(after, boot)) !== 'same') continue;
       const counters = scheduling?.trim().split(/\s+/).map(Number) ?? [];
-      processes.push({ executable, label: item.label, parent: item.parent, state: fields[0], wait: waits.get(wait?.trim()) ?? (wait === null ? 'unavailable' : 'other'),
+      processes.push({ executable, label: item.label, parent: item.parent, state: fields[0], wait: hookWaitCategory(wait),
         birth_verified: true, cpu_ns: counters[0], runqueue_ns: counters[1], slices: counters[2] });
       if (children === null) { truncated = true; continue; }
       for (const child of children.trim().split(/\s+/).filter(Boolean)) {

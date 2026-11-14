@@ -59,3 +59,16 @@ observation and can be unavailable, incomplete or stale by timeout; it cannot
 establish causality alone. No live runtime changes or exported E2E were performed
 by this implementation task. Independent review/QA and an instrumented exported
 E2E remain required before repeating the release qualification.
+
+## Review round 1 revision
+
+- Fixed a portability regression in the pre-existing owner fixture test: timing
+  and timeout assertions run on every platform; Linux sample contents are asserted
+  only on Linux, while other platforms explicitly require unsupported/empty data.
+  No native macOS run was performed here.
+- Added the observed `jbd2_log_wait_commit` wait symbol to a fixed `journal-wait`
+  category. A focused redaction test verifies the category survives sanitization
+  while raw/unknown kernel symbols cannot escape.
+- Targeted diagnostic tests passed 11/11 on Linux:
+  `/tmp/kom-export-diagnostics-review1-targeted.log`. Full ordered gates are deferred
+  to independent QA after round 2 review, avoiding concurrent dist mutations.

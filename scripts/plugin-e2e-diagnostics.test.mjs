@@ -5,7 +5,7 @@ import { mkdtemp, mkdir, readFile, writeFile, rm, symlink } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hookDiagnostic, authorityDiagnostic, hookProcessDiagnostic } from './lib/plugin-e2e-diagnostics.mjs';
+import { hookDiagnostic, authorityDiagnostic, hookProcessDiagnostic, hookWaitCategory } from './lib/plugin-e2e-diagnostics.mjs';
 async function fixture(t) {
   const home = await mkdtemp(join(tmpdir(), 'kom-e2e-diagnostic-'));
   t.after(() => rm(home, { recursive: true, force: true }));
@@ -99,8 +99,13 @@ process.stdin.resume(); setInterval(() => {}, 1000);
   const timeout = await hook();
   assert.equal(timeout.diagnostic.outcome, 'timeout');
   assert(timeout.diagnostic.phases.timeout_ms >= 1900);
-  assert.equal(timeout.diagnostic.process_sample.status, 'sampled');
-  assert(['node', 'other'].includes(timeout.diagnostic.process_sample.processes[0].executable)); // Linux may retain the shebang script name.
+  if (process.platform === 'linux') {
+    assert.equal(timeout.diagnostic.process_sample.status, 'sampled');
+    assert(['node', 'other'].includes(timeout.diagnostic.process_sample.processes[0].executable)); // Linux may retain the shebang script name.
+  } else {
+    assert.equal(timeout.diagnostic.process_sample.status, 'unsupported');
+    assert.deepEqual(timeout.diagnostic.process_sample.processes, []);
+  }
   assert(timeout.diagnostic.process_sample.elapsed_ms < timeout.diagnostic.phases.timeout_ms);
   assert.equal(typeof timeout.diagnostic.process_sample.sampled_at, 'string');
   const pidFile = join(home, 'hook-pid');
@@ -190,4 +195,15 @@ test('Linux process sampling bounds descendants and emits only synthetic labels'
   assert(result.processes.slice(1).every(row => row.parent === 'hook' && row.birth_verified));
   assert(!JSON.stringify(result).includes(birth));
   assert(!Object.hasOwn(result.processes[0], 'pid'));
+});
+
+test('wait categories recognize journal stalls without exposing arbitrary kernel strings', () => {
+  assert.equal(hookWaitCategory('jbd2_log_wait_commit\n'), 'journal-wait');
+  assert.equal(hookWaitCategory('private-kernel-symbol'), 'other');
+  assert.equal(hookWaitCategory(null), 'unavailable');
+  const value = hookDiagnostic({ outcome: 'timeout', process_sample: { status: 'sampled',
+    processes: [{ wait: hookWaitCategory('jbd2_log_wait_commit') }, { wait: 'private-kernel-symbol' }] } });
+  assert.equal(value.process_sample.processes[0].wait, 'journal-wait');
+  assert.equal(value.process_sample.processes[1].wait, 'unavailable');
+  assert(!JSON.stringify(value).includes('jbd2')); assert(!JSON.stringify(value).includes('private'));
 });
