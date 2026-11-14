@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-14. Released baseline: [0.15.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.15.2).
+Updated 2026-11-14. Released baseline: [0.16.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.16.0).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -11,6 +11,24 @@ full release qualification and ordinary local updater completion are recorded in
 clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
+
+Published 0.16.0 [bounded recovery and shutdown repair](sdlc/bounded-resync/release.md)
+is qualified by independent reviews/QA and three first-attempt full exact-head CI gates
+(792 workspace tests, 151 script tests). Public hashes and clean Claude/Codex MCP installs
+passed. Four local integrated gates failed; those failures and their unknown causes remain
+recorded, not superseded by the green CI runs.
+
+Local hub, shared daemon and actual MCP are 0.16.0, contract 4. The hub is connected,
+caller active, schemas 5/8 and backups 5/7 passed quick_check, and both new indexes exist.
+The updater's final aggregate-health gate blocked on one pre-cutover recipient-not-found
+reply. After independent runtime/database checks the deployed version was explicitly
+accepted and the timer restored. Aggregate health remains degraded for that retained
+operation; no queue deletion, resend, rollback or automatic retry occurred. See the
+[rollout assessment](sdlc/bounded-resync/deploy-status.md). #9/#19/#22/#25 remain open.
+
+## Previous qualification checkpoints (historical)
+
+The observations below describe their respective rollout times, not current service versions.
 
 Published 0.15.2 [operation diagnostics](sdlc/operation-error-diagnostics/release.md)
 returns retained blocked results with safe allowlisted reasons. Independent reviews,
@@ -107,8 +125,8 @@ remains open; a healthy short probe is not a root-cause fix.
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
 | 1 | Operation recovery after Claude compaction and unrelated flush work | [Current repair](sdlc/feedback-operation-recovery/feedback-triage.md) released in 0.15.1 after controlled regressions, independent reviews, full qualification and local rollout. Historical inaccessible observations are not retrospectively adopted |
-| 1 | [#31: bounded delivery resync](https://github.com/alex-voloshin-dev/kommutator/issues/31) | Controlled 0.15.1 real-socket reproduction with 200 unread 60 KB bodies repeatedly reconnects without completing synchronization; five-message control passes. 0.16.0 candidate implements bounded continuation independent of read receipts, atomic schema8 indexes and owner-fenced fair recovery. Independent reviews/QA and 792 integrated tests pass; packaging remains blocked by retained intermittent exported-hook timeouts; diagnostic comparison and pre-timeout sampling improved. Historical #22 attribution remains unproven |
-| 1 | [#34: transport shutdown ordering](https://github.com/alex-voloshin-dev/kommutator/issues/34) | Baseline 0.15.2 and candidate reproduce callbacks after awaited close; narrow repair approved by independent review/security/QA, with 792 integrated tests; packaging remains blocked; see the candidate release report. This does not explain six packaging-gate timeouts |
+| Done | [#31: bounded delivery resync](https://github.com/alex-voloshin-dev/kommutator/issues/31) | Released and locally deployed in 0.16.0 after controlled real-socket regression, independent review/QA and full CI qualification. Schema8 indexes and bounded/fair recovery verified; legacy clients retain burst limitations. Historical #22 attribution remains unproven |
+| Done | [#34: transport shutdown ordering](https://github.com/alex-voloshin-dev/kommutator/issues/34) | Released and locally deployed in 0.16.0; independently reviewed controlled regression proves awaited close and late-callback fencing. This does not explain the retained packaging timeouts |
 | 1 | Blocked operation diagnostics | Completed in 0.15.2: retained blocked evidence and allowlisted reasons; safe queue disposition remains separate |
 | 2 | Safe blocked-outbox disposition | Latest remote report lists 93 retained RPC-rejected entries on 0.15.0. Design explicit owner visibility and replay-safe disposition; do not delete rows or infer non-commit from the last rejection |
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
@@ -131,10 +149,10 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Core and identity | Hub, daemon, MCP/hooks, boards and dashboard; live macOS two-Claude native exchange; same-host identity and resume fencing; 0.12.2 durable retirement recovery and pre-enqueue address validation | Preserve these contracts; synthetic recovery coverage is separate from every vendor/environment combination |
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
-| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.15.0 deployed; ordinary updater completed without manual recovery | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.13.1 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.16.0 deployed; explicit reconciliation retained one unrelated blocked operation | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.16.0 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
-| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.15.0 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
+| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.16.0 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
 
 ## Acceptance work that needs a suitable environment

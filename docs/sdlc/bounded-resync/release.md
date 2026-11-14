@@ -1,7 +1,7 @@
 ---
 type: release
 feature: bounded-resync
-status: candidate
+status: qualified
 version: 0.16.0
 changelog:
   - "Added: negotiated bounded delivery recovery pages and fair owner scheduling."
@@ -28,7 +28,7 @@ runtime contract 4 are unchanged. Both the hub and daemon must be upgraded for t
 fix: legacy negotiation remains supported and retains the old large-burst limitation.
 Updating an installed plugin alone does not prove its shared daemon has upgraded.
 
-## Qualification in progress
+## Controlled qualification evidence
 
 The baseline real-socket scenario with 200 unread 60,000-character bodies repeatedly
 reconnected without completing. The candidate recovered all 200 over one connection
@@ -41,7 +41,7 @@ of production migration duration. Review-found races and their red/green regress
 are retained in implementation.md. Final independent correctness/security/external reviews and QA passed with 781 tests. Separate shutdown review and QA passed
 with 792 workspace tests, including active-error positive controls and fixture
 startup ownership regressions.
-Exact-version gates, public installations and local rollout remain pending.
+The qualification and rollout checkpoints below supersede this preparation snapshot.
 
 ## Not validated or fixed
 
@@ -129,3 +129,54 @@ The next finite diagnostic observes the disposable E2E process tree externally,
 without sharing its Node filesystem worker pool, alongside restricted syscall
 tracing. Instrumentation is not qualification. The candidate remains unpublished;
 no new maintenance window, tag, merge or 0.16.0 service activation has occurred.
+
+## Maintainer release decision and public installation checks
+
+Released as 0.16.0 at e1ddc59; PR #33 merged as bd9f7f9. Three first-attempt full
+exact-head CI gates (branch, PR and tag) passed, with independent correctness,
+security, external review and QA: 792 workspace tests and 151 script tests. This
+is the full-pipeline qualification basis. The four failed local integrated gates
+above remain failures; their hook timeout causes are not established. A passing
+external-only E2E did not reproduce them. Ptrace changed timings and failed a
+different SessionEnd assertion; it is not qualification. Independent QA reviewed
+this residual risk and found no new concrete regression blocker for the scoped
+repairs. Issues #9/#19/#22/#25 remain open.
+
+Both public archives were downloaded anonymously and matched SHA-256. A fresh
+export matched the packaged export's complete SHA256SUMS. Clean real Claude and
+Codex CLI installations launched MCP 0.16.0 with Node 26.13.0 and passed private
+setup/foreign-Origin checks. This is not real-model conversation evidence.
+See [qualification evidence](../../../spikes/evidence/2026-11-14-bounded-resync-qualification.json).
+
+Local deployment is scheduled no earlier than 2026-11-14 21:25 UTC after the new
+15-minute notice. Timer stopped, updater drained and lock verified free. Actual
+service migration, backup integrity and resumed client checks remain a separate
+rollout checkpoint; no automatic rollback is permitted.
+
+## Verified local rollout — 2026-11-14 21:32 UTC
+
+Pinned cutover selected e1ddc59 / 0.16.0 after the announced 21:25 UTC earliest window.
+The non-root isolated image smoke passed. Docker hub started at 21:31:04.991 UTC;
+actual hub package, shared daemon PID2079962 and this session's loaded MCP are 0.16.0,
+with runtime contract4. The caller is active with its role and canonical feedback topics.
+SessionStart and PostToolUse success observations were returned after the chat restart;
+no hook trust was modified.
+
+Both current databases passed quick_check with schemas5/8 and mode0600. Both new hub
+indexes exist. VACUUM INTO backups passed quick_check with original schemas5/7 and
+mode0600. The updater reached activation but blocked at its aggregate-health gate:
+one pre-cutover reply to an absent remote recipient remained blocked. This was not a
+restart IPC timeout. Independent runtime and database checks justified explicit
+reconcile accept; checkpoint is idle/appliedVersion0.16.0 and timer is active.
+Aggregate health remains degraded for outbox644, operation
+b2c4332d-c885-4f6b-9f1d-7997b51c3ba5, recipient-not-found. That work was neither
+removed nor resent. Acceptance records deployment, not resolution of the blocked work.
+The checkpoint's nested result.version0.15.1 is historical, not the running version.
+
+Announcement: 0765ffb1-55b4-45ac-98e9-3ab8fe68eda5 in kommutator-feedback.
+This confirms hub storage/routing, not recipient read. Remote daemons were not updated.
+The previous bounded observer stopped during chat restart; it does not cover the entire
+cutover. A separate 120-second observer was started during final activation.
+See [rollout evidence](../../../spikes/evidence/2026-11-14-bounded-resync-rollout.json)
+and [assessment](deploy-status.md). No historical timeout issue or extended acceptance
+gate is closed by this short deployment observation.

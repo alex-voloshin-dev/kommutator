@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "version": "0.16.0",
+  "release_commit": "e1ddc59cc13b2f92ba245396a324eb4a2ebc0f3d",
+  "merge_commit": "bd9f7f9a218072f48369ddae298b4da4602d6196",
+  "qualification_basis": "Independent review/QA and three first-attempt complete exact-head CI pipelines; local integrated failures remain retained, not reclassified as green.",
+  "workspace_tests": 792,
+  "script_tests": 151,
+  "ci_release_checks": [
+    43640509423,
+    43640513003,
+    43641187571
+  ],
+  "ci_secret_scans": [
+    43640509574,
+    43640513071,
+    43641187569
+  ],
+  "local_integrated_attempts": [
+    {
+      "log": "/tmp/kommutator-v0160-release-check.log",
+      "result": "failed",
+      "scope": "six agentd timeouts and two late cleanup errors"
+    },
+    {
+      "log": "/tmp/kommutator-v0160-release-check-round2.log",
+      "result": "failed",
+      "scope": "two hub deadlines; observed live storage waits, concurrent filesystem-search confound"
+    },
+    {
+      "log": "/tmp/kommutator-v0160-release-check-round3.log",
+      "result": "failed",
+      "scope": "owner-2 SessionStart fixture timeout; old birth diagnostic was invalid"
+    },
+    {
+      "log": "/tmp/kommutator-v0160-release-check-round4.log",
+      "result": "failed",
+      "scope": "stale PostToolUse after valid resume; sampling pending, spawn/stdin completed, cause unknown"
+    }
+  ],
+  "diagnostics": {
+    "standalone_e2e": "passed",
+    "external_proc_only_e2e": "passed, diagnostic not qualification",
+    "ptrace_e2e": "failed a different SessionEnd assertion; instrumentation concern, not qualification",
+    "original_timeouts_explained": false
+  },
+  "public_assets": {
+    "tar_sha256": "07f030a1f8b51c89586f6065bd4f8b9543d0298f7b37f6862bd2bdaabed38dbb",
+    "zip_sha256": "056c786e66be03792e3b8e7aa71a2dcd02f4804e3b7b0771b8ee11930465be8e",
+    "anonymous_download_verified": true,
+    "final_export_matches_packaged_export": true
+  },
+  "native_clean_install": {
+    "claude_cli": "2.1.325",
+    "codex_cli": "0.167.2",
+    "mcp_versions": [
+      "0.16.0",
+      "0.16.0"
+    ],
+    "node": "26.13.0",
+    "private_setup": true,
+    "foreign_origin_rejected": true,
+    "real_model_conversation": false
+  },
+  "deployment": "Completed with explicit inspected reconciliation; see 2026-11-14-bounded-resync-rollout.json. Aggregate degraded for retained pre-cutover recipient-not-found operation.",
+  "unclosed_issues": [
+    9,
+    19,
+    22,
+    25
+  ],
+  "unvalidated": [
+    "day-long",
+    "physical subnet allow/deny",
+    "unattended Windows reboot",
+    "native Work/idle wake"
+  ]
+}

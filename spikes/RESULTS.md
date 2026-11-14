@@ -1413,3 +1413,20 @@ by design. No 0.16.0 release or service activation occurred. See
 [release evidence and failures](../docs/sdlc/bounded-resync/release.md),
 [diagnostic QA](../docs/sdlc/export-hook-diagnostics/qa.md) and
 [phase evidence](evidence/2026-11-14-post-resume-hook-timeout.json).
+
+
+## 2026-11-14 — 0.16.0 publication and local rollout
+
+Source e1ddc59 (PR33 merge bd9f7f9) qualified through independent review/QA and three
+full exact-head CI pipelines: 792 workspace and 151 script tests. Anonymous archive
+hashes and clean Claude/Codex installation probes passed. Four local integrated gates
+remain failed and unexplained in the [release report](../docs/sdlc/bounded-resync/release.md).
+
+Pinned updater activated Docker hub at 21:31:04 UTC and shared daemon0.16.0; loaded
+MCP0.16.0, contract4, hub connected, caller active. Current databases5/8, indexes and
+backups5/7 passed integrity checks. The final updater health gate blocked on a retained
+pre-cutover recipient-not-found reply; explicit independent verification preceded
+reconcile accept and timer restoration. Aggregate health remains degraded for that
+operation, not an empty queue. No automatic retry, rollback, queue deletion or resend.
+See [versioned rollout evidence](evidence/2026-11-14-bounded-resync-rollout.json).
+#9/#19/#22/#25, day-long, physical subnet, reboot and native Work/idle wake remain open.

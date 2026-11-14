@@ -1,0 +1,85 @@
+{
+  "at": "2026-11-14T21:31:45.010595+00:00",
+  "databases": [
+    {
+      "path": "/home/avav25/.kommutator/state.db",
+      "schema": 5,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": []
+    },
+    {
+      "path": "/home/avav25/.local/share/kommutator-hub/kommutator.db",
+      "schema": 8,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    },
+    {
+      "path": "/home/avav25/.local/state/kommutator-release-deploy/attempts/v0.16.0-2f916cc0-6518-4ac8-81f0-f9b1f9527d8b/agentd-before.db",
+      "schema": 5,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": []
+    },
+    {
+      "path": "/home/avav25/.local/share/kommutator-hub/pre-release-0.16.0-1794691863664.db",
+      "schema": 7,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": []
+    }
+  ],
+  "version": "0.16.0",
+  "release_commit": "e1ddc59cc13b2f92ba245396a324eb4a2ebc0f3d",
+  "hub_started_at": "2026-11-14T21:31:04.991497964Z",
+  "daemon_pid": 2079962,
+  "client_version": "0.16.0",
+  "runtime_contract": 4,
+  "hub_connected": true,
+  "caller": "active",
+  "aggregate_health": "degraded",
+  "outbox": {
+    "total": 1,
+    "blocked": 1,
+    "operation_id": "b2c4332d-c885-4f6b-9f1d-7997b51c3ba5",
+    "reason": "recipient-not-found",
+    "disposition": "retained; no deletion or resend"
+  },
+  "updater": {
+    "initial_result": "blocked at aggregate health verification after activation",
+    "reconciliation": "accept after independent checks; no retry or rollback",
+    "checkpoint": "idle",
+    "appliedVersion": "0.16.0",
+    "timer": "active",
+    "nested_result_version": "historical 0.15.1, not runtime"
+  },
+  "announcement_id": "0765ffb1-55b4-45ac-98e9-3ab8fe68eda5",
+  "unclosed_issues": [
+    9,
+    19,
+    22,
+    25
+  ],
+  "bounded_observer": {
+    "samples": 60,
+    "first_at": "2026-11-14T21:31:20.861363+00:00",
+    "last_at": "2026-11-14T21:33:18.873856+00:00",
+    "http_status_counts": {
+      "401": 60
+    },
+    "max_endpoint_ms": 2.642,
+    "complete": true
+  }
+}
