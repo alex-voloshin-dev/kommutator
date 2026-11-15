@@ -1984,3 +1984,14 @@ Unexpected IPC transport closure has its own code and remains uncertain. Shutdow
 once, then probes fresh nonstarting connections within two seconds; only absent-listener
 ENOENT/ECONNREFUSED authorizes replacement. Lazy startup uses one monotonic connection/hello
 budget, spawns at most once, supports cancellation, and never replays an application RPC.
+
+
+### MCP argument recovery guidance (2026-11-15)
+
+MCP-local validation may name static trusted sources for required message IDs and board
+arguments: full message IDs come from the current caller's inbox, joined topic names
+from whoami/list_topics, and existing board keys from board_get. The tool schema remains
+strict and validation precedes client resolution and IPC. Guidance never guesses caller
+identity, topics, IDs or replay authority; it does not join topics, resend mutations or
+relax access checks. Host-side loss of deferred schemas after compaction requires the
+host's tool-discovery mechanism; it is not repaired by accepting invalid calls.
