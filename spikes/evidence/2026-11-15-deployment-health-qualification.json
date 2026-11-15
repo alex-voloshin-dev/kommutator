@@ -37,5 +37,32 @@
   },
   "historical_read_cause": "not established",
   "native_wake": "current visible f4ai capability hook; native failure not reproduced",
-  "deployment": "pending"
+  "deployment": "completed normally; see 2026-11-15-deployment-health-rollout.json",
+  "release_commit": "1aa9909ef3f1bcc5c770b82798ee08705f798a5f",
+  "merge_commit": "82988e1daa5d0abe916a5562336b1aea0e06e99a",
+  "ci_release_checks": [
+    43745460319,
+    43745465205,
+    43745574095
+  ],
+  "ci_secret_scans": [
+    43745460230,
+    43745465060,
+    43745574125
+  ],
+  "public_hashes_verified": true,
+  "native_install": {
+    "claude": "2.1.325",
+    "codex": "0.169.0",
+    "mcp": "0.16.1",
+    "node": "26.13.0",
+    "private_setup": true,
+    "foreign_origin_rejected": true,
+    "argument_hints": true,
+    "real_model": false
+  },
+  "history_scan": {
+    "commits": 109,
+    "result": "no leaks found"
+  }
 }

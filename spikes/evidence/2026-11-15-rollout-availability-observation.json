@@ -1,0 +1,123 @@
+{
+  "version": "0.16.1",
+  "condition": "bounded rollout observer; original full raw log retained in /tmp/kom-v0161-rollout-observer.jsonl",
+  "samples": 295,
+  "first_at": "2026-11-15T18:18:12.573529+00:00",
+  "last_at": "2026-11-15T18:28:11.834429+00:00",
+  "http_status_counts": {
+    "401": 253,
+    "missing": 42
+  },
+  "endpoint_failures": {
+    "TimeoutError": 40
+  },
+  "first_failure": "2026-11-15T18:20:34.583937+00:00",
+  "last_failure": "2026-11-15T18:23:49.814890+00:00",
+  "failures_before_hub_activation": 4,
+  "failures_after_hub_activation": 36,
+  "max_host_io_full_avg10": 76.51,
+  "max_host_memory_full_avg10": 46.59,
+  "verified_D_state_samples": [
+    {
+      "at": "2026-11-15T18:20:34.583937+00:00",
+      "container_started_at": "2026-11-14T21:31:04.991497964Z",
+      "pid": 2070578,
+      "birth_ticks": "36896188",
+      "state": "D",
+      "wchan": "jbd2_log_wait_commit"
+    },
+    {
+      "at": "2026-11-15T18:20:36.584085+00:00",
+      "container_started_at": "2026-11-14T21:31:04.991497964Z",
+      "pid": 2070578,
+      "birth_ticks": "36896188",
+      "state": "D",
+      "wchan": "jbd2_log_wait_commit"
+    },
+    {
+      "at": "2026-11-15T18:20:50.898539+00:00",
+      "container_started_at": "2026-11-14T21:31:04.991497964Z",
+      "pid": 2070578,
+      "birth_ticks": "36896188",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:20:52.898684+00:00",
+      "container_started_at": "2026-11-14T21:31:04.991497964Z",
+      "pid": 2070578,
+      "birth_ticks": "36896188",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:23:02.275739+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "blk_mq_get_tag"
+    },
+    {
+      "at": "2026-11-15T18:23:04.275901+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:23:06.276069+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:23:08.276212+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:23:10.276350+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:23:13.487824+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:23:15.487918+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:23:49.814890+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "folio_wait_bit_common"
+    }
+  ],
+  "identity_unavailable_failures": 28,
+  "interpretation": "Storage waits observed in both old and new hub episodes; strong host memory/IO pressure correlated with post-update interval. Root device/workload cause not proven. Broad MCP reload preceded post-update interval; no causal claim or production stress replay. No matching kernel allocation/vmbus/OOM/I/O error lines returned for18:20-18:24:30UTC.",
+  "last_sample_http_status": 401,
+  "issue": 22,
+  "observer_completed": true
+}

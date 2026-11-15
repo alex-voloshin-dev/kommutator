@@ -5,7 +5,7 @@ work, no snapshot mutation or raw error-text leakage, newly blocked work rejecti
 and exact maximum-length versus next-character MCP argument boundaries.
 
 Ordered build, typecheck and complete workspace tests passed: 807 total
-(41 protocol, 209 hub, 249 daemon, 308 CLI). Updater script suite passed26/26.
+(41 protocol, 209 hub, 249 daemon, 308 CLI). Updater script suite passed 26/26.
 Logs: /tmp/kom-v0161-qa-{build,types,tests,updater}.log. No failed QA runs and no runtime
 edits were required. Parent reviewed the added tests against unchanged implementation.
 

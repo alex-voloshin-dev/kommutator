@@ -1,0 +1,90 @@
+{
+  "at": "2026-11-15T18:22:14.008551+00:00",
+  "databases": [
+    {
+      "path": "/home/avav25/.kommutator/state.db",
+      "schema": 5,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": []
+    },
+    {
+      "path": "/home/avav25/.local/share/kommutator-hub/kommutator.db",
+      "schema": 8,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    },
+    {
+      "path": "/home/avav25/.local/state/kommutator-release-deploy/attempts/v0.16.1-e88d29e8-ea3f-4543-a770-79a8ef5941fd/agentd-before.db",
+      "schema": 5,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": []
+    },
+    {
+      "path": "/home/avav25/.local/share/kommutator-hub/pre-release-0.16.1-1794766881930.db",
+      "schema": 8,
+      "quick_check": [
+        "ok"
+      ],
+      "mode": "0o600",
+      "indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    }
+  ],
+  "version": "0.16.1",
+  "release_commit": "1aa9909ef3f1bcc5c770b82798ee08705f798a5f",
+  "updater_result": {
+    "version": "0.16.1",
+    "commit": "1aa9909ef3f1bcc5c770b82798ee08705f798a5f",
+    "image": "kommutator-hub:release-0.16.1",
+    "nodeVersion": "26.13.0",
+    "nodePath": "/home/avav25/.local/share/kommutator-toolchains/node-26.13.0/bin/node",
+    "pnpmVersion": "12.18.0",
+    "assets": {
+      "tarSha256": "cd0eed5aae3792e9277ee05ef2cab17a95dcd1aec8aeeed931b4a5271b22f692",
+      "zipSha256": "9ab7197b919d5e4432c7fb0b6b02e1991e981ba57fba1986b7b5825762699ae9"
+    },
+    "daemonPid": 3572721,
+    "runtimeContract": 4,
+    "health": {
+      "state": "degraded",
+      "retainedBlocked": 1,
+      "warning": "Preexisting blocked work remains unresolved; deployment acceptance does not authorize resend or deletion."
+    },
+    "directory": "/home/avav25/.local/state/kommutator-release-deploy/attempts/v0.16.1-e88d29e8-ea3f-4543-a770-79a8ef5941fd"
+  },
+  "checkpoint": {
+    "status": "idle",
+    "appliedVersion": "0.16.1"
+  },
+  "manual_reconciliation": false,
+  "timer": "active",
+  "hub_started_at": "2026-11-15T18:21:23.319690736Z",
+  "mcp": "0.16.1",
+  "caller": "active",
+  "hub_connected": true,
+  "announcement_id": "a1cb55cf-dc6b-43c8-a826-6e13afbfcb0d",
+  "hook_trust_changed": false,
+  "post_update_hook_execution": "not certified by MCP reload",
+  "queue_disposition": "old blocked operation retained; no resend/delete",
+  "unclosed_issues": [
+    9,
+    19,
+    22,
+    25
+  ],
+  "availability_observation": "2026-11-15-rollout-availability-observation.json;40 endpoint timeouts retained, not a fully stable interval"
+}

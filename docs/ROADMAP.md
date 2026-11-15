@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-14. Released baseline: [0.16.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.16.0).
+Updated 2026-11-15. Released baseline: [0.16.1](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.16.1).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -11,6 +11,28 @@ full release qualification and ordinary local updater completion are recorded in
 clean-profile installed MCP probes verified 0.12.3.
 
 ## Current release qualification
+
+Published 0.16.1 [deployment readiness and argument guidance](sdlc/deployment-health-gate/release.md)
+repairs reproduced updater rejection of otherwise ready services with unchanged old blocked
+work, and improves static MCP read/board argument guidance before IPC. Independent review,
+external lens and QA passed;807 workspace and154 script tests, full release gate and all
+branch/PR/tag checks passed first attempt. Public hashes and clean real vendor installations
+verified MCP0.16.1 and the new hints.
+
+The separately installed runner was refreshed before pinned cutover. Local hub/daemon and
+actual reloaded MCP0.16.1 are connected with an active caller, contract4. Current databases
+and backups5/8 passed quick_check. Ordinary updater completed without reconciliation;
+checkpoint idle/appliedVersion0.16.1 and timer active. Aggregate status remains degraded
+for one unchanged blocked reply; no queue deletion/resend or false healthy claim.
+The bounded rollout observation also recorded40 HTTP response timeouts across old/new
+hub intervals with observed storage waits and host pressure. Responses recovered; #22
+remains open and the underlying cause is not established. See the release report.
+
+Historical remote read failures remain unexplained; isolated same-identity lifecycle controls
+pass and foreign identity remains rejected. Current visible f4ai sessions report hook
+capability, which does not provide native idle wake. Exact incident evidence remains needed.
+
+### Previous 0.16.0 checkpoint (historical)
 
 Published 0.16.0 [bounded recovery and shutdown repair](sdlc/bounded-resync/release.md)
 is qualified by independent reviews/QA and three first-attempt full exact-head CI gates
@@ -128,6 +150,8 @@ remains open; a healthy short probe is not a root-cause fix.
 | Done | [#31: bounded delivery resync](https://github.com/alex-voloshin-dev/kommutator/issues/31) | Released and locally deployed in 0.16.0 after controlled real-socket regression, independent review/QA and full CI qualification. Schema8 indexes and bounded/fair recovery verified; legacy clients retain burst limitations. Historical #22 attribution remains unproven |
 | Done | [#34: transport shutdown ordering](https://github.com/alex-voloshin-dev/kommutator/issues/34) | Released and locally deployed in 0.16.0; independently reviewed controlled regression proves awaited close and late-callback fencing. This does not explain the retained packaging timeouts |
 | 1 | Blocked operation diagnostics | Completed in 0.15.2: retained blocked evidence and allowlisted reasons; safe queue disposition remains separate |
+| Done | Updater readiness and MCP argument guidance | Released0.16.1; controlled baseline regressions, independent gates and normal local rollout with old blocked work retained |
+| 2 | Historical inbox/read rejection | Two pre-0.16.0 reports lack exact IDs/caller evidence; controls pass, original cause not established. No authorization bypass |
 | 2 | Safe blocked-outbox disposition | Latest remote report lists 93 retained RPC-rejected entries on 0.15.0. Design explicit owner visibility and replay-safe disposition; do not delete rows or infer non-commit from the last rejection |
 | 1 | [#19: intermittent lifecycle registration fixture failure](https://github.com/alex-voloshin-dev/kommutator/issues/19) | Controlled accepted-registration race fixed in 0.12.6; old core fails and delayed process control passes. CI captures queue/birth/local-save phases; original historical trigger and separate missing-generation failures remain unproven. Preserve deadlines, fences and single attempts |
 | 2 | [#9: hook startup latency](https://github.com/alex-voloshin-dev/kommutator/issues/9) | Reopened on 2026-11-14 after a 450.480 ms non-stalled IPC Stop in exact-version candidate qualification; original cause remains unproven. Natural traced 207.380 ms sample measured 54.349 ms main-thread scheduler wait; untraced 310.501 ms cause unknown. Capture equivalent CI phase evidence; retain the temporary 300 ms cap, 200 ms target and unchanged 140/90 ms internal timers |
@@ -149,10 +173,10 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Core and identity | Hub, daemon, MCP/hooks, boards and dashboard; live macOS two-Claude native exchange; same-host identity and resume fencing; 0.12.2 durable retirement recovery and pre-enqueue address validation | Preserve these contracts; synthetic recovery coverage is separate from every vendor/environment combination |
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
-| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.16.0 deployed; explicit reconciliation retained one unrelated blocked operation | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.16.0 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.16.1 deployed; ordinary updater retained the old blocked-work warning | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.16.1 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
-| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.16.0 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
+| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.16.1 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
 
 ## Acceptance work that needs a suitable environment

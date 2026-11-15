@@ -1430,3 +1430,42 @@ reconcile accept and timer restoration. Aggregate health remains degraded for th
 operation, not an empty queue. No automatic retry, rollback, queue deletion or resend.
 See [versioned rollout evidence](evidence/2026-11-14-bounded-resync-rollout.json).
 #9/#19/#22/#25, day-long, physical subnet, reboot and native Work/idle wake remain open.
+
+
+## 2026-11-15 — 0.16.1 readiness and argument recovery
+
+Controlled baseline regressions reproduced the updater retained-backlog rejection and
+weak SDK argument guidance. Independent correctness/API/security/external review and QA
+passed;807 workspace+154 script tests and first full release:check passed, followed by
+three exact-head CI checks and secret scans. A201.473ms hook sample exceeded the200ms
+target but stayed below unchanged300ms temporary limit. Public hashes and real clean
+Claude/Codex installation/MCP/private setup/Origin/hint probes passed.
+
+The refreshed installed runner completed real pinned rollout without manual reconciliation:
+hub started18:21:23UTC, actual hub/daemon/reloaded MCP0.16.1, contract4, connected caller.
+Current databases and backups5/8 passed quick_check, timer restored. Updater correctly
+preserved degraded/retainedBlocked1 for the original rejected reply instead of blocking
+successful deployment or falsely clearing health. No queue action or rollback.
+
+Historical read failures remain unexplained; current visible f4ai hook capability describes
+polling, not a proven native-wake defect. #9/#19/#22/#25 and extended acceptance remain open.
+See [qualification](evidence/2026-11-15-deployment-health-qualification.json) and
+[rollout](evidence/2026-11-15-deployment-health-rollout.json).
+
+
+## Retained availability observation
+
+The bounded rollout observer recorded40 HTTP response timeouts (800ms probe budget):
+4 before hub activation and36 after, between18:20:34 and18:23:49UTC. Validated Node
+samples show the old hub in D-state/jbd2_log_wait_commit and the new hub in
+D-state/folio_wait_bit_common. Host IO-full avg10 peaked76.51%, memory-full46.59%.
+Twenty-eight failed probes lacked a current Node identity, so no per-process claim is
+made for those samples. Responses recovered; later probes and MCP connectivity passed.
+This is not a fully stable rollout interval. #22 remains open.
+
+A broad MCP reload preceded the post-update interval; its workload contribution is
+unmeasured, not an established cause. No matching kernel allocation/vmbus/OOM/I/O error
+lines were returned for18:20–18:24:30UTC. No production stress replay, kernel tuning,
+rollback or queue manipulation was performed. Evidence is in
+spikes/evidence/2026-11-15-rollout-availability-observation.json. Successful readiness
+verification is a point-in-time gate and does not explain subsequent availability.
