@@ -1582,6 +1582,16 @@ Compose configurations must preserve the default loopback port, identity and pri
 Online VACUUM INTO snapshots precede activation and possible schema migration. Hub health,
 agentd version/contract and hub connectivity are checked before recording success.
 
+Deployment readiness is separate from aggregate backlog health. The updater requires the
+exact target daemon version, runtime contract 4, a positive PID and explicit connected hub.
+Healthy results require no reported issues. A degraded result is admissible only when its
+sole issue is blocked outbox work and every currently blocked row has the same ID, method
+and error in a complete, validated pre-activation status snapshot. Missing or inconsistent
+snapshots, new/changed blocked rows, unknown issues and disconnected services fail closed.
+The result retains the aggregate state, blocked count and a fixed unresolved-backlog warning;
+accepting deployment neither clears degradation nor proves non-commit or delivery. It never
+removes, retries or rewrites queued operations. New blocking work still requires inspection.
+
 A private checkpoint and kernel lock serialize updates. Interrupted or failed attempts block
 future automatic updates until explicit operator reconciliation; rollback is never automatic,
 because newer schemas may be incompatible with older binaries. Source clones, dependencies,
