@@ -191,6 +191,44 @@ export function imageSmokeArguments(image, version, uid = process.getuid(), gid 
     'node', '--input-type=module', '-e', imageSmoke, version];
 }
 
+const BLOCKED_OUTBOX_ISSUE = 'Outbox has blocked entries; inspect their error before deciding whether to resend.';
+const RETAINED_BACKLOG_WARNING = 'Preexisting blocked work remains unresolved; deployment acceptance does not authorize resend or deletion.';
+
+function blockedSnapshot(status) {
+  if (!Number.isSafeInteger(status?.outbox_depth) || status.outbox_depth < 0 ||
+      !Array.isArray(status.outbox) || status.outbox.length !== status.outbox_depth) return undefined;
+  const ids = new Set(), blocked = new Map();
+  for (const row of status.outbox) {
+    if (!row || !Number.isSafeInteger(row.id) || row.id <= 0 || ids.has(row.id) ||
+        typeof row.method !== 'string' || !/^[a-z]+\.[a-z_]+$/.test(row.method) ||
+        (row.error !== null && (typeof row.error !== 'string' || !row.error))) return undefined;
+    ids.add(row.id);
+    if (row.error !== null) blocked.set(row.id, { method: row.method, error: row.error });
+  }
+  return blocked;
+}
+
+function onlyBlockedHealth(status) {
+  return status?.health?.state === 'degraded' && Array.isArray(status.health.issues) &&
+    status.health.issues.length === 1 && status.health.issues[0] === BLOCKED_OUTBOX_ISSUE;
+}
+
+// Deployment may preserve old unresolved work; it must not certify new degradation.
+export function deploymentReadiness(status, previous, version) {
+  if (status?.daemon?.running !== true || status.daemon.version !== version ||
+      status.runtime_contract !== 4 || !Number.isSafeInteger(status.daemon.pid) ||
+      status.daemon.pid <= 0 || status.hub?.connected !== true) return undefined;
+  const blocked = blockedSnapshot(status);
+  if (!blocked) return undefined;
+  if (status.health?.state === 'healthy' && Array.isArray(status.health.issues) &&
+      status.health.issues.length === 0 && blocked.size === 0) return { state: 'healthy', retainedBlocked: 0 };
+  if (!onlyBlockedHealth(status) || blocked.size === 0 || !onlyBlockedHealth(previous) ||
+      previous.daemon?.running !== true || previous.runtime_contract !== 4 || previous.hub?.connected !== true) return undefined;
+  const before = blockedSnapshot(previous);
+  if (!before || [...blocked].some(([id, row]) => before.get(id)?.method !== row.method || before.get(id)?.error !== row.error)) return undefined;
+  return { state: 'degraded', retainedBlocked: blocked.size, warning: RETAINED_BACKLOG_WARNING };
+}
+
 export async function deployRelease(release, commit, directory, execute = run, paths = defaultPaths(), expected) {
   if (expected) { validateCutover(expected); if (release.tag_name !== `v${expected.version}` || commit !== expected.commit) throw new Error('cutover deployment identity mismatch'); }
   const version = release.tag_name.slice(1), clone = join(directory, 'repo');
@@ -227,13 +265,14 @@ export async function deployRelease(release, commit, directory, execute = run, p
   try { daemonDb.exec(`VACUUM INTO '${join(directory, 'agentd-before.db').replaceAll("'", "''")}'`); } finally { daemonDb.close(); }
   await step('activate-hub', 'docker', [...compose, 'up', '-d', '--no-build', '--force-recreate', '--wait', '--wait-timeout', '120', 'hub']);
   await step('restart-agentd', process.execPath, [cli, 'daemon', 'restart']);
-  let status;
+  let status, health;
   for (let attempt = 0; attempt < 20; attempt++) {
     status = JSON.parse(await step('verify-agentd', process.execPath, [cli, 'status']));
-    if (status.daemon?.running === true && status.daemon?.version === version && Number.isSafeInteger(status.runtime_contract) && status.runtime_contract > 0 && status.hub?.connected && status.health?.state === 'healthy') break;
+    health = deploymentReadiness(status, previousDaemon, version);
+    if (health) break;
     await new Promise(resolve => setTimeout(resolve, 500));
   }
-  if (status.daemon?.running !== true || status.daemon?.version !== version || !Number.isSafeInteger(status.runtime_contract) || status.runtime_contract <= 0 || !status.hub?.connected || status.health?.state !== 'healthy') throw new Error('new daemon did not become healthy');
+  if (!health) throw new Error('new daemon did not become ready; inspect runtime and retained backlog evidence');
   if (!Number.isSafeInteger(status.daemon.pid) || status.daemon.pid <= 0) throw new Error('invalid daemon PID');
   const daemonNode = (await step('verify-daemon-node', process.execPath, ['--input-type=module', '-e', 'import {realpath} from "node:fs/promises"; console.log(await realpath("/proc/"+process.argv[1]+"/exe"));', String(status.daemon.pid)])).trim();
   if (daemonNode !== actualNode.path) throw new Error('daemon Node executable mismatch');
@@ -241,7 +280,7 @@ export async function deployRelease(release, commit, directory, execute = run, p
   const current = (await step('current', 'docker', [...compose, 'ps', '--quiet', 'hub'])).trim();
   const actual = JSON.parse(await step('verify-hub', 'docker', ['inspect', current]))[0]; validateContainer(actual, paths);
   if (actual.State?.Health?.Status !== 'healthy' || actual.Config?.Image !== image) throw new Error('new hub did not become healthy');
-  return { version, commit, image, nodeVersion: actualNode.version, nodePath: actualNode.path, pnpmVersion: '12.18.0', ...(assetIdentity ? { assets: assetIdentity } : {}), daemonPid: status.daemon.pid, runtimeContract: status.runtime_contract, directory };
+  return { version, commit, image, nodeVersion: actualNode.version, nodePath: actualNode.path, pnpmVersion: '12.18.0', ...(assetIdentity ? { assets: assetIdentity } : {}), daemonPid: status.daemon.pid, runtimeContract: status.runtime_contract, health, directory };
 }
 export async function updateOnce({ policy, state, execute = run, deploy = deployRelease, mode = 'run', expected }) {
   if (mode === 'cutover') validateCutover(expected);

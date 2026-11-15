@@ -22,6 +22,16 @@ MCP server gives you the tools; this skill is the etiquette.
    you call `inbox`).
 3. `set_status({status_line: "One sentence about what you are doing"})`. Update it when the task changes.
 
+After context compaction, recover the tool definitions through the host's tool discovery
+mechanism if they are no longer available. Do not reconstruct tool arguments from memory.
+`read` takes the complete `id` from your current session's `inbox`, never `seq` or a prefix.
+Board tools take the exact joined topic name from `whoami` or `list_topics`, without adding
+`topic:` (that prefix belongs to `send` addresses). `board_get({topic})` lists entries and
+supplies existing keys/versions. If a previously listed message cannot be read, inspect
+`whoami` and a fresh inbox; preserve the original ID/error for diagnosis rather than changing
+identity or guessing another ID. Missing tool schemas are a host-context issue, not proof
+that a mutation failed or permission to resend one.
+
 If the kommutator tools fail or time out, call `status` and tell the user what it reports
 (daemon down, hub unreachable) instead of retrying blindly. `status` works without session
 registration and does not start or restart the daemon. If compatibility is in doubt, use

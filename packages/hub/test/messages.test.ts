@@ -300,6 +300,27 @@ describe("message routing and inbox", () => {
     expect(resyncDeliveries(ctx, peer, { acked: { gone: 0 } })).toEqual({ replayed: 0 });
   });
 
+  it("keeps an inbox ID readable across receipts, rename, topic leave and reincarnation of the same identity", () => {
+    for (const session_id of ["a", "b"]) joinTopic(ctx, peer, { session_id, name: "read-control" });
+    const sent = sendMessage(ctx, peer, params(["topic:read-control"], { kind: "topic" }));
+    const listed = inbox("b", { unread_only: true }).headers[0];
+    expect(listed?.id).toBe(sent.id);
+    if (!listed) throw new Error("expected inbox header");
+    markReceipt(ctx, peer, { session_id: "b", ids: [listed.id], state: "read" });
+    upsertSession(ctx, peer, Methods["session.upsert"].parse({ op: "update", session: { id: "b", name: "renamed-reader" } }));
+    leaveTopic(ctx, peer, { session_id: "b", name: "read-control" });
+    expect(readMessage(ctx, peer, { session_id: "b", id: listed.id })).toMatchObject({ message: { id: sent.id }, state: "read" });
+    db.prepare("UPDATE sessions SET ended_at = ?, state = 'gone' WHERE id = 'b'").run(NOW);
+    upsertSession(ctx, peer, Methods["session.upsert"].parse({
+      op: "reincarnate", reg_id: "read-control-revive", session: { id: "b", host: "laptop", name: "renamed-reader", vendor: "claude-code" },
+    }));
+    expect(inbox("b", { unread_only: false }).headers).toMatchObject([{ id: sent.id, state: "read" }]);
+    expect(readMessage(ctx, peer, { session_id: "b", id: listed.id }).message.id).toBe(sent.id);
+    expect(() => readMessage(ctx, { host: "server" }, { session_id: "c", id: listed.id })).toThrow("not in this session's inbox");
+    expect(inbox("c", { unread_only: false }).headers).toEqual([]);
+    expect(db.prepare("SELECT session_id, state FROM deliveries WHERE message_id = ?").all(sent.id)).toEqual([{ session_id: "b", state: "read" }]);
+  });
+
   it("captures membership at send time without granting history to later subscribers", () => {
     for (const session_id of ["a", "b"]) joinTopic(ctx, peer, { session_id, name: "offline-feedback" });
     const first = sendMessage(ctx, peer, params(["topic:offline-feedback"], { kind: "topic" }));

@@ -104,6 +104,24 @@ healthcheck with a synthetic key and isolated tmpfs database before any producti
 This catches runtime permission failures that a root build-stage import cannot detect.
 
 
+## Deployment readiness and retained blocked work
+
+Deployment readiness requires exact runtime contract 4 and the selected version, with explicit
+hub connectivity. Aggregate `degraded` is accepted only for unchanged blocked rows present in
+the complete pre-activation snapshot (same ID, method and error), with no other health issue.
+The result records the remaining blocked count and warning; aggregate status stays degraded.
+New/changed blocked work, malformed evidence and other degradation still block the attempt.
+This never removes or resends work and does not certify every client registration.
+
+Publishing a client/hub release does not replace the separately installed updater runner.
+Before using this gate, stop its timer, drain the oneshot and check its lock as above. Stage
+the reviewed updater script with its `scripts/lib/` dependencies and asset verifier in a new
+private runner directory, point the systemd unit at it with the existing private Node26/PATH,
+and daemon-reload. Preserve the old runner and active daemon checkout. Inspect checkpoint
+and actual versions before a pinned cutover; restore the timer only after verification or
+explicit inspected reconciliation. Do not modify or lower aggregate runtime health to make
+an old updater pass.
+
 ## Runtime contract 4 and local state schema 5 transition
 
 This transition changes Claude process identity and retirement paths. Service deployment

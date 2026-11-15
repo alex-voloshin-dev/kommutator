@@ -1,0 +1,41 @@
+{
+  "version": "0.16.1",
+  "baseline_regressions": {
+    "updater": "failed old health gate after20 polls",
+    "mcp": "11 guidance failures through SDK"
+  },
+  "qa": {
+    "workspace_tests": 807,
+    "updater_script_tests": 26,
+    "build": "passed",
+    "typecheck": "passed"
+  },
+  "reviews": {
+    "correctness": "approve",
+    "security": "approve",
+    "integration": "approve",
+    "external": "approve"
+  },
+  "assets": {
+    "tar_sha256": "cd0eed5aae3792e9277ee05ef2cab17a95dcd1aec8aeeed931b4a5271b22f692",
+    "zip_sha256": "9ab7197b919d5e4432c7fb0b6b02e1991e981ba57fba1986b7b5825762699ae9",
+    "gitleaks": {
+      "raw_exit": 1,
+      "findings": 2,
+      "disposition": "both manifest matches verified as SHA256 of THIRD-PARTY-LICENSES/path-key@3.1.1-path-key-license, not credentials"
+    }
+  },
+  "release_check": {
+    "result": "passed first attempt",
+    "workspace_tests": 807,
+    "script_tests": 154,
+    "clean_path": true,
+    "synthetic_e2e": true,
+    "log": "/tmp/kom-v0161-release-check.log",
+    "above_target_hook_ms": 201.473,
+    "limit_ms": 300
+  },
+  "historical_read_cause": "not established",
+  "native_wake": "current visible f4ai capability hook; native failure not reproduced",
+  "deployment": "pending"
+}

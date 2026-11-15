@@ -223,3 +223,60 @@ it("projects caller ownership failure after the final wrapper in both status mod
   }
   expect(calls).toEqual([]); expect(methods).toEqual(["daemon.status", "daemon.status"]);
 });
+
+it.each([
+  ["read", {}, "Use id from this session's inbox"],
+  ["read", { id: 419 }, "Use id from this session's inbox"],
+  ["read", { id: "" }, "Use id from this session's inbox"],
+  ["read", { id: "x".repeat(300_000) }, "Use id from this session's inbox"],
+  ["board_get", {}, "Use topic from whoami or list_topics"],
+  ["board_get", { topic: 419 }, "Use topic from whoami or list_topics"],
+  ["board_put", { topic: "", key: "known", body: "" }, "Use topic from whoami or list_topics"],
+  ["board_history", { topic: "x".repeat(300_000), key: "known" }, "Use topic from whoami or list_topics"],
+  ["board_get", { topic: "global", key: 419 }, "Use an exact key from board_get"],
+  ["board_history", { topic: "global" }, "Use an exact key from board_get"],
+  ["board_history", { topic: "global", key: "" }, "Use an exact key from board_get"],
+  ["board_put", { topic: "global", body: "" }, "Choose an explicit key"],
+] as const)("guides invalid %s arguments through SDK validation before resolving a caller", async (name, args, hint) => {
+  let resolutions = 0;
+  const server = createMcpServer(() => { resolutions++; throw new Error("must not resolve"); });
+  const client = new Client({ name: "test", version: "test" });
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  await server.connect(b); await client.connect(a);
+  close.push(() => client.close(), () => server.close());
+  const result = await client.callTool({ name, arguments: args });
+  expect(result.isError).toBe(true);
+  const text = JSON.stringify(result.content);
+  expect(text).toContain(hint);
+  expect(text).not.toContain("x".repeat(1_000));
+  expect(text).not.toContain("operation_id");
+  expect(text.length).toBeLessThan(2_000);
+  expect(resolutions).toBe(0);
+});
+
+it("preserves opaque IDs, board names and optional key omission without argument repair", async () => {
+  const { client, calls } = await setup();
+  await client.callTool({ name: "read", arguments: { id: "opaque-id" } });
+  await client.callTool({ name: "board_get", arguments: { topic: "project:example/repo" } });
+  await client.callTool({ name: "board_history", arguments: { topic: "global", key: "handoff/exact" } });
+  expect(calls).toEqual([
+    { method: "message.read", params: { id: "opaque-id" } },
+    { method: "board.get", params: { topic: "project:example/repo" } },
+    { method: "board.history", params: { topic: "global", key: "handoff/exact", limit: 10 } },
+  ]);
+});
+
+it("keeps exact boundary arguments valid and rejects the next character without IPC", async () => {
+  const { client, calls } = await setup();
+  for (const [name, args] of [
+    ["read", { id: "i".repeat(64) }],
+    ["board_get", { topic: "t".repeat(120), key: "k".repeat(120) }],
+  ] as const) expect((await client.callTool({ name, arguments: args })).isError).not.toBe(true);
+  expect(calls).toHaveLength(2);
+  for (const [name, args] of [
+    ["read", { id: "i".repeat(65) }],
+    ["board_get", { topic: "t".repeat(121) }],
+    ["board_get", { topic: "global", key: "k".repeat(121) }],
+  ] as const) expect((await client.callTool({ name, arguments: args })).isError).toBe(true);
+  expect(calls).toHaveLength(2);
+});

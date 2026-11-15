@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { compareVersions, chooseRelease, assetsReady, checksReady, updateOnce, saveCheckpoint, readCheckpoint, loadDeployPolicy, run, validateCompose, validateContainer, deployRelease, normalizeTrackedSource, REPOSITORY, cutoverConstraints } from './lib/local-release-deploy.mjs';
+import { compareVersions, chooseRelease, assetsReady, checksReady, updateOnce, saveCheckpoint, readCheckpoint, loadDeployPolicy, run, validateCompose, validateContainer, deployRelease, normalizeTrackedSource, REPOSITORY, cutoverConstraints, deploymentReadiness } from './lib/local-release-deploy.mjs';
 const sha = 'a'.repeat(40);
 test('actual cutover CLI rejects malformed constraints before creating state or invoking tools', async t => {
   const home = await temp(t);
@@ -89,7 +89,7 @@ test('both deployment boundaries reject expanded port, mount or privilege access
   for (const mutate of [x => { x.services.hub.ports[0].host_ip = '0.0.0.0'; }, x => { x.services.hub.cap_add = ['SYS_ADMIN']; }, x => { x.services.hub.volumes.push({ source: '/', target: '/host' }); }]) { const copy = structuredClone(compose); mutate(copy); assert.throws(() => validateCompose(copy, paths)); }
   for (const mutate of [x => { x.HostConfig.Privileged = true; }, x => { x.HostConfig.PortBindings['8787/tcp'].push({ HostIp: '::', HostPort: '8787' }); }, x => { x.Mounts.push({ Type: 'bind', Source: '/', Destination: '/host' }); }]) { const copy = structuredClone(container); mutate(copy); assert.throws(() => validateContainer(copy, paths)); }
 });
-test('staged deployment builds before backups/activation, verifies exact versions and preserves daemon backup', async t => {
+async function deploymentFixture(t, { previous, current } = {}) {
   const directory = await temp(t), paths = { data: join(directory, 'hub'), key: join(directory, 'key'), daemon: join(directory, 'daemon') };
   await mkdir(paths.daemon); const db = new DatabaseSync(join(paths.daemon, 'state.db')); db.exec('CREATE TABLE proof(value TEXT); INSERT INTO proof VALUES (\'preserved\')'); db.close();
   const { compose, container } = fixtures(paths), order = [];
@@ -106,15 +106,32 @@ test('staged deployment builds before backups/activation, verifies exact version
     if (step === 'compose') return JSON.stringify(compose);
     if (step === 'existing' || step === 'current') return 'a'.repeat(64);
     if (step === 'inspect' || step === 'verify-hub') return JSON.stringify([container]);
-    if (step === 'preflight-agentd') return JSON.stringify({ daemon: { version: '0.3.0' } });
+    if (step === 'preflight-agentd') return JSON.stringify(previous ?? { daemon: { version: '0.3.0' } });
     if (step === 'preflight-hub') return JSON.stringify({ version: '0.3.0' });
-    if (step === 'verify-agentd') return JSON.stringify({ daemon: { running: true, version: '0.4.0', pid: 123 }, runtime_contract: 3, hub: { connected: true }, health: { state: 'healthy' } });
+    if (step === 'verify-agentd') return JSON.stringify(current ?? { daemon: { running: true, version: '0.4.0', pid: 123 }, runtime_contract: 4, hub: { connected: true }, health: { state: 'healthy', issues: [] }, outbox_depth: 0, outbox: [] });
     return '';
   };
-  const result = await deployRelease(release, sha, directory, execute, paths); assert.equal(result.runtimeContract, 3);
+  return { directory, paths, execute, order };
+}
+test('staged deployment builds before backups/activation, verifies exact versions and preserves daemon backup', async t => {
+  const { directory, paths, execute, order } = await deploymentFixture(t);
+  const result = await deployRelease(release, sha, directory, execute, paths); assert.equal(result.runtimeContract, 4);
   assert.ok(order.indexOf('image') < order.indexOf('smoke-image')); assert.ok(order.indexOf('smoke-image') < order.indexOf('backup-hub'));
   assert.ok(order.indexOf('image') < order.indexOf('backup-hub')); assert.ok(order.indexOf('backup-hub') < order.indexOf('activate-hub')); assert.ok(order.indexOf('activate-hub') < order.indexOf('restart-agentd'));
   const backup = new DatabaseSync(join(directory, 'agentd-before.db'), { readOnly: true }); assert.equal(backup.prepare('SELECT value FROM proof').get().value, 'preserved'); backup.close();
+});
+test('deployment accepts only unchanged preexisting blocked work and retains its warning', async t => {
+  const issue = 'Outbox has blocked entries; inspect their error before deciding whether to resend.';
+  const previous = { daemon: { running: true, version: '0.3.0', pid: 122 }, runtime_contract: 4,
+    hub: { connected: true }, health: { state: 'degraded', issues: [issue] }, outbox_depth: 1,
+    outbox: [{ id: 644, method: 'message.send', age_ms: 100, error: 'RPC -32004: unknown recipient handle' }] };
+  const current = { ...structuredClone(previous), daemon: { running: true, version: '0.4.0', pid: 123 } };
+  current.outbox[0].age_ms = 200;
+  const { directory, paths, execute } = await deploymentFixture(t, { previous, current });
+  const result = await deployRelease(release, sha, directory, execute, paths);
+  assert.deepEqual(result.health, { state: 'degraded', retainedBlocked: 1,
+    warning: 'Preexisting blocked work remains unresolved; deployment acceptance does not authorize resend or deletion.' });
+  assert.equal(current.outbox.length, 1);
 });
 test('runner abort kills active child; already aborted command never starts', async t => {
   const state = await temp(t), marker = join(state, 'started'), controller = new AbortController();
@@ -336,4 +353,56 @@ test('clone moved tag or mismatched actual toolchain cannot reach activation', a
     await assert.rejects(deployRelease(release, sha, directory, execute));
     for (const forbidden of ['install', 'backup-hub', 'activate-hub', 'restart-agentd']) assert.ok(!seen.includes(forbidden));
   }
+});
+
+
+test('deployment readiness rejects disconnected, unknown, new and malformed degradation', () => {
+  const previous = { daemon: { running: true, version: '0.3.0', pid: 122 }, runtime_contract: 4,
+    hub: { connected: true }, health: { state: 'degraded', issues: ['Outbox has blocked entries; inspect their error before deciding whether to resend.'] },
+    outbox_depth: 1, outbox: [{ id: 644, method: 'message.send', error: 'RPC -32004: unknown recipient handle' }] };
+  const current = { ...structuredClone(previous), daemon: { running: true, version: '0.4.0', pid: 123 } };
+  assert.equal(deploymentReadiness(current, previous, '0.4.0').retainedBlocked, 1);
+  for (const mutate of [
+    x => { x.hub.connected = false; }, x => { x.hub.connected = 'true'; },
+    x => { x.daemon.running = false; }, x => { x.daemon.pid = -1; },
+    x => { x.daemon.version = '0.3.0'; }, x => { x.runtime_contract = 3; }, x => { x.runtime_contract = 5; },
+    x => { x.health.state = 'unknown'; }, x => { x.health.issues.push('Other degradation'); },
+    x => { x.health.issues = []; }, x => { x.health.state = 'healthy'; x.health.issues = []; },
+    x => { x.outbox[0].id++; }, x => { x.outbox[0].method = 'board.put'; },
+    x => { x.outbox[0].error = 'new rejection'; }, x => { x.outbox_depth++; },
+    x => { delete x.outbox; }, x => { x.outbox[0].id = '644'; },
+    x => { x.outbox[0].error = {}; }, x => { delete x.outbox[0].error; },
+    x => { x.outbox.push({ ...x.outbox[0] }); x.outbox_depth++; },
+  ]) {
+    const changed = structuredClone(current); mutate(changed);
+    assert.equal(deploymentReadiness(changed, previous, '0.4.0'), undefined);
+  }
+  for (const mutate of [
+    x => { delete x.outbox; }, x => { x.outbox_depth = 0; },
+    x => { x.outbox[0].error = null; }, x => { x.hub.connected = false; },
+    x => { x.health.issues.push('unrelated failure'); }, x => { x.runtime_contract = 3; },
+  ]) {
+    const changed = structuredClone(previous); mutate(changed);
+    assert.equal(deploymentReadiness(current, changed, '0.4.0'), undefined);
+  }
+  const recovered = { ...current, health: { state: 'healthy', issues: [] }, outbox_depth: 0, outbox: [] };
+  assert.deepEqual(deploymentReadiness(recovered, previous, '0.4.0'), { state: 'healthy', retainedBlocked: 0 });
+  assert.equal(deploymentReadiness({ ...recovered, health: { state: 'healthy', issues: ['unknown'] } }, previous, '0.4.0'), undefined);
+});
+
+test('readiness retains only remaining old failures without mutating snapshots or exposing their text', () => {
+  const issue = 'Outbox has blocked entries; inspect their error before deciding whether to resend.';
+  const previous = { daemon: { running: true, version: '0.3.0', pid: 122 }, runtime_contract: 4,
+    hub: { connected: true }, health: { state: 'degraded', issues: [issue] }, outbox_depth: 2,
+    outbox: [{ id: 1, method: 'message.send', error: 'private old rejection' }, { id: 2, method: 'board.put', error: 'private other rejection' }] };
+  const current = { ...structuredClone(previous), daemon: { running: true, version: '0.4.0', pid: 123 },
+    outbox: [{ ...previous.outbox[1] }, { id: 3, method: 'session.upsert', error: null }] };
+  const before = JSON.stringify({ previous, current });
+  const result = deploymentReadiness(current, previous, '0.4.0');
+  assert.equal(result.retainedBlocked, 1);
+  assert.equal(result.state, 'degraded');
+  assert.doesNotMatch(JSON.stringify(result), /private/);
+  assert.equal(JSON.stringify({ previous, current }), before);
+  current.outbox[1].error = 'new failure after activation';
+  assert.equal(deploymentReadiness(current, previous, '0.4.0'), undefined);
 });
