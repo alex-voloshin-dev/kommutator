@@ -389,3 +389,20 @@ test('deployment readiness rejects disconnected, unknown, new and malformed degr
   assert.deepEqual(deploymentReadiness(recovered, previous, '0.4.0'), { state: 'healthy', retainedBlocked: 0 });
   assert.equal(deploymentReadiness({ ...recovered, health: { state: 'healthy', issues: ['unknown'] } }, previous, '0.4.0'), undefined);
 });
+
+test('readiness retains only remaining old failures without mutating snapshots or exposing their text', () => {
+  const issue = 'Outbox has blocked entries; inspect their error before deciding whether to resend.';
+  const previous = { daemon: { running: true, version: '0.3.0', pid: 122 }, runtime_contract: 4,
+    hub: { connected: true }, health: { state: 'degraded', issues: [issue] }, outbox_depth: 2,
+    outbox: [{ id: 1, method: 'message.send', error: 'private old rejection' }, { id: 2, method: 'board.put', error: 'private other rejection' }] };
+  const current = { ...structuredClone(previous), daemon: { running: true, version: '0.4.0', pid: 123 },
+    outbox: [{ ...previous.outbox[1] }, { id: 3, method: 'session.upsert', error: null }] };
+  const before = JSON.stringify({ previous, current });
+  const result = deploymentReadiness(current, previous, '0.4.0');
+  assert.equal(result.retainedBlocked, 1);
+  assert.equal(result.state, 'degraded');
+  assert.doesNotMatch(JSON.stringify(result), /private/);
+  assert.equal(JSON.stringify({ previous, current }), before);
+  current.outbox[1].error = 'new failure after activation';
+  assert.equal(deploymentReadiness(current, previous, '0.4.0'), undefined);
+});

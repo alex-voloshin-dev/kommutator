@@ -265,3 +265,18 @@ it("preserves opaque IDs, board names and optional key omission without argument
     { method: "board.history", params: { topic: "global", key: "handoff/exact", limit: 10 } },
   ]);
 });
+
+it("keeps exact boundary arguments valid and rejects the next character without IPC", async () => {
+  const { client, calls } = await setup();
+  for (const [name, args] of [
+    ["read", { id: "i".repeat(64) }],
+    ["board_get", { topic: "t".repeat(120), key: "k".repeat(120) }],
+  ] as const) expect((await client.callTool({ name, arguments: args })).isError).not.toBe(true);
+  expect(calls).toHaveLength(2);
+  for (const [name, args] of [
+    ["read", { id: "i".repeat(65) }],
+    ["board_get", { topic: "t".repeat(121) }],
+    ["board_get", { topic: "global", key: "k".repeat(121) }],
+  ] as const) expect((await client.callTool({ name, arguments: args })).isError).toBe(true);
+  expect(calls).toHaveLength(2);
+});
