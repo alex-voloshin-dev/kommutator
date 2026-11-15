@@ -9,12 +9,12 @@
     "missing": 42
   },
   "endpoint_failures": {
-    "TimeoutError": 40
+    "TimeoutError": 42
   },
   "first_failure": "2026-11-15T18:20:34.583937+00:00",
-  "last_failure": "2026-11-15T18:23:49.814890+00:00",
+  "last_failure": "2026-11-15T18:27:51.833094+00:00",
   "failures_before_hub_activation": 4,
-  "failures_after_hub_activation": 36,
+  "failures_after_hub_activation": 38,
   "max_host_io_full_avg10": 76.51,
   "max_host_memory_full_avg10": 46.59,
   "verified_D_state_samples": [
@@ -113,6 +113,22 @@
       "birth_ticks": "44398021",
       "state": "D",
       "wchan": "folio_wait_bit_common"
+    },
+    {
+      "at": "2026-11-15T18:27:49.833000+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "jbd2_log_wait_commit"
+    },
+    {
+      "at": "2026-11-15T18:27:51.833094+00:00",
+      "container_started_at": "2026-11-15T18:21:23.319690736Z",
+      "pid": 3562991,
+      "birth_ticks": "44398021",
+      "state": "D",
+      "wchan": "jbd2_log_wait_commit"
     }
   ],
   "identity_unavailable_failures": 28,

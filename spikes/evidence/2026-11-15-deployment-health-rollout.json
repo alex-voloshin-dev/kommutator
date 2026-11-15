@@ -86,5 +86,5 @@
     22,
     25
   ],
-  "availability_observation": "2026-11-15-rollout-availability-observation.json;40 endpoint timeouts retained, not a fully stable interval"
+  "availability_observation": "2026-11-15-rollout-availability-observation.json;42 endpoint timeouts retained, not a fully stable interval"
 }

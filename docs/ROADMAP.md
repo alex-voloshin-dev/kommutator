@@ -24,7 +24,7 @@ actual reloaded MCP0.16.1 are connected with an active caller, contract4. Curren
 and backups5/8 passed quick_check. Ordinary updater completed without reconciliation;
 checkpoint idle/appliedVersion0.16.1 and timer active. Aggregate status remains degraded
 for one unchanged blocked reply; no queue deletion/resend or false healthy claim.
-The bounded rollout observation also recorded40 HTTP response timeouts across old/new
+The bounded rollout observation also recorded42 HTTP response timeouts across old/new
 hub intervals with observed storage waits and host pressure. Responses recovered; #22
 remains open and the underlying cause is not established. See the release report.
 
