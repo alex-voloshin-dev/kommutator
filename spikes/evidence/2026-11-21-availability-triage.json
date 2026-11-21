@@ -1,0 +1,87 @@
+{
+  "observed_at": "2026-11-21T17:43:14.640063+00:00",
+  "baseline_commit": "c15559276abb732a57a6a0dc479ebae1f41e31c3",
+  "client_version": "0.16.1",
+  "daemon_version": "0.16.1",
+  "hub_image": "kommutator-hub:release-0.16.1",
+  "runtime_contract": 4,
+  "caller": "active",
+  "hub_connected": true,
+  "aggregate_health": "degraded",
+  "retained_blocked_outbox": 644,
+  "timer": "active",
+  "remote_reported_version": "0.16.0",
+  "local_heartbeat_failure_utc": "2026-11-20T21:06:40.810Z",
+  "remote_reported_failure_interval": [
+    "2026-11-20T21:06:25Z",
+    "2026-11-20T21:07:01Z"
+  ],
+  "updater_surrounding_runs": "idle at 21:03:55 and 21:09:55 UTC; no cutover recorded",
+  "current_http_probe": [
+    {
+      "status": 401,
+      "ms": 46.36
+    },
+    {
+      "status": 401,
+      "ms": 6.049
+    },
+    {
+      "status": 401,
+      "ms": 6.449
+    },
+    {
+      "status": 401,
+      "ms": 3.233
+    },
+    {
+      "status": 401,
+      "ms": 3.845
+    },
+    {
+      "status": 401,
+      "ms": 17.949
+    },
+    {
+      "status": 401,
+      "ms": 16.127
+    },
+    {
+      "status": 401,
+      "ms": 2.402
+    },
+    {
+      "status": 401,
+      "ms": 5.236
+    },
+    {
+      "status": 401,
+      "ms": 2.713
+    },
+    {
+      "status": 401,
+      "ms": 5.153
+    },
+    {
+      "status": 401,
+      "ms": 1.612
+    }
+  ],
+  "limits": [
+    "No historical operation admission conclusion",
+    "Second UUID inconsistent across reports",
+    "No remote daemon database access",
+    "Bounded empty journals do not establish absence of host fault",
+    "No sustained availability claim",
+    "No production queue mutation or resend"
+  ],
+  "environment_recovery": {
+    "backup": "/tmp/kommutator-npm-recovery-an0b9h0a",
+    "tracked_manifests_unchanged": true,
+    "frozen_install": true,
+    "node": "26.13.0",
+    "pnpm": "12.18.0",
+    "tsup": "9.0.0",
+    "esbuild_transform": "0.28.2 passed"
+  }
+}

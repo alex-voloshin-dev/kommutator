@@ -306,6 +306,11 @@ observations to the refreshed generation; old connections stay fenced. Gaps, ret
 process/project/endpoint replacement and A → B → A do not transfer. See DESIGN §19.
 Tracked submit returns after its own durable settlement without awaiting unrelated
 outbox work; disconnect does not cancel or replay an admitted operation.
+For Claude tracked submits, the wrapper preflights the same UUID with local
+`operation.status` rather than hub-dependent `whoami`. Existing binding/owner/generation
+fences and pre-dispatch registration recovery remain; an already registered owner may
+queue while offline. The lookup result never authorizes replay, and submit is dispatched
+at most once. Direct lookup remains recovery-free; no new RPC or wire fields are added.
 
 Confirmed send evidence means hub storage/routing, not recipient read. Ack counts belong
 to the last confirmed hub attempt, not necessarily the original attempt; old-hub absent
