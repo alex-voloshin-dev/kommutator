@@ -1,0 +1,73 @@
+{
+  "interval": [
+    "2026-11-21T17:45:42.621077+00:00",
+    "2026-11-21T17:46:44.578707+00:00"
+  ],
+  "sample_count": 60,
+  "blocked_samples": [
+    {
+      "comm": "du",
+      "wait": "0",
+      "count": 3
+    },
+    {
+      "comm": "ls",
+      "wait": "0",
+      "count": 4
+    },
+    {
+      "comm": "ls",
+      "wait": "p9_client_rpc",
+      "count": 45
+    },
+    {
+      "comm": "du",
+      "wait": "__wait_on_buffer",
+      "count": 9
+    },
+    {
+      "comm": "node-MainThread",
+      "wait": "folio_wait_bit_common",
+      "count": 2
+    },
+    {
+      "comm": "claude",
+      "wait": "folio_wait_bit_common",
+      "count": 2
+    },
+    {
+      "comm": "node-MainThread",
+      "wait": "jbd2_log_wait_commit",
+      "count": 13
+    },
+    {
+      "comm": "node",
+      "wait": "folio_wait_bit_common",
+      "count": 1
+    }
+  ],
+  "validated_hub": {
+    "pid": 2414656,
+    "parent_pid": 2414276,
+    "birth_ticks": "95963742",
+    "image": "kommutator-hub:release-0.16.1",
+    "journal_wait_samples": 6,
+    "page_wait_samples": 1
+  },
+  "vmstat_delta": {
+    "pswpin": 0,
+    "pswpout": 48,
+    "allocstall_normal": 0,
+    "pgmajfault": 84,
+    "pgsteal_kswapd": 34167,
+    "pgscan_kswapd": 130459,
+    "pgscan_direct": 458
+  },
+  "limits": [
+    "Sampling followed the failed full gate; it cannot assign its cause.",
+    "Other commands were active; their contribution was not measured.",
+    "No stress workload was deliberately added to production.",
+    "No causal attribution for November 20 or all historical failures."
+  ],
+  "raw_local_log": "/tmp/kom-nov21-pressure-observer.jsonl"
+}
