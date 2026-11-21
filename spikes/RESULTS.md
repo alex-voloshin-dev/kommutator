@@ -1484,3 +1484,11 @@ threshold was changed. Full hosted qualification and publication are pending.
 See docs/sdlc/claude-offline-admission/, docs/sdlc/nov20-availability/incident.md and
 spikes/evidence/2026-11-21-*.json. The failed local gates remain evidence, not green
 checks; isolated success does not explain them.
+
+Candidate21245cb subsequently passed complete branch44932556313 and PR44932592559
+CI on the first attempt:822 workspace tests,154 script tests, build/typecheck,
+integrity, clean-PATH and synthetic exported E2E. Independent review/QA approves.
+The two local failed gates remain unexplained by those passes. Publication/local
+cutover deferred until after2026-11-22 10:30UTC, with another actual maintenance
+notice. No public0.16.2 assets, native install verification or rollout claimed.
+Evidence:2026-11-21-claude-offline-qualification.json.

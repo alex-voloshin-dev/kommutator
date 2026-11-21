@@ -15,10 +15,9 @@ clean-profile installed MCP probes verified 0.12.3.
 Candidate 0.16.2 repairs reproduced Claude offline tracked admission blocked by the
 remote whoami preflight. Independent reviews and 40 focused QA tests pass. Two ordinary
 local full gates failed in unchanged hub disk tests; diagnostic SQLite calls took
-42.7–46 seconds. Underlying storage/workload cause remains unproven. Full hosted
-qualification is pending; see [candidate report](sdlc/claude-offline-admission/release.md).
+42.7–46 seconds. Underlying storage/workload cause remains unproven. Both full hosted gates passed (822 workspace/154 script tests); see [candidate report](sdlc/claude-offline-admission/release.md).
 Publication/cutover is deferred until after November 22, 10:30 UTC to avoid reported
-fleet production windows. No 0.16.2 release, rollout or remote update is claimed.
+fleet production windows. Draft PR #36 is prepared. No 0.16.2 release, rollout or remote update is claimed.
 
 ## Current release qualification
 

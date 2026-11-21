@@ -1,0 +1,52 @@
+{
+  "candidate_version": "0.16.2",
+  "source_commit": "21245cb0adb8ed60f77902bf47127e78fb28ff75",
+  "pr": 36,
+  "review": "approve",
+  "external_review": "approve",
+  "focused_qa": 40,
+  "full_ci": {
+    "branch": 44932556313,
+    "pr": 44932592559,
+    "workspace_tests": 822,
+    "script_tests": 154,
+    "build": true,
+    "typecheck": true,
+    "audit": true,
+    "integrity": true,
+    "clean_path": true,
+    "synthetic_exported_e2e": true,
+    "first_attempt": true
+  },
+  "secret_ci": [
+    44932556323,
+    44932592625
+  ],
+  "local_gates": {
+    "ordinary_full_attempts": 2,
+    "both_failed": true,
+    "each_hub": {
+      "passed": 206,
+      "failed": 3
+    },
+    "build_typecheck_passed": true,
+    "diagnostic_is_qualification": false
+  },
+  "source_scan": "no leaks",
+  "artifact_scan": {
+    "raw_exit": 1,
+    "findings": 2,
+    "adjudication": "Both matches are path-key license SHA256 in runtime manifests; verified against actual license bytes."
+  },
+  "publication": "pending; not before 2026-11-22T10:30:00Z; new notice required",
+  "runtime_deployed": "0.16.1 unchanged",
+  "public_installation_checks": "pending publication",
+  "assets_directory": "/tmp/kommutator-v0.16.2-assets",
+  "export_directory": "/tmp/kommutator-v0.16.2-export",
+  "limits": [
+    "Underlying storage/workload cause unknown",
+    "Historical sends not established uncommitted",
+    "No remote rollout",
+    "No native wake/daylong/subnet/reboot acceptance"
+  ]
+}

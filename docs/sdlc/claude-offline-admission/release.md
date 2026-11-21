@@ -1,7 +1,7 @@
 ---
 type: release
 feature: claude-offline-admission
-status: candidate
+status: qualified-pending-publication
 version: 0.16.2
 changelog:
   - "Fixed: registered Claude tracked sends and explicit acknowledgements use local owner preflight before durable offline admission."
@@ -55,6 +55,24 @@ bundles remain unvalidated. No remote daemon update is claimed.
 The maintainer deferred publication and local cutover until after 2026-11-22
 10:30 UTC based on reported fleet production windows. This is an earliest window,
 not a scheduled unattended release. Reannounce actual maintenance before publication.
-The existing updater timer remains active on published0.16.1; do not publish assets
+The existing updater timer remains active on published 0.16.1; do not publish assets
 or merge their catalogs before qualification and the coordinated window.
-Notice:6b6ec887-0334-4661-9181-b4986ed6b6c2.
+Notice: 6b6ec887-0334-4661-9181-b4986ed6b6c2.
+
+## Hosted qualification completed
+
+Exact source commit 21245cb passed both complete first-attempt CI runs:
+branch 44932556313 and PR 44932592559. Each ran build/typecheck, 822 workspace
+tests and 154 script tests, integrity, clean-PATH and synthetic exported E2E.
+Both secret scans passed. The develop review decision is proceed based on independent
+review/QA plus the unchanged complete hosted gate. The two failed ordinary local
+gates and diagnostic failures above are retained; hosted success does not explain them.
+
+Source scanning found no secrets. Artifact scanning returned two generic-key flags;
+both identify the SHA256 of the path-key license in runtime manifests, verified
+against its actual bytes. Raw artifact scan exit 1 is retained as adjudicated false
+positives. Bundled assets and catalog hashes are prepared, not publicly published.
+
+PR #36 remains draft until the maintenance window and public assets. No tag/release
+has been created; anonymous public download, native installations from that release,
+local cutover/database checks and post-release announcement remain pending.
