@@ -1,6 +1,6 @@
 {
   "version": "0.16.2",
-  "status": "in-progress",
+  "status": "qualified-pending-publication",
   "base": "5933e7978e29e5624afe5f984ab52d65f414c928",
   "product_changes": [
     "negative project discovery cache eviction",
@@ -61,7 +61,19 @@
       "log": "/tmp/kom-nov24-qa-round2-workspace.log"
     }
   ],
-  "hosted_gate": "pending",
+  "hosted_gate": {
+    "source": "2d91b2f896b40fa8b31ee1ea4ecd586882901c29",
+    "branch": 45312208460,
+    "pr": 45312214957,
+    "secret_scans": [
+      45312208543,
+      45312214944
+    ],
+    "result": "first-attempt success both",
+    "workspace_tests": 830,
+    "script_tests": 161,
+    "release_check": "build/typecheck/test/audit/integrity/clean-PATH/exported synthetic E2E passed"
+  },
   "release_published": false,
   "production_changed": false,
   "independent_qa": {
@@ -75,5 +87,6 @@
     "source_scan": "exit0 no findings",
     "artifact_scan": "raw exit1, exactly2 actual path-key license SHA-256 false positives verified against bytes/manifests",
     "public_download": "pending"
-  }
+  },
+  "develop_decision": "proceed (round2, independent reviews + focused QA + unchanged full hosted gate)"
 }

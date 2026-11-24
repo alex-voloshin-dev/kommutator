@@ -40,3 +40,12 @@ retain owner-change-before-held-response ordering. Independent QA passed47 opera
 7 project and6 watch tests. Full round2 failed4 hub SQLite tests before agentd/CLI;
 cause unknown. No third local full gate. Hosted exact-head full gate remains required
 before an aggregate proceed decision. See qa.md for both retained failures.
+
+## Final aggregate decision
+
+Complete first-attempt hosted gates on2d91b2f passed: branch45312208460 and
+PR45312214957,830 workspace tests and161 script tests each, full release:check
+including audit, integrity, clean-PATH and exported synthetic E2E. Both secret scans
+passed. With independent focused QA and reviews, review-decision round2 returned
+`proceed`. This accepts qualification on the unchanged hosted gate, not a green
+local suite; the two local failed runs and second run's unknown cause remain above.

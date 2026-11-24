@@ -1,7 +1,7 @@
 ---
 type: release
 feature: feedback-nov24
-status: requalification-in-progress
+status: qualified-pending-publication
 version: 0.16.2
 changelog:
   - "Fixed: registered Claude tracked mutations can reach durable local admission without a hub-dependent preflight."
@@ -49,3 +49,14 @@ workspace-write socket access or a real model conversation across every vendor.
 Not published. No new maintenance window announced. Matching new archives, complete
 release qualification, public download/native installation checks and local cutover
 are still pending. The existing 0.16.1 services and old blocked outbox are unchanged.
+
+## Hosted qualification completed
+
+Source2d91b2f passed branch45312208460 and PR45312214957 on their first attempts:
+830 workspace tests,161 script tests, build/typecheck, audit, integrity, clean-PATH
+and synthetic exported E2E. Both secret scans passed. Independent QA verified the
+repaired47 operation tests plus7 project and6 watch tests. Develop round2 returned
+proceed. The two local full failures remain recorded; hosted success does not explain
+the SQLite timeouts. New archives/catalogs match; source scan has no findings, raw
+artifact scan exit1 consists of two verified path-key license hash false positives.
+Publication, clean public installs and local cutover still pending.
