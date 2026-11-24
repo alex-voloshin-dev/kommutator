@@ -1492,3 +1492,19 @@ The two local failed gates remain unexplained by those passes. Publication/local
 cutover deferred until after2026-11-22 10:30UTC, with another actual maintenance
 notice. No public0.16.2 assets, native install verification or rollout claimed.
 Evidence:2026-11-21-claude-offline-qualification.json.
+
+## 2026-11-24 — feedback repair qualification in progress
+
+Production remains0.16.1; no publication/cutover is claimed. New negative Git discovery
+and read-only warm management failures were reproduced. The actual exported management
+help succeeds on a read-only mount where baseline fails EROFS; private socket denial
+produces fixed EACCES guidance with empty stdout. These are isolated fixtures, not
+actual Codex workspace-write socket authorization. Reviews approve product changes.
+
+The first integrated gate failed5 agentd operation tests with7 unhandled errors. An A/B
+control confirmed microtask-only test waits relied on permanent negative Git caching;
+exact real-save phase waits retain all ownership assertions and pass47 operation tests.
+A second full gate stopped at4 SQLite hub test timeouts (205pass); cause unknown. No
+third blind local full run, timeout increase or durability relaxation. Hosted full
+qualification is pending. See [evidence](evidence/2026-11-24-feedback-qualification.json)
+and [triage](../docs/sdlc/feedback-nov24/triage.md).

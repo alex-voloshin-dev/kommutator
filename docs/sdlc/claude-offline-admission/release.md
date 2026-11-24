@@ -1,7 +1,7 @@
 ---
 type: release
 feature: claude-offline-admission
-status: qualified-pending-publication
+status: requalification-in-progress
 version: 0.16.2
 changelog:
   - "Fixed: registered Claude tracked sends and explicit acknowledgements use local owner preflight before durable offline admission."
@@ -76,3 +76,15 @@ positives. Bundled assets and catalog hashes are prepared, not publicly publishe
 PR #36 remains draft until the maintenance window and public assets. No tag/release
 has been created; anonymous public download, native installations from that release,
 local cutover/database checks and post-release announcement remain pending.
+
+## November 24 feedback extension — not yet qualified
+
+The initial prepared head remains unpublished. New source changes address negative Git
+remote caching and cached management under read-only filesystems, with bounded local IPC
+permission guidance. See [feedback triage](../feedback-nov24/triage.md). The earlier CI
+qualification applies only to its recorded commits, not this extended candidate. Old
+archives were lost after host reboot; new matching assets and complete gates are required.
+
+The reporter subsequently resolved the second operation UUID transcription error; this
+does not establish admission/commit or historical root cause. Separate-host post-NAT
+inbox/read access is now reported; outside-subnet denial remains untested.
