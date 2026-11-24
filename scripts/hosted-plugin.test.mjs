@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, chmod, rm, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, chmod, rm, symlink, rename } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -156,4 +156,42 @@ test('a FIFO cache lock is rejected before opening or downloading', async t => {
   assert.equal(r.stdout, '');
   assert.match(r.stderr, /Unsafe cache lock/);
   await assert.rejects(readFile(f.env.MOCK_COUNT), { code: 'ENOENT' });
+});
+
+test('warm manage uses the validated cache without filesystem writes or an install lock', async t => {
+  const f = await fixture(t);
+  assert.equal((await f.run()).code, 0);
+  for (const command of ['mkdir', 'chmod', 'flock', 'curl']) {
+    await writeFile(join(f.directory, 'bin', command), '#!/bin/sh\nprintf "unexpected cache write or install operation\\n" >&2\nexit 73\n', { mode: 0o755 });
+  }
+  await rm(join(f.env.KOM_HOME, 'downloads', f.sha256 + '.lock'));
+  execFileSync('mkfifo', [join(f.env.KOM_HOME, 'downloads', f.sha256 + '.lock')]);
+  const result = await f.run(['manage', 'watch', '--help']);
+  assert.deepEqual(result, { code: 0, stdout: 'managed\n', stderr: '' });
+  assert.equal(await readFile(f.env.MOCK_COUNT, 'utf8'), 'download\n');
+  await chmod(f.env.KOM_HOME, 0o755);
+  const unsafe = await f.run(['manage', 'watch', '--help']);
+  assert.notEqual(unsafe.code, 0);
+  assert.equal(unsafe.stdout, '');
+});
+
+test('warm manage rejects corrupted markers and linked cache directories', async t => {
+  for (const corrupt of ['marker', 'ready-link', 'bundle-link', 'target-link', 'cache-link']) {
+    await t.test(corrupt, async t => {
+      const f = await fixture(t);
+      assert.equal((await f.run()).code, 0);
+      const cache = join(f.env.KOM_HOME, 'downloads');
+      const target = join(cache, f.sha256);
+      if (corrupt === 'marker') await writeFile(join(target, 'ready'), 'wrong');
+      else {
+        const path = corrupt === 'ready-link' ? join(target, 'ready') : corrupt === 'bundle-link' ? join(target, 'bundle') : corrupt === 'target-link' ? target : cache;
+        const destination = join(f.directory, 'relocated');
+        await rename(path, destination);
+        await symlink(destination, path);
+      }
+      const result = await f.run(['manage', 'watch', '--help']);
+      assert.notEqual(result.code, 0);
+      assert.equal(result.stdout, '');
+    });
+  }
 });

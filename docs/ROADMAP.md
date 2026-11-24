@@ -10,6 +10,15 @@ full release qualification and ordinary local updater completion are recorded in
 [RESULTS](../spikes/RESULTS.md). The previous chat MCP was compatible 0.12.2;
 clean-profile installed MCP probes verified 0.12.3.
 
+## In-progress maintenance (2026-11-21)
+
+Candidate 0.16.2 repairs reproduced Claude offline tracked admission blocked by the
+remote whoami preflight. Independent reviews and 40 focused QA tests pass. Two ordinary
+local full gates failed in unchanged hub disk tests; diagnostic SQLite calls took
+42.7–46 seconds. Underlying storage/workload cause remains unproven. Both full hosted gates passed (822 workspace/154 script tests); see [candidate report](sdlc/claude-offline-admission/release.md).
+Publication/cutover is deferred until after November 22, 10:30 UTC to avoid reported
+fleet production windows. Draft PR #36 is prepared. No 0.16.2 release, rollout or remote update is claimed.
+
 ## Current release qualification
 
 Published 0.16.1 [deployment readiness and argument guidance](sdlc/deployment-health-gate/release.md)
@@ -141,6 +150,17 @@ additional green CI samples, an observability gap between the release gate and i
 separate phase run, and recurrent local/remote availability failures correlated with
 WSL kernel allocation warnings. The [availability incident](sdlc/runtime-reliability-followup/incident.md)
 remains open; a healthy short probe is not a root-cause fix.
+
+## New feedback under investigation (2026-11-24)
+
+[Feedback triage](sdlc/feedback-nov24/triage.md) records the new reports. Draft 0.16.2
+repairs the reproduced Claude offline pre-admission lookup, but remains unpublished.
+Fresh reports add negative Git lookup caching and read-only watch startup/diagnostics;
+these require their own review and qualification before inclusion in a release.
+Hook capability does not interrupt idle waits, even with wake enabled. Reported historical
+unknown sends remain uncorrelated with the remote daemon's admission/replay state.
+The remote f4ai-think client confirmed post-NAT inbox/read access; outside-subnet denial
+and unattended reboot acceptance remain separate checks.
 
 ## Immediate maintenance
 

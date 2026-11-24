@@ -1355,7 +1355,7 @@ The original 0.15.1 large failure and small success remain controls. A schema-7 
 rejected schema8. Earlier failed gates and pending qualification are retained in the
 [implementation handoff](../docs/sdlc/bounded-resync/implementation.md) and
 [evidence](evidence/2026-11-14-bounded-resync-implementation.json).
-These controlled results do not establish historical issue22 causes or close field gates.
+These controlled results do not establish historical issue #22 causes or close field gates.
 
 ## 2026-11-14 — 0.15.2 published and local rollout reconciled
 
@@ -1469,3 +1469,48 @@ lines were returned for18:20–18:24:30UTC. No production stress replay, kernel 
 rollback or queue manipulation was performed. Evidence is in
 spikes/evidence/2026-11-15-rollout-availability-observation.json. Successful readiness
 verification is a point-in-time gate and does not explain subsequent availability.
+
+
+## 2026-11-21 — Claude offline admission investigation
+
+Baseline 0.16.1 rejects both controlled offline tracked send/ack calls before local
+admission via the Claude whoami preflight. The narrow candidate uses local operation
+lookup as authority preflight, never retries submit and preserves owner fencing.
+Independent review/QA and 40 targeted checks pass. Two ordinary full local gates failed
+three unchanged hub disk tests each. A diagnostic run localized 42.7–46-second pauses
+inside SQLite exec; underlying host/device/workload cause is not established. No gate
+threshold was changed. Full hosted qualification and publication are pending.
+
+See docs/sdlc/claude-offline-admission/, docs/sdlc/nov20-availability/incident.md and
+spikes/evidence/2026-11-21-*.json. The failed local gates remain evidence, not green
+checks; isolated success does not explain them.
+
+Candidate21245cb subsequently passed complete branch44932556313 and PR44932592559
+CI on the first attempt:822 workspace tests,154 script tests, build/typecheck,
+integrity, clean-PATH and synthetic exported E2E. Independent review/QA approves.
+The two local failed gates remain unexplained by those passes. Publication/local
+cutover deferred until after2026-11-22 10:30UTC, with another actual maintenance
+notice. No public0.16.2 assets, native install verification or rollout claimed.
+Evidence:2026-11-21-claude-offline-qualification.json.
+
+## 2026-11-24 — feedback repair qualification in progress
+
+Production remains0.16.1; no publication/cutover is claimed. New negative Git discovery
+and read-only warm management failures were reproduced. The actual exported management
+help succeeds on a read-only mount where baseline fails EROFS; private socket denial
+produces fixed EACCES guidance with empty stdout. These are isolated fixtures, not
+actual Codex workspace-write socket authorization. Reviews approve product changes.
+
+The first integrated gate failed5 agentd operation tests with7 unhandled errors. An A/B
+control confirmed microtask-only test waits relied on permanent negative Git caching;
+exact real-save phase waits retain all ownership assertions and pass47 operation tests.
+A second full gate stopped at4 SQLite hub test timeouts (205pass); cause unknown. No
+third blind local full run, timeout increase or durability relaxation. Hosted full
+qualification is pending. See [evidence](evidence/2026-11-24-feedback-qualification.json)
+and [triage](../docs/sdlc/feedback-nov24/triage.md).
+
+The extended candidate subsequently passed both complete hosted gates on2d91b2f:
+branch45312208460 and PR45312214957,830 workspace tests and161 script tests, audit,
+integrity, clean-PATH and synthetic E2E. Secret scans passed. Independent review/QA
+plus the full unchanged hosted gate produced develop proceed. This is qualification,
+not public installation or deployment; local SQLite timeout cause remains unknown.

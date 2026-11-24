@@ -22,6 +22,9 @@ export async function watch(options: WatchOptions, client: RpcClient, io: WatchI
     } catch (error) {
       if (error instanceof ZodError) throw new Error("Invalid watch response; update compatible hub and daemon versions.");
       const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+      if (code === "EACCES" || code === "EPERM" || code === "EROFS") {
+        throw new Error(`Watch cannot access local daemon IPC (${code}). Check the command sandbox and local socket permissions; use an authorized environment with IPC access.`);
+      }
       if (code === -32601 || code === -32602) throw new Error("Watch is unsupported; update both hub and local daemon.");
       if (code === -32001 || code === -32020) throw new Error("Watch authorization lost; verify the exact local session and its topic membership.");
       if (![undefined, -32030, -32031, "ENOENT", "ECONNREFUSED", "ECONNRESET", "EPIPE", "ETIMEDOUT"].includes(code as never)) {

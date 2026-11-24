@@ -36,6 +36,13 @@ export class Projects {
   async key(cwd: string, callerProject?: string): Promise<string> {
     let remote = this.remotes.get(cwd);
     if (!remote) { remote = this.readRemote(cwd); this.remotes.set(cwd, remote); }
-    return (await remote) ?? callerProject ?? basename(cwd);
+    let resolved: string | undefined;
+    try {
+      resolved = await remote;
+      return resolved ?? callerProject ?? basename(cwd);
+    } finally {
+      // A missing remote (or failed lookup) is not a permanent project identity.
+      if (resolved === undefined && this.remotes.get(cwd) === remote) this.remotes.delete(cwd);
+    }
   }
 }

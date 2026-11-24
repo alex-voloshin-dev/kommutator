@@ -957,6 +957,23 @@ connection can still time out in existing `ipc.hello`; no hard lookup availabili
 identity bypass is promised. Existing hook timers, receipt meaning, retirement
 fences, board CAS, hub replay retention and disabled pruning are unchanged.
 
+### Claude offline tracked admission (2026-11-21)
+
+Before `operation.submit`, the Claude wrapper checks the same operation UUID through
+local `operation.status` instead of remote `whoami`. This read-only preflight runs the
+existing immutable tracked-owner/binding checks without requiring hub topics or flushing
+unrelated work. Its result does not authorize replay or prove non-admission; the subsequent
+single submit still validates and admits its own UUID atomically. Missing/unsupported
+lookup, malformed UUIDs and ownership failures do not fall back to an untracked mutation.
+
+The existing pre-dispatch `-32020` recovery may replay the current committed hook authority
+and open a fresh shim, with unchanged generation checks. That recovery still calls hook
+`whoami` and can require hub connectivity; this change only removes a hub dependency for
+an already registered valid owner. Direct `operation.status` remains recovery-free. No
+submitted mutation is retried, including when submission itself rejects with `-32020` or
+its result is lost. Generation checks run before dispatch and after the reply. Other methods
+retain their existing `whoami` preflight. No wire, runtime-contract or schema change is needed.
+
 ### Continuous Claude operation observation recovery (2026-11-14)
 
 A validated higher-generation hook for the same uninterrupted live Claude conversation
@@ -1215,6 +1232,12 @@ Implementation decisions for steps 3–4 (2026-10-25):
 - **Project discovery:** use the caller's cwd to read its Git remote with a bounded,
   read-only lookup; then its `ipc.hello.project_key` (`KOM_PROJECT`), then the cwd basename.
   Do not inherit the first spawning session's project environment for every later caller.
+  Concurrent lookups for one cwd share an in-flight request; successful remote results
+  remain cached for the daemon lifetime. Missing or failed lookups are evicted so a later
+  registration can discover a newly initialized repository or recover from a transient
+  Git failure. This does not migrate existing sessions, topics or boards. Existing Claude
+  owners still reject conflicting project context and require a fresh session; existing
+  registered identities are not silently rewritten.
 - **Adapter evidence:** the observed `user/message.content` envelope preserves the hub
   sender and reply IDs in content; silence remains `written`. No positive ACK classifier
   is justified. Production MCP detached survival is process-tested with fake vendor

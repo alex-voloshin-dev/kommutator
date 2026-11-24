@@ -27,7 +27,9 @@ export class ClaudePluginClient implements RpcClient {
       await this.unchanged(observed.generation);
       return result;
     }
-    try { await client.call("whoami"); }
+    // Check tracked authority locally: whoami needs hub topics and can prevent offline admission.
+    try { await client.call(method === "operation.submit" ? "operation.status" : "whoami",
+      method === "operation.submit" ? { operation_id: params.operation_id } : {}); }
     catch (error) {
       if (!(error instanceof IpcError) || error.code !== -32020) throw error;
       await this.unchanged(observed.generation);

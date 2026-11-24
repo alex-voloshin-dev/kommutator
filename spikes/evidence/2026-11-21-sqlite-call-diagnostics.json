@@ -1,0 +1,101 @@
+{
+  "kind": "diagnostic_not_qualification",
+  "hook": "node:sqlite prototype duration instrumentation; no SQL/payload output",
+  "slow_calls": [
+    {
+      "at": "2026-11-21T17:50:32.795Z",
+      "pid": 3593405,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 45987.189
+    },
+    {
+      "at": "2026-11-21T17:50:32.812Z",
+      "pid": 3593384,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 44985.115
+    },
+    {
+      "at": "2026-11-21T17:50:32.841Z",
+      "pid": 3593381,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 42699.521
+    },
+    {
+      "at": "2026-11-21T17:50:43.238Z",
+      "pid": 3593405,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 5200.352
+    },
+    {
+      "at": "2026-11-21T17:50:37.539Z",
+      "pid": 3593405,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 3848.231
+    },
+    {
+      "at": "2026-11-21T17:49:49.459Z",
+      "pid": 3593381,
+      "method": "exec",
+      "label": "DROP",
+      "ms": 2224.54
+    },
+    {
+      "at": "2026-11-21T17:49:46.287Z",
+      "pid": 3593381,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 762.352
+    },
+    {
+      "at": "2026-11-21T17:50:33.523Z",
+      "pid": 3593405,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 697.613
+    },
+    {
+      "at": "2026-11-21T17:49:50.133Z",
+      "pid": 3593381,
+      "method": "close",
+      "label": "none",
+      "ms": 673.971
+    },
+    {
+      "at": "2026-11-21T17:49:47.435Z",
+      "pid": 3593384,
+      "method": "exec",
+      "label": "VACUUM",
+      "ms": 637.409
+    },
+    {
+      "at": "2026-11-21T17:49:46.501Z",
+      "pid": 3593405,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 549.388
+    },
+    {
+      "at": "2026-11-21T17:49:46.982Z",
+      "pid": 3593381,
+      "method": "exec",
+      "label": "unknown",
+      "ms": 509.359
+    }
+  ],
+  "result": "hub206 passed3 timeout failures",
+  "limitations": [
+    "Instrumentation can alter scheduling",
+    "Does not establish underlying device/workload cause",
+    "Does not explain all prior failures",
+    "No production database instrumentation or mutation"
+  ],
+  "logs": [
+    "/tmp/kom-nov21-hub-diagnostic.log",
+    "/tmp/kom-sqlite-latency.jsonl"
+  ]
+}

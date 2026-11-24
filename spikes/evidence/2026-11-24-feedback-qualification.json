@@ -1,0 +1,92 @@
+{
+  "version": "0.16.2",
+  "status": "qualified-pending-publication",
+  "base": "5933e7978e29e5624afe5f984ab52d65f414c928",
+  "product_changes": [
+    "negative project discovery cache eviction",
+    "validated read-only warm management path",
+    "allowlisted local watch permission guidance"
+  ],
+  "unchanged": [
+    "runtime contract 4",
+    "daemon schema 5",
+    "hub schema 8",
+    "hook timers 140/90ms",
+    "full-process temporary limit <300ms",
+    "owner/project fences",
+    "replay/receipt semantics"
+  ],
+  "reviews": {
+    "correctness": "approve",
+    "security": "approve",
+    "external_project": "approve",
+    "external_watch": "approve",
+    "fixture_internal": "approve",
+    "fixture_external": "approve"
+  },
+  "local_gates": [
+    {
+      "round": 1,
+      "build": "pass",
+      "typecheck": "pass",
+      "protocol": {
+        "passed": 41
+      },
+      "hub": {
+        "passed": 209
+      },
+      "agentd": {
+        "passed": 250,
+        "failed": 5,
+        "unhandled_errors": 7
+      },
+      "cli": "not reached",
+      "cause": "operation fixture microtask-only waits cannot await newly repeated Git subprocess; verified A/B original cache47pass, candidate42pass/5fail; exact-save phase repair47pass",
+      "log": "/tmp/kom-nov24-qa-workspace.log"
+    },
+    {
+      "round": 2,
+      "build": "pass",
+      "typecheck": "pass",
+      "protocol": {
+        "passed": 41
+      },
+      "hub": {
+        "passed": 205,
+        "failed": 4
+      },
+      "agentd": "not reached",
+      "cli": "not reached",
+      "cause": "unknown; SQLite migration/persistence/backup tests exceeded5s; IO pressure observed but causal attribution not established",
+      "log": "/tmp/kom-nov24-qa-round2-workspace.log"
+    }
+  ],
+  "hosted_gate": {
+    "source": "2d91b2f896b40fa8b31ee1ea4ecd586882901c29",
+    "branch": 45312208460,
+    "pr": 45312214957,
+    "secret_scans": [
+      45312208543,
+      45312214944
+    ],
+    "result": "first-attempt success both",
+    "workspace_tests": 830,
+    "script_tests": 161,
+    "release_check": "build/typecheck/test/audit/integrity/clean-PATH/exported synthetic E2E passed"
+  },
+  "release_published": false,
+  "production_changed": false,
+  "independent_qa": {
+    "targeted": "54 agentd (47 operations +7 project),6 watch passed",
+    "full_local": "failed; see retained rounds",
+    "report": "docs/sdlc/feedback-nov24/qa.md"
+  },
+  "artifacts": {
+    "tar_sha256": "c1998923dc1c8f3f1835e6102b32204faca661fb37e9619cbee0a4cad8ac7d77",
+    "claude_zip_sha256": "22d8fa5c9ab07dec3f5acd3a953d92f12804c5a53af399e83aad48626a57786c",
+    "source_scan": "exit0 no findings",
+    "artifact_scan": "raw exit1, exactly2 actual path-key license SHA-256 false positives verified against bytes/manifests",
+    "public_download": "pending"
+  },
+  "develop_decision": "proceed (round2, independent reviews + focused QA + unchanged full hosted gate)"
+}

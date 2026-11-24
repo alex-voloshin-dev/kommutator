@@ -3,8 +3,8 @@
 set -eu
 umask 077
 vendor='codex'
-expected='cd0eed5aae3792e9277ee05ef2cab17a95dcd1aec8aeeed931b4a5271b22f692'
-url='https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.16.1/kommutator-v0.16.1-linux-x64.tar.gz'
+expected='c1998923dc1c8f3f1835e6102b32204faca661fb37e9619cbee0a4cad8ac7d77'
+url='https://github.com/alex-voloshin-dev/kommutator/releases/download/v0.16.2/kommutator-v0.16.2-linux-x64.tar.gz'
 mode=${1:-mcp}
 [ "$#" -eq 0 ] || shift
 fail() { printf 'kommutator: %s\n' "$*" >&2; exit 1; }
@@ -30,6 +30,18 @@ for command in curl sha256sum tar gzip flock stat mktemp realpath; do
   command -v "$command" >/dev/null 2>&1 || fail "Install $command first (Ubuntu: curl coreutils tar util-linux)."
 done
 owner=$(id -u)
+if [ "$mode" = manage ] && [ -f "$target/ready" ]; then
+  # An installed immutable release needs no download lock or permission writes.
+  # This permits read-only management/help; the command still needs its own IPC access.
+  for directory in "$home" "$cache" "$target"; do
+    [ ! -L "$directory" ] || fail 'Private cache must not be a symbolic link.'
+    [ "$(stat -c '%u:%a' -- "$directory")" = "$owner:700" ] || fail 'Unsafe cached release permissions.'
+    [ "$(realpath -- "$directory")" = "$directory" ] || fail 'Private cache path must be canonical without symbolic links.'
+  done
+  [ ! -L "$target/ready" ] && [ ! -L "$bundle" ] && [ "$(cat "$target/ready")" = "$expected" ] || fail 'Invalid cached release.'
+  [ -x "$bundle/plugins/$vendor/bin/manage" ] || fail 'Client archive is incomplete.'
+  exec "$bundle/plugins/$vendor/bin/manage" "$@"
+fi
 private_dir() {
   [ ! -L "$1" ] || fail 'Private cache must not be a symbolic link.'
   mkdir -p -- "$1"
