@@ -151,6 +151,17 @@ separate phase run, and recurrent local/remote availability failures correlated 
 WSL kernel allocation warnings. The [availability incident](sdlc/runtime-reliability-followup/incident.md)
 remains open; a healthy short probe is not a root-cause fix.
 
+## New feedback under investigation (2026-11-24)
+
+[Feedback triage](sdlc/feedback-nov24/triage.md) records the new reports. Draft 0.16.2
+repairs the reproduced Claude offline pre-admission lookup, but remains unpublished.
+Fresh reports add negative Git lookup caching and read-only watch startup/diagnostics;
+these require their own review and qualification before inclusion in a release.
+Hook capability does not interrupt idle waits, even with wake enabled. Reported historical
+unknown sends remain uncorrelated with the remote daemon's admission/replay state.
+The remote f4ai-think client confirmed post-NAT inbox/read access; outside-subnet denial
+and unattended reboot acceptance remain separate checks.
+
 ## Immediate maintenance
 
 | Priority | Work | Completion evidence |

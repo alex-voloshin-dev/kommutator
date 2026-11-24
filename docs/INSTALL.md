@@ -111,6 +111,9 @@ POSIX utilities and `ps` are still required; system Node and `kom` are not requi
 Claude native idle wake in bypass sessions requires explicit per-session
 `crossSessionInbound: accept`, together with `KOM_CLAUDE_INBOUND_POLICY=accept` in that launch's
 environment. The marker only reports the actual setting; it does not change Claude policy.
+If `whoami` reports `capability: hook`, messages arrive at supported subsequent hooks;
+`wake: on` and a sender's `wake: true` do not interrupt an idle wait or upgrade that capability.
+Use bounded inbox polling at natural work boundaries when native delivery is unavailable.
 Never enable it globally. Bypass/default was observed Held. See the
 [Claude integration details](../plugins/claude-code/README.md). Codex delivers on hooks;
 it cannot wake an already idle thread. Desktop UI acceptance is separate from CLI evidence.
