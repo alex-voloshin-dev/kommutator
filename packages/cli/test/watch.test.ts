@@ -51,3 +51,17 @@ it("terminates malformed pages without emitting or retrying", async () => {
   expect(lines).toEqual([]);
   expect(pauses).toBe(0);
 });
+
+it("explains local IPC permission failures without exposing error contents or retrying", async () => {
+  for (const code of ["EACCES", "EPERM", "EROFS"]) {
+    let calls = 0, pauses = 0;
+    const output: string[] = [];
+    await expect(watch({ session: "session", topic: "feedback" }, {
+      close() {}, async call() { calls++; throw Object.assign(new Error("private socket path and secret"), { code }); },
+    }, { write: async line => { output.push(line); }, diagnostic: line => output.push(line), pause: async () => { pauses++; } }))
+      .rejects.toThrow(`Watch cannot access local daemon IPC (${code}). Check the command sandbox and local socket permissions; use an authorized environment with IPC access.`);
+    expect(calls).toBe(1);
+    expect(pauses).toBe(0);
+    expect(output).toEqual([]);
+  }
+});

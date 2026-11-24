@@ -163,6 +163,12 @@ hub and daemon if the watch method is unsupported.
 
 For a bundled Claude plugin, use the verified installed plugin path's `bin/manage watch`
 with the same arguments. For hosted Codex use its installed `bin/launch manage watch`.
+An already initialized hosted client can run management help from a read-only cache;
+the launcher validates its private cache without rewriting permissions or taking an
+installation lock. A cold installation still needs write access. Help succeeding does
+not prove watch can connect: the command environment must also permit access to the local
+daemon socket. Permission errors report a fixed local IPC diagnostic; use an authorized
+environment with that access rather than weakening cache permissions or bypassing a sandbox.
 Resolve the actual path from your vendor's installed-plugin metadata; do not guess a cache
 version or assume a plugin-root environment variable exists in a terminal.
 

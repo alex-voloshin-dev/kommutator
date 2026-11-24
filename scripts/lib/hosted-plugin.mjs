@@ -36,6 +36,18 @@ for command in curl sha256sum tar gzip flock stat mktemp realpath; do
   command -v "$command" >/dev/null 2>&1 || fail "Install $command first (Ubuntu: curl coreutils tar util-linux)."
 done
 owner=$(id -u)
+if [ "$mode" = manage ] && [ -f "$target/ready" ]; then
+  # An installed immutable release needs no download lock or permission writes.
+  # This permits read-only management/help; the command still needs its own IPC access.
+  for directory in "$home" "$cache" "$target"; do
+    [ ! -L "$directory" ] || fail 'Private cache must not be a symbolic link.'
+    [ "$(stat -c '%u:%a' -- "$directory")" = "$owner:700" ] || fail 'Unsafe cached release permissions.'
+    [ "$(realpath -- "$directory")" = "$directory" ] || fail 'Private cache path must be canonical without symbolic links.'
+  done
+  [ ! -L "$target/ready" ] && [ ! -L "$bundle" ] && [ "$(cat "$target/ready")" = "$expected" ] || fail 'Invalid cached release.'
+  [ -x "$bundle/plugins/$vendor/bin/manage" ] || fail 'Client archive is incomplete.'
+  exec "$bundle/plugins/$vendor/bin/manage" "$@"
+fi
 private_dir() {
   [ ! -L "$1" ] || fail 'Private cache must not be a symbolic link.'
   mkdir -p -- "$1"
