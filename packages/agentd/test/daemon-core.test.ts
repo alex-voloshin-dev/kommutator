@@ -3,6 +3,8 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { z } from "zod";
 import { createConformanceHarness, RemoteRpcError } from "@kommutator/hub/testing";
 import { PROTOCOL_VERSION, Results, RegisteredSession, Methods } from "@kommutator/protocol";
@@ -111,6 +113,26 @@ async function send(core: DaemonCore, peer: IpcPeer, to: string, body = "message
 }
 
 describe("daemon identity and IPC authorization", () => {
+  it("discovers a newly created Git remote for a fresh owner without rebinding the previous owner", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "kom-new-project-"));
+    cleanup.push(async () => rm(cwd, { recursive: true, force: true }));
+    const { core } = await fixture();
+    const old = await hook(core, "before-git", { cwd });
+    expect(old.session?.project_key).not.toBe("github.com/example/new-project");
+
+    const git = promisify(execFile);
+    await git("git", ["-C", cwd, "init", "--quiet"], { timeout: 5000 });
+    await git("git", ["-C", cwd, "remote", "add", "origin", "https://github.com/example/new-project.git"], { timeout: 5000 });
+
+    const fresh = await hook(core, "after-git", { cwd, ppid: 56 });
+    expect(fresh.session?.project_key).toBe("github.com/example/new-project");
+    expect(fresh.session?.id).not.toBe(old.session?.id);
+    await expect(hook(core, "before-git", { cwd })).rejects.toThrow("Conflicting project context");
+    const previous = Identity.parse(await core.request(old.peer, "whoami", {}));
+    expect(previous.session.id).toBe(old.session?.id);
+    expect(previous.session.project_key).toBe(old.session?.project_key);
+    expect(previous.topics.some(topic => topic.name === "project:github.com/example/new-project")).toBe(false);
+  });
   it("keeps socket diagnostics CLI-only and excludes credentials, endpoints and gone sessions", async () => {
     const { core } = await fixture();
     const home = await mkdtemp(join(tmpdir(), "kom-diag-"));

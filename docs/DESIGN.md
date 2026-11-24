@@ -1232,6 +1232,12 @@ Implementation decisions for steps 3–4 (2026-10-25):
 - **Project discovery:** use the caller's cwd to read its Git remote with a bounded,
   read-only lookup; then its `ipc.hello.project_key` (`KOM_PROJECT`), then the cwd basename.
   Do not inherit the first spawning session's project environment for every later caller.
+  Concurrent lookups for one cwd share an in-flight request; successful remote results
+  remain cached for the daemon lifetime. Missing or failed lookups are evicted so a later
+  registration can discover a newly initialized repository or recover from a transient
+  Git failure. This does not migrate existing sessions, topics or boards. Existing Claude
+  owners still reject conflicting project context and require a fresh session; existing
+  registered identities are not silently rewritten.
 - **Adapter evidence:** the observed `user/message.content` envelope preserves the hub
   sender and reply IDs in content; silence remains `written`. No positive ACK classifier
   is justified. Production MCP detached survival is process-tested with fake vendor
