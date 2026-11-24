@@ -52,4 +52,25 @@ describe("project identity", () => {
     expect(await projects.key("/repo", "second")).toBe("github.com/Owner/repo");
     expect(calls).toBe(1);
   });
+  it("shares a rejected lookup without poisoning later callers", async () => {
+    let rejectLookup: ((reason: Error) => void) | undefined;
+    let calls = 0;
+    const failure = new Error("temporary Git failure");
+    const projects = new Projects(() => {
+      if (++calls === 1) return new Promise((_resolve, reject) => { rejectLookup = reject; });
+      return Promise.resolve("github.com/Owner/recovered");
+    });
+    const first = projects.key("/repo", "first");
+    const second = projects.key("/repo", "second");
+    const settled = Promise.allSettled([first, second]);
+    expect(calls).toBe(1);
+    rejectLookup?.(failure);
+    expect(await settled).toEqual([
+      { status: "rejected", reason: failure },
+      { status: "rejected", reason: failure },
+    ]);
+    expect(await projects.key("/repo", "third")).toBe("github.com/Owner/recovered");
+    expect(await projects.key("/repo", "fourth")).toBe("github.com/Owner/recovered");
+    expect(calls).toBe(2);
+  });
 });

@@ -65,3 +65,18 @@ it("explains local IPC permission failures without exposing error contents or re
     expect(output).toEqual([]);
   }
 });
+
+it("does not reflect an unknown error code or message in access guidance", async () => {
+  let calls = 0, pauses = 0;
+  const output: string[] = [];
+  await expect(watch({ session: "session", topic: "feedback" }, {
+    close() {}, async call() {
+      calls++;
+      throw Object.assign(new Error("private socket path and secret"), { code: "EACCES\nprivate injected text" });
+    },
+  }, { write: async line => { output.push(line); }, diagnostic: line => output.push(line), pause: async () => { pauses++; } }))
+    .rejects.toEqual(new Error("Watch failed; inspect local diagnostics."));
+  expect(calls).toBe(1);
+  expect(pauses).toBe(0);
+  expect(output).toEqual([]);
+});
