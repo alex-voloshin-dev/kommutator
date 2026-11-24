@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -9,10 +9,25 @@ import { DaemonCore, type IpcPeer } from "../src/core.js";
 import { OfflineError, RpcError } from "../src/errors.js";
 import { OBSERVATION_TTL, RESULT_BYTES } from "../src/operations.js";
 import type { HubTransport } from "../src/hub-link.js";
+import type { LocalRecord } from "../src/registry.js";
 
 const cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close(); });
 function deferred() { let resolve!: () => void; const promise = new Promise<void>(r => { resolve = r; }); return { promise, resolve }; }
+function savedWhen(core: DaemonCore, matches: (record: LocalRecord) => boolean): Promise<void> {
+  const saved = deferred();
+  const save = core.registry.save.bind(core.registry);
+  const spy = vi.spyOn(core.registry, "save").mockImplementation(record => {
+    save(record);
+    if (matches(record)) { spy.mockRestore(); saved.resolve(); }
+  });
+  cleanup.push(async () => { spy.mockRestore(); });
+  return saved.promise;
+}
+function drainOnCleanup(release: ReturnType<typeof deferred>, ...tasks: Promise<unknown>[]) {
+  const settled = Promise.allSettled(tasks);
+  cleanup.push(async () => { release.resolve(); await settled; });
+}
 async function fixture(path = ":memory:", sharedHub?: ReturnType<typeof createConformanceHarness>) {
   const hub = sharedHub ?? createConformanceHarness();
   if (!sharedHub) cleanup.push(async () => hub.close());
@@ -147,8 +162,10 @@ it("fences an older Codex connection after same-root process replacement, includ
   const f = await fixture(); const old = await f.shim(); const entered = deferred(), release = deferred();
   f.after(async method => { if (method === "message.send") { entered.resolve(); await release.promise; } });
   const pending = f.submit(old); const rejected = expect(pending).rejects.toThrow(/owner.*changed/); await entered.promise;
+  const replaced = savedWhen(f.core, record => record.key === old.key && record.pid === 456);
   const replacement = f.shim("root-a", 456);
-  for (let i = 0; i < 100 && f.core.registry.get(old.key ?? "")?.pid !== 456; i++) await Promise.resolve();
+  drainOnCleanup(release, rejected, replacement);
+  await replaced;
   expect(f.core.registry.get(old.key ?? "")?.pid).toBe(456);
   release.resolve(); await rejected; const fresh = await replacement;
   const id = randomUUID(); await f.submit(fresh, id);
@@ -299,8 +316,10 @@ it("pins before hello's flush and never enables tracking for an incomplete or re
   const hello = f.core.request(old, "ipc.hello", { client: "shim", vendor: "codex", vendor_session_id: "same-root", pid: 123, cwd: "/repo", protocol_version: PROTOCOL_VERSION });
   await entered.promise;
   await expect(f.status(old, randomUUID())).rejects.toThrow(/owner.*unavailable/);
+  const replaced = savedWhen(f.core, record => record.key === old.key && record.pid === 456);
   const next = f.shim("same-root", 456);
-  for (let i = 0; i < 100 && f.core.registry.get(old.key ?? "")?.pid !== 456; i++) await Promise.resolve();
+  drainOnCleanup(release, hello, next);
+  await replaced;
   expect(f.core.registry.get(old.key ?? "")?.pid).toBe(456);
   release.resolve(); await hello; const fresh = await next;
   await expect(f.submit(old)).rejects.toThrow(/owner.*unavailable/);
@@ -380,9 +399,12 @@ it("transfers pending observation settlement but does not reauthorize its origin
   const entered = deferred(), release = deferred();
   f.after(async method => { if (method === "message.send") { entered.resolve(); await release.promise; } });
   const pending = f.submit(old.peer, id); const fenced = expect(pending).rejects.toMatchObject({ code: -32020 });
+  drainOnCleanup(release, fenced);
   await entered.promise;
+  const saved = savedWhen(f.core, record => record.key === old.peer.key && record.pid === 321 && record.ownerGeneration === 2);
   const refreshed = claude(f, 2);
-  for (let i = 0; i < 100 && f.core.registry.get(old.peer.key ?? "")?.ownerGeneration !== 2; i++) await Promise.resolve();
+  drainOnCleanup(release, refreshed);
+  await saved;
   expect(f.core.registry.get(old.peer.key ?? "")?.ownerGeneration).toBe(2);
   release.resolve(); await fenced; const current = await refreshed;
   expect(await f.status(current.peer, id)).toMatchObject({ outcome: "confirmed" });
@@ -425,8 +447,10 @@ it("attaches the registration UUID when its delayed ACK crosses a continuous ref
   const entered = deferred(), release = deferred();
   f.after(async method => { if (method === "session.upsert") { entered.resolve(); await release.promise; } });
   f.transport.connected = true; const flush = f.core.flush(); await entered.promise;
+  const saved = savedWhen(f.core, record => record.key === old.peer.key && record.pid === 321 && record.ownerGeneration === 2);
   const refreshed = claude(f, 2);
-  for (let i = 0; i < 100 && f.core.registry.get(old.peer.key ?? "")?.ownerGeneration !== 2; i++) await Promise.resolve();
+  drainOnCleanup(release, refreshed);
+  await saved;
   expect(f.core.registry.get(old.peer.key ?? "")?.ownerGeneration).toBe(2);
   release.resolve(); await flush; const current = await refreshed;
   expect(await f.status(current.peer, id)).toMatchObject({ outcome: "confirmed" });
@@ -439,10 +463,15 @@ it.each(["switch-back", "missed-middle-hook"] as const)("does not attach predece
   const entered = deferred(), release = deferred();
   f.after(async method => { if (method === "session.upsert") { entered.resolve(); await release.promise; } });
   f.transport.connected = true; const flush = f.core.flush(); await entered.promise;
+  const middleSaved = boundary === "switch-back" ? savedWhen(f.core, record =>
+    record.session.vendor_session_id === "conversation-b" && record.pid === 321 && record.ownerGeneration === 2) : undefined;
   const middle = boundary === "switch-back" ? expect(claude(f, 2, "conversation-b")).rejects.toMatchObject({ code: -32020 }) : undefined;
-  if (middle) for (let i = 0; i < 100 && !f.core.registry.all().some(record => record.session.vendor_session_id === "conversation-b"); i++) await Promise.resolve();
+  if (middle) drainOnCleanup(release, middle);
+  await middleSaved;
+  const saved = savedWhen(f.core, record => record.key === old.peer.key && record.pid === 321 && record.ownerGeneration === 3);
   const refreshed = claude(f, 3);
-  for (let i = 0; i < 100 && f.core.registry.get(old.peer.key ?? "")?.ownerGeneration !== 3; i++) await Promise.resolve();
+  drainOnCleanup(release, flush, refreshed);
+  await saved;
   release.resolve(); await flush; await middle; const current = await refreshed;
   expect(await f.status(current.peer, id)).toEqual({ operation_id: id, outcome: "unknown" });
 });
