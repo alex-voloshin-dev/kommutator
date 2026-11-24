@@ -1,7 +1,7 @@
 ---
 type: release
 feature: claude-offline-admission
-status: requalification-in-progress
+status: released
 version: 0.16.2
 changelog:
   - "Fixed: registered Claude tracked sends and explicit acknowledgements use local owner preflight before durable offline admission."
@@ -9,6 +9,10 @@ breaking: []
 ---
 
 # Kommutator 0.16.2 — Claude offline admission
+
+> Historical preparation record. Published/deployed 2026-11-24 with additional feedback
+> repairs; [current release report](../feedback-nov24/release.md) supersedes pending
+> publication/rollout statements below and records retained failures.
 
 ## Fixed
 

@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-15. Released baseline: [0.16.1](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.16.1).
+Updated 2026-11-24. Released baseline: [0.16.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.16.2).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -21,6 +21,20 @@ fleet production windows. Draft PR #36 is prepared. No 0.16.2 release, rollout o
 
 ## Current release qualification
 
+Published [0.16.2 feedback repairs](sdlc/feedback-nov24/release.md): Claude offline local
+admission, retryable negative Git discovery and read-only cached management/safe IPC
+diagnostics. Independent reviews/QA and complete source/head/tag CI passed (830 workspace,
+161 script tests). Public hashes and real clean vendor installations passed. Two local
+failed full runs remain documented; SQLite timeout cause is unknown.
+
+Local hub, shared daemon and actual reloaded Codex MCP 0.16.2 are connected; caller active,
+contract 4. Current/backup databases 5/8 passed quick_check, updater idle 0.16.2, timer active.
+Old blocked 644 remains and aggregate degraded is retained. Bounded observation recorded
+6 timeouts and 1 URL transport error among 237 probes, before/after activation. Issue22
+remains open; short current health is not stability proof.
+
+### Previous 0.16.1 checkpoint (historical)
+
 Published 0.16.1 [deployment readiness and argument guidance](sdlc/deployment-health-gate/release.md)
 repairs reproduced updater rejection of otherwise ready services with unchanged old blocked
 work, and improves static MCP read/board argument guidance before IPC. Independent review,
@@ -29,7 +43,7 @@ branch/PR/tag checks passed first attempt. Public hashes and clean real vendor i
 verified MCP0.16.1 and the new hints.
 
 The separately installed runner was refreshed before pinned cutover. Local hub/daemon and
-actual reloaded MCP0.16.1 are connected with an active caller, contract4. Current databases
+actual reloaded MCP0.16.1 are connected with an active caller, contract 4. Current databases
 and backups5/8 passed quick_check. Ordinary updater completed without reconciliation;
 checkpoint idle/appliedVersion0.16.1 and timer active. Aggregate status remains degraded
 for one unchanged blocked reply; no queue deletion/resend or false healthy claim.
@@ -151,21 +165,19 @@ separate phase run, and recurrent local/remote availability failures correlated 
 WSL kernel allocation warnings. The [availability incident](sdlc/runtime-reliability-followup/incident.md)
 remains open; a healthy short probe is not a root-cause fix.
 
-## New feedback under investigation (2026-11-24)
+## November 24 feedback disposition
 
-[Feedback triage](sdlc/feedback-nov24/triage.md) records the new reports. Draft 0.16.2
-repairs the reproduced Claude offline pre-admission lookup, but remains unpublished.
-Fresh reports add negative Git lookup caching and read-only watch startup/diagnostics;
-these require their own review and qualification before inclusion in a release.
-Hook capability does not interrupt idle waits, even with wake enabled. Reported historical
-unknown sends remain uncorrelated with the remote daemon's admission/replay state.
-The remote f4ai-think client confirmed post-NAT inbox/read access; outside-subnet denial
-and unattended reboot acceptance remain separate checks.
+[Feedback triage](sdlc/feedback-nov24/triage.md) and [release report](sdlc/feedback-nov24/release.md)
+record implemented repairs and historical limits. Existing project identities are not migrated;
+hook capability does not interrupt idle waits. Remote unknown sends still need sender-side
+admission/replay correlation. The f4ai-think client confirmed post-NAT inbox/read access;
+outside-subnet denial and unattended reboot acceptance remain separate.
 
 ## Immediate maintenance
 
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
+| Done | Offline Claude admission, negative Git cache and read-only management | Released/deployed 0.16.2; baseline regressions, independent review/QA, complete hosted qualification and public installation probes. Historical unknown operations and socket sandbox access are not retrospectively resolved |
 | 1 | Operation recovery after Claude compaction and unrelated flush work | [Current repair](sdlc/feedback-operation-recovery/feedback-triage.md) released in 0.15.1 after controlled regressions, independent reviews, full qualification and local rollout. Historical inaccessible observations are not retrospectively adopted |
 | Done | [#31: bounded delivery resync](https://github.com/alex-voloshin-dev/kommutator/issues/31) | Released and locally deployed in 0.16.0 after controlled real-socket regression, independent review/QA and full CI qualification. Schema8 indexes and bounded/fair recovery verified; legacy clients retain burst limitations. Historical #22 attribution remains unproven |
 | Done | [#34: transport shutdown ordering](https://github.com/alex-voloshin-dev/kommutator/issues/34) | Released and locally deployed in 0.16.0; independently reviewed controlled regression proves awaited close and late-callback fencing. This does not explain the retained packaging timeouts |
@@ -193,8 +205,8 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Core and identity | Hub, daemon, MCP/hooks, boards and dashboard; live macOS two-Claude native exchange; same-host identity and resume fencing; 0.12.2 durable retirement recovery and pre-enqueue address validation | Preserve these contracts; synthetic recovery coverage is separate from every vendor/environment combination |
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
-| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.16.1 deployed; ordinary updater retained the old blocked-work warning | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.16.1 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.16.2 deployed; ordinary updater retained the old blocked-work warning | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.16.2 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
 | Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.16.1 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |

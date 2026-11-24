@@ -1,0 +1,119 @@
+{
+  "version": "0.16.2",
+  "release_commit": "4b10fdfbc681a8fb8df6222a13b322830d1e8202",
+  "merge_commit": "aaf62d64c84298da0b20d32508f73976b361ded8",
+  "checkpoint": {
+    "status": "idle",
+    "appliedVersion": "0.16.2"
+  },
+  "updater_result": {
+    "version": "0.16.2",
+    "commit": "4b10fdfbc681a8fb8df6222a13b322830d1e8202",
+    "image": "kommutator-hub:release-0.16.2",
+    "nodeVersion": "26.13.0",
+    "nodePath": "/home/avav25/.local/share/kommutator-toolchains/node-26.13.0/bin/node",
+    "pnpmVersion": "12.18.0",
+    "assets": {
+      "tarSha256": "c1998923dc1c8f3f1835e6102b32204faca661fb37e9619cbee0a4cad8ac7d77",
+      "zipSha256": "22d8fa5c9ab07dec3f5acd3a953d92f12804c5a53af399e83aad48626a57786c"
+    },
+    "daemonPid": 1809376,
+    "runtimeContract": 4,
+    "health": {
+      "state": "degraded",
+      "retainedBlocked": 1,
+      "warning": "Preexisting blocked work remains unresolved; deployment acceptance does not authorize resend or deletion."
+    },
+    "directory": "/home/avav25/.local/state/kommutator-release-deploy/attempts/v0.16.2-6e68e3af-794c-44e3-a260-a8f428e10db2"
+  },
+  "manual_reconciliation": false,
+  "hub_started_at": "2026-11-24T02:41:27.085208928Z",
+  "daemon_started_utc": "2026-11-24T02:41:33Z",
+  "databases": [
+    {
+      "path": "/home/avav25/.kommutator/state.db",
+      "schema": 5,
+      "quick_check": "ok",
+      "mode": "0o600",
+      "indexes": []
+    },
+    {
+      "path": "/home/avav25/.local/share/kommutator-hub/kommutator.db",
+      "schema": 8,
+      "quick_check": "ok",
+      "mode": "0o600",
+      "indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    },
+    {
+      "path": "/home/avav25/.local/state/kommutator-release-deploy/attempts/v0.16.2-6e68e3af-794c-44e3-a260-a8f428e10db2/agentd-before.db",
+      "schema": 5,
+      "quick_check": "ok",
+      "mode": "0o600",
+      "indexes": []
+    },
+    {
+      "path": "/home/avav25/.local/share/kommutator-hub/pre-release-0.16.2-1795488083682.db",
+      "schema": 8,
+      "quick_check": "ok",
+      "mode": "0o600",
+      "indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    }
+  ],
+  "loaded_mcp": "0.16.2",
+  "caller": "active",
+  "hub_connected": true,
+  "role": "kommutator-developer",
+  "subscriptions": [
+    "kommutator-feedback",
+    "agentic-forge-feedback"
+  ],
+  "timer": "active",
+  "feedback_observer": "active",
+  "autonomous_maintainer": "disabled; not reenabled by this rollout",
+  "outbox": "one unchanged blocked644; no deletion/resend",
+  "native_installs": [
+    {
+      "vendor": "codex",
+      "version": "0.16.2",
+      "configured": false,
+      "private_setup": 200,
+      "foreign_origin": 403,
+      "operation_status_tool": true,
+      "synthetic_client": true
+    },
+    {
+      "vendor": "claude-code",
+      "version": "0.16.2",
+      "configured": false,
+      "private_setup": 200,
+      "foreign_origin": 403,
+      "operation_status_tool": true,
+      "synthetic_client": true
+    }
+  ],
+  "plugin_files": {
+    "codex": "0.16.2",
+    "claude": "0.16.2"
+  },
+  "existing_claude_mcp": "not independently reloaded/verified",
+  "hook_trust": "five0.16.2 hooks reported trusted/enabled; no manual trust write; fresh runtime execution not certified by reload",
+  "maintenance_notice": "65a5819b-a6ee-4a92-9ab2-dcc926e6678d",
+  "announcement": "b0255d68-dc3e-4632-a1d9-98a4184fbfdf",
+  "availability": "2026-11-24-feedback-availability.json;237probes,230expected401,6timeouts,1URLtransporterror",
+  "open_issues": [
+    9,
+    19,
+    22,
+    25
+  ],
+  "probe_setup_errors": [
+    "first clean Codex probe lacked explicitly configured CODEX_HOME directory; corrected before installer execution",
+    "raw-JSON attempts to WebSocket app-server socket timed out; corrected transport and verified loaded thread before normal reload"
+  ]
+}

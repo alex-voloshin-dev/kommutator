@@ -1,0 +1,65 @@
+{
+  "first": "2026-11-24T02:35:28.818019+00:00",
+  "last": "2026-11-24T02:43:27.603904+00:00",
+  "samples": 237,
+  "counts": {
+    "401": 230,
+    "TimeoutError": 6,
+    "URLError": 1
+  },
+  "before_activation_errors": 5,
+  "after_activation_errors": 2,
+  "max_io_full_avg10": 44.31,
+  "errors": [
+    {
+      "at": "2026-11-24T02:40:40.863335+00:00",
+      "error": "TimeoutError",
+      "elapsed_ms": 801.406,
+      "io_pressure": "some avg10=12.35 avg60=3.05 avg300=2.60 total=554691159\nfull avg10=9.47 avg60=2.43 avg300=2.36 total=539609299"
+    },
+    {
+      "at": "2026-11-24T02:40:42.863844+00:00",
+      "error": "TimeoutError",
+      "elapsed_ms": 801.717,
+      "io_pressure": "some avg10=27.14 avg60=6.02 avg300=3.23 total=556647517\nfull avg10=23.87 avg60=5.26 avg300=2.96 total=541506895"
+    },
+    {
+      "at": "2026-11-24T02:40:44.863973+00:00",
+      "error": "TimeoutError",
+      "elapsed_ms": 1079.096,
+      "io_pressure": "some avg10=39.98 avg60=9.03 avg300=3.88 total=558634368\nfull avg10=36.76 avg60=8.20 avg300=3.58 total=543234674"
+    },
+    {
+      "at": "2026-11-24T02:40:46.864107+00:00",
+      "error": "TimeoutError",
+      "elapsed_ms": 801.637,
+      "io_pressure": "some avg10=46.14 avg60=11.16 avg300=4.36 total=560095526\nfull avg10=39.52 avg60=9.63 avg300=3.92 total=544459025"
+    },
+    {
+      "at": "2026-11-24T02:41:26.868312+00:00",
+      "error": "URLError",
+      "elapsed_ms": 0.365,
+      "io_pressure": "some avg10=7.62 avg60=10.42 avg300=5.11 total=563912765\nfull avg10=6.95 avg60=9.20 avg300=4.61 total=547962842"
+    },
+    {
+      "at": "2026-11-24T02:42:12.189841+00:00",
+      "error": "TimeoutError",
+      "elapsed_ms": 2029.603,
+      "io_pressure": "some avg10=10.45 avg60=7.18 avg300=4.93 total=565767953\nfull avg10=1.15 avg60=4.74 avg300=4.10 total=548390162"
+    },
+    {
+      "at": "2026-11-24T02:42:21.591703+00:00",
+      "error": "TimeoutError",
+      "elapsed_ms": 909.562,
+      "io_pressure": "some avg10=24.01 avg60=10.94 avg300=5.82 total=568887903\nfull avg10=1.64 avg60=4.39 avg300=4.04 total=548653111"
+    }
+  ],
+  "version": "0.16.2",
+  "new_hub_started_at": "2026-11-24T02:41:27.085208928Z",
+  "request_timeout_seconds": 0.8,
+  "interval_seconds": 2,
+  "duration_seconds": 480,
+  "interpretation": "Unauthenticated loopback reachability only;401 is expected.6 timeout observations and1 URL transport error.5 unsuccessful probes before new container start,2 after.Origin of each failed probe is not established;client scheduling and shared host load may affect observation. No per-probe process birth evidence or root-cause attribution. HTTP budget is not a wall-clock guarantee.",
+  "maintenance_started_after": "2026-11-24T02:40:00Z",
+  "raw_log": "private release-prep nov24-0162/availability.jsonl"
+}

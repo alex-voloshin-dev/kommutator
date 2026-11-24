@@ -1510,7 +1510,24 @@ qualification is pending. See [evidence](evidence/2026-11-24-feedback-qualificat
 and [triage](../docs/sdlc/feedback-nov24/triage.md).
 
 The extended candidate subsequently passed both complete hosted gates on2d91b2f:
-branch45312208460 and PR45312214957,830 workspace tests and161 script tests, audit,
+branch45312208460 and PR45312214957,830 workspace tests and 161 script tests, audit,
 integrity, clean-PATH and synthetic E2E. Secret scans passed. Independent review/QA
 plus the full unchanged hosted gate produced develop proceed. This is qualification,
 not public installation or deployment; local SQLite timeout cause remains unknown.
+
+## 2026-11-24 — 0.16.2 published and deployed
+
+PR #36 merged; immutable tag4b10fdf and matching public assets verified anonymously. Clean
+Claude/Codex installs launchedMCP 0.16.2 with private setup and foreign-Origin rejection.
+Pinned updater ran after announced 02:40 UTC, completed normally and retained old blocked 644.
+Hub/daemon and actual reloaded Codex MCP 0.16.2 verified; contract 4, connected/active, databases
+and backups5/8 quick_check ok, indexes present, timer active. No manual reconciliation or
+queue deletion/resend. Existing Claude MCP not independently reloaded; new hook execution
+not certified solely by trusted metadata.
+
+The 237-probe bounded loopback observation recorded 230 expected 401,6 timeouts,1 URL transport
+error; 5 unsuccessful probes before new hub start and 2 after. IO-full avg10 max 44.31%,
+cause unestablished; no stable-rollout claim or closure of #22. Source/head/tag hosted gates
+passed 830 workspace + 161 script tests. Local failed gates remain recorded. See
+[rollout](evidence/2026-11-24-feedback-rollout.json) and
+[availability](evidence/2026-11-24-feedback-availability.json).
