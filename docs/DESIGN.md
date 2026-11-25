@@ -1116,7 +1116,18 @@ unpersisted command is queued. Callers must not retry already dispatched mutatio
 Hook observations are private, bounded diagnostic evidence, not identity authority or delivery
 receipts. Observation writes are serialized in the background; conversation authority and
 delivery never await them. Only the final best-effort flush waits, under the existing
-entrypoint deadline. They contain only a fixed event/outcome, timestamp and hashed root discriminator.
+entrypoint deadline. They contain only a fixed event/outcome, timestamp and hashed root discriminator,
+plus optional allowlisted failure reason and phase (added 2026-11-25). Reasons distinguish
+IPC timeout, registration rejection, daemon shutdown, hub/socket unavailability, socket closure,
+permission denial, read-only storage, other RPC rejection and unexpected failure. Phases identify
+input, authority, conflict/compatibility checks, IPC connection/hello or the active hook operation.
+Local IPC timeout metadata distinguishes hello from the requested operation without recording
+method text, parameters, remote error messages, paths or credentials. Existing IPC error codes,
+deadlines, failure outcomes and receipt behavior are unchanged; output-written acknowledgement
+uncertainty still takes precedence. Legacy observations without detail remain readable, while
+unknown detail values are rejected on read and never persisted by the writer. The 64-slot and
+512-byte read bounds remain. These details localize future failures; they do not establish the
+cause of historical generic failures or prove that a timed-out operation was not committed.
 An interrupted attempt or missing observation is unknown. Failures before output keep stdout
 empty and exit zero; the existing 140ms entrypoint deadline and 200ms vendor budget remain.
 Explicit diagnostics expose observations; no failure generates an unsolicited agent turn.

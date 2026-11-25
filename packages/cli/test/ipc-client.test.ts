@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createServer, type Server, type Socket } from "node:net";
-import { mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { confirmDaemonStopped } from "../src/daemon-stop.js";
@@ -35,6 +35,14 @@ function listen(server: Server, endpoint: string): Promise<void> {
 function response(socket: Socket, id: number, result: unknown) { socket.write(JSON.stringify({ jsonrpc: "2.0", id, result }) + "\n"); }
 
 describe("IPC client", () => {
+  it("preserves OS permission codes and annotates the socket connection phase", async () => {
+    const { endpoint } = await fixture(() => { throw new Error("unauthorized socket must not dispatch"); });
+    await chmod(endpoint, 0);
+    const client = new IpcClient({ endpoint, hello: cliHello, timeoutMs: 100 });
+    cleanup.push(() => client.close());
+    await expect(client.call("whoami")).rejects.toMatchObject({ code: "EACCES", diagnostic: { phase: "ipc-connect", reason: "transport-error" } });
+  });
+
   it("handshakes each connection and reconnects the next call after daemon disconnect", async () => {
     const methods: string[] = [];
     const { endpoint, sockets } = await fixture((socket, request) => { methods.push(request.method); response(socket, request.id, { ok: true }); });

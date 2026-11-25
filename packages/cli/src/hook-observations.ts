@@ -7,12 +7,21 @@ import { homedir } from "node:os";
 const events = ["SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd"] as const;
 const outcomes = ["attempted", "success", "retired-locally", "invalid-input", "identity-unavailable", "conflict", "daemon-incompatible", "hub-unavailable", "ipc-unavailable", "failed", "output-written-ack-unverified"] as const;
 export type HookOutcome = typeof outcomes[number];
-export interface HookObservation { event: typeof events[number] | "unknown"; outcome: HookOutcome; at: string; root_hash?: string }
+const reasons = ["ipc-timeout", "registration-rejected", "daemon-stopping", "hub-unavailable", "ipc-unavailable", "ipc-closed", "permission-denied", "read-only-filesystem", "rpc-rejected", "unexpected"] as const;
+const phases = ["input", "authority", "conflict-check", "compatibility", "ipc-connect", "ipc-hello", "whoami", "hook-poll", "hook-ack", "session-gone", "output"] as const;
+export interface HookFailureDetail { reason: typeof reasons[number]; phase: typeof phases[number] }
+export interface HookObservation { event: typeof events[number] | "unknown"; outcome: HookOutcome; at: string; root_hash?: string; reason?: HookFailureDetail["reason"]; phase?: HookFailureDetail["phase"] }
+function failureDetail(value: unknown): HookFailureDetail | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const row = value as Record<string, unknown>;
+  if (!reasons.includes(row.reason as HookFailureDetail["reason"]) || !phases.includes(row.phase as HookFailureDetail["phase"])) return undefined;
+  return { reason: row.reason as HookFailureDetail["reason"], phase: row.phase as HookFailureDetail["phase"] };
+}
 const hash = (root: string) => createHash("sha256").update(root).digest("hex");
 const directory = (home?: string) => join(home ?? process.env.KOM_HOME ?? join(homedir(), ".kommutator"), "hook-observations");
 
 /** Fixed 64 slots. Collision/partial writes can lose evidence, never establish identity. */
-export async function recordHookObservation(event: string | undefined, outcome: HookOutcome, root?: string, home?: string, slot = process.pid % 64): Promise<void> {
+export async function recordHookObservation(event: string | undefined, outcome: HookOutcome, root?: string, home?: string, slot = process.pid % 64, detail?: HookFailureDetail): Promise<void> {
   try {
     const dir = directory(home);
     await mkdir(dir, { recursive: true, mode: 0o700 });
@@ -24,7 +33,7 @@ export async function recordHookObservation(event: string | undefined, outcome: 
       if (!(await file.stat()).isFile()) return;
       await file.chmod(0o600);
       const value: HookObservation = { event: events.includes(event as typeof events[number]) ? event as typeof events[number] : "unknown",
-        outcome, at: new Date().toISOString(), ...(root ? { root_hash: hash(root) } : {}) };
+        outcome, at: new Date().toISOString(), ...(root ? { root_hash: hash(root) } : {}), ...failureDetail(detail) };
       await file.writeFile(JSON.stringify(value));
     } finally { await file.close(); }
   } catch { /* Diagnostic storage must never interfere with the hook. */ }
@@ -46,7 +55,8 @@ export async function readHookObservations(root?: string, home?: string): Promis
         if (!outcomes.includes(row.outcome as HookOutcome) || typeof row.at !== "string" || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(row.at)) return undefined;
         if (row.root_hash !== undefined && (typeof row.root_hash !== "string" || !/^[a-f0-9]{64}$/.test(row.root_hash))) return undefined;
         if (root !== undefined && row.root_hash !== hash(root)) return undefined;
-        return { event: row.event, outcome: row.outcome, at: row.at, ...(row.root_hash ? { root_hash: row.root_hash } : {}) } as HookObservation;
+        if ((row.reason !== undefined || row.phase !== undefined) && !failureDetail(row)) return undefined;
+        return { event: row.event, outcome: row.outcome, at: row.at, ...(row.root_hash ? { root_hash: row.root_hash } : {}), ...failureDetail(row) } as HookObservation;
       } finally { await file.close(); }
     } catch { return undefined; }
   }));
