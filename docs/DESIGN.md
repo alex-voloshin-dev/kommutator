@@ -1132,6 +1132,16 @@ Local IPC distinguishes hub unavailability (-32030) from daemon shutdown (-32031
 Diagnostics use fixed messages, never arbitrary transport text or a promise that an
 unpersisted command is queued. Callers must not retry already dispatched mutations blindly.
 
+Plugin daemon preflight diagnostics retain an optional `probe_failure` when their existing
+CLI status request throws: fixed method `daemon.status`, local IPC phase (`ipc-connect`,
+`ipc-hello`, `ipc-request`, or `unknown`), bounded reason (`timeout`, `transport-error`,
+`rpc-rejected`, or `unexpected`) and an allowlisted OS/RPC code or null. Arbitrary remote
+messages, paths, parameters and credentials are never included. The existing unavailable
+error keeps its static prefix and appends only this sanitized record; synthetic exported
+E2E records that original result before cleanup without issuing an additional status probe.
+Compatibility/stopped classification, lazy startup, readiness waiting and deadlines are
+unchanged. Probe failure is not evidence about another operation's admission or commit.
+
 Hook observations are private, bounded diagnostic evidence, not identity authority or delivery
 receipts. Observation writes are serialized in the background; conversation authority and
 delivery never await them. Only the final best-effort flush waits, under the existing

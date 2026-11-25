@@ -116,3 +116,31 @@ it("does not guess lookup recovery direction for malformed contract metadata", a
   await expect(lookup).rejects.not.toThrow("private-fixture-contract");
   expect(calls).toEqual(["ipc.hello", "daemon.runtime"]);
 });
+
+it("keeps original RPC failure phase/code while redacting the daemon's arbitrary message", async () => {
+  const methods: string[] = [];
+  server = createServer(socket => {
+    let buffer = "";
+    socket.on("data", chunk => {
+      buffer += String(chunk);
+      let end: number;
+      while ((end = buffer.indexOf("\n")) >= 0) {
+        const request = JSON.parse(buffer.slice(0, end)); buffer = buffer.slice(end + 1);
+        methods.push(request.method);
+        socket.write(JSON.stringify({ jsonrpc: "2.0", id: request.id,
+          ...(request.method === "ipc.hello" ? { result: { bound: false } }
+            : { error: { code: -32031, message: "private-key /private/path arbitrary remote text" } }),
+        }) + "\n");
+      }
+    });
+  });
+  await new Promise<void>((resolve, reject) => {
+    server!.once("error", reject);
+    server!.listen(join(home, "agentd.sock"), () => { server!.off("error", reject); resolve(); });
+  });
+  const result = await pluginDaemonDiagnostics();
+  expect(result.daemon).toBe("unavailable");
+  expect(result.probe_failure).toEqual({ method: "daemon.status", phase: "ipc-request", reason: "rpc-rejected", code: -32031 });
+  expect(JSON.stringify(result)).not.toMatch(/private-key|\/private\/path|arbitrary remote text/);
+  expect(methods).toEqual(["ipc.hello", "daemon.status"]);
+});

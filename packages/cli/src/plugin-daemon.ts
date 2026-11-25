@@ -9,6 +9,19 @@ const ObservedRuntime = z.object({
   daemon: z.object({ version: Version }).catch({ version: null }),
 });
 type DaemonState = "stopped" | "compatible" | "incompatible" | "unavailable";
+const ProbeCode = z.literal(["ENOENT", "ECONNREFUSED", "ECONNRESET", "EPIPE", "EACCES", "EPERM", "EROFS", "ETIMEDOUT",
+  -32700, -32600, -32601, -32602, -32000, -32020, -32030, -32031, -32032]).nullable().catch(null);
+const ProbeDetail = z.object({
+  phase: z.enum(["ipc-connect", "ipc-hello", "ipc-request", "unknown"]).catch("unknown"),
+  reason: z.enum(["timeout", "transport-error", "rpc-rejected", "unexpected"]).catch("unexpected"),
+}).catch({ phase: "unknown", reason: "unexpected" });
+const ProbeFailureInput = z.object({ code: ProbeCode, diagnostic: ProbeDetail })
+  .catch({ code: null, diagnostic: { phase: "unknown", reason: "unexpected" } });
+function probeFailure(error: unknown) {
+  const value = ProbeFailureInput.parse(error);
+  return { method: "daemon.status" as const, ...value.diagnostic, code: value.code };
+}
+
 const recovery: Partial<Record<DaemonState, string>> = {
   stopped: "The shared daemon is stopped. Resume your client with trusted SessionStart hooks, then call whoami to register and start the shared daemon. No daemon was started by this check.",
   unavailable: "Shared daemon unavailable; inspect the private local configuration and daemon log. No restart was performed.",
@@ -27,10 +40,11 @@ function compatibilityRecovery(contract: number | null, version: string | null):
       : "The daemon contract could not be verified. Inspect setup_status and installed versions before choosing which component to update. Do not restart the shared daemon based on missing metadata alone.";
   return `${versions} ${action} No restart was performed; compatibility does not prove session registration.`;
 }
-function diagnostics(daemon: DaemonState, value?: unknown) {
+function diagnostics(daemon: DaemonState, value?: unknown, failure?: ReturnType<typeof probeFailure>) {
   const observed = ObservedRuntime.safeParse(value);
   return {
     daemon, client_version: RELEASE_VERSION, expected_runtime_contract: expectedRuntimeContract,
+    ...(failure ? { probe_failure: failure } : {}),
     daemon_version: observed.success ? observed.data.daemon.version : null,
     daemon_runtime_contract: observed.success ? observed.data.runtime_contract : null,
     ...(daemon === "incompatible" ? { recovery: compatibilityRecovery(observed.success ? observed.data.runtime_contract : null, observed.success ? observed.data.daemon.version : null) } : recovery[daemon] ? { recovery: recovery[daemon] } : {}),
@@ -52,7 +66,7 @@ export async function pluginDaemonDiagnostics(lazyStart = false, timeoutMs = 500
     }
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
-    return diagnostics(code === "ENOENT" || code === "ECONNREFUSED" ? "stopped" : "unavailable");
+    return diagnostics(code === "ENOENT" || code === "ECONNREFUSED" ? "stopped" : "unavailable", undefined, probeFailure(error));
   } finally { client.close(); }
 }
 export async function pluginDaemonStatus(lazyStart = false, timeoutMs = 500, waitForHubMs = 0): Promise<DaemonState> {
@@ -62,7 +76,8 @@ export async function requirePluginDaemon(): Promise<void> {
   const observed = await pluginDaemonDiagnostics(true, 5000, 1000);
   const state = observed.daemon;
   if (state === "incompatible") throw new RuntimeCompatibilityError(observed.recovery ?? compatibilityRecovery(null, null));
-  if (state !== "compatible") throw new Error("Shared daemon unavailable; inspect the private local configuration and daemon log.");
+  if (state !== "compatible") throw new Error("Shared daemon unavailable; inspect the private local configuration and daemon log." +
+    (observed.probe_failure ? ` Probe failure: ${JSON.stringify(observed.probe_failure)}.` : ""));
 }
 
 /** Pure lookup preparation; never replace this with daemon.status diagnostics. */

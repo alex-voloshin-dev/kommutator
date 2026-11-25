@@ -207,6 +207,13 @@ when configured it also returns `daemon` (stopped/compatible/incompatible/unavai
 `client_version`, `expected_runtime_contract`, nullable `daemon_version` and
 `daemon_runtime_contract`, and `recovery` when action is needed. `setup_start` returns
 configuration state and, only when needed, an expiring private loopback form URL.
+A failed local daemon probe may also return `probe_failure`: fixed method
+`daemon.status`, an allowlisted phase (`ipc-connect`, `ipc-hello`, `ipc-request`,
+or `unknown`), reason (`timeout`, `transport-error`, `rpc-rejected`, or `unexpected`),
+and an allowlisted code or `null`. The method identifies the intended probe; the
+phase identifies where it failed, including connection or hello before that request.
+Arbitrary error text, paths, parameters and credentials are excluded. This optional
+plugin-local diagnostic changes neither daemon classification nor the IPC wire schema.
 MCP `status` calls `daemon.status` through a separate CLI-only read-only IPC connection.
 Claude plugins attach a `DaemonStatusParams.caller` selector from the current private
 registration: `{ vendor: "claude-code", vendor_session_id, pid, process_started_at,

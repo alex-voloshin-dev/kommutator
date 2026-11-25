@@ -149,3 +149,18 @@ export async function hookProcessDiagnostic(pid, expectedBirth, signal) {
     return processSample({ status: 'sampled', truncated, processes });
   } catch { return { status: 'unavailable', processes: [] }; }
 }
+
+/** Preserve only the original fixed probe failure suffix, never arbitrary tool text. */
+export function daemonProbeFailureDiagnostic(value) {
+  const prefix = 'Shared daemon unavailable; inspect the private local configuration and daemon log. Probe failure: ';
+  if (typeof value !== 'string' || value.length > 512 || !value.startsWith(prefix) || !value.endsWith('.')) return undefined;
+  try {
+    const row = JSON.parse(value.slice(prefix.length, -1));
+    const code = new Set([null, 'ENOENT', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'EACCES', 'EPERM', 'EROFS', 'ETIMEDOUT',
+      -32700, -32600, -32601, -32602, -32000, -32020, -32030, -32031, -32032]);
+    if (!row || typeof row !== 'object' || Array.isArray(row) || Object.keys(row).sort().join(',') !== 'code,method,phase,reason' ||
+        row.method !== 'daemon.status' || !['ipc-connect', 'ipc-hello', 'ipc-request', 'unknown'].includes(row.phase) ||
+        !['timeout', 'transport-error', 'rpc-rejected', 'unexpected'].includes(row.reason) || !code.has(row.code)) return undefined;
+    return { method: row.method, phase: row.phase, reason: row.reason, code: row.code };
+  } catch { return undefined; }
+}
