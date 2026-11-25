@@ -1,0 +1,33 @@
+{
+  "started": "2026-11-25T15:40:27.276643+00:00",
+  "ended": "2026-11-25T15:41:52.279086+00:00",
+  "samples": 18,
+  "results": {
+    "401": 18
+  },
+  "max_io_full_avg10": 0.75,
+  "limits": [
+    "90-second bounded observation, not day-long qualification.",
+    "same_birth field compared entire process snapshot including state/wchan; false is ambiguous, not PID-reuse evidence. No failed probe occurred.",
+    "elapsed_ms includes docker/process diagnostics, not just HTTP request time.",
+    "No kernel I/O/OOM/allocation error strings in accessible ring buffer; absence does not establish storage health."
+  ],
+  "runtime_version": "0.17.0",
+  "observed_daemon_pid": 2666070,
+  "hub_started_at": "2026-11-25T03:17:21.924415358Z",
+  "log_observation": {
+    "since": "2026-11-25T03:17:28Z",
+    "through": "2026-11-25T15:40:07Z",
+    "new_connection_or_heartbeat_error_entries": 0,
+    "other_entries": 1,
+    "limits": "One process-exited retirement after MCP replacement. Absence of error entries is not continuous service or remote-client evidence."
+  },
+  "storage": {
+    "filesystem": "ext4",
+    "source": "/dev/sdd",
+    "free_gib_approx": 925,
+    "mount_options": "rw,relatime,discard,errors=remount-ro,data=ordered",
+    "shared_with_docker": true
+  },
+  "changes_to_services_kernel_or_queues": false
+}
