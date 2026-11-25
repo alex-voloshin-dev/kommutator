@@ -10,14 +10,13 @@ full release qualification and ordinary local updater completion are recorded in
 [RESULTS](../spikes/RESULTS.md). The previous chat MCP was compatible 0.12.2;
 clean-profile installed MCP probes verified 0.12.3.
 
-## In-progress maintenance (2026-11-21)
+## Current investigation (2026-11-25 UTC)
 
-Candidate 0.16.2 repairs reproduced Claude offline tracked admission blocked by the
-remote whoami preflight. Independent reviews and 40 focused QA tests pass. Two ordinary
-local full gates failed in unchanged hub disk tests; diagnostic SQLite calls took
-42.7–46 seconds. Underlying storage/workload cause remains unproven. Both full hosted gates passed (822 workspace/154 script tests); see [candidate report](sdlc/claude-offline-admission/release.md).
-Publication/cutover is deferred until after November 22, 10:30 UTC to avoid reported
-fleet production windows. Draft PR #36 is prepared. No 0.16.2 release, rollout or remote update is claimed.
+Version 0.16.2 is published and locally deployed; the November 22 publication hold
+and draft PR #36 are historical, not pending work. Reliability follow-up investigates
+repeated failed synchronization backoff and insufficient hook failure distinctions.
+No new release or root-cause fix is claimed until reproduction and qualification.
+Historical local gate failures and unknown remote operation outcomes remain unresolved.
 
 ## Current release qualification
 
@@ -208,7 +207,7 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.16.2 deployed; ordinary updater retained the old blocked-work warning | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
 | Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.16.2 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
-| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.16.1 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
+| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.16.2 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
 
 ## Acceptance work that needs a suitable environment
