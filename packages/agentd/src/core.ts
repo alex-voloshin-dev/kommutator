@@ -496,6 +496,19 @@ export class DaemonCore {
     return this.currentOwner(peer, record);
   }
 
+  private canRebindLocally(peer: IpcPeer, record: LocalRecord): boolean {
+    const hello = peer.hello;
+    return hello?.client === "shim" && hello.vendor === "claude-code" &&
+      hello.vendor_session_id === record.session.vendor_session_id &&
+      hello.owner_generation !== undefined && hello.owner_generation > 0 &&
+      hello.owner_generation === record.ownerGeneration && Boolean(record.session.id) &&
+      hello.cwd === record.session.cwd &&
+      (hello.project_key === undefined || hello.project_key === record.session.project_key) &&
+      (hello.endpoint === undefined || hello.endpoint === record.endpoint) &&
+      !this.registry.outbox().some(entry => entry.local_key === record.key &&
+        (entry.method === "session.upsert" || entry.method === "session.gone"));
+  }
+
   async request(peer: IpcPeer, method: string, value: unknown = {}): Promise<unknown> {
     if (this.closed) throw new DaemonStoppingError();
     if (method === "ipc.hello") {
@@ -508,6 +521,7 @@ export class DaemonCore {
       peer.hello = parsed.data;
       if (parsed.data.protocol_version !== PROTOCOL_VERSION) this.report("IPC protocol version differs from daemon");
       if (parsed.data.client === "cli") return { bound: false };
+      let localBinding: LocalRecord | undefined;
       if (parsed.data.vendor === "codex") {
         if (!parsed.data.vendor_session_id) throw new RpcError(-32602, "Codex requires an explicit vendor_session_id");
         if (parsed.data.client === "shim") {
@@ -530,13 +544,26 @@ export class DaemonCore {
         peer.key = record.key;
         if (record.pid && record.processStartedAt) peer.operationOwner = operationOwner(record);
       } else {
-        try { const bound = await this.bind(peer); if (bound.pid && bound.processStartedAt) peer.operationOwner = operationOwner(bound); } catch (error) { if (!(error instanceof RpcError)) throw error; }
+        try {
+          const bound = await this.bind(peer);
+          if (bound.pid && bound.processStartedAt) peer.operationOwner = operationOwner(bound);
+          if (this.canRebindLocally(peer, bound)) localBinding = structuredClone(bound);
+        } catch (error) { if (!(error instanceof RpcError)) throw error; }
       }
       this.requireOpen();
       if (parsed.data.client === "shim" && parsed.data.vendor === "claude-code" && (!this.peers.has(peer) || peer.ended)) {
         throw new RpcError(-32020, "session connection closed while binding Claude owner");
       }
-      await this.flush();
+      if (localBinding) {
+        const pinned = localBinding;
+        await this.reconcileRetirements(record => record.key === pinned.key);
+        const current = await this.bind(peer);
+        if (!matchesOwner(operationOwner(pinned), current) || pinned.session.cwd !== current.session.cwd ||
+          pinned.session.project_key !== current.session.project_key || pinned.endpoint !== current.endpoint) {
+          throw new RpcError(-32020, "bound Claude owner changed during local rebind; open a new session connection");
+        }
+        if (!this.canRebindLocally(peer, current)) await this.flush();
+      } else await this.flush();
       this.requireOpen();
       if (parsed.data.client === "shim" && parsed.data.vendor === "claude-code" && (!this.peers.has(peer) || peer.ended)) {
         throw new RpcError(-32020, "session connection closed while binding Claude owner");

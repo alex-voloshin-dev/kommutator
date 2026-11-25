@@ -386,3 +386,10 @@ broken support is an error, not a reason for silent legacy fallback.
 Hub schema 8 adds unread-sequence and message-target indexes atomically from 5/6/7,
 without rewriting history; older hubs reject it. Runtime contract 4/local schema 5
 remain unchanged. Back up and fix forward; see DESIGN §19 and LOCAL_RELEASE_DEPLOY.
+
+
+For an explicit positive-generation Claude shim, hello may bind a previously registered
+unchanged live owner locally without awaiting unrelated flush work. Exact owner/context,
+fresh process birth and retirement-marker checks still apply; pending owner lifecycle work
+uses ordinary synchronization. New registrations, hooks, Codex and manual generation-zero
+paths are unchanged. See DESIGN §19; this adds no RPC fields or replay authority.
