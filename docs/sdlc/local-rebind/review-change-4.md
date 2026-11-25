@@ -1,3 +1,33 @@
+---
+type: review
+target: local-rebind-and-probe-diagnostics
+iteration: 4
+verdict: approve
+review_decision: proceed
+findings: []
+---
+
+# Integrated review, round 4
+
+The user explicitly expanded the review budget to six rounds. Independent correctness
+and security reviewers approve the narrow probe diagnostic change; the external lens
+returned `verdict: approve` with no findings. The only minor suggestion (document
+optional `setup_status.probe_failure` in PROTOCOL) was addressed. The additional
+QA real Unix IPC hello/request timeout tests received independent read-only approval.
+
+All previous ownership, lifecycle, replay, receipt and deadline fences remain. The
+new projection preserves only fixed method, allowlisted phase/reason and code/null.
+E2E retains those fields from the same failed invocation before cleanup, without
+probing again. This does not establish the cause of the earlier exported resume
+failure or the production journal-wait incident.
+
+Independent ordered build/typecheck and 887 workspace tests passed first attempt;
+16 script diagnostic tests also passed. The review-decision tool returned proceed.
+Full packaging qualification remains a separate release gate. External log: /tmp/kom-v0172-probe-external.log.
+
+
+## Retained prior review evidence
+
 # Integrated review — round 1
 
 Correctness/API reviewer: approve, no findings (integrated f83ab40).

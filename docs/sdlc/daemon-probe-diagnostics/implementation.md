@@ -37,7 +37,7 @@ It recorded 257 IPC sends, 255 resolutions and two expected rejections, no IPC t
 and one expected initial ENOENT connection failure. Twenty-four SQLite calls exceeded
 20 ms; the longest was 236.561 ms. Instrumentation affects timing and request IDs
 can overlap across connections, so no per-connection latency inference is claimed.
-No production service or database was changed. The original timeout cause remains
+No production service or database was changed. The original failure cause remains
 unknown; production storage observations do not establish this synthetic failure's
 cause.
 

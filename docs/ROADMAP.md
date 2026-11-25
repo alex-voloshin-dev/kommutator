@@ -15,9 +15,18 @@ clean-profile installed MCP probes verified 0.12.3.
 Version 0.17.0 fixes reproduced synchronization-backoff reset behavior and adds bounded
 request-timeout and hook reason/phase evidence. Historical availability, registration and
 IPC failures remain unresolved; the 03:08 UTC November25 incident occurred before cutover.
-Next: correlate triggering request diagnostics, local storage waits and remote operation
-admission without replaying unknown mutations. Preserve primary and cleanup errors in
-future lifecycle fixture diagnostics; passing repeats do not explain failed gates.
+Candidate [0.17.2 / PR #38](sdlc/local-rebind/release.md) implements established-Claude
+local rebind without unrelated queue flush, primary/cleanup error preservation, and
+correct completed-versus-interrupted diagnostic test coverage. Independent QA passed
+870 tests and exact-head hosted branch/PR gates passed. Publication remains deferred:
+the local exported E2E failed `whoami` immediately after resume; its underlying IPC
+cause was not retained. Next: bounded diagnostic reproduction, not a blind gate rerun.
+
+A 24-hour/8-MiB bounded local collector started at 16:11:42 UTC; its first failure
+at 16:12:32 matched the working 0.17.0 hub in journal wait before and after the
+800-ms probe. Storage root cause remains unknown. Correlate request diagnostics,
+process/storage evidence and remote admission without replaying unknown mutations.
+This collection is ongoing, not completed day-long acceptance.
 
 ## Current release qualification
 

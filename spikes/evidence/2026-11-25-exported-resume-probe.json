@@ -1,0 +1,51 @@
+{
+  "interval_utc": [
+    "2026-11-25T16:14:01Z",
+    "2026-11-25T16:14:33Z"
+  ],
+  "events": {
+    "instrumented.ipc": 7,
+    "instrumented.probe": 5,
+    "probe.failed": 1,
+    "ipc.sent": 257,
+    "sqlite.exec": 18,
+    "ipc.resolved": 255,
+    "ipc.rejected": 2,
+    "sqlite.run": 6
+  },
+  "probe_failures": [
+    {
+      "event": "probe.failed",
+      "elapsed_ms": null,
+      "pid": 3553563,
+      "at": "2026-11-25T16:14:03.702Z",
+      "method": "daemon.status",
+      "id": null,
+      "code": "ENOENT",
+      "phase": "ipc-connect",
+      "reason": "transport-error"
+    }
+  ],
+  "timeouts": [],
+  "sqlite_slow_count": 24,
+  "sqlite_max_ms": 236.561,
+  "sqlite_max_record": {
+    "event": "sqlite.exec",
+    "elapsed_ms": 236.561,
+    "pid": 3553661,
+    "at": "2026-11-25T16:14:05.216Z",
+    "method": "OTHER",
+    "id": null,
+    "code": null,
+    "phase": null,
+    "reason": null
+  },
+  "result": "passed; original resumed probe failure not reproduced",
+  "limitations": [
+    "Diagnostics alter timing; not qualification.",
+    "IPC IDs are per-client and may overlap within a process; no per-connection duration correlation asserted.",
+    "Only synchronous SQLite calls >=20ms logged, no SQL/parameters.",
+    "Original failed gate erased low-level probe error and removed synthetic runtime state; no retrospective cause.",
+    "First diagnostic instrumentation invalid due bundled renamed id2; preserved separately."
+  ]
+}

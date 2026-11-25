@@ -19,3 +19,12 @@ Final0.17.2 follow-up after controlled observation-persistence test repair: orde
 typecheck and870/870 workspace tests passed first attempt (41/209/280/340). Controlled
 observation-stall process185.726ms. No extra QA edits needed; exact CI interruption timing
 remains unproven. Logs /tmp/kom-v0172-qa-{build,types,test}.log.
+
+
+Round 4 after sanitized daemon-probe diagnostics: independent QA added two real
+Unix IPC timeout-phase tests (hello versus status request), preserving exact calls
+and connection closure. Ordered build/typecheck and 887/887 tests passed first
+attempt (41 protocol, 209 hub, 280 agentd, 357 CLI); 16 diagnostic script tests passed.
+One controlled observation-stall sample was 205.709 ms, above 200 ms target and
+below strict 300 ms limit. No retry or runtime changes. Logs:
+`/tmp/kom-probe-integrated-qa-{build,types,test,script}.log`.
