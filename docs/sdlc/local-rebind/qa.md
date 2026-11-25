@@ -13,3 +13,9 @@ vendor dialogue, native idle wake, day-long stability or historical outage cause
 
 Engineer intermediate fixture mistakes and one unchanged disk-backed timeout remain in
 implementation.md; successful QA does not explain the earlier disk timeout.
+
+
+Final0.17.2 follow-up after controlled observation-persistence test repair: ordered build,
+typecheck and870/870 workspace tests passed first attempt (41/209/280/340). Controlled
+observation-stall process185.726ms. No extra QA edits needed; exact CI interruption timing
+remains unproven. Logs /tmp/kom-v0172-qa-{build,types,test}.log.

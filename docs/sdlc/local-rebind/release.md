@@ -2,16 +2,17 @@
 type: release
 feature: local-rebind
 status: proposed
-version: 0.17.1
+version: 0.17.2
 changelog:
   - "Fixed: established Claude reconnects no longer await unrelated outbox synchronization."
   - "Fixed: lifecycle fixtures retain primary failures when cleanup or diagnostic output fails."
 breaking: []
 ---
 
-# Kommutator 0.17.1 candidate
+# Kommutator 0.17.2 candidate
 
-The release workflow proposes patch0.17.1 from the actual changes since0.17.0.
+The release workflow proposed patch0.17.1; its unpublished immutable tag remains retained.
+The corrected test-contract candidate advances to0.17.2, without rewriting that tag.
 No publication, service update or final qualification is claimed yet.
 
 A previously registered, explicitly identified positive-generation Claude owner can
@@ -37,3 +38,16 @@ qualification; prior storage waits and issues9/19/22/25 remain open.
 
 Historical outage causes, safe blocked-queue disposition, native idle wake/Work, physical
 outside-subnet denial, unattended Windows reboot and other platforms remain open gates.
+
+
+## Candidate0.17.1 qualification interruption
+
+The full local release gate and exact-head branch45649459503/tag45649789658 passed.
+PR45649636476 failed the unchanged non-stalled Stop process test: output and all three
+IPC methods were observed, but observations were empty at168.216ms. This is not a
+failure of the new local-rebind regression. Source explicitly permits interruption of
+best-effort diagnostic persistence at the140ms entrypoint deadline; the old test demanded
+a terminal record regardless. A controlled reproduction and separate completed/interrupted
+contract coverage are required; no blind rerun, relaxed deadlines or publication.
+Tagv0.17.1 remains immutable/unpublished. GitHub draft creation returned502 and the
+release does not exist. Timer restored and tentative16:05UTC service work deferred.
