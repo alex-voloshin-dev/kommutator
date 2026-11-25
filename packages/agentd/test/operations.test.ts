@@ -1,5 +1,9 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { createHash, randomUUID } from "node:crypto";
+import { once } from "node:events";
+import { connect } from "node:net";
+import { createInterface } from "node:readline";
+import { z } from "zod";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,6 +11,7 @@ import { createConformanceHarness, RemoteRpcError } from "@kommutator/hub/testin
 import { Methods, OperationStatus, PROTOCOL_VERSION, Results, Session } from "@kommutator/protocol";
 import { DaemonCore, type IpcPeer } from "../src/core.js";
 import { OfflineError, RpcError } from "../src/errors.js";
+import { startIpc } from "../src/ipc.js";
 import { OBSERVATION_TTL, RESULT_BYTES } from "../src/operations.js";
 import type { HubTransport } from "../src/hub-link.js";
 import type { LocalRecord } from "../src/registry.js";
@@ -562,7 +567,7 @@ it("rebinds a registered Claude owner for local lookup while unrelated hub work 
 });
 
 
-it.each(["birth", "generation", "retirement", "endpoint", "cwd", "project", "disconnect", "shutdown"] as const)(
+it.each(["birth", "generation", "epoch", "session", "retirement", "endpoint", "cwd", "project", "disconnect", "shutdown"] as const)(
   "fences local Claude rebind when %s changes during its fresh process probe", async changed => {
     const f = await fixture(); const original = await claude(f, 1); const id = randomUUID();
     await f.submit(original.peer, id);
@@ -574,6 +579,8 @@ it.each(["birth", "generation", "retirement", "endpoint", "cwd", "project", "dis
       if (changed === "shutdown") { await f.close(); return; }
       const record = f.core.registry.get(original.peer.key ?? ""); if (!record) throw new Error("missing owner");
       if (changed === "generation") record.ownerGeneration = 2;
+      if (changed === "epoch") record.lifecycleEpoch = (record.lifecycleEpoch ?? 0) + 1;
+      if (changed === "session") record.session.id = randomUUID();
       if (changed === "retirement") record.session.state = "gone";
       if (changed === "endpoint") record.endpoint = "/different.sock";
       if (changed === "cwd") record.session.cwd = "/different";
@@ -619,6 +626,67 @@ it.each(["register", "reincarnate", "update"] as const)("still awaits an owner's
     pid: 322, ppid: 321, owner_generation: 1, runtime_contract: 4, cwd: "/repo", protocol_version: PROTOCOL_VERSION }).then(value => { ready = true; return value; });
   drainOnCleanup(release, hello);
   await Promise.race([entered.promise, hello.then(() => { throw new Error("hello completed before lifecycle response barrier"); })]);
+  expect(ready).toBe(false); expect(rebound.operationsReady).not.toBe(true);
+  release.resolve(); expect(await hello).toMatchObject({ bound: true });
+});
+
+
+it("serves fresh Claude hello and retained lookup over Unix IPC without releasing unrelated hub work", async () => {
+  const home = await mkdtemp(join(tmpdir(), "kom-rebind-ipc-"));
+  cleanup.push(() => rm(home, { recursive: true, force: true }));
+  const f = await fixture(); const original = await claude(f, 1); const id = randomUUID();
+  await f.submit(original.peer, id); const retained = await f.status(original.peer, id);
+  const other = await f.shim("ipc-unrelated", 789);
+  const entered = deferred(), release = deferred();
+  f.after(async method => { if (method === "message.send") { entered.resolve(); await release.promise; } });
+  const sending = f.submit(other); drainOnCleanup(release, sending); await entered.promise;
+  const queued = f.core.registry.outbox(); const calls = f.calls.length;
+  const endpoint = join(home, "agentd.sock");
+  const ipc = await startIpc({ path: endpoint, peer: () => f.core.peer(),
+    disconnect: peer => f.core.disconnect(peer), request: (peer, method, params) => f.core.request(peer, method, params) });
+  cleanup.push(ipc.close);
+  const socket = connect(endpoint); cleanup.push(async () => { socket.destroy(); });
+  await once(socket, "connect");
+  const lines = createInterface({ input: socket }); cleanup.push(async () => { lines.close(); });
+  const Reply = z.object({ jsonrpc: z.literal("2.0"), id: z.number(), result: z.unknown().optional(), error: z.unknown().optional() });
+  const request = (requestId: number, method: string, params: unknown) => new Promise<z.infer<typeof Reply>>((resolve, reject) => {
+    const finish = () => { clearTimeout(timer); lines.off("line", receive); socket.off("error", fail); };
+    const fail = (error: Error) => { finish(); reject(error); };
+    const receive = (line: string) => {
+      finish();
+      try { resolve(Reply.parse(JSON.parse(line) as unknown)); } catch (error) { reject(error); }
+    };
+    // A transport deadlock guard, not a latency target: the hub barrier stays held until both replies.
+    const timer = setTimeout(() => fail(new Error("local IPC response waited for unrelated hub work")), 1_000);
+    lines.once("line", receive); socket.once("error", fail);
+    socket.write(JSON.stringify({ jsonrpc: "2.0", id: requestId, method, params }) + "\n");
+  });
+  expect(await request(1, "ipc.hello", { client: "shim", vendor: "claude-code", vendor_session_id: "conversation-a",
+    pid: 322, ppid: 321, owner_generation: 1, runtime_contract: 4, cwd: "/repo", protocol_version: PROTOCOL_VERSION }))
+    .toMatchObject({ id: 1, result: { bound: true } });
+  const reply = await request(2, "operation.status", { operation_id: id });
+  expect(reply.error).toBeUndefined(); expect(reply.id).toBe(2);
+  expect(OperationStatus.parse(reply.result)).toEqual(retained);
+  expect(f.core.registry.outbox()).toEqual(queued); expect(f.calls).toHaveLength(calls);
+  release.resolve(); await sending;
+});
+
+it("waits for an owner lifecycle write introduced during the local rebind probe", async () => {
+  const f = await fixture(); const original = await claude(f, 1);
+  const entered = deferred(), release = deferred(); let probes = 0;
+  f.beforeProbe(async () => {
+    if (++probes !== 2) return;
+    const record = f.core.registry.get(original.peer.key ?? ""); if (!record) throw new Error("missing owner");
+    const params = Methods["session.upsert"].parse({ op: "update", session: { id: record.session.id, wake: "on" } });
+    f.core.registry.enqueue(record.key, "session.upsert", params, 100);
+  });
+  f.after(async method => { if (method === "session.upsert") { entered.resolve(); await release.promise; } });
+  const rebound = f.core.peer(); let ready = false;
+  const hello = f.core.request(rebound, "ipc.hello", { client: "shim", vendor: "claude-code", vendor_session_id: "conversation-a",
+    pid: 322, ppid: 321, owner_generation: 1, runtime_contract: 4, cwd: "/repo", protocol_version: PROTOCOL_VERSION })
+    .then(value => { ready = true; return value; });
+  drainOnCleanup(release, hello);
+  await Promise.race([entered.promise, hello.then(() => { throw new Error("hello skipped concurrent lifecycle synchronization"); })]);
   expect(ready).toBe(false); expect(rebound.operationsReady).not.toBe(true);
   release.resolve(); expect(await hello).toMatchObject({ bound: true });
 });
