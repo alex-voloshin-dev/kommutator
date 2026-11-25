@@ -1,4 +1,4 @@
-import { Results, RELEASE_VERSION } from "@kommutator/protocol";
+import { Methods, Results, RELEASE_VERSION } from "@kommutator/protocol";
 import WebSocket from "ws";
 import * as z from "zod";
 import { MAX_FRAME_BYTES, PROTOCOL_VERSION } from "@kommutator/protocol";
@@ -74,9 +74,9 @@ export class HubLink implements HubTransport {
             const version = hello.protocol_version;
             if (version !== PROTOCOL_VERSION) this.onError("hub protocol version differs from daemon");
             this.connected = true;
-            this.backoff = 100;
             this.heartbeat = setInterval(() => { if (ws.readyState === WebSocket.OPEN) ws.ping(); }, 20_000);
             await onConnect();
+            if (!this.stopped && this.ws === ws && ws.readyState === WebSocket.OPEN) this.backoff = 100;
           } catch {
             if (!this.stopped && this.ws === ws) this.onError("hub synchronization failed");
             ws.terminate();
@@ -111,11 +111,19 @@ export class HubLink implements HubTransport {
     const id = ++this.nextId;
     const frame = JSON.stringify({ jsonrpc: "2.0", id, method, params });
     if (Buffer.byteLength(frame) > MAX_FRAME_BYTES) return Promise.reject(new RpcError(-32011, "request exceeds frame limit"));
+    const started = performance.now();
+    const epoch = this.epoch;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
+        const pendingCount = this.pending.size;
+        const elapsedMs = Math.round(performance.now() - started);
         this.pending.delete(id);
         reject(new OfflineError("hub request timed out"));
         ws.terminate();
+        try {
+          this.onError(JSON.stringify({ event: "hub.request-timeout", method: Object.hasOwn(Methods, method) ? method : "unknown",
+            request_id: id, epoch, elapsed_ms: elapsedMs, pending_count: pendingCount }));
+        } catch { /* Diagnostic storage failure cannot interrupt transport timeout handling. */ }
       }, this.timeoutMs);
       this.pending.set(id, { resolve, reject, timer });
       ws.send(frame, (error) => { if (error) ws.terminate(); });

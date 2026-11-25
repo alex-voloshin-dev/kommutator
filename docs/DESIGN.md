@@ -850,6 +850,25 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### Hub synchronization backoff and timeout evidence (2026-11-25)
+
+The existing 100 ms to 10 second exponential reconnect delay resets only after
+the same current, open socket completes its post-hello synchronization callback.
+An authenticated hello alone is not recovery: repeated flush/resync failures must
+not pin reconnects at 100 ms. The socket remains available during synchronization
+so its own recovery RPCs can run. A superseded or stopped callback cannot reset
+the current retry delay. No request timeout, replay authority or receipt rule changes.
+
+A request timeout that terminates a link records a bounded diagnostic with
+event `hub.request-timeout`, an allowlisted protocol method (otherwise `unknown`),
+local numeric request ID and connection epoch, monotonic elapsed milliseconds and
+the number of pending requests at that instant. This distinguishes an elapsed request
+deadline from the existing connection-close rejection of collateral requests; it does not prove
+whether any remote mutation committed. Params, keys, endpoint URLs, remote error
+strings and message bodies are excluded. Diagnostic sink failures are contained after
+the pending request is rejected and its socket terminated. These diagnostics and the controlled
+backoff repair do not establish the cause of historical availability failures.
+
 ### HubLink shutdown completion (2026-11-14)
 
 Awaiting HubLink close completes termination of its current local WebSocket, cancels
