@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-25. Released baseline: [0.17.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.17.0).
+Updated 2026-11-25. Released baseline: [0.17.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.17.2).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -15,20 +15,34 @@ clean-profile installed MCP probes verified 0.12.3.
 Version 0.17.0 fixes reproduced synchronization-backoff reset behavior and adds bounded
 request-timeout and hook reason/phase evidence. Historical availability, registration and
 IPC failures remain unresolved; the 03:08 UTC November25 incident occurred before cutover.
-Candidate [0.17.2 / PR #38](sdlc/local-rebind/release.md) implements established-Claude
-local rebind without unrelated queue flush, primary/cleanup error preservation, and
-correct completed-versus-interrupted diagnostic test coverage. Independent QA passed
-870 tests and exact-head hosted branch/PR gates passed. Publication remains deferred:
-the local exported E2E failed `whoami` immediately after resume; its underlying IPC
-cause was not retained. Next: bounded diagnostic reproduction, not a blind gate rerun.
+Released [0.17.2 / PR #38](sdlc/local-rebind/release.md) fixes established-Claude
+local rebind blocked by unrelated queue flush, retains primary/cleanup fixture
+failures and original allowlisted daemon-probe diagnostics, and separates completed
+versus interrupted diagnostic test coverage. Earlier exported resume failure remains
+unexplained: corrected instrumentation and final qualification passed, not a cause.
 
-A 24-hour/8-MiB bounded local collector started at 16:11:42 UTC; its first failure
-at 16:12:32 matched the working 0.17.0 hub in journal wait before and after the
-800-ms probe. Storage root cause remains unknown. Correlate request diagnostics,
-process/storage evidence and remote admission without replaying unknown mutations.
-This collection is ongoing, not completed day-long acceptance.
+A 24-hour/8-MiB collector started at 16:11:42 UTC. Three pre-cutover loopback timeouts
+matched the 0.17.0 hub in journal/folio waits, including overlap with our diagnostic
+and release-check workloads whose contribution was not measured. WSL 3.0.5 is already
+installed; upstream fsync-fix similarity does not establish local cause. Continue
+correlated host/guest evidence without replaying unknown mutations or relaxing
+durability. Collection is ongoing, not completed day-long acceptance. See the
+[storage follow-up](sdlc/local-rebind/storage-followup.md).
 
 ## Current release qualification
+
+Published 0.17.2: independent correctness/security/external reviews and QA;
+887 workspace and 162 script tests in the final full local gate and exact-head
+branch/PR/tag hosted CI. Public hashes and real clean Claude/Codex install probes
+passed. Earlier local/CI failures remain in the release report.
+
+Local hub, shared daemon and actually loaded Codex MCP are 0.17.2, connected/active,
+contract 4. Current/backup databases 5/8 passed quick_check; timer restored,
+checkpoint idle. Old blocked 644 remains, aggregate degraded. New service starts
+16:46:22/27 UTC. Live Claude MCP, remote rollout and platform/day-long gates are not
+certified. See [rollout evidence](../spikes/evidence/2026-11-25-local-rebind-rollout.json).
+
+### Previous 0.17.0 checkpoint
 
 Published [0.17.0 reliability repairs](sdlc/reliability-nov25/release.md): independent reviews
 and QA,849 workspace tests and161 script tests in full first-attempt branch/PR/tag hosted

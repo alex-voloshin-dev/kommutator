@@ -1582,6 +1582,28 @@ Production remains 0.17.0. A bounded collector started at 16:11:42 UTC (at most
 24 hours/8 MiB). At 16:12:32 UTC an 804.557 ms unauthenticated loopback probe
 timed out while the birth-matched hub process was in D-state,
 `jbd2_log_wait_commit`, before and after the request. IO-full avg10 was 15.49%;
-memory-full avg10 was zero. This establishes journal wait in this episode, not
-the storage root cause or a cause for the separate synthetic E2E failure.
+memory-full avg10 was zero. The first instrumented synthetic E2E trace spans
+16:12:27.568–16:13:02.191 UTC and overlaps this production timeout. Its shared-storage
+contribution was not measured; its IPC instrumentation was incomplete. This establishes
+journal wait in this episode, not the storage root cause or a cause for the original
+separate failed release gate.
 See [ongoing observation evidence](evidence/2026-11-25-ongoing-availability.json).
+
+
+## 2026-11-25 — 0.17.2 released and locally deployed
+
+Tag 96bd3d2, PR #38 merged as 5e72b9e. Final independent review/security/external/QA
+passed; ordered build/typecheck and 887 tests, full release gate with 162 script
+tests, first-attempt exact-head branch/PR/tag CI, public hashes and real clean
+Claude/Codex MCP 0.17.2 installation/setup/Origin probes passed. Previous failed
+gates and unknown original probe cause remain preserved, not explained by success.
+
+After the announced window, ordinary pinned updater started hub at 16:46:22 UTC and
+daemon at 16:46:27 UTC. Hub/daemon/actual Codex MCP 0.17.2, contract 4, connected and
+caller active. Current and backup databases 5/8 quick_check passed, indexes verified,
+checkpoint idle, timer restored. Old blocked 644 preserved; aggregate degraded.
+Native hooks list 0.17.2 trusted/enabled without manual trust writes; actual hook
+execution and live Claude activation not certified. Announcement c31f34db-747f-4c44-b28e-0e52ad61dae7.
+See [qualification](evidence/2026-11-25-local-rebind-qualification.json),
+[rollout](evidence/2026-11-25-local-rebind-rollout.json), and the still ongoing
+[availability evidence](evidence/2026-11-25-ongoing-availability.json).

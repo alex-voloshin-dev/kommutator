@@ -1,0 +1,89 @@
+{
+  "version": "0.17.2",
+  "release_commit": "96bd3d20b44c70b10af8c5e7c2384557f98f9e48",
+  "merge_commit": "5e72b9eac7bd17fd914241afe62676e217281d36",
+  "notice": "771b1587-6ba8-478f-ba8d-111b26cac2b0",
+  "earliest_cutover_utc": "2026-11-25T16:45:00Z",
+  "hub_started_utc": "2026-11-25T16:46:22.047498206Z",
+  "daemon_started_utc": "2026-11-25T16:46:27Z",
+  "daemon_pid": 3695906,
+  "versions": {
+    "hub": "0.17.2",
+    "daemon": "0.17.2",
+    "loaded_codex_mcp": "0.17.2",
+    "installed_codex_plugin": "0.17.2",
+    "installed_claude_plugin": "0.17.2"
+  },
+  "runtime_contract": 4,
+  "authenticated_hub_snapshot_http": 200,
+  "hub_connected": true,
+  "caller": "active",
+  "role": "kommutator-developer",
+  "subscriptions": [
+    "kommutator-feedback",
+    "agentic-forge-feedback"
+  ],
+  "health": {
+    "aggregate": "degraded",
+    "cause": "unchanged preexisting blocked outbox644",
+    "outbox_depth": 1,
+    "deleted_or_resent": false
+  },
+  "checkpoint": {
+    "status": "idle",
+    "appliedVersion": "0.17.2",
+    "manual_reconciliation": false
+  },
+  "timer": "active",
+  "databases": [
+    {
+      "database": "daemon",
+      "quick_check": "ok",
+      "schema": 5,
+      "mode": "0o600"
+    },
+    {
+      "database": "hub",
+      "quick_check": "ok",
+      "schema": 8,
+      "mode": "0o600",
+      "verified_indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    },
+    {
+      "database": "daemon-backup",
+      "quick_check": "ok",
+      "schema": 5,
+      "mode": "0o600"
+    },
+    {
+      "database": "hub-backup",
+      "quick_check": "ok",
+      "schema": 8,
+      "mode": "0o600"
+    }
+  ],
+  "hooks": {
+    "version": "0.17.2",
+    "native_list": "trusted and enabled, all five",
+    "manual_trust_writes": false,
+    "fresh_hook_execution_certified": false
+  },
+  "announcement_id": "c31f34db-747f-4c44-b28e-0e52ad61dae7",
+  "observer_snapshot": {
+    "samples": 222,
+    "unsuccessful": 3,
+    "post_activation_samples": 14,
+    "post_activation_unsuccessful": 0,
+    "last_sample": "2026-11-25T16:48:32.898193+00:00",
+    "ongoing": true
+  },
+  "limitations": [
+    "Loaded Claude MCP and remote daemon activation not independently verified.",
+    "Sparse loopback samples do not establish day-long stability or remote delivery.",
+    "Historical storage, registration and IPC causes remain unresolved.",
+    "An attempted authenticated /version probe returned404 because no such route exists; corrected /api/snapshot returned200 and in-container protocol release constant was0.17.2."
+  ]
+}

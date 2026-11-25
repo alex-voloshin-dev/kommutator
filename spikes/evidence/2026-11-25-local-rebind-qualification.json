@@ -1,0 +1,114 @@
+{
+  "version": "0.17.2",
+  "release_commit": "96bd3d20b44c70b10af8c5e7c2384557f98f9e48",
+  "merge_commit": "5e72b9eac7bd17fd914241afe62676e217281d36",
+  "independent_review": {
+    "correctness": "approve",
+    "security": "approve",
+    "external": "approve",
+    "qa": "passed"
+  },
+  "final_qa": {
+    "workspace_tests": 887,
+    "first_attempt": true,
+    "script_diagnostics_tests": 16,
+    "ordered": [
+      "build",
+      "typecheck",
+      "test"
+    ]
+  },
+  "final_release_gate": {
+    "workspace_tests": 887,
+    "script_tests": 162,
+    "result": "passed",
+    "log": "kom-v0172-release-check-round2.log",
+    "synthetic_exported_e2e": true
+  },
+  "ci": {
+    "branch": 45653595169,
+    "pull_request": 45653613340,
+    "tag": 45654174224,
+    "all_first_attempt_success": true
+  },
+  "public_assets": [
+    {
+      "asset": "kommutator-v0.17.2-claude-linux-x64.zip",
+      "sha256": "d8f1cafe08c0a46f58d52e1118010e2a10097ef4de6eaeb92711b997aa34181f",
+      "anonymous": true
+    },
+    {
+      "asset": "kommutator-v0.17.2-claude-linux-x64.zip.sha256",
+      "sha256": "ac5a447755a007e1058ac9c59862b6414976c653b47ea38f137992457948befb",
+      "anonymous": true
+    },
+    {
+      "asset": "kommutator-v0.17.2-linux-x64.tar.gz",
+      "sha256": "42144604a54f190f15c2fed4a4017748b59491907fe93f388c3cd79e84ebfa30",
+      "anonymous": true
+    },
+    {
+      "asset": "kommutator-v0.17.2-linux-x64.tar.gz.sha256",
+      "sha256": "ea7b606f851b63ffe382e3fff425de75e01225225599a654659d19c8fd3c8df0",
+      "anonymous": true
+    }
+  ],
+  "native_install_probes": [
+    {
+      "vendor": "codex",
+      "version": "0.17.2",
+      "configured": false,
+      "private_setup": 200,
+      "foreign_origin": 403,
+      "operation_status_tool": true,
+      "synthetic_client": true
+    },
+    {
+      "vendor": "claude-code",
+      "version": "0.17.2",
+      "configured": false,
+      "private_setup": 200,
+      "foreign_origin": 403,
+      "operation_status_tool": true,
+      "synthetic_client": true
+    }
+  ],
+  "artifact_scan": {
+    "raw_exit": 1,
+    "findings": [
+      {
+        "manifest": "plugins/claude-code/runtime/release.json",
+        "license_hash_verified": true,
+        "exact_report_span_verified": true
+      },
+      {
+        "manifest": "plugins/codex/runtime/release.json",
+        "license_hash_verified": true,
+        "exact_report_span_verified": true
+      }
+    ]
+  },
+  "retained_failures": [
+    "Unpublished 0.17.1 PR CI required terminal best-effort hook observation; controlled interruption reproduced an incorrect test guarantee.",
+    "Earlier 0.17.2 local release gate failed exported resumed whoami at daemon preflight; original IPC error was erased, cause remains unknown.",
+    "First diagnostic loader missed bundled identifiers and is invalid for IPC attribution.",
+    "Corrected instrumented E2E passed but did not reproduce or explain the original failure.",
+    "First new diagnostic tests had three overly broad secret regex assertions matching static private-configuration guidance; tests corrected without runtime weakening."
+  ],
+  "timing": {
+    "qa_above_target_ms": 205.709,
+    "target_ms": 200,
+    "strict_limit_ms": 300,
+    "runtime_hook_timers_unchanged": [
+      140,
+      90
+    ]
+  },
+  "limits": [
+    "No general storage or historical outage root cause established.",
+    "No real model conversation/native idle wake/day-long delivery/physical subnet/unattended Windows reboot acceptance.",
+    "Remote daemons are not updated by local rollout.",
+    "Unknown mutations must not be blindly resent."
+  ],
+  "local_rollout": "completed; see 2026-11-25-local-rebind-rollout.json"
+}

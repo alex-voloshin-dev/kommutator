@@ -1,7 +1,7 @@
 ---
 type: release
 feature: local-rebind
-status: proposed
+status: released
 version: 0.17.2
 changelog:
   - "Fixed: established Claude reconnects no longer await unrelated outbox synchronization."
@@ -9,11 +9,11 @@ changelog:
 breaking: []
 ---
 
-# Kommutator 0.17.2 candidate
+# Kommutator 0.17.2
 
 The release workflow proposed patch0.17.1; its unpublished immutable tag remains retained.
 The corrected test-contract candidate advances to0.17.2, without rewriting that tag.
-No publication, service update or final qualification is claimed yet.
+The following preparation history is retained; the completed publication checkpoint is below.
 
 A previously registered, explicitly identified positive-generation Claude owner can
 complete a fresh IPC hello and local operation lookup without waiting on another owner's
@@ -110,3 +110,52 @@ first attempt. One controlled hook sample 205.709 ms exceeds the 200 ms target b
 not the strict 300 ms temporary limit. The release artifacts are being regenerated
 from the updated source; earlier 0.17.2 assets are superseded private candidates,
 not published assets. Full release checks and exact-head CI remain required.
+
+
+## Published checkpoint
+
+Released at 2026-11-25 16:30:14 UTC from
+`96bd3d20b44c70b10af8c5e7c2384557f98f9e48`. PR #38 merged afterward as
+`5e72b9eac7bd17fd914241afe62676e217281d36`, so public matching assets preceded
+installation catalogs. Exact-head branch 45653595169, PR 45653613340 and tag
+45654174224 passed on their first attempts; corresponding secret scans passed.
+
+Final full local release gate passed build/typecheck, 887 workspace tests, 162
+script tests, audit, integrity, clean-PATH and exported synthetic E2E. Public assets
+were downloaded anonymously and hashes matched. Real clean-profile Claude/Codex
+installations started MCP 0.17.2; private setup returned 200 and foreign Origin 403.
+These are synthetic MCP probes, not model dialogue or native wake acceptance.
+
+Local plugin files were updated to 0.17.2. At this checkpoint production services
+and loaded MCP remain 0.17.0; hooks/list still names 0.17.0 for the live root.
+No trust changes were made. Announced local cutover is no earlier than 16:45 UTC,
+notice 771b1587-6ba8-478f-ba8d-111b26cac2b0. Deploy timer is intentionally stopped,
+service inactive/MainPID zero and lock free. Restore it after verified cutover.
+
+GitHub writes recovered: issue #22 observation comment 7168055581 and #25 probe
+comment 7168056033 are now published. Initial server errors remain historical.
+The later [storage follow-up](storage-followup.md) records host checks and upstream
+comparison without claiming a root cause.
+
+
+## Local rollout completed
+
+The ordinary pinned updater completed without manual reconciliation. Hub started
+16:46:22 UTC, daemon 16:46:27 UTC, after the announced 16:45 UTC window. Hub,
+shared daemon and actually loaded Codex MCP all report 0.17.2, contract 4.
+Authenticated hub snapshot returns 200; caller active, role and both subscriptions
+retained. The first ad-hoc authenticated `/version` probe returned 404 (no such
+route); the corrected snapshot and in-container release constant verified health
+and version. No credential was printed.
+
+Current and VACUUM INTO backup databases passed quick_check (daemon 5, hub 8); both
+hub indexes verified. Checkpoint idle/appliedVersion 0.17.2, timer restored. Old
+blocked outbox 644 remains unchanged: aggregate degraded is expected, not hidden.
+No queue entry was deleted or resent. Native hooks list all five 0.17.2 hooks
+trusted/enabled without manual trust writes; fresh execution is not certified.
+Live Claude MCP and remote daemon updates are not implied. Announcement:
+`c31f34db-747f-4c44-b28e-0e52ad61dae7`.
+
+The bounded observer remains active; only the recorded post-activation samples
+are available, not day-long acceptance. See qualification and rollout evidence
+in `spikes/evidence/2026-11-25-local-rebind-*.json`.

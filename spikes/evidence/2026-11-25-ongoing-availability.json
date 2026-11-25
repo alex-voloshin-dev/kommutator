@@ -9,8 +9,8 @@
     "bytes": 8388608,
     "probe_interval_seconds": 10
   },
-  "snapshot_samples": 12,
-  "snapshot_end": "2026-11-25T16:13:32.583822+00:00",
+  "snapshot_samples": 156,
+  "snapshot_end": "2026-11-25T16:37:32.623929+00:00",
   "unsuccessful_samples": [
     {
       "at": "2026-11-25T16:12:32.582359+00:00",
@@ -61,6 +61,106 @@
         "runqueue_ns": 770308700
       },
       "same_process_birth": true
+    },
+    {
+      "at": "2026-11-25T16:26:32.605979+00:00",
+      "container": {
+        "started": "2026-11-25T03:17:21.924415358Z",
+        "image": "kommutator-hub:release-0.17.0",
+        "node_pid": 2665713,
+        "node_birth": "27822312"
+      },
+      "container_refreshed_at": "2026-11-25T16:25:42.640619+00:00",
+      "cache_age_ms": 50001,
+      "before": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 305098875600,
+        "runqueue_ns": 911828200
+      },
+      "io": {
+        "some": {
+          "avg10": 24.59,
+          "avg60": 11.7
+        },
+        "full": {
+          "avg10": 18.91,
+          "avg60": 9.4
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 7.23,
+          "avg60": 1.33
+        },
+        "full": {
+          "avg10": 6.35,
+          "avg60": 1.17
+        }
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 800.912,
+      "after": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 305103192500,
+        "runqueue_ns": 911828200
+      },
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-25T16:26:52.606344+00:00",
+      "container": {
+        "started": "2026-11-25T03:17:21.924415358Z",
+        "image": "kommutator-hub:release-0.17.0",
+        "node_pid": 2665713,
+        "node_birth": "27822312"
+      },
+      "container_refreshed_at": "2026-11-25T16:26:42.635793+00:00",
+      "cache_age_ms": 10000,
+      "before": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 305219890100,
+        "runqueue_ns": 912227700
+      },
+      "io": {
+        "some": {
+          "avg10": 4.86,
+          "avg60": 9.52
+        },
+        "full": {
+          "avg10": 3.91,
+          "avg60": 7.72
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 1.0,
+          "avg60": 0.98
+        },
+        "full": {
+          "avg10": 0.89,
+          "avg60": 0.86
+        }
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 804.609,
+      "after": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 305219890100,
+        "runqueue_ns": 912227700
+      },
+      "same_process_birth": true
     }
   ],
   "limitations": [
@@ -68,5 +168,18 @@
     "Container identity is cached for at most 60 seconds and process birth is checked before/after each probe.",
     "No storage root cause established.",
     "Does not attribute the separate synthetic E2E failure."
-  ]
+  ],
+  "concurrent_work": {
+    "first_instrumented_e2e_trace_interval": [
+      "2026-11-25T16:12:27.568Z",
+      "2026-11-25T16:13:02.191Z"
+    ],
+    "overlaps_16_12_32_production_timeout": true,
+    "limitations": "The first loader lacked complete IPC instrumentation. Trace bounds show overlapping synthetic work, not the amount or cause of shared-storage delay. Production services were unchanged.",
+    "additional_production_timeouts": [
+      "2026-11-25T16:26:32.605979Z",
+      "2026-11-25T16:26:52.606344Z"
+    ],
+    "additional_overlap": "Local release-check packaging/exported E2E was active; contribution not measured."
+  }
 }
