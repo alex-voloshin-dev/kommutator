@@ -172,21 +172,23 @@ export class IpcClient implements RpcClient {
       this.socket = socket;
       socket.setEncoding("utf8");
       let established = false;
+      const transportPhase = (): IpcDiagnostic["phase"] => !established ? "ipc-connect"
+        : this.socket === socket && [...this.pending.values()].some(waiter => waiter.phase === "ipc-hello") ? "ipc-hello" : "ipc-request";
       const timer = setTimeout(() => { this.cancelOpening = undefined; socket.destroy(); reject(new IpcError("IPC connection timed out", undefined, { phase: "ipc-connect", reason: "timeout" })); }, Math.max(1, timeoutMs));
       this.cancelOpening = () => { clearTimeout(timer); this.cancelOpening = undefined; socket.destroy(); reject(new IpcError("IPC client closed")); };
       socket.once("connect", () => { established = true; clearTimeout(timer); this.cancelOpening = undefined; resolve(); });
       socket.on("error", (error) => {
         clearTimeout(timer); this.cancelOpening = undefined;
         // Preserve the original OS error and code; attach only local fixed phase metadata.
-        Object.assign(error, { diagnostic: { phase: established ? "ipc-request" : "ipc-connect", reason: "transport-error" } satisfies IpcDiagnostic });
+        Object.assign(error, { diagnostic: { phase: transportPhase(), reason: "transport-error" } satisfies IpcDiagnostic });
         reject(error); if (this.socket === socket) this.disconnect(error);
       });
       socket.on("close", () => {
         clearTimeout(timer);
-        if (!established) reject(new IpcError("IPC transport closed before connection", IPC_TRANSPORT_CLOSED));
+        if (!established) reject(new IpcError("IPC transport closed before connection", IPC_TRANSPORT_CLOSED, { phase: "ipc-connect", reason: "transport-error" }));
         if (this.socket === socket) {
           this.cancelOpening = undefined;
-          this.disconnect(new IpcError("Daemon disconnected; delivery state may be uncertain; do not resend blindly", IPC_TRANSPORT_CLOSED));
+          this.disconnect(new IpcError("Daemon disconnected; delivery state may be uncertain; do not resend blindly", IPC_TRANSPORT_CLOSED, { phase: transportPhase(), reason: "transport-error" }));
         }
       });
       socket.on("data", (chunk: string) => {

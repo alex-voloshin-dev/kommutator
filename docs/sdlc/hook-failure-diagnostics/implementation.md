@@ -49,3 +49,15 @@ The hard entrypoint deadline can still interrupt diagnostic flush; missing data 
 
 Independent review/QA and the integrated full release gate are still pending. No live
 daemon, hub, private configuration or database was modified by this work.
+
+## Review follow-up: transport closure during hello
+
+Review found that a socket error/close after connection but before the hello reply could
+still be attributed to the outer `whoami`/poll. A new real Unix-socket close-after-hello
+regression fails on the first candidate with `phase: whoami` instead of `ipc-hello`.
+The transport callback now checks this socket's pending hello before clearing waiters;
+it retains the same codes, error messages, rejection and reconnect behavior. No ownership
+or per-request replay semantics changed.
+
+Ordered build/typecheck and the expanded six focused files passed, **43 tests**.
+Logs: `/tmp/kom-hookdiag-close-{baseline,build,typecheck,focused}.log`.

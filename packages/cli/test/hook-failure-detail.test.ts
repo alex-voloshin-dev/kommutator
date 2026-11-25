@@ -12,6 +12,7 @@ it.each([
   { mode: "reject-hello", reason: "registration-rejected", phase: "ipc-hello", methods: ["ipc.hello"] },
   { mode: "stall-hello", reason: "ipc-timeout", phase: "ipc-hello", methods: ["ipc.hello"] },
   { mode: "stall-whoami", reason: "ipc-timeout", phase: "whoami", methods: ["ipc.hello", "whoami"] },
+  { mode: "close-hello", reason: "ipc-closed", phase: "ipc-hello", methods: ["ipc.hello"] },
 ])("distinguishes $mode without replay or remote text disclosure", async ({ mode, reason, phase, methods }) => {
   const home = await mkdtemp(join(tmpdir(), "kom-hook-detail-"));
   vi.stubEnv("KOM_HOME", home);
@@ -28,6 +29,7 @@ it.each([
         const request = JSON.parse(buffer.slice(0, end)) as { id: number; method: string };
         buffer = buffer.slice(end + 1);
         seen.push(request.method);
+        if (mode === "close-hello") { socket.end(); continue; }
         if (mode === "reject-hello") socket.write(JSON.stringify({ jsonrpc: "2.0", id: request.id,
           error: { code: -32020, message: "SECRET remote token and /private/path" } }) + "\n");
         else if (mode === "stall-whoami" && request.method === "ipc.hello") {
