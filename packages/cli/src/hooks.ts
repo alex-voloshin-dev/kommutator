@@ -1,4 +1,4 @@
-import { recordHookObservation, type HookOutcome } from "./hook-observations.js";
+import { recordHookObservation, type HookFailureDetail, type HookOutcome } from "./hook-observations.js";
 import { pluginDaemonStatus } from "./plugin-daemon.js";
 import { pluginConflicts } from "./plugin-conflicts.js";
 import { savePluginContext, saveClaudeRegistration, forgetClaudeRegistration, activeClaudeRegistration, type ActiveClaudeRegistration } from "./plugin-context.js";
@@ -35,12 +35,16 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [],
   let outcome: HookOutcome = "invalid-input";
   let outputWritten = false;
   let retiredLocally = false;
+  let phase: HookFailureDetail["phase"] = "input";
+  let detail: HookFailureDetail | undefined;
   // Diagnostic filesystem latency must not precede conversation authority or delivery.
   // Serialize best-effort writes so a late attempt cannot overwrite the final outcome.
   let observations = Promise.resolve();
-  const observe = (value: HookOutcome) => {
+  const observe = (value: HookOutcome, failure?: HookFailureDetail) => {
     const observedRoot = root;
-    observations = observations.then(() => recordHookObservation(rawEvent, value, observedRoot));
+    observations = observations.then(() => failure
+      ? recordHookObservation(rawEvent, value, observedRoot, undefined, undefined, failure)
+      : recordHookObservation(rawEvent, value, observedRoot));
   };
   observe("attempted");
   try {
@@ -50,6 +54,7 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [],
     const payload = Payload.parse(prepared ? prepared.payload : await readInput());
     root = payload.session_id;
     outcome = "identity-unavailable";
+    phase = "authority";
     observe("attempted");
     let hello = hookHello(payload, process.env, vendor);
     if (process.env.KOM_PLUGIN_PROFILE) {
@@ -67,17 +72,35 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [],
           retiredLocally = true;
         }
       }
+      phase = "conflict-check";
       if ((await pluginConflicts(process.env.KOM_PLUGIN_PROFILE, payload.cwd)).length) { outcome = "conflict"; return; }
+      phase = "compatibility";
       if (await pluginDaemonStatus(false, 35) !== "compatible") { outcome = "daemon-incompatible"; return; }
     }
     outcome = "failed";
     client = new IpcClient({ hello: () => hello, lazyStart: false, timeoutMs: 90 });
-    await handleHook(event, payload, client, (output) => new Promise((resolve, reject) => {
+    const rpc = client;
+    const observedClient: RpcClient = { close: () => rpc.close(), call: (method, params) => {
+      phase = method === "whoami" ? "whoami" : method === "hook.poll" ? "hook-poll" : method === "hook.ack" ? "hook-ack" : "session-gone";
+      return params === undefined ? rpc.call(method) : rpc.call(method, params);
+    } };
+    await handleHook(event, payload, observedClient, (output) => new Promise((resolve, reject) => {
+      phase = "output";
       process.stdout.write(output, (error) => { if (error) reject(error); else { outputWritten = true; resolve(); } });
     }));
     outcome = "success";
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+    const diagnostic = error && typeof error === "object" && "diagnostic" in error ? error.diagnostic : undefined;
+    const ipc = diagnostic && typeof diagnostic === "object" ? diagnostic as Record<string, unknown> : undefined;
+    if (ipc?.phase === "ipc-connect" || ipc?.phase === "ipc-hello") phase = ipc.phase;
+    const reason: HookFailureDetail["reason"] = ipc?.reason === "timeout" ? "ipc-timeout"
+      : code === -32020 ? "registration-rejected" : code === -32031 ? "daemon-stopping"
+      : code === -32030 ? "hub-unavailable" : code === -32032 ? "ipc-closed"
+      : code === "ENOENT" || code === "ECONNREFUSED" ? "ipc-unavailable"
+      : code === "EACCES" || code === "EPERM" ? "permission-denied" : code === "EROFS" ? "read-only-filesystem"
+      : ipc?.reason === "rpc-rejected" ? "rpc-rejected" : "unexpected";
+    detail = { phase, reason };
     if (outputWritten) outcome = "output-written-ack-unverified";
     else if (retiredLocally && code === -32020) outcome = "retired-locally";
     else if (code === -32030) outcome = "hub-unavailable";
@@ -87,7 +110,7 @@ export async function runHook(rawEvent: string | undefined, args: string[] = [],
     }
   } finally {
     client?.close();
-    observe(outcome);
+    observe(outcome, detail);
     // The unchanged entrypoint deadline may interrupt this flush; missing evidence is unknown.
     await observations;
   }

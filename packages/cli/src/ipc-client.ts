@@ -13,8 +13,12 @@ export interface RpcClient {
 
 export const IPC_TRANSPORT_CLOSED = -32032;
 
+export interface IpcDiagnostic {
+  phase: "ipc-connect" | "ipc-hello" | "ipc-request";
+  reason: "timeout" | "rpc-rejected" | "transport-error";
+}
 export class IpcError extends Error {
-  constructor(message: string, readonly code?: number) { super(message); }
+  constructor(message: string, readonly code?: number, readonly diagnostic?: IpcDiagnostic) { super(message); }
 }
 
 const Reply = z.object({ jsonrpc: z.literal("2.0"), id: z.number().int(),
@@ -73,7 +77,7 @@ export class IpcClient implements RpcClient {
   private socket: Socket | undefined;
   private connecting: Promise<void> | undefined;
   private nextId = 1;
-  private pending = new Map<number, { resolve(value: unknown): void; reject(error: Error): void; timer: NodeJS.Timeout }>();
+  private pending = new Map<number, { resolve(value: unknown): void; reject(error: Error): void; timer: NodeJS.Timeout; phase: IpcDiagnostic["phase"] }>();
   private buffer = "";
   private closed = false;
   private cancelOpening: (() => void) | undefined;
@@ -139,7 +143,7 @@ export class IpcClient implements RpcClient {
     for (let attempt = 0; ; attempt++) {
       if (this.closed) throw new IpcError("IPC client closed");
       try {
-        if (remaining() <= 0) throw new IpcError("Daemon startup timed out; check kom init and kom daemon run");
+        if (remaining() <= 0) throw new IpcError("Daemon startup timed out; check kom init and kom daemon run", undefined, { phase: "ipc-connect", reason: "timeout" });
         await this.openSocket(remaining());
         if (this.closed) throw new IpcError("IPC client closed");
         const hello: unknown = await this.request("ipc.hello", this.options.hello(), remaining());
@@ -168,16 +172,23 @@ export class IpcClient implements RpcClient {
       this.socket = socket;
       socket.setEncoding("utf8");
       let established = false;
-      const timer = setTimeout(() => { this.cancelOpening = undefined; socket.destroy(); reject(new IpcError("IPC connection timed out")); }, Math.max(1, timeoutMs));
+      const transportPhase = (): IpcDiagnostic["phase"] => !established ? "ipc-connect"
+        : this.socket === socket && [...this.pending.values()].some(waiter => waiter.phase === "ipc-hello") ? "ipc-hello" : "ipc-request";
+      const timer = setTimeout(() => { this.cancelOpening = undefined; socket.destroy(); reject(new IpcError("IPC connection timed out", undefined, { phase: "ipc-connect", reason: "timeout" })); }, Math.max(1, timeoutMs));
       this.cancelOpening = () => { clearTimeout(timer); this.cancelOpening = undefined; socket.destroy(); reject(new IpcError("IPC client closed")); };
       socket.once("connect", () => { established = true; clearTimeout(timer); this.cancelOpening = undefined; resolve(); });
-      socket.on("error", (error) => { clearTimeout(timer); this.cancelOpening = undefined; reject(error); if (this.socket === socket) this.disconnect(error); });
+      socket.on("error", (error) => {
+        clearTimeout(timer); this.cancelOpening = undefined;
+        // Preserve the original OS error and code; attach only local fixed phase metadata.
+        Object.assign(error, { diagnostic: { phase: transportPhase(), reason: "transport-error" } satisfies IpcDiagnostic });
+        reject(error); if (this.socket === socket) this.disconnect(error);
+      });
       socket.on("close", () => {
         clearTimeout(timer);
-        if (!established) reject(new IpcError("IPC transport closed before connection", IPC_TRANSPORT_CLOSED));
+        if (!established) reject(new IpcError("IPC transport closed before connection", IPC_TRANSPORT_CLOSED, { phase: "ipc-connect", reason: "transport-error" }));
         if (this.socket === socket) {
           this.cancelOpening = undefined;
-          this.disconnect(new IpcError("Daemon disconnected; delivery state may be uncertain; do not resend blindly", IPC_TRANSPORT_CLOSED));
+          this.disconnect(new IpcError("Daemon disconnected; delivery state may be uncertain; do not resend blindly", IPC_TRANSPORT_CLOSED, { phase: transportPhase(), reason: "transport-error" }));
         }
       });
       socket.on("data", (chunk: string) => {
@@ -195,7 +206,7 @@ export class IpcClient implements RpcClient {
             const waiter = this.pending.get(reply.id);
             if (!waiter) continue;
             clearTimeout(waiter.timer); this.pending.delete(reply.id);
-            if (reply.error) waiter.reject(new IpcError(reply.error.message, reply.error.code));
+            if (reply.error) waiter.reject(new IpcError(reply.error.message, reply.error.code, { phase: waiter.phase, reason: "rpc-rejected" }));
             else waiter.resolve(reply.result);
           } catch { this.disconnect(new IpcError("Malformed IPC response")); return; }
         }
@@ -208,15 +219,16 @@ export class IpcClient implements RpcClient {
     const socket = this.socket;
     if (!socket || socket.destroyed) return Promise.reject(new IpcError("Daemon unavailable"));
     const id = this.nextId++;
+    const phase = method === "ipc.hello" ? "ipc-hello" : "ipc-request";
     const frame = JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n";
     if (Buffer.byteLength(frame) > MAX_FRAME_BYTES) return Promise.reject(new IpcError("Oversized IPC request"));
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.timedOutOnConnection = true;
         this.pending.delete(id);
-        reject(new IpcError("Daemon request timed out; delivery state may be uncertain; do not resend blindly"));
+        reject(new IpcError("Daemon request timed out; delivery state may be uncertain; do not resend blindly", undefined, { phase, reason: "timeout" }));
       }, timeoutMs);
-      this.pending.set(id, { resolve, reject, timer });
+      this.pending.set(id, { resolve, reject, timer, phase });
       socket.write(frame, (error) => { if (error) this.disconnect(error); });
     });
   }

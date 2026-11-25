@@ -32,7 +32,8 @@ it.each([
   mocks.status.mockResolvedValue(daemon);
   mocks.call.mockRejectedValue(Object.assign(new Error("terminal binding"), { code }));
   await runHook("SessionEnd", [], { payload: { session_id: "ended-conversation", cwd: "/repo" }, retired: active });
-  expect(mocks.observe).toHaveBeenLastCalledWith("SessionEnd", outcome, "ended-conversation");
+  expect(mocks.observe.mock.calls.at(-1)?.slice(0, 3)).toEqual(["SessionEnd", outcome, "ended-conversation"]);
+  if (daemon === "compatible") expect(mocks.observe.mock.calls.at(-1)?.[5]).toMatchObject({ phase: "session-gone" });
   expect(mocks.active).not.toHaveBeenCalled();
   expect(mocks.forget).not.toHaveBeenCalled();
   if (daemon === "compatible") expect(mocks.call).toHaveBeenCalledWith("session.gone");
@@ -43,6 +44,7 @@ it("does not label a registration failure as retirement without committed end ev
   vi.stubEnv("KOM_PLUGIN_PROFILE", "claude-code");
   mocks.active.mockRejectedValue(Object.assign(new Error("missing authority"), { code: -32020 }));
   await runHook("SessionEnd", [], { payload: { session_id: "ended-conversation", cwd: "/repo" } });
-  expect(mocks.observe).toHaveBeenLastCalledWith("SessionEnd", "identity-unavailable", "ended-conversation");
+  expect(mocks.observe).toHaveBeenLastCalledWith("SessionEnd", "identity-unavailable", "ended-conversation", undefined, undefined,
+    { reason: "registration-rejected", phase: "authority" });
   expect(mocks.call).not.toHaveBeenCalled();
 });

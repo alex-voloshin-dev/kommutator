@@ -850,6 +850,25 @@ not declared done on the strength of a working inbox.
 
 ## 19. Implementation decisions and open questions
 
+### Hub synchronization backoff and timeout evidence (2026-11-25)
+
+The existing 100 ms to 10 second exponential reconnect delay resets only after
+the same current, open socket completes its post-hello synchronization callback.
+An authenticated hello alone is not recovery: repeated flush/resync failures must
+not pin reconnects at 100 ms. The socket remains available during synchronization
+so its own recovery RPCs can run. A superseded or stopped callback cannot reset
+the current retry delay. No request timeout, replay authority or receipt rule changes.
+
+A request timeout that terminates a link records a bounded diagnostic with
+event `hub.request-timeout`, an allowlisted protocol method (otherwise `unknown`),
+local numeric request ID and connection epoch, monotonic elapsed milliseconds and
+the number of pending requests at that instant. This distinguishes an elapsed request
+deadline from the existing connection-close rejection of collateral requests; it does not prove
+whether any remote mutation committed. Params, keys, endpoint URLs, remote error
+strings and message bodies are excluded. Diagnostic sink failures are contained after
+the pending request is rejected and its socket terminated. These diagnostics and the controlled
+backoff repair do not establish the cause of historical availability failures.
+
 ### HubLink shutdown completion (2026-11-14)
 
 Awaiting HubLink close completes termination of its current local WebSocket, cancels
@@ -1116,7 +1135,18 @@ unpersisted command is queued. Callers must not retry already dispatched mutatio
 Hook observations are private, bounded diagnostic evidence, not identity authority or delivery
 receipts. Observation writes are serialized in the background; conversation authority and
 delivery never await them. Only the final best-effort flush waits, under the existing
-entrypoint deadline. They contain only a fixed event/outcome, timestamp and hashed root discriminator.
+entrypoint deadline. They contain only a fixed event/outcome, timestamp and hashed root discriminator,
+plus optional allowlisted failure reason and phase (added 2026-11-25). Reasons distinguish
+IPC timeout, registration rejection, daemon shutdown, hub/socket unavailability, socket closure,
+permission denial, read-only storage, other RPC rejection and unexpected failure. Phases identify
+input, authority, conflict/compatibility checks, IPC connection/hello or the active hook operation.
+Local IPC timeout metadata distinguishes hello from the requested operation without recording
+method text, parameters, remote error messages, paths or credentials. Existing IPC error codes,
+deadlines, failure outcomes and receipt behavior are unchanged; output-written acknowledgement
+uncertainty still takes precedence. Legacy observations without detail remain readable, while
+unknown detail values are rejected on read and never persisted by the writer. The 64-slot and
+512-byte read bounds remain. These details localize future failures; they do not establish the
+cause of historical generic failures or prove that a timed-out operation was not committed.
 An interrupted attempt or missing observation is unknown. Failures before output keep stdout
 empty and exit zero; the existing 140ms entrypoint deadline and 200ms vendor budget remain.
 Explicit diagnostics expose observations; no failure generates an unsolicited agent turn.

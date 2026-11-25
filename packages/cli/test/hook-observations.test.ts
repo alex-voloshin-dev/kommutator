@@ -41,3 +41,18 @@ it("ignores FIFO slots without blocking explicit diagnostics", async () => {
   expect(await readHookObservations("root", path)).toHaveLength(1);
   expect(performance.now() - started).toBeLessThan(200);
 });
+
+it("retains bounded allowlisted failure detail and reads legacy records", async () => {
+  const path = await home();
+  await recordHookObservation("PostToolUse", "failed", "root", path, 0, { reason: "ipc-timeout", phase: "ipc-hello" });
+  const file = join(path, "hook-observations", "0.json");
+  expect((await stat(file)).size).toBeLessThanOrEqual(512);
+  expect(await readHookObservations("root", path)).toMatchObject([{ reason: "ipc-timeout", phase: "ipc-hello", outcome: "failed" }]);
+  const legacy = { event: "Stop", outcome: "failed", at: "2026-11-24T22:25:03.000Z" };
+  await writeFile(file, JSON.stringify(legacy));
+  expect(await readHookObservations(undefined, path)).toEqual([legacy]);
+  for (const extra of [{ reason: "/private/token", phase: "ipc-hello" }, { reason: "ipc-timeout", phase: "raw secret method" }, { reason: "ipc-timeout" }]) {
+    await writeFile(file, JSON.stringify({ ...legacy, ...extra }));
+    expect(await readHookObservations(undefined, path)).toEqual([]);
+  }
+});

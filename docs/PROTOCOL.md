@@ -192,6 +192,13 @@ Codex diagnostic hook events are process-local evidence collected after successf
 they reset when the daemon restarts or the session launch changes. They prove observed calls,
 not that a model consumed context or that a desktop window supports native wake.
 
+Plugin-local hook observations added by status/doctor may also include fixed `reason` and
+`phase` values for a failed hook. These private bounded records distinguish local IPC timeout
+from registration rejection and identify connection/hello versus the active hook operation;
+they contain no raw error text, parameters or paths. Legacy records remain valid. This adds
+no hub/IPC method, runtime contract or receipt authority. An interrupted or missing observation
+remains unknown, and `output-written-ack-unverified` does not become delivery confirmation.
+
 ## Plugin-local setup (2026-10-28)
 
 The stdio MCP entrypoint additionally exposes argument-free `setup_status` and `setup_start`.
