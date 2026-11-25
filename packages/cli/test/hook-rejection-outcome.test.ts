@@ -50,7 +50,10 @@ it.each([
   } finally { await rm(home, { recursive: true, force: true }); }
 });
 
-it("keeps written output distinct from a rejected acknowledgement", async () => {
+it.each([
+  { event: "PostToolUse", code: -32020, reason: "registration-rejected" },
+  { event: "Stop", code: -32030, reason: "hub-unavailable" },
+])("persists exact $event evidence after a completed flush with rejected acknowledgement", async ({ event, code, reason }) => {
   const home = await mkdtemp(join(tmpdir(), "kom-hook-ack-detail-"));
   vi.stubEnv("KOM_HOME", home); vi.stubEnv("KOM_PLUGIN_PROFILE", "");
   const output: string[] = [];
@@ -62,15 +65,20 @@ it("keeps written output distinct from a rejected acknowledgement", async () => 
   mocks.call.mockImplementation(async (method: string) => {
     if (method === "hook.poll") return { block: true, headers: [{ id: "one", seq: 1, from: "peer@host", kind: "dm", priority: "normal",
       preview: "visible", thread_id: "one", created_at: "2026-11-24T00:00:00.000Z", state: "unread", wake: true }] };
-    throw Object.assign(new Error("private remote error"), { code: -32020 });
+    throw Object.assign(new Error("private remote error"), { code });
   });
   try {
-    await runHook("PostToolUse", [], { payload: { session_id: "root", cwd: home } });
+    await runHook(event, event === "Stop" ? ["--vendor", "codex"] : [], { payload: { session_id: "root", cwd: home } });
     expect(output).toHaveLength(1);
     expect(output[0]).toContain("visible");
-    expect(mocks.call.mock.calls.map(call => call[0])).toEqual(["hook.poll", "hook.ack"]);
-    expect(await readHookObservations("root", home)).toMatchObject([
-      { outcome: "output-written-ack-unverified", reason: "registration-rejected", phase: "hook-ack" },
+    expect(mocks.call.mock.calls).toEqual([["hook.poll", { event }], ["hook.ack", { ids: ["one"] }]]);
+    expect(mocks.close).toHaveBeenCalledOnce();
+    expect(mocks.spawn).not.toHaveBeenCalled();
+    const observations = await readHookObservations("root", home);
+    expect(observations).toHaveLength(1);
+    expect(observations).toMatchObject([
+      { event, outcome: "output-written-ack-unverified", reason, phase: "hook-ack" },
     ]);
+    expect(JSON.stringify(observations)).not.toContain("private remote error");
   } finally { await rm(home, { recursive: true, force: true }); }
 });

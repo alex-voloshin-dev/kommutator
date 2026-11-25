@@ -9,11 +9,17 @@ import { expect, it } from "vitest";
 import { readHookObservations } from "../src/hook-observations.js";
 
 const entry = fileURLToPath(new URL("../dist/index.js", import.meta.url));
+const observationStall = fileURLToPath(new URL("../../../scripts/fixtures/hook-observation-stall.mjs", import.meta.url));
 
-it.each([false, true])("keeps real hook output and observations truthful when IPC stalls=%s", async stalled => {
+it.each([
+  { stalled: false, stallObservation: false },
+  { stalled: true, stallObservation: false },
+  { stalled: false, stallObservation: true },
+])("keeps real hook evidence truthful with IPC stalled=$stalled and observation stalled=$stallObservation", async ({ stalled, stallObservation }) => {
   const home = await mkdtemp(join(tmpdir(), "kom-hook-ipc-"));
   const sockets = new Set<Socket>();
   const methods: string[] = [];
+  const acknowledgements: unknown[] = [];
   const server = createServer(socket => {
     sockets.add(socket);
     socket.on("close", () => sockets.delete(socket));
@@ -25,6 +31,7 @@ it.each([false, true])("keeps real hook output and observations truthful when IP
         const request = JSON.parse(buffer.slice(0, end));
         buffer = buffer.slice(end + 1);
         methods.push(request.method);
+        if (request.method === "hook.ack") acknowledgements.push(request.params);
         if (stalled) continue;
         const result = request.method === "hook.poll" ? { block: true, headers: [{
           id: "notice", seq: 1, from: "peer@host", kind: "dm", priority: "normal", preview: "Visible notice",
@@ -41,25 +48,36 @@ it.each([false, true])("keeps real hook output and observations truthful when IP
     const env = { ...process.env, KOM_HOME: home };
     delete env.KOM_PLUGIN_PROFILE;
     const started = performance.now();
-    const child = spawn(process.execPath, [entry, "hook", "Stop", "--vendor", "codex"], { env });
+    const child = spawn(process.execPath, [...(stallObservation ? ["--import", observationStall] : []), entry, "hook", "Stop", "--vendor", "codex"], { env });
     let stdout = "", stderr = "";
     child.stdout.on("data", chunk => { stdout += String(chunk); });
     child.stderr.on("data", chunk => { stderr += String(chunk); });
     child.stdin.end(JSON.stringify({ session_id: "test-root" }));
     const code = await new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
     const elapsedMs = performance.now() - started;
-    expectHookProcessTime(elapsedMs, `Codex Stop IPC stalled=${stalled}`);
+    expectHookProcessTime(elapsedMs, `Codex Stop IPC stalled=${stalled}, observation stalled=${stallObservation}`);
     expect(code).toBe(0);
     expect(stderr).not.toContain("secret transport details");
     const observations = await readHookObservations("test-root", home);
+    expect(observations.some(row => row.outcome === "success")).toBe(false);
+    expect(JSON.stringify(observations)).not.toMatch(/test-root|secret transport details/);
     if (stalled) {
       expect(stdout).toBe("");
       expect(observations.some(row => row.outcome === "success")).toBe(false);
       expect(methods).toEqual(["ipc.hello"]);
+      expect(acknowledgements).toEqual([]);
     } else {
       expect(JSON.parse(stdout).reason).toContain("Visible notice");
       expect(methods).toEqual(["ipc.hello", "hook.poll", "hook.ack"]);
-      expect(observations).toMatchObject([{ outcome: "output-written-ack-unverified" }]);
+      expect(acknowledgements).toEqual([{ ids: ["notice"] }]);
+      // The hard entrypoint deadline may interrupt the diagnostic flush. Completed
+      // runHook coverage separately requires the exact terminal record and ack IDs.
+      expect(observations.length).toBeLessThanOrEqual(1);
+      expect(observations.every(row => row.outcome === "attempted" || row.outcome === "output-written-ack-unverified")).toBe(true);
+      if (stallObservation) {
+        expect(stderr).toBe("[fixture-observation-write-stalled]\n");
+        expect(observations).toEqual([]);
+      }
     }
   } finally {
     for (const socket of sockets) socket.destroy();
