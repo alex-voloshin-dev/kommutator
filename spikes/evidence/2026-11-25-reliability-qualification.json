@@ -1,7 +1,7 @@
 {
   "candidate_version": "0.17.0",
   "baseline": "bc8252564a695524559d52024de1225541c4f473",
-  "status": "qualification-pending",
+  "status": "published-qualified",
   "baseline_results": {
     "hub_link_new_tests": {
       "failed": 5,
@@ -62,5 +62,35 @@
     "security": "approve",
     "external_final": "approve",
     "external_prior_packaging_mismatch": "resolved by matching export and catalogs"
+  },
+  "release_commit": "101b3142976c6d8d3644205464fc1b7974ab12c9",
+  "hosted": {
+    "branch": 45537324305,
+    "pull_request": 45537355089,
+    "tag": 45537677452,
+    "result": "success-first-attempt",
+    "workspace_tests": 849,
+    "script_tests": 161
+  },
+  "public_assets": {
+    "tar_sha256": "5e4bd5086bd83a4d0423d9f7f8060944147afc1c002e7378f9a6c33dea67cf36",
+    "claude_zip_sha256": "1b4931d2b6aee8a6a4d9a1d5e7ebd3718b0bc74b5998f60c1bfd026bc173c189",
+    "anonymous_hash_check": "passed",
+    "clean_native_installs": [
+      "codex",
+      "claude-code"
+    ],
+    "private_setup": 200,
+    "foreign_origin": 403
+  },
+  "diagnostic_repeat": {
+    "cases": 3,
+    "passed": 3,
+    "causal_explanation": false,
+    "hook_ms": [
+      130.182,
+      122.218,
+      127.982
+    ]
   }
 }

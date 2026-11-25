@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-24. Released baseline: [0.16.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.16.2).
+Updated 2026-11-25. Released baseline: [0.17.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.17.0).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -12,25 +12,30 @@ clean-profile installed MCP probes verified 0.12.3.
 
 ## Current investigation (2026-11-25 UTC)
 
-Version 0.16.2 is published and locally deployed; the November 22 publication hold
-and draft PR #36 are historical, not pending work. Reliability follow-up investigates
-repeated failed synchronization backoff and insufficient hook failure distinctions.
-No new release or root-cause fix is claimed until reproduction and qualification.
-Historical local gate failures and unknown remote operation outcomes remain unresolved.
+Version 0.17.0 fixes reproduced synchronization-backoff reset behavior and adds bounded
+request-timeout and hook reason/phase evidence. Historical availability, registration and
+IPC failures remain unresolved; the 03:08 UTC November25 incident occurred before cutover.
+Next: correlate triggering request diagnostics, local storage waits and remote operation
+admission without replaying unknown mutations. Preserve primary and cleanup errors in
+future lifecycle fixture diagnostics; passing repeats do not explain failed gates.
 
 ## Current release qualification
 
-Published [0.16.2 feedback repairs](sdlc/feedback-nov24/release.md): Claude offline local
-admission, retryable negative Git discovery and read-only cached management/safe IPC
-diagnostics. Independent reviews/QA and complete source/head/tag CI passed (830 workspace,
-161 script tests). Public hashes and real clean vendor installations passed. Two local
-failed full runs remain documented; SQLite timeout cause is unknown.
+Published [0.17.0 reliability repairs](sdlc/reliability-nov25/release.md): independent reviews
+and QA,849 workspace tests and161 script tests in full first-attempt branch/PR/tag hosted
+gates. Public hashes and clean Claude/Codex installations passed. The subsequent local
+release gate failed3 CLI tests (846 passed); targeted diagnostics passed without a cause.
 
-Local hub, shared daemon and actual reloaded Codex MCP 0.16.2 are connected; caller active,
-contract 4. Current/backup databases 5/8 passed quick_check, updater idle 0.16.2, timer active.
-Old blocked 644 remains and aggregate degraded is retained. Bounded observation recorded
-6 timeouts and 1 URL transport error among 237 probes, before/after activation. Issue22
-remains open; short current health is not stability proof.
+Local hub, shared daemon and actual reloaded Codex MCP0.17.0 are connected; caller active,
+contract4. Current/backup databases5/8 passed quick_check, updater idle0.17.0, timer active.
+Old blocked644 and aggregate degraded remain. Bounded observation:94 expected401,2 timeouts
+among96 probes; both failed probes preceded activation and observed matching hub birth in
+D-state/jbd2_log_wait_commit. Only five post-activation probes, not a stability qualification.
+Issue22 remains open. See [rollout evidence](../spikes/evidence/2026-11-25-reliability-rollout.json)
+and [availability evidence](../spikes/evidence/2026-11-25-reliability-availability.json).
+
+Previous0.16.2 [feedback repairs](sdlc/feedback-nov24/release.md) remain qualified and released;
+its November22 publication hold and draftPR36 are historical, not pending work.
 
 ### Previous 0.16.1 checkpoint (historical)
 
@@ -204,10 +209,10 @@ exact caller, message IDs, arguments and returned counts if it recurs.
 | Core and identity | Hub, daemon, MCP/hooks, boards and dashboard; live macOS two-Claude native exchange; same-host identity and resume fencing; 0.12.2 durable retirement recovery and pre-enqueue address validation | Preserve these contracts; synthetic recovery coverage is separate from every vendor/environment combination |
 | Toolchain | Node 26.13.0 and pnpm 12.18.0 pinned; Linux x64 source, bundled runtime and local Docker deployment qualified | Execute other supported target platforms before claiming their bundled runtime support |
 | Operability | Doctor/status, bounded logs, dashboard filters/freshness and topic/subscriber visibility; durable outbox and nonblocking compatibility diagnostics | A recorded full day of real use without manual database repair; capacity measurements |
-| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.16.2 deployed; ordinary updater retained the old blocked-work warning | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
-| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.16.2 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
+| WSL/Docker | Persistent isolated hub, private key/database, local release updater with backups and health gates; hub/daemon 0.17.0 deployed; ordinary updater retained the old blocked-work warning | Actual Windows reboot/logon recovery remains open. The earlier emergency-host recovery is not unattended reboot acceptance |
+| Codex integration | Per-call root metadata, hooks, exact-hash trust, mixed-vendor exchange and hub restart recovery; current session MCP 0.17.0 verified | Actual Work desktop UI and native idle wake; hook delivery does not establish native wake |
 | LAN | Fixed port 8787; opt-in single explicit subnet; effective-rule and host-local checks observed | Independent physical allowed- and denied-subnet clients; WSL NAT/host-local probes cannot substitute |
-| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.16.2 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
+| Client distribution | Public GitHub marketplace, immutable Linux x64 release assets, anonymous hash verification, real Claude/Codex CLI installation and MCP/private-setup probes through 0.17.0 | Record real model exchange after manual-to-plugin migration; execute other OS/architecture artifacts |
 | Publication | Public MIT repository, secret scanning and hosted CI; versioned client releases and local hub images | Public GHCR hub image and official vendor catalog submissions remain separate work; no npm or official marketplace approval is implied |
 
 ## Acceptance work that needs a suitable environment

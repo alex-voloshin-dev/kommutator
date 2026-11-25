@@ -1531,3 +1531,32 @@ cause unestablished; no stable-rollout claim or closure of #22. Source/head/tag 
 passed 830 workspace + 161 script tests. Local failed gates remain recorded. See
 [rollout](evidence/2026-11-24-feedback-rollout.json) and
 [availability](evidence/2026-11-24-feedback-availability.json).
+
+
+## 2026-11-25 — 0.17.0 recovery backoff and failure diagnostics
+
+Reproduced failed-sync reconnects pinned at100ms; reset now follows successful current-socket
+synchronization. Added bounded hub timeout and hook reason/phase evidence, preserving all
+replay, identity, receipt and deadline contracts. Baseline failures and independent reviews/QA
+are in [release report](../docs/sdlc/reliability-nov25/release.md).
+
+Independent local build/typecheck/849 workspace tests passed. Subsequent full local release
+gate FAILED3 CLI cases (846 passed); one targeted diagnostic passed, cause unestablished.
+Full exact-head branch45537324305, PR45537355089 and tag45537677452 gates passed first attempt
+(849 workspace/161 script tests, packaging, audit, integrity, clean-PATH and exported E2E).
+Public anonymous hashes and native clean Claude/Codex installation probes passed.
+
+Pinned cutover after announced03:15UTC completed normally; hub03:17:21UTC, daemon and actual
+Codex MCP0.17.0, contract4, connected/active. Current databases and VACUUM INTO backups5/8
+quick_check OK, indexes verified, timer restored. Old blocked644 retained; aggregate degraded.
+Five hooks trusted/enabled without manual trust writes; fresh execution and live Claude MCP
+activation not certified. No queue resend/deletion or manual updater reconciliation.
+
+Bounded observer96 probes:94 expected401,2 timeouts before activation, both matching hub
+birth in D-state/jbd2_log_wait_commit. Only five post-activation probes. Storage root cause
+and concurrent build contribution unmeasured. New remote03:08 report independently matches
+three local heartbeat failures before planned restart; observer began later. Issue22 remains
+open, along with historical9/19/25 and day-long/platform/network/reboot gates.
+See [qualification](evidence/2026-11-25-reliability-qualification.json),
+[rollout](evidence/2026-11-25-reliability-rollout.json) and
+[availability](evidence/2026-11-25-reliability-availability.json).

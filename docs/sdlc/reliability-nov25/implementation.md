@@ -49,3 +49,13 @@ and day-long/subnet/reboot/native-wake gates remain open until their individual 
 
 Pending. Record baseline failures, candidate gates and independent review/QA below. A later
 passing run does not explain an earlier failure. Separate worktrees/dependency trees are used.
+
+## Fresh availability report before cutover
+
+Message7cbef222-0e35-480b-86b0-dc3daa66ead4 reports a transient board read failure at
+03:08UTC on November25 from remote0.16.1, with active registration and hub disconnected,
+then connected and a successful read. The hub-host daemon independently retained three
+heartbeat failures at03:08:23.890–.893UTC. No hub/daemon restart occurred in this task
+before the announced03:15UTC window. This corroborates an availability interval, not a
+storage/network cause. Public artifact/native-install work was nearby but its contribution
+was not measured. The bounded rollout observer started later and cannot explain this event.

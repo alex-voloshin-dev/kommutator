@@ -34,3 +34,8 @@ Matching0.17.0 assets/catalogs regenerated. External lens3 returned approve with
 its prior packaging finding is resolved. Independent QA's ordered full workspace passed849.
 The subsequent parent release gate failed three CLI cases and is retained in qa.md. Final
 release qualification is pending; approval alone does not authorize claiming a green gate.
+
+Final decision: `review-decision --verdict approve --iteration 3 --gate-green yes`
+returned `proceed` after independent QA and both complete unchanged hosted release gates
+passed. This decision retains the local failed packaging gate, not reclassifying it as green.
+Source, final packaged diff and exact tag commit are qualified; deployment is separately checked.

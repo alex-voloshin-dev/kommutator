@@ -1,0 +1,61 @@
+{
+  "version": "0.17.0",
+  "window_utc": [
+    "2026-11-25T03:09:51.365574+00:00",
+    "2026-11-25T03:17:46.384292+00:00"
+  ],
+  "probe_budget_ms": 800,
+  "samples": 96,
+  "expected_http_401": 94,
+  "timeouts": 2,
+  "per_image": {
+    "kommutator-hub:release-0.16.2": {
+      "401": 89,
+      "timeout": 2
+    },
+    "kommutator-hub:release-0.17.0": {
+      "401": 5
+    }
+  },
+  "max_io_full_avg10": 50.87,
+  "max_memory_full_avg10": 4.99,
+  "failed_probes": [
+    {
+      "at": "2026-11-25T03:16:41.382106+00:00",
+      "io_full_avg10": 41.72,
+      "memory_full_avg10": 0.14,
+      "container_started_at": "2026-11-24T02:41:27.085208928Z",
+      "image": "kommutator-hub:release-0.16.2",
+      "process": {
+        "pid": 1809192,
+        "birth_ticks": "18966845",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit"
+      },
+      "error": "timeout",
+      "elapsed_ms": 801.378,
+      "process_birth_still_matches": true
+    },
+    {
+      "at": "2026-11-25T03:16:46.382337+00:00",
+      "io_full_avg10": 50.87,
+      "memory_full_avg10": 0.09,
+      "container_started_at": "2026-11-24T02:41:27.085208928Z",
+      "image": "kommutator-hub:release-0.16.2",
+      "process": {
+        "pid": 1809192,
+        "birth_ticks": "18966845",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit"
+      },
+      "error": "timeout",
+      "elapsed_ms": 801.543,
+      "process_birth_still_matches": true
+    }
+  ],
+  "limits": [
+    "Two pre-activation timeouts observed with matching hub birth and D-state/jbd2_log_wait_commit; root cause and deployment-build contribution not established.",
+    "Only five post-activation probes; no day-long stability proof.",
+    "Observer started after independently corroborated 03:08 heartbeat incident and cannot explain it."
+  ]
+}

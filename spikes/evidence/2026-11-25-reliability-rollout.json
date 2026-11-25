@@ -1,0 +1,60 @@
+{
+  "version": "0.17.0",
+  "release_commit": "101b3142976c6d8d3644205464fc1b7974ab12c9",
+  "merge_commit": "d5efc10f1901038fce2b5071d266602136b3ddaf",
+  "hub_started_utc": "2026-11-25T03:17:21.924415358Z",
+  "daemon_pid_observed": 2666070,
+  "versions": {
+    "hub": "0.17.0",
+    "daemon": "0.17.0",
+    "loaded_codex_mcp": "0.17.0"
+  },
+  "runtime_contract": 4,
+  "hub_connected": true,
+  "caller": "active",
+  "aggregate_health": "degraded",
+  "retained_blocked_outbox": [
+    644
+  ],
+  "checkpoint": {
+    "status": "idle",
+    "appliedVersion": "0.17.0"
+  },
+  "timer": "active",
+  "database_checks": [
+    {
+      "database": "daemon",
+      "quick_check": "ok",
+      "schema": 5,
+      "mode": "0o600"
+    },
+    {
+      "database": "hub",
+      "quick_check": "ok",
+      "schema": 8,
+      "mode": "0o600",
+      "verified_indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    },
+    {
+      "database": "daemon-backup",
+      "quick_check": "ok",
+      "schema": 5,
+      "mode": "0o600"
+    },
+    {
+      "database": "hub-backup",
+      "quick_check": "ok",
+      "schema": 8,
+      "mode": "0o600"
+    }
+  ],
+  "hook_trust": "Five installed hooks trusted/enabled; no manual trust writes, fresh execution not proven.",
+  "limitations": [
+    "Existing live Claude MCP not independently reloaded/certified.",
+    "Checkpoint retains historical updatedAt/reconciliation fields; target/result and independent runtime checks establish this deployment.",
+    "No queue deletion/resend or manual reconciliation."
+  ]
+}
