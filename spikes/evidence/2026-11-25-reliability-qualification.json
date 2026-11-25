@@ -1,0 +1,66 @@
+{
+  "candidate_version": "0.17.0",
+  "baseline": "bc8252564a695524559d52024de1225541c4f473",
+  "status": "qualification-pending",
+  "baseline_results": {
+    "hub_link_new_tests": {
+      "failed": 5,
+      "passed": 1,
+      "scope": "three premature backoff reset regressions and two absent timeout diagnostic assertions"
+    },
+    "hook_detail_real_ipc": {
+      "failed": 3,
+      "passed": 0
+    },
+    "hello_close_attribution": {
+      "failed": 1,
+      "scope": "closed during hello reported undispatched whoami"
+    }
+  },
+  "focused_engineer_checks": {
+    "hub_link": 18,
+    "hook_details": 43,
+    "ordered_build_typecheck": "passed"
+  },
+  "retained_intermediate_failures": [
+    "Vitest fake-timer helper return-value assertion was corrected; transport assertions preserved.",
+    "Four hook mock call-arity assertions updated to include new optional detail; original outcome semantics preserved.",
+    "External review2 found version/catalog mismatch before required packaging; final matching artifacts still pending."
+  ],
+  "unchanged": [
+    "runtime contract 4",
+    "daemon schema 5",
+    "hub schema 8",
+    "140 ms entrypoint deadline",
+    "90 ms IPC timeout",
+    "300 ms temporary full-process threshold",
+    "mutation replay and receipt authority"
+  ],
+  "limitations": [
+    "Historical availability and startup causes not established",
+    "Unknown operations not evidence of non-commit",
+    "No production stress or kernel changes"
+  ],
+  "independent_qa": {
+    "ordered_build_typecheck": "passed",
+    "workspace_tests": 849,
+    "new_real_websocket_test": "passed",
+    "compiled_hook_ms": 123.654
+  },
+  "local_release_gate": {
+    "status": "failed",
+    "protocol_passed": 41,
+    "hub_passed": 209,
+    "agentd_passed": 263,
+    "cli_passed": 333,
+    "cli_failed": 3,
+    "scripts_and_exported_e2e": "not reached",
+    "cause": "not established"
+  },
+  "reviews": {
+    "correctness": "approve",
+    "security": "approve",
+    "external_final": "approve",
+    "external_prior_packaging_mismatch": "resolved by matching export and catalogs"
+  }
+}
