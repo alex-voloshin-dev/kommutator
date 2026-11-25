@@ -1560,3 +1560,28 @@ open, along with historical9/19/25 and day-long/platform/network/reboot gates.
 See [qualification](evidence/2026-11-25-reliability-qualification.json),
 [rollout](evidence/2026-11-25-reliability-rollout.json) and
 [availability](evidence/2026-11-25-reliability-availability.json).
+
+
+## 2026-11-25 — established Claude rebind candidate, publication deferred
+
+Candidate 0.17.2 (PR #38, head 662d8f9) fixes a reproduced fresh IPC rebind
+waiting behind another owner's stalled hub request, with ownership, lifecycle and
+context fences retained. Lifecycle fixtures preserve primary and cleanup failures.
+Completed-hook diagnostics and deadline-interrupted process diagnostics have separate
+coverage; runtime deadlines and delivery/ack assertions are unchanged.
+
+Independent ordered QA passed 870 workspace tests. Exact-head hosted branch
+45651033438 and PR 45651040837 passed first attempt. Local full release gate
+passed build/typecheck, 870 workspace and 161 script tests, then FAILED exported
+Claude `whoami` after resume with `Shared daemon unavailable`. The precise IPC
+cause was not retained. Publication is deferred pending bounded investigation;
+successful CI does not explain this failure. See the
+[release report](../docs/sdlc/local-rebind/release.md).
+
+Production remains 0.17.0. A bounded collector started at 16:11:42 UTC (at most
+24 hours/8 MiB). At 16:12:32 UTC an 804.557 ms unauthenticated loopback probe
+timed out while the birth-matched hub process was in D-state,
+`jbd2_log_wait_commit`, before and after the request. IO-full avg10 was 15.49%;
+memory-full avg10 was zero. This establishes journal wait in this episode, not
+the storage root cause or a cause for the separate synthetic E2E failure.
+See [ongoing observation evidence](evidence/2026-11-25-ongoing-availability.json).

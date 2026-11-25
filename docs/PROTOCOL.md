@@ -207,6 +207,13 @@ when configured it also returns `daemon` (stopped/compatible/incompatible/unavai
 `client_version`, `expected_runtime_contract`, nullable `daemon_version` and
 `daemon_runtime_contract`, and `recovery` when action is needed. `setup_start` returns
 configuration state and, only when needed, an expiring private loopback form URL.
+A failed local daemon probe may also return `probe_failure`: fixed method
+`daemon.status`, an allowlisted phase (`ipc-connect`, `ipc-hello`, `ipc-request`,
+or `unknown`), reason (`timeout`, `transport-error`, `rpc-rejected`, or `unexpected`),
+and an allowlisted code or `null`. The method identifies the intended probe; the
+phase identifies where it failed, including connection or hello before that request.
+Arbitrary error text, paths, parameters and credentials are excluded. This optional
+plugin-local diagnostic changes neither daemon classification nor the IPC wire schema.
 MCP `status` calls `daemon.status` through a separate CLI-only read-only IPC connection.
 Claude plugins attach a `DaemonStatusParams.caller` selector from the current private
 registration: `{ vendor: "claude-code", vendor_session_id, pid, process_started_at,
@@ -386,3 +393,10 @@ broken support is an error, not a reason for silent legacy fallback.
 Hub schema 8 adds unread-sequence and message-target indexes atomically from 5/6/7,
 without rewriting history; older hubs reject it. Runtime contract 4/local schema 5
 remain unchanged. Back up and fix forward; see DESIGN §19 and LOCAL_RELEASE_DEPLOY.
+
+
+For an explicit positive-generation Claude shim, hello may bind a previously registered
+unchanged live owner locally without awaiting unrelated flush work. Exact owner/context,
+fresh process birth and retirement-marker checks still apply; pending owner lifecycle work
+uses ordinary synchronization. New registrations, hooks, Codex and manual generation-zero
+paths are unchanged. See DESIGN §19; this adds no RPC fields or replay authority.

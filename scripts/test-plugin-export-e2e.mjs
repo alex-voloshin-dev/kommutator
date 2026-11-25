@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHubServer } from '../packages/hub/dist/server.js';
 import { openDatabase } from '../packages/hub/dist/db.js';
-import { hookDiagnostic, authorityDiagnostic } from './lib/plugin-e2e-diagnostics.mjs';
+import { hookDiagnostic, authorityDiagnostic, daemonProbeFailureDiagnostic } from './lib/plugin-e2e-diagnostics.mjs';
 const artifact = resolve(process.argv[2]);
 const home = await mkdtemp(join(tmpdir(), 'kom-export-e2e-'));
 const project = join(home, 'project');
@@ -33,7 +33,7 @@ await mkdir(join(home, '.claude')); await mkdir(join(home, 'codex'));
 await writeFile(claudeSettings, JSON.stringify(installedClaude));
 await writeFile(codexSettings, installedCodex);
 const clients = [];
-const owners = []; const hookResults = []; let lastStage = 'setup';
+const owners = []; const hookResults = []; let lastStage = 'setup'; let probeFailure;
 function recordHook(owner, result) {
   if (hookResults.length === 64) hookResults.shift();
   hookResults.push({ owner, ...hookDiagnostic(result) });
@@ -91,6 +91,7 @@ async function client(vendor, id, parent) {
   return { child, async call(name, args = {}, root = id, expectedError = false) {
     lastStage = `tool:${vendor}:${parent?.label ?? 'standalone'}:${name}`;
     const reply = await request('tools/call', { name, arguments: args, _meta: { sessionId: root, threadId: root } });
+    if (Boolean(reply.isError) !== expectedError) probeFailure = daemonProbeFailureDiagnostic(reply.content?.[0]?.text);
     assert.equal(Boolean(reply.isError), expectedError, `${vendor} ${name}: ${reply.content?.[0]?.text}`);
     return expectedError ? reply.content[0].text : JSON.parse(reply.content[0].text);
   } };
@@ -244,7 +245,7 @@ try {
   let authority;
   try { authority = await authorityDiagnostic(kom, owners.map(({ child, label, vendorId }) => ({ label, vendorId, pid: child.pid, alive: child.exitCode === null && child.signalCode === null })), project); }
   catch { authority = { context: 'diagnostic-unavailable' }; }
-  console.error('[export-e2e-diagnostic] ' + JSON.stringify({ stage: lastStage, hooks: hookResults, authority }));
+  console.error('[export-e2e-diagnostic] ' + JSON.stringify({ stage: lastStage, hooks: hookResults, authority, ...(probeFailure ? { probe_failure: probeFailure } : {}) }));
   throw error;
 } finally {
   for (const path of moved) await rename(path + '.qa-hidden', path);

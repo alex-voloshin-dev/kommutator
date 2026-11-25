@@ -1,6 +1,6 @@
 import { withCleanup } from "./fixture-lifecycle.js";
 import { expectHookProcessTime } from "./hook-timing.js";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { spawn } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { createServer, type Server } from "node:net";
@@ -67,6 +67,19 @@ async function fixture() {
   const clients: Client[] = [];
   const inboxes: Server[] = [];
   let daemon: z.infer<typeof DaemonInfo> | undefined;
+  const started = performance.now();
+  const phases: { phase: string; elapsed_ms: number }[] = [];
+  const mark = (label: "hook-spawn" | "hook-input" | "hook-close" | "hook-timeout" | "cleanup-start" | "shutdown-start") => {
+    if (phases.length < 32) phases.push({ phase: label, elapsed_ms: performance.now() - started });
+  };
+  // Parent-owned, bounded evidence survives a killed hook and precedes destructive cleanup.
+  const report = () => {
+    try {
+      console.error("[lifecycle-failure]", JSON.stringify({ phases,
+        hub_listening: hub.listening, known_daemon: daemon !== undefined, client_count: clients.length,
+        inbox_count: inboxes.length }));
+    } catch { /* Diagnostic output must not replace the failure or prevent timeout cleanup. */ }
+  };
   const environment = {
     PATH: process.env.PATH ?? "",
     ...(process.env.KOM_LIFECYCLE_TRACE === "1" ? { KOM_LIFECYCLE_TRACE: "1", NODE_OPTIONS: `--import=${phasePreload}` } : {}),
@@ -84,6 +97,7 @@ async function fixture() {
   }
 
   async function close() {
+    mark("cleanup-start");
     const failures: unknown[] = [];
     for (const client of clients) {
       try { await client.close(); } catch (error) { failures.push(error); }
@@ -93,10 +107,12 @@ async function fixture() {
       endpoint: join(home, "agentd.sock"), timeoutMs: 500, lazyStart: false,
       hello: () => ({ client: "cli", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, pid: process.pid, cwd }),
     });
+    mark("shutdown-start");
     try { await management.call("daemon.shutdown"); }
     catch (error) {
       const code = error instanceof Error && "code" in error ? error.code : undefined;
-      if (code !== "ENOENT" && code !== "ECONNREFUSED") failures.push(error);
+      if (code !== "ENOENT" && code !== "ECONNREFUSED")
+        failures.push(new Error("Fixture phase: cleanup daemon shutdown", { cause: error }));
     } finally { management.close(); }
     if (!daemon) {
       try { await daemonInfo(); }
@@ -145,10 +161,15 @@ async function fixture() {
     await writeFile(join(home, "config.json"), JSON.stringify({
       hub: `http://127.0.0.1:${address.port}`, key: "process-lifecycle-test-key", host: "fixture-mac",
     }), { mode: 0o600 });
-  } catch (error) { await close(); throw error; }
+  } catch (error) { await withCleanup(async () => { report(); throw error; }, close); }
 
   return {
     home, cwd, db, close, daemonInfo,
+    async run(body: () => Promise<void>) {
+      await withCleanup(async () => {
+        try { await body(); } catch (error) { report(); throw error; }
+      }, close);
+    },
     async shim(vendorId?: string) {
       const transport = new StdioClientTransport({
         command: process.execPath, args: [entry, "mcp"], cwd, stderr: "pipe",
@@ -173,16 +194,23 @@ async function fixture() {
       const started = performance.now();
       const parentStarted = process.hrtime.bigint();
       const result = await new Promise<{ code: number | null; stdout: string; elapsed: number }>((resolve, reject) => {
+        mark("hook-spawn");
         const child = spawn(process.execPath, [entry, "hook", "SessionStart"], {
           cwd, env: { ...environment, CLAUDE_CODE_SESSION_ID: vendorId, CLAUDE_CODE_MESSAGING_SOCKET: endpoint },
           stdio: ["pipe", "pipe", "pipe"],
         });
         let stdout = "";
-        const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new Error("SessionStart fixture timed out")); }, 3_000);
+        const timer = setTimeout(() => {
+          mark("hook-timeout");
+          report();
+          child.kill("SIGKILL");
+          reject(new Error("SessionStart fixture timed out"));
+        }, 3_000);
         child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
         child.stderr.resume();
         child.once("error", (error) => { clearTimeout(timer); reject(error); });
         child.once("close", (code) => {
+          mark("hook-close");
           const parentClosed = process.hrtime.bigint();
           const elapsed = performance.now() - started;
           clearTimeout(timer);
@@ -193,6 +221,7 @@ async function fixture() {
           resolve({ code, stdout, elapsed });
         });
         child.stdin.end(JSON.stringify({ session_id: vendorId, cwd, permission_mode: "default" }));
+        mark("hook-input");
       });
       expect({ code: result.code, stdout: result.stdout }).toEqual({ code: 0, stdout: "" });
       const observations = (await readHookObservations(vendorId, home)).map(({ event, outcome, at }) => ({ event, outcome, at }));
@@ -211,6 +240,44 @@ async function whoami(client: Client, failureContext?: () => string) {
 }
 
 describe("built CLI process lifecycle with fake vendor sessions (not live vendor E2E)", () => {
+  it.each([false, true])("retains body and shutdown failures before cleanup (throwing diagnostic sink: %s)", async (throwingSink) => {
+    const setup = await fixture();
+    const sockets = new Set<import("node:net").Socket>();
+    const listener = createServer(socket => {
+      sockets.add(socket);
+      socket.once("close", () => sockets.delete(socket));
+      socket.on("data", () => {}); // Keep management hello pending until its existing deadline.
+    });
+    const reports = vi.spyOn(console, "error").mockImplementation(() => {
+      if (throwingSink) throw new Error("synthetic diagnostic sink failure");
+    });
+    const primary = new Error("synthetic cold registration failure");
+    try {
+      const failure: unknown = await setup.run(async () => {
+        await new Promise<void>((resolve, reject) => {
+          listener.once("error", reject);
+          listener.listen(join(setup.home, "agentd.sock"), () => { listener.off("error", reject); resolve(); });
+        });
+        throw primary;
+      }).catch(error => error);
+      expect(failure).toBeInstanceOf(AggregateError);
+      if (!(failure instanceof AggregateError)) throw new Error("missing combined failure");
+      expect(failure.errors[0]).toBe(primary);
+      const cleanup = failure.errors[1];
+      expect(cleanup).toBeInstanceOf(AggregateError);
+      expect(cleanup.errors[0].message).toBe("Fixture phase: cleanup daemon shutdown");
+      expect(cleanup.errors[0].cause.message).toMatch(/request timed out/);
+      expect(reports).toHaveBeenCalledWith("[lifecycle-failure]", JSON.stringify({
+        phases: [], hub_listening: true, known_daemon: false, client_count: 0, inbox_count: 0,
+      }));
+      await expect(stat(setup.home)).rejects.toMatchObject({ code: "ENOENT" });
+    } finally {
+      reports.mockRestore();
+      for (const socket of sockets) socket.destroy();
+      await closeServer(listener);
+    }
+  });
+
   it("does not mistake a rejected hook's fail-open exit for successful registration", async () => {
     const setup = await fixture();
     const sockets = new Set<import("node:net").Socket>();
@@ -231,7 +298,7 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
         }
       });
     });
-    try {
+    await setup.run(() => withCleanup(async () => {
       await new Promise<void>((resolve, reject) => {
         listener.once("error", reject);
         listener.listen(join(setup.home, "agentd.sock"), () => { listener.off("error", reject); resolve(); });
@@ -243,16 +310,15 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
       // by the IPC fixture and absent registration, never by an attempted observation.
       expect(hook.observations.some(row => row.outcome === "success")).toBe(false);
       expect(setup.db.prepare("SELECT COUNT(*) AS count FROM sessions").get()).toEqual({ count: 0 });
-    } finally {
+    }, async () => {
       for (const socket of sockets) socket.destroy();
       await closeServer(listener);
-      await setup.close();
-    }
+    }));
   }, 10_000);
 
   it("returns a valid cold SessionStart within the temporary 300ms process limit and leaves its detached daemon running", async () => {
     const setup = await fixture();
-    try {
+    await setup.run(async () => {
       const hook = await setup.register("fixture-cold-start", "cold-start");
       expectHookProcessTime(hook.elapsed, "configured cold SessionStart");
       await expect.poll(async () => {
@@ -260,12 +326,12 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
       }, { timeout: 5_000, interval: 25 }).toBeTypeOf("number");
       const daemon = await setup.daemonInfo();
       expect(isRunning(daemon.pid)).toBe(true);
-    } finally { await setup.close(); }
+    });
   }, 10_000);
 
   it.each(["absent", "stale"] as const)("shares one daemon from an initially %s socket and survives the first shim exiting", async (initial) => {
     const setup = await fixture();
-    await withCleanup(async () => {
+    await setup.run(async () => {
       if (initial === "stale") await staleSocket(join(setup.home, "agentd.sock"));
       const [first, second] = await Promise.all([setup.shim("fixture-author"), setup.shim("fixture-reviewer")]);
       // Both calls fail to connect and may race to spawn the detached singleton.
@@ -314,6 +380,6 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
       expect(await whoami(second.client)).toEqual(reviewer);
       const status = ToolReply.parse(await second.client.callTool({ name: "status", arguments: {} }));
       expect(status.isError).not.toBe(true);
-    }, () => setup.close());
+    });
   }, 20_000);
 });

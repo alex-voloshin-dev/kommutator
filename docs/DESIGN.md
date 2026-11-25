@@ -1132,6 +1132,16 @@ Local IPC distinguishes hub unavailability (-32030) from daemon shutdown (-32031
 Diagnostics use fixed messages, never arbitrary transport text or a promise that an
 unpersisted command is queued. Callers must not retry already dispatched mutations blindly.
 
+Plugin daemon preflight diagnostics retain an optional `probe_failure` when their existing
+CLI status request throws: fixed method `daemon.status`, local IPC phase (`ipc-connect`,
+`ipc-hello`, `ipc-request`, or `unknown`), bounded reason (`timeout`, `transport-error`,
+`rpc-rejected`, or `unexpected`) and an allowlisted OS/RPC code or null. Arbitrary remote
+messages, paths, parameters and credentials are never included. The existing unavailable
+error keeps its static prefix and appends only this sanitized record; synthetic exported
+E2E records that original result before cleanup without issuing an additional status probe.
+Compatibility/stopped classification, lazy startup, readiness waiting and deadlines are
+unchanged. Probe failure is not evidence about another operation's admission or commit.
+
 Hook observations are private, bounded diagnostic evidence, not identity authority or delivery
 receipts. Observation writes are serialized in the background; conversation authority and
 delivery never await them. Only the final best-effort flush waits, under the existing
@@ -2048,3 +2058,23 @@ strict and validation precedes client resolution and IPC. Guidance never guesses
 identity, topics, IDs or replay authority; it does not join topics, resend mutations or
 relax access checks. Host-side loss of deferred schemas after compaction requires the
 host's tool-discovery mechanism; it is not repaired by accepting invalid calls.
+
+
+### Local rebind of an established Claude owner (2026-11-25)
+
+A fresh Claude shim IPC connection for an explicitly identified, positive-generation,
+already registered live owner may complete hello without awaiting unrelated outbox work.
+The shortcut requires matching observed PID/process birth, generation, conversation, cwd,
+optional explicit project/endpoint, and existing hub session UUID; no pending session.upsert
+or session.gone for that owner is allowed. Capture immutable owner/context facts before
+asynchronous checks, reconcile that owner's durable end marker, probe process birth again,
+and revalidate the exact owner/context and open peer before completing hello. Retirement,
+generation/process/context replacement, shutdown or disconnect rejects this binding.
+
+This performs no registration, reincarnation, queue flush, resubmission or receipt change.
+A concurrent new lifecycle write falls back to normal synchronization; fresh registration,
+manual generation-zero, hook and Codex paths keep their existing behavior. Only a completed
+hello enables tracked operations; local operation.status remains owner-scoped evidence and
+unknown never authorizes resend. Hub-dependent calls and mutation settlement may still wait
+for connectivity; this does not make all operations independent of the hub. No schema,
+runtime contract or timer changes.

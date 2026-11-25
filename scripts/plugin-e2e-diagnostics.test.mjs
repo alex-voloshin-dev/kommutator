@@ -274,3 +274,15 @@ test('an unsettled or rejected process probe cannot delay the owner fixture kill
     assert.equal(alive(), false, 'Diagnostic failure must not leave a live timed-out hook');
   });
 });
+
+test('keeps only exact bounded original daemon probe failure fields', async () => {
+  const { daemonProbeFailureDiagnostic } = await import('./lib/plugin-e2e-diagnostics.mjs');
+  const prefix = 'Shared daemon unavailable; inspect the private local configuration and daemon log. Probe failure: ';
+  const row = { method: 'daemon.status', phase: 'ipc-hello', reason: 'timeout', code: null };
+  assert.deepEqual(daemonProbeFailureDiagnostic(prefix + JSON.stringify(row) + '.'), row);
+  for (const value of [undefined, 'private tool response', prefix + 'x'.repeat(513), prefix + '{}.',
+    prefix + JSON.stringify({ ...row, token: 'private' }) + '.',
+    prefix + JSON.stringify({ ...row, phase: '/private/path' }) + '.',
+    prefix + JSON.stringify({ ...row, code: 12345 }) + '.',
+    prefix + JSON.stringify({ ...row, reason: 'secret' }) + '.']) assert.equal(daemonProbeFailureDiagnostic(value), undefined);
+});
