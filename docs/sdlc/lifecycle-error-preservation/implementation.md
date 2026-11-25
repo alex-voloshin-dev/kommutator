@@ -53,3 +53,16 @@ controlled reproduction of masking, not a reproduction of the historical registr
 
 No production service, database, kernel setting or queue was changed. Full workspace and
 release qualification are not claimed here. Historical issues9/19/22/25 remain open.
+
+## Review hardening
+
+The reviewer identified two diagnostic-path weaknesses: a throwing output sink could mask
+an original failure or prevent timeout termination, and the new regression's listener startup
+did not handle its error event. Reporting is now explicitly best-effort. The same real
+body-plus-shutdown regression runs with both a normal and throwing diagnostic sink; both
+must preserve the original failure and complete cleanup. Listener startup uses error-aware
+listen inside the fixture's cleanup wrapper, so startup rejection also closes the fixture.
+Ordered build/typecheck and the expanded focused suite are recorded below after execution.
+
+Review-hardening validation passed: ordered workspace build/typecheck, then focused10/10.
+Logs: `/tmp/kom-lifecycle-review-{build,types,focused}.log`. No new failed attempts.

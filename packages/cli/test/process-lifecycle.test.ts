@@ -73,9 +73,13 @@ async function fixture() {
     if (phases.length < 32) phases.push({ phase: label, elapsed_ms: performance.now() - started });
   };
   // Parent-owned, bounded evidence survives a killed hook and precedes destructive cleanup.
-  const report = () => console.error("[lifecycle-failure]", JSON.stringify({ phases,
-    hub_listening: hub.listening, known_daemon: daemon !== undefined, client_count: clients.length,
-    inbox_count: inboxes.length }));
+  const report = () => {
+    try {
+      console.error("[lifecycle-failure]", JSON.stringify({ phases,
+        hub_listening: hub.listening, known_daemon: daemon !== undefined, client_count: clients.length,
+        inbox_count: inboxes.length }));
+    } catch { /* Diagnostic output must not replace the failure or prevent timeout cleanup. */ }
+  };
   const environment = {
     PATH: process.env.PATH ?? "",
     ...(process.env.KOM_LIFECYCLE_TRACE === "1" ? { KOM_LIFECYCLE_TRACE: "1", NODE_OPTIONS: `--import=${phasePreload}` } : {}),
@@ -236,7 +240,7 @@ async function whoami(client: Client, failureContext?: () => string) {
 }
 
 describe("built CLI process lifecycle with fake vendor sessions (not live vendor E2E)", () => {
-  it("retains body and shutdown failures with evidence captured before cleanup", async () => {
+  it.each([false, true])("retains body and shutdown failures before cleanup (throwing diagnostic sink: %s)", async (throwingSink) => {
     const setup = await fixture();
     const sockets = new Set<import("node:net").Socket>();
     const listener = createServer(socket => {
@@ -244,11 +248,18 @@ describe("built CLI process lifecycle with fake vendor sessions (not live vendor
       socket.once("close", () => sockets.delete(socket));
       socket.on("data", () => {}); // Keep management hello pending until its existing deadline.
     });
-    const reports = vi.spyOn(console, "error").mockImplementation(() => {});
+    const reports = vi.spyOn(console, "error").mockImplementation(() => {
+      if (throwingSink) throw new Error("synthetic diagnostic sink failure");
+    });
     const primary = new Error("synthetic cold registration failure");
     try {
-      await new Promise<void>(resolve => listener.listen(join(setup.home, "agentd.sock"), resolve));
-      const failure: unknown = await setup.run(async () => { throw primary; }).catch(error => error);
+      const failure: unknown = await setup.run(async () => {
+        await new Promise<void>((resolve, reject) => {
+          listener.once("error", reject);
+          listener.listen(join(setup.home, "agentd.sock"), () => { listener.off("error", reject); resolve(); });
+        });
+        throw primary;
+      }).catch(error => error);
       expect(failure).toBeInstanceOf(AggregateError);
       if (!(failure instanceof AggregateError)) throw new Error("missing combined failure");
       expect(failure.errors[0]).toBe(primary);
