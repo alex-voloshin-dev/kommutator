@@ -2182,3 +2182,63 @@ it("rolls back a partially inserted recovery page before wake, then safely repla
     .toEqual([{ state: "unread", n: 2 }]);
   expect(transport.calls.filter(call => call.method === "receipt.mark")).toEqual([]);
 });
+
+it("preserves concurrent registration, DND and delivery state when superseding after a predecessor probe", async () => {
+  let pause = false;
+  let entered: () => void = () => {};
+  let release: (value: string) => void = () => {};
+  const probing = new Promise<void>(resolve => { entered = resolve; });
+  const birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
+  const { core, transport } = await fixture({ online: false, birth: async pid => {
+    if (pause && pid === 66) { pause = false; entered(); return new Promise<string>(resolve => { release = resolve; }); }
+    return birth;
+  } });
+  const active = await hook(core, "superseded-current", { ppid: 55, owner_generation: 1 });
+  const previous = await hook(core, "predecessor-probe", { ppid: 66, owner_generation: 1 });
+  expect(core.registry.get(active.peer.key!)?.session.id).toBeUndefined();
+  pause = true;
+  const replacement = hook(core, "predecessor-probe", { ppid: 55, owner_generation: 2 });
+  await probing;
+  await transport.reconnect();
+  const registered = core.registry.get(active.peer.key!);
+  if (!registered?.session.id) throw new Error("missing registered owner");
+  await core.request(await cli(core), "session.dnd", { session: registered.session.id, wake: "off" });
+  const sent = await send(core, previous.peer, registered.session.handle!);
+  if (sent.status !== "sent") throw new Error("expected online send");
+  await core.request(active.peer, "receipt.mark", { ids: [sent.id], state: "read" });
+  const current = core.registry.get(registered.key);
+  expect(current?.acked).toBeGreaterThan(0);
+  expect(current?.session.wake).toBe("off");
+  release(birth);
+  await replacement;
+  const retired = core.registry.get(registered.key);
+  expect(retired?.session).toMatchObject({ id: registered.session.id, wake: "off", state: "gone" });
+  expect(retired?.acked).toBe(current?.acked);
+  expect(retired?.goneReason).toBe("superseded");
+  expect(transport.calls.filter(call => call.method === "session.gone")).toContainEqual({
+    method: "session.gone", params: expect.objectContaining({ session_id: registered.session.id }),
+  });
+});
+
+it("rejects a predecessor retired during its probe without superseding the current conversation", async () => {
+  let pause = false;
+  let entered: () => void = () => {};
+  let release: () => void = () => {};
+  const probing = new Promise<void>(resolve => { entered = resolve; });
+  const birth = "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1";
+  const { core } = await fixture({ exists: () => false, birth: async pid => {
+    if (pause && pid === 66) { pause = false; entered(); return new Promise<undefined>(resolve => { release = () => resolve(undefined); }); }
+    return birth;
+  } });
+  const active = await hook(core, "still-current", { ppid: 55, owner_generation: 1 });
+  const prior = await hook(core, "retired-predecessor", { ppid: 66, owner_generation: 1 });
+  pause = true;
+  const registering = hook(core, "retired-predecessor", { ppid: 55, owner_generation: 2 });
+  const rejected = expect(registering).rejects.toThrow("owner changed during predecessor probe");
+  await probing;
+  await core.request(prior.peer, "session.gone", {});
+  release();
+  await rejected;
+  expect(core.registry.get(active.peer.key!)?.session.state).toBe("active");
+  expect(core.registry.get(prior.peer.key!)?.session.state).toBe("gone");
+});

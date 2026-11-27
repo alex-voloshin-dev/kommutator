@@ -313,14 +313,18 @@ export class DaemonCore {
         compareProcessBirth(record.processStartedAt, birth) === "unverified")) {
         throw new RpcError(-32020, "Legacy Claude owner requires a new OS process after upgrading all hooks and MCP; use /exit, then claude --resume");
       }
-      const owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
-      const latestGeneration = Math.max(0, ...owned.map(record => record.ownerGeneration ?? 0));
+      const validateGeneration = (records: LocalRecord[]): number => {
+        const latest = Math.max(0, ...records.map(record => record.ownerGeneration ?? 0));
+        if (generation < latest || (generation === latest && records.some(record =>
+          (record.ownerGeneration ?? 0) === generation && ((generation > 0 && record.session.vendor_session_id !== vendorId) ||
+            (record.session.vendor_session_id === vendorId && record.session.state === "gone" && (generation === 0 || record.goneReason !== "liveness")))))) {
+          throw new RpcError(-32020, "stale or conflicting Claude conversation generation; use /exit, then claude --resume with trusted hooks");
+        }
+        return latest;
+      };
       const generation = hello.owner_generation ?? 0;
-      if (generation < latestGeneration || (generation === latestGeneration && owned.some(record =>
-        (record.ownerGeneration ?? 0) === generation && ((generation > 0 && record.session.vendor_session_id !== vendorId) ||
-          (record.session.vendor_session_id === vendorId && record.session.state === "gone" && (generation === 0 || record.goneReason !== "liveness")))))) {
-        throw new RpcError(-32020, "stale or conflicting Claude conversation generation; use /exit, then claude --resume with trusted hooks");
-      }
+      let owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
+      let latestGeneration = validateGeneration(owned);
       const candidates = this.registry.all().filter(record => record.session.vendor === vendor && record.session.vendor_session_id === vendorId);
       const sameOwner = candidates.filter(record => record.pid === pid && record.processStartedAt === birth);
       if (sameOwner.length > 1) throw new RpcError(-32020, "ambiguous Claude process ownership");
@@ -337,6 +341,21 @@ export class DaemonCore {
         }
       }
       this.requireOpen();
+      // The predecessor probe can yield to registration flushes, receipts and lifecycle changes.
+      // Revalidate fences and mutate fresh records, never the pre-probe snapshots.
+      owned = this.registry.all().filter(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
+      latestGeneration = validateGeneration(owned);
+      if (existing) {
+        const current = this.registry.get(existing.key);
+        if (!current || current.pid !== existing.pid || current.processStartedAt !== existing.processStartedAt ||
+          current.ownerGeneration !== existing.ownerGeneration || current.lifecycleEpoch !== existing.lifecycleEpoch ||
+          current.session.vendor_session_id !== existing.session.vendor_session_id || current.endpoint !== existing.endpoint ||
+          current.session.cwd !== hello.cwd || current.session.project_key !== project ||
+          (current.session.state === "gone") !== (existing.session.state === "gone") || current.goneReason !== existing.goneReason) {
+          throw new RpcError(-32020, "Claude owner changed during predecessor probe; retry with current owner context");
+        }
+        existing = current;
+      }
       if (generation > latestGeneration) for (const prior of owned) {
         if (prior.session.state === "gone") continue;
         this.wake.cancel(prior.key);

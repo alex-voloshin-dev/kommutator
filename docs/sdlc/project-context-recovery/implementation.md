@@ -86,3 +86,30 @@ remain. No installed runtime, live configuration, memberships or board histories
 No history merge, automatic legacy-key inference, MCP selector, pruning or receipt behavior
 was introduced. Existing Codex diagnostic wording from the prior commit was preserved.
 Day-long use, physical subnet, reboot and actual vendor activation gates remain open.
+
+## Independent review correction: predecessor-probe concurrency
+
+The external code review found that deferred supersession used owner snapshots captured
+before an awaited predecessor birth probe. Concurrent registration/receipt/DND writes could
+be overwritten by `markGone`, including loss of the just-assigned hub UUID. The correction
+reloads current owned records and revalidates generation admission after the final await.
+Any reused predecessor is reloaded and its process/context/generation/lifecycle fence is
+checked before mutation. Supersession then operates on current records without another await.
+
+Added a deterministic paused-probe regression using actual isolated hub reconnect,
+registration, CLI DND, send and explicit read receipt. Against the previous core it loses
+the UUID and reverts wake to `on` (`/tmp/kom-nov27-project-review-regression-baseline2.log`).
+The first fixture attempt expected delivery alone to advance the read cursor and failed
+before reaching the defect; it was corrected to use an explicit read receipt, preserving
+receipt semantics (`/tmp/kom-nov27-project-review-regression-baseline.log`). A second control
+retires the candidate during its probe and verifies rejection without superseding the active
+conversation. Context rejection still precedes all new lifecycle publication.
+
+The first correction build passed; typecheck caught a test-only missing `status === "sent"`
+narrowing before accessing a send ID. That failure is retained in
+`/tmp/kom-nov27-project-review-typecheck.log`; the initial focused run passed 136 tests.
+After adding the explicit discriminant check, ordered workspace build and typecheck passed
+(`/tmp/kom-nov27-project-review-build2.log`, `/tmp/kom-nov27-project-review-typecheck2.log`).
+The final focused run passed **136 tests** (131 daemon-core, 5 operation-boundary),
+recorded in `/tmp/kom-nov27-project-review-focused2.log`.
+Independent re-review and complete exact-head qualification remain with the parent.
