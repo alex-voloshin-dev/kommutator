@@ -829,6 +829,47 @@ describe("wake and receipt boundaries", () => {
 
 
 describe("Codex root lifecycle", () => {
+  it.each(["missing", "ended"])("rejects a %s Codex root hook without registering or choosing another identity", async state => {
+    const { core, transport } = await fixture();
+    const hello = { protocol_version: PROTOCOL_VERSION, runtime_contract: 4, vendor: "codex", vendor_session_id: "root", pid: 10, ppid: 999, cwd: "/same/repo" };
+    const other = core.peer();
+    await core.request(other, "ipc.hello", { ...hello, client: "shim", vendor_session_id: "other" });
+    await hook(core, "root", { cwd: hello.cwd, ppid: hello.ppid });
+    if (state === "ended") {
+      const root = core.peer();
+      await core.request(root, "ipc.hello", { ...hello, client: "shim" });
+      await core.request(root, "session.gone");
+    }
+    const before = core.registry.all();
+    const calls = transport.calls.length;
+    const pending = core.peer();
+    const expected = { code: -32020, message: expect.stringMatching(/Codex root.*reconnect Kommutator MCP for the current root.*whoami/) };
+    await expect(core.request(pending, "ipc.hello", { ...hello, client: "hook", pid: 40 })).rejects.toMatchObject(expected);
+    await expect(core.request(pending, "whoami")).rejects.toMatchObject(expected);
+    expect(pending.key).toBeUndefined();
+    expect(core.registry.all()).toEqual(before);
+    expect(transport.calls.slice(calls)).toEqual([]);
+    expect(Identity.parse(await core.request(other, "whoami")).session.vendor_session_id).toBe("other");
+  });
+
+  it("rejects ambiguous exact Codex registrations without registration advice or a fallback identity", async () => {
+    const { core, transport } = await fixture();
+    const hello = { protocol_version: PROTOCOL_VERSION, runtime_contract: 4, vendor: "codex", vendor_session_id: "root", pid: 10, ppid: 999, cwd: "/same/repo" };
+    await core.request(core.peer(), "ipc.hello", { ...hello, client: "shim" });
+    const record = core.registry.get("codex:root");
+    if (!record) throw new Error("fixture root was not registered");
+    core.registry.save({ ...record, key: "duplicate-root", pid: 20 });
+    const before = core.registry.all();
+    const calls = transport.calls.length;
+    const pending = core.peer();
+    await expect(core.request(pending, "ipc.hello", { ...hello, client: "hook", pid: 40 })).rejects.toMatchObject({
+      code: -32020, message: "ambiguous Codex root registration; cannot choose a session",
+    });
+    expect(pending.key).toBeUndefined();
+    expect(core.registry.all()).toEqual(before);
+    expect(transport.calls.slice(calls)).toEqual([]);
+  });
+
   it("registers two same-cwd roots from shims and does not replace liveness or revive from hooks", async () => {
     const { core } = await fixture();
     const hello = (id: string, client: "shim" | "hook", pid: number) => ({ protocol_version: PROTOCOL_VERSION, runtime_contract: 4, vendor: "codex", vendor_session_id: id, client, pid, ppid: 999, cwd: "/same/repo" });

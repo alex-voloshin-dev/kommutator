@@ -8,6 +8,10 @@ export function resolveBinding(facts: BindingFacts, records: LocalRecord[], boun
   if (facts.vendor_session_id) {
     const exact = live.filter((r) => r.session.vendor_session_id === facts.vendor_session_id);
     if (exact.length === 1 && exact[0]) return exact[0];
+    if (facts.vendor === "codex") {
+      if (exact.length > 1) throw new RpcError(-32020, "ambiguous Codex root registration; cannot choose a session");
+      throw new RpcError(-32020, "Codex root is not registered or has ended; reconnect Kommutator MCP for the current root and call whoami");
+    }
     throw new RpcError(-32020, "vendor session is not registered yet; waiting for its hook");
   }
   const parent = facts.ppid ? live.filter((r) => r.pid === facts.ppid) : [];
