@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-25. Released baseline: [0.17.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.17.2).
+Updated 2026-11-27. Released baseline: [0.17.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.17.2).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -10,7 +10,23 @@ full release qualification and ordinary local updater completion are recorded in
 [RESULTS](../spikes/RESULTS.md). The previous chat MCP was compatible 0.12.2;
 clean-profile installed MCP probes verified 0.12.3.
 
-## Current investigation (2026-11-25 UTC)
+## Candidate 0.18.0 (not published)
+
+[PR39](https://github.com/alex-voloshin-dev/kommutator/pull/39) pins established
+Claude context across inferred Git changes, adds explicit private checkout
+selection for eligible new owners, and corrects Codex binding guidance.
+Independent code reviews and QA passed; exact-version packaging/CI/rollout
+remain pending. Conflicting explicit Claude project assertions now reject on
+first registration too. Both existing board histories remain separate and intact.
+See [release report](sdlc/project-context-recovery/release.md).
+
+The 24-hour sampled HTTP observer completed:8640 probes,8636 expected401 and
+four timeouts. One post-restart0.17.2 failure matched journal wait. This is not
+day-long message-delivery acceptance and does not establish a universal storage
+cause. A separate bounded one-hour observation began November27 during release
+preparation; its result remains pending.
+
+## Previous investigation (2026-11-25 UTC)
 
 Version 0.17.0 fixes reproduced synchronization-backoff reset behavior and adds bounded
 request-timeout and hook reason/phase evidence. Historical availability, registration and
@@ -26,7 +42,7 @@ matched the 0.17.0 hub in journal/folio waits, including overlap with our diagno
 and release-check workloads whose contribution was not measured. WSL 3.0.5 is already
 installed; upstream fsync-fix similarity does not establish local cause. Continue
 correlated host/guest evidence without replaying unknown mutations or relaxing
-durability. Collection is ongoing, not completed day-long acceptance. See the
+durability. This was the collection-time assessment; the completed November27 analysis above does not establish day-long delivery acceptance. See the
 [storage follow-up](sdlc/local-rebind/storage-followup.md).
 
 ## Current release qualification

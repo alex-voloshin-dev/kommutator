@@ -52,3 +52,8 @@ canonical version8, plus an Engineering handoff on the canonical board.
 These are divergent histories, not an empty target. Neither last-write-wins
 copy nor replacing either board is an acceptable preservation strategy.
 This is remote testimony; both histories remain unmodified by this work.
+
+Message `399ec51d-e6cd-4d9d-88e0-e6ad956dd099` (521), Nov27 18:38:23UTC,
+clarifies the Methodology Strategist's self-estimated outage as17:25–17:48UTC.
+Engineering's separate onset remains13:01UTC. These are different reports;
+this timing clarification does not establish a shared original trigger.
