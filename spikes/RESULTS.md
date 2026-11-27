@@ -1662,3 +1662,14 @@ Updated fixed snapshot through19:03:58UTC:276 probes,271 HTTP401/five timeouts;
 four failures after0.18.0 activation. The two additional failures at19:02:38 and
 19:03:58 again had matching hub birth and D/jbd2 both before and after. Collector
 remains bounded/active; this is not the final one-hour result or a causal finding.
+
+### Bounded Windows disk sampling,19:07:53–19:09:23UTC
+
+90 read-only Windows Get-Counter samples (valid status) observed host PhysicalDisk
+_Total average-write counter up to0.3411104325s, average-read up to0.6817988s and
+current disk queue up to255. Available memory2438–2606MiB. Seven overlapping WSL
+HTTP probes all returned401; thus this window does not correlate a failed probe
+with the burst. Aggregate disks are not proven WSL backing-device attribution,
+and sampled averages are not individual I/O distributions. No root cause or
+configuration fix inferred; no stress/kernel/durability changes. See
+[storage evidence](evidence/2026-11-27-windows-storage-sampling.json).

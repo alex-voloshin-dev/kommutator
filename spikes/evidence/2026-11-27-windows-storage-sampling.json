@@ -1,0 +1,156 @@
+{
+  "runtime": "hub0.18.0 on WSL; unchanged production settings",
+  "start": "2026-11-27T19:07:53.5092424Z",
+  "end": "2026-11-27T19:09:23.6049820Z",
+  "collector": "Windows Get-Counter,90 samples at1second,read-only,no stress",
+  "windows_samples": 90,
+  "invalid_counter_statuses": 0,
+  "metrics": {
+    "\\physicaldisk(_total)\\avg. disk sec/write": {
+      "min": 0,
+      "max": 0.3411104325,
+      "peak_samples": [
+        {
+          "at": "2026-11-27T19:09:22.5974711Z",
+          "value": 0.3411104325,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:09:21.5939244Z",
+          "value": 0.3089696347826087,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:09:15.5405241Z",
+          "value": 0.05428628571428572,
+          "status": 0
+        }
+      ]
+    },
+    "\\physicaldisk(_total)\\avg. disk sec/read": {
+      "min": 0,
+      "max": 0.6817988,
+      "peak_samples": [
+        {
+          "at": "2026-11-27T19:09:22.5974711Z",
+          "value": 0.6817988,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:09:23.6049820Z",
+          "value": 0.0536832,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:09:18.5787962Z",
+          "value": 0.024921733333333335,
+          "status": 0
+        }
+      ]
+    },
+    "\\physicaldisk(_total)\\current disk queue length": {
+      "min": 0,
+      "max": 255,
+      "peak_samples": [
+        {
+          "at": "2026-11-27T19:07:55.7603852Z",
+          "value": 255,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:08:34.1636088Z",
+          "value": 34,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:09:21.5939244Z",
+          "value": 19,
+          "status": 0
+        }
+      ]
+    },
+    "\\memory\\available mbytes": {
+      "min": 2438,
+      "max": 2606,
+      "peak_samples": [
+        {
+          "at": "2026-11-27T19:07:53.5092424Z",
+          "value": 2606,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:07:58.7872792Z",
+          "value": 2603,
+          "status": 0
+        },
+        {
+          "at": "2026-11-27T19:07:54.7560534Z",
+          "value": 2602,
+          "status": 0
+        }
+      ]
+    }
+  },
+  "overlapping_guest_probes": [
+    {
+      "at": "2026-11-27T19:07:58.460635+00:00",
+      "http": 401,
+      "elapsed_ms": 5.458,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:08:08.423517+00:00",
+      "http": 401,
+      "elapsed_ms": 5.807,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:08:18.423365+00:00",
+      "http": 401,
+      "elapsed_ms": 1.886,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:08:28.423451+00:00",
+      "http": 401,
+      "elapsed_ms": 1.494,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:08:38.423660+00:00",
+      "http": 401,
+      "elapsed_ms": 1.746,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:08:48.423896+00:00",
+      "http": 401,
+      "elapsed_ms": 1.599,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:08:58.451027+00:00",
+      "http": 401,
+      "elapsed_ms": 1.57,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:09:08.424127+00:00",
+      "http": 401,
+      "elapsed_ms": 1.926,
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T19:09:18.424298+00:00",
+      "http": 401,
+      "elapsed_ms": 33.179,
+      "same_process_birth": true
+    }
+  ],
+  "limits": [
+    "PhysicalDisk(_Total) aggregates host disks, not established WSL backing-device attribution",
+    "counters are sample averages/current queue, not individual I/O latency distributions",
+    "seven guest probes in window, not continuous observation; no failed guest probe in this window",
+    "no causal explanation of earlier timeouts established; resource burst evidence only"
+  ]
+}
