@@ -1,0 +1,165 @@
+{
+  "observed_through": "2026-11-27T18:58:58.448290+00:00",
+  "collector": "bounded1h still running, not final acceptance",
+  "sample_count": 246,
+  "http401": 243,
+  "failures": [
+    {
+      "at": "2026-11-27T18:56:06.193522+00:00",
+      "container": {
+        "started": "2026-11-25T17:23:21.563610249Z",
+        "image": "kommutator-hub:release-0.17.2",
+        "node_pid": 3837635,
+        "node_birth": "32898273"
+      },
+      "container_refreshed_at": "2026-11-27T18:56:06.193394+00:00",
+      "cache_age_ms": 0,
+      "before": {
+        "pid": 3837635,
+        "birth_ticks": "32898273",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 1213589841500,
+        "runqueue_ns": 5422348900
+      },
+      "io": {
+        "some": {
+          "avg10": 4.66,
+          "avg60": 2.23
+        },
+        "full": {
+          "avg10": 3.32,
+          "avg60": 1.68
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 0.62,
+          "avg60": 0.32
+        },
+        "full": {
+          "avg10": 0.47,
+          "avg60": 0.24
+        }
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 805.064,
+      "after": {
+        "pid": 3837635,
+        "birth_ticks": "32898273",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 1213589841500,
+        "runqueue_ns": 5422348900
+      },
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T18:58:18.407723+00:00",
+      "container": {
+        "started": "2026-11-27T18:56:48.209911355Z",
+        "image": "kommutator-hub:release-0.18.0",
+        "node_pid": 1766325,
+        "node_birth": "50738945"
+      },
+      "container_refreshed_at": "2026-11-27T18:57:56.203448+00:00",
+      "cache_age_ms": 22238,
+      "before": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 1542852000,
+        "runqueue_ns": 34912200
+      },
+      "io": {
+        "some": {
+          "avg10": 48.08,
+          "avg60": 16.12
+        },
+        "full": {
+          "avg10": 9.18,
+          "avg60": 6.72
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 27.9,
+          "avg60": 7.11
+        },
+        "full": {
+          "avg10": 4.19,
+          "avg60": 1.69
+        }
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 803.23,
+      "after": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 1545074500,
+        "runqueue_ns": 34954500
+      },
+      "same_process_birth": true
+    },
+    {
+      "at": "2026-11-27T18:58:28.407992+00:00",
+      "container": {
+        "started": "2026-11-27T18:56:48.209911355Z",
+        "image": "kommutator-hub:release-0.18.0",
+        "node_pid": 1766325,
+        "node_birth": "50738945"
+      },
+      "container_refreshed_at": "2026-11-27T18:57:56.203448+00:00",
+      "cache_age_ms": 32238,
+      "before": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 1548217100,
+        "runqueue_ns": 116668100
+      },
+      "io": {
+        "some": {
+          "avg10": 76.73,
+          "avg60": 27.71
+        },
+        "full": {
+          "avg10": 45.82,
+          "avg60": 15.01
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 39.09,
+          "avg60": 12.55
+        },
+        "full": {
+          "avg10": 24.55,
+          "avg60": 6.53
+        }
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 802.937,
+      "after": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 1548240500,
+        "runqueue_ns": 116668100
+      },
+      "same_process_birth": true
+    }
+  ],
+  "activation": "2026-11-27T18:56:48.209911355Z",
+  "limits": [
+    "pre-activation timeout overlaps updater preparation; contribution unmeasured",
+    "post-activation failures overlap plugin update and MCP reload; contribution unmeasured",
+    "birth-matched disk waits do not establish universal storage root cause",
+    "800ms unauthenticated loopback probe, not message delivery test"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "version": "0.18.0",
-  "state": "qualification-pending",
+  "state": "published-qualified-local-rollout-pending",
   "source": "c3ceb3ebbe7b7caa4f804a7de24077f4b287fef6",
   "reviews": "correctness/security/external approve round2; independent QA completed",
   "workspace": {
@@ -39,7 +39,7 @@
     "disposition": "verified SHA-256 of path-key license, not credentials",
     "hash": "48da2f39e100d4085767e94966b43f4fa95ff6a0698fba57ed460914e35f94a0"
   },
-  "public_install_and_rollout": "pending",
+  "public_install_and_rollout": "public assets and real clean CLI installs verified; local rollout pending",
   "limits": [
     "historical availability/registration/IPC causes unresolved",
     "no live remote context migration",
@@ -61,5 +61,81 @@
       46051387740
     ],
     "all": "success first attempt"
+  },
+  "release_commit": "0748dd438873f08c5b624b37e8a996ffb40f5a07",
+  "final_ci": {
+    "branch": 46051701547,
+    "pr": 46051707574,
+    "tag": 46051993703,
+    "secret_scans": [
+      46051701745,
+      46051707693,
+      46051993661
+    ],
+    "all": "success first attempt"
+  },
+  "separate_exported_e2e": "passed",
+  "publication": {
+    "version": "0.18.0",
+    "commit": "0748dd438873f08c5b624b37e8a996ffb40f5a07",
+    "branch_ci": 46051701547,
+    "pr_ci": 46051707574,
+    "tag_ci": 46051993703,
+    "secret_scans": [
+      46051701745,
+      46051707693,
+      46051993661
+    ],
+    "ci_result": "all passed first attempt",
+    "public_assets": [
+      {
+        "asset": "kommutator-v0.18.0-claude-linux-x64.zip",
+        "sha256": "d2f008cf5dbd0e44bf3040a22913aa60454c2f9c8c02147057436e876be99f39",
+        "anonymous": true
+      },
+      {
+        "asset": "kommutator-v0.18.0-claude-linux-x64.zip.sha256",
+        "sha256": "97d1aea65dd09f0478a7cfe4678687aaad4037991304b60247208c3e92d1e0ab",
+        "anonymous": true
+      },
+      {
+        "asset": "kommutator-v0.18.0-linux-x64.tar.gz",
+        "sha256": "d080db91df045164e81a6ddf6d0dae83eda4b9a34c695e31a6517ff05d3134f6",
+        "anonymous": true
+      },
+      {
+        "asset": "kommutator-v0.18.0-linux-x64.tar.gz.sha256",
+        "sha256": "f60ec35fb7d3ed37131651e4a214760087196cdc664f5b429191b28e1c60004e",
+        "anonymous": true
+      }
+    ],
+    "installed": [
+      {
+        "vendor": "codex",
+        "version": "0.18.0",
+        "configured": false,
+        "private_setup": 200,
+        "foreign_origin": 403,
+        "operation_status_tool": true,
+        "synthetic_client": true
+      },
+      {
+        "vendor": "claude-code",
+        "version": "0.18.0",
+        "configured": false,
+        "private_setup": 200,
+        "foreign_origin": 403,
+        "operation_status_tool": true,
+        "synthetic_client": true
+      }
+    ],
+    "local_integrated_gate": "failed914/916; two IPC request timeouts; no cause established",
+    "separate_gates": {
+      "scripts": 162,
+      "integrity": "passed",
+      "clean_path": "passed",
+      "exported_synthetic_e2e": "passed"
+    },
+    "deployment": "pending; no earlier2026-11-27T18:55Z"
   }
 }

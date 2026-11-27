@@ -1,0 +1,69 @@
+{
+  "version": "0.18.0",
+  "release_commit": "0748dd438873f08c5b624b37e8a996ffb40f5a07",
+  "merge_commit": "8bb814b0d4dc9e3ed7c0dbb02668ef6cfbf7a849",
+  "notice": "6a83becd-1c7b-4e84-8455-7babf92a5db4",
+  "earliest_interruption": "2026-11-27T18:55:00Z",
+  "hub_started": "2026-11-27T18:56:48.209911355Z",
+  "daemon_started": "2026-11-27T18:56:54Z",
+  "daemon_pid": 1767622,
+  "actual_loaded_mcp": "0.18.0",
+  "runtime_contract": 4,
+  "hub_connected": true,
+  "caller": "active",
+  "role": "kommutator-developer",
+  "feedback_topics": [
+    "kommutator-feedback",
+    "agentic-forge-feedback"
+  ],
+  "health": {
+    "state": "degraded",
+    "retainedBlocked": 1,
+    "warning": "Preexisting blocked work remains unresolved; deployment acceptance does not authorize resend or deletion."
+  },
+  "blocked_row_644": "retained unchanged, no delete or resend",
+  "checkpoint": {
+    "status": "idle",
+    "appliedVersion": "0.18.0"
+  },
+  "timer": "active",
+  "databases": [
+    {
+      "database": "daemon",
+      "quick_check": "ok",
+      "schema": 5,
+      "mode": "0o600"
+    },
+    {
+      "database": "hub",
+      "quick_check": "ok",
+      "schema": 8,
+      "mode": "0o600",
+      "verified_indexes": [
+        "deliveries_unread_session_seq",
+        "message_targets_message_id"
+      ]
+    },
+    {
+      "database": "daemon-backup",
+      "quick_check": "ok",
+      "schema": 5,
+      "mode": "0o600"
+    },
+    {
+      "database": "hub-backup",
+      "quick_check": "ok",
+      "schema": 8,
+      "mode": "0o600"
+    }
+  ],
+  "plugin_files": {
+    "codex": "0.18.0",
+    "claude": "0.18.0"
+  },
+  "hooks": "all five0.18.0 trusted/enabled by native hooks/list; no manual trust writes, new-content execution not certified",
+  "remote_clients": "not upgraded or certified",
+  "announcement": "8ba3d287-68cd-40d2-9712-f40f1faae759",
+  "availability_followup": "904c90c1-bf44-4526-8a3a-ae4deb1dfc42",
+  "availability": "three observed response timeouts before/after activation; see separate evidence; not fully stable rollout"
+}

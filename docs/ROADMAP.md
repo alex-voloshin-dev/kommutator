@@ -1,6 +1,6 @@
 # Current roadmap
 
-Updated 2026-11-27. Released baseline: [0.17.2](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.17.2).
+Updated 2026-11-27. Released baseline: [0.18.0](https://github.com/alex-voloshin-dev/kommutator/releases/tag/v0.18.0).
 This roadmap separates implemented behavior, remaining acceptance and deferred product work.
 Historical task order remains in [MVP_PLAN](MVP_PLAN.md); current recovery and scope decisions
 are in [DESIGN §17–19](DESIGN.md). Observed execution is recorded in [spikes/RESULTS](../spikes/RESULTS.md).
@@ -10,13 +10,14 @@ full release qualification and ordinary local updater completion are recorded in
 [RESULTS](../spikes/RESULTS.md). The previous chat MCP was compatible 0.12.2;
 clean-profile installed MCP probes verified 0.12.3.
 
-## Candidate 0.18.0 (not published)
+## Released 0.18.0
 
 [PR39](https://github.com/alex-voloshin-dev/kommutator/pull/39) pins established
 Claude context across inferred Git changes, adds explicit private checkout
 selection for eligible new owners, and corrects Codex binding guidance.
-Independent code reviews and QA passed; exact-version packaging/CI/rollout
-remain pending. Conflicting explicit Claude project assertions now reject on
+Independent reviews/QA, exact-version916 tests,162 scripts and complete branch/PR/tag
+hosted release gates passed; public installs and local rollout verified. Local
+integrated gate failed two IPC-timeout cases; those causes remain unknown. Conflicting explicit Claude project assertions now reject on
 first registration too. Both existing board histories remain separate and intact.
 See [release report](sdlc/project-context-recovery/release.md).
 
@@ -24,7 +25,11 @@ The 24-hour sampled HTTP observer completed:8640 probes,8636 expected401 and
 four timeouts. One post-restart0.17.2 failure matched journal wait. This is not
 day-long message-delivery acceptance and does not establish a universal storage
 cause. A separate bounded one-hour observation began November27 during release
-preparation; its result remains pending.
+preparation; ongoing snapshot captured three timeouts, two after0.18.0 activation,
+with journal/folio waits. See [rollout availability](../spikes/evidence/2026-11-27-project-context-availability.json).
+Local hub, shared daemon and loaded Codex MCP0.18.0 are connected/caller active;
+current+backup databases5/8 pass quick_check; checkpoint idle and timer active.
+Old blocked644 remains and aggregate degraded; no blanket stability claim.
 
 ## Previous investigation (2026-11-25 UTC)
 
@@ -45,7 +50,7 @@ correlated host/guest evidence without replaying unknown mutations or relaxing
 durability. This was the collection-time assessment; the completed November27 analysis above does not establish day-long delivery acceptance. See the
 [storage follow-up](sdlc/local-rebind/storage-followup.md).
 
-## Current release qualification
+## Previous 0.17.2 qualification
 
 Published 0.17.2: independent correctness/security/external reviews and QA;
 887 workspace and 162 script tests in the final full local gate and exact-head

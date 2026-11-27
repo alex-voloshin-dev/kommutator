@@ -1,7 +1,7 @@
 ---
 type: release
 feature: project-context-recovery
-status: draft
+status: final
 version: 0.18.0
 changelog:
   - "Added explicit private checkout project selection for eligible new registrations."
@@ -11,9 +11,10 @@ breaking:
   - "Claude caller and daemon project assertions must match on first and repeated registration; previously ignored conflicting KOM_PROJECT values now reject."
 ---
 
-# Proposed 0.18.0
+# Kommutator 0.18.0
 
-NOT published, tagged or deployed. Code review and QA completed; exact-version release qualification remains in progress.
+Published immutable tag v0.18.0 at0748dd438873f08c5b624b37e8a996ffb40f5a07.
+Public assets, clean installs and local rollout verified; availability limitations below remain.
 
 The prefix-only release helper suggested0.17.3 because implementation commits
 used fix prefixes. Maintainer selects0.18.0 based on actual behavior: a new
@@ -69,7 +70,12 @@ workspace and162 script tests plus audit/integrity/clean-PATH/exported E2E.
 Maintainer qualification accepts the bounded repairs based on independent reviews,
 QA, ordered exact-version tests and two complete hosted gates, retaining local
 failures as unresolved rather than declaring the local full gate green.
-Final documentation-head/tag checks, public installs and rollout remain pending.
+Final head0748dd4 branch46051701547, PR46051707574 and tag46051993703 full
+release gates passed first attempt; secret scans46051701745/46051707693/46051993661
+passed. Separate local exported E2E completed successfully. Anonymous public
+archives matched pinned hashes; real clean vendor CLI installs started MCP0.18.0,
+private setup200 and foreign Origin403. These are synthetic MCP probes, not real
+model dialogue. Local rollout subsequently completed as below.
 
 Source-history scanning initially flagged synthetic `handoff/marketing` board
 entry keys. A precise path AND literal-value exception retains the detector;
@@ -84,3 +90,28 @@ not credentials. This is a reviewed false positive, not a raw successful scan.
 Real model dialogue across all clients, native Work/idle wake, day-long message
 delivery, physical subnet denial and unattended Windows reboot remain open.
 Sampled HTTP401 response observation is not authenticated delivery acceptance.
+
+## Local rollout
+
+PR39 merged as8bb814b0d4dc9e3ed7c0dbb02668ef6cfbf7a849 after public assets and
+installation verification. Announced earliest interruption18:55UTC; actual hub
+start18:56:48.209911355UTC and daemon18:56:54UTC. Ordinary pinned updater completed
+without reconciliation. Runtime hub/daemon and loaded Codex MCP0.18.0, contract4,
+caller active/connected; role and both feedback subscriptions retained.
+Current databases and VACUUM INTO backups quick_check OK, schemas5/8 and hub indexes
+verified. Timer restored, checkpoint idle/appliedVersion0.18.0. Old blocked644
+unchanged; aggregate degraded. No current-seat selection or board migration applied.
+
+Local Claude/Codex plugin files upgraded; native hooks/list reports five trusted
+enabled0.18.0 hooks without manual trust changes. New-content execution and live
+Claude/remote MCP upgrade are not certified. Current root identity was observed
+after standard MCP reload, not copied from a prior session.
+
+Bounded observation also captured one pre-activation timeout on0.17.2 and two
+after activation on0.18.0, with birth-matched hub journal/folio waits. Services
+subsequently responded, but this is not a fully stable rollout or an established
+storage root cause. Updater preparation/plugin reload overlap some windows; their
+contribution is unmeasured. See issue22comment7226082541 and
+[availability evidence](../../../spikes/evidence/2026-11-27-project-context-availability.json).
+Announcement8ba3d287-68cd-40d2-9712-f40f1faae759 and availability follow-up
+904c90c1-bf44-4526-8a3a-ae4deb1dfc42 were confirmed sent, not proof of reader action.

@@ -1642,3 +1642,18 @@ gates46051379328/46051387732 and secret scans passed first attempt.
 Publication/rollout pending; see [qualification evidence](evidence/2026-11-27-project-context-qualification.json)
 and [release report](../docs/sdlc/project-context-recovery/release.md). No claim
 of all historical availability/registration causes fixed or merged board histories.
+
+### 0.18.0 publication and local rollout
+
+Final0748dd4 branch46051701547/PR46051707574/tag46051993703 full gates and
+secret scans passed first attempt. Public hashes/clean Claude+Codex installs
+verified. PR39 merged; pinned updater activated hub18:56:48 and daemon18:56:54UTC,
+actual loaded MCP0.18.0 verified. Databases/backups5/8 quick_check OK, contract4,
+connected caller active, timer restored/checkpoint idle; old blocked644 retained.
+No manual reconciliation or trust writes.
+
+Ongoing bounded observation captured three timeouts: one0.17.2 before activation,
+two0.18.0 afterward, birth-matched journal/folio waits. Availability root cause
+remains open; planned restart does not explain all failures. See
+[rollout](evidence/2026-11-27-project-context-rollout.json) and
+[availability](evidence/2026-11-27-project-context-availability.json).
