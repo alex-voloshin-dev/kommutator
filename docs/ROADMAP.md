@@ -25,7 +25,7 @@ The 24-hour sampled HTTP observer completed:8640 probes,8636 expected401 and
 four timeouts. One post-restart0.17.2 failure matched journal wait. This is not
 day-long message-delivery acceptance and does not establish a universal storage
 cause. A separate bounded one-hour observation began November27 during release
-preparation; ongoing snapshot captured three timeouts, two after0.18.0 activation,
+preparation; fixed snapshot through19:03:58UTC captured five timeouts, four after0.18.0 activation,
 with journal/folio waits. See [rollout availability](../spikes/evidence/2026-11-27-project-context-availability.json).
 Local hub, shared daemon and loaded Codex MCP0.18.0 are connected/caller active;
 current+backup databases5/8 pass quick_check; checkpoint idle and timer active.

@@ -115,3 +115,9 @@ contribution is unmeasured. See issue22comment7226082541 and
 [availability evidence](../../../spikes/evidence/2026-11-27-project-context-availability.json).
 Announcement8ba3d287-68cd-40d2-9712-f40f1faae759 and availability follow-up
 904c90c1-bf44-4526-8a3a-ae4deb1dfc42 were confirmed sent, not proof of reader action.
+
+Later fixed snapshot through19:03:58UTC:276 probes,271 expected401, five timeouts
+(one before activation, four afterward). Additional19:02:38/19:03:58 failures
+again matched D/jbd2 before and after; low sampled avg10 pressure does not exclude
+short stalls. This supersedes the earlier three-timeout count for the longer
+window; the bounded collector remains active and no final one-hour claim is made.

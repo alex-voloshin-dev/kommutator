@@ -65,5 +65,5 @@
   "remote_clients": "not upgraded or certified",
   "announcement": "8ba3d287-68cd-40d2-9712-f40f1faae759",
   "availability_followup": "904c90c1-bf44-4526-8a3a-ae4deb1dfc42",
-  "availability": "three observed response timeouts before/after activation; see separate evidence; not fully stable rollout"
+  "availability": "five observed response timeouts through19:03:58UTC, four after activation; bounded collector ongoing; not fully stable rollout"
 }

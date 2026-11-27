@@ -1657,3 +1657,8 @@ two0.18.0 afterward, birth-matched journal/folio waits. Availability root cause
 remains open; planned restart does not explain all failures. See
 [rollout](evidence/2026-11-27-project-context-rollout.json) and
 [availability](evidence/2026-11-27-project-context-availability.json).
+
+Updated fixed snapshot through19:03:58UTC:276 probes,271 HTTP401/five timeouts;
+four failures after0.18.0 activation. The two additional failures at19:02:38 and
+19:03:58 again had matching hub birth and D/jbd2 both before and after. Collector
+remains bounded/active; this is not the final one-hour result or a causal finding.
