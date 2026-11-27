@@ -108,3 +108,41 @@ describe("private project contexts", () => {
     expect(await readFile(lock, "utf8")).toBe("retained");
   });
 });
+
+it("accepts the exact file/count bounds and rejects one extra byte or record without replacing valid state", async () => {
+  const dir = await home();
+  const path = join(dir, "project-contexts.json");
+  const entries = Array.from({ length: 128 }, (_, index) => ({ ...entry, cwd: `/checkout-${index}` }));
+  const body = contents(entries).padEnd(65536, " ");
+  await writeFile(path, body, { mode: 0o600 });
+  expect(await loadProjectContexts(dir)).toEqual(entries);
+  const extra = { ...entry, cwd: "/extra" };
+  await expect(updateProjectContext(dir, extra.cwd, extra, projectContextRevision(extra.cwd))).rejects.toThrow();
+  expect(await readFile(path, "utf8")).toBe(body);
+  await writeFile(path, body + " ");
+  await expect(loadProjectContexts(dir)).rejects.toThrow("invalid or unsafe");
+});
+
+it("rejects foreign descriptor ownership and unsafe or symlinked private directories", async () => {
+  const dir = await home();
+  const path = join(dir, "project-contexts.json");
+  const body = contents([entry]);
+  await writeFile(path, body, { mode: 0o600 });
+  const uid = process.getuid?.();
+  if (uid === undefined) throw new Error("Unix uid evidence required by private configuration tests");
+  // The real directory descriptor passes first; the file descriptor's uid then differs
+  // from the synthetic caller uid, without requiring privileged chown in CI.
+  const callerUid = vi.spyOn(process, "getuid").mockReturnValueOnce(uid).mockReturnValue(uid + 1);
+  try { await expect(loadProjectContexts(dir)).rejects.toThrow("invalid or unsafe"); }
+  finally { callerUid.mockRestore(); }
+  expect(await loadProjectContexts(dir)).toEqual([entry]);
+  await chmod(dir, 0o750);
+  await expect(loadProjectContexts(dir)).rejects.toThrow("invalid or unsafe");
+  await expect(updateProjectContext(dir, entry.cwd, undefined, projectContextRevision(entry.cwd, entry))).rejects.toThrow("private regular file and directory");
+  await chmod(dir, 0o700);
+  const alias = join(await home(), "alias");
+  await symlink(dir, alias);
+  await expect(loadProjectContexts(alias)).rejects.toThrow("invalid or unsafe");
+  await expect(updateProjectContext(alias, entry.cwd, undefined, projectContextRevision(entry.cwd, entry))).rejects.toThrow();
+  expect(await readFile(path, "utf8")).toBe(body);
+});

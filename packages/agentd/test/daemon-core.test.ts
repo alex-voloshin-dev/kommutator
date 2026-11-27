@@ -154,6 +154,13 @@ describe("daemon identity and IPC authorization", () => {
     await first.core.request(legacy.peer, "board.put", { topic, key: "handoff/marketing", body: "legacy two", if_version: 1 });
     const board = await first.core.request(legacy.peer, "board.get", { topic });
     const history = await first.core.request(legacy.peer, "board.history", { topic, key: "handoff/marketing" });
+    const canonicalKey = "github.com/example/context";
+    const canonicalTopic = `project:${canonicalKey}`;
+    const canonical = await hook(first.core, "canonical", { cwd, project_key: canonicalKey, ppid: 78 });
+    await first.core.request(canonical.peer, "board.put", { topic: canonicalTopic, key: "handoff/marketing", body: "canonical independent handoff" });
+    const canonicalBoard = await first.core.request(canonical.peer, "board.get", { topic: canonicalTopic });
+    const canonicalHistory = await first.core.request(canonical.peer, "board.history", { topic: canonicalTopic, key: "handoff/marketing" });
+    expect(canonicalHistory).not.toEqual(history);
     await first.close();
     await promisify(execFile)("git", ["-C", cwd, "remote", "add", "origin", "https://github.com/example/context.git"]);
     const selection = { cwd, remote: "github.com/example/context", project_key: "legacy" };
@@ -197,6 +204,12 @@ describe("daemon identity and IPC authorization", () => {
     expect(sibling.session?.project_key).not.toBe("legacy");
     await expect(recovered.core.request(sibling.peer, "board.get", { topic })).rejects.toThrow();
     expect(await recovered.core.request(fresh.peer, "board.history", { topic, key: "handoff/marketing" })).toEqual(history);
+    const retainedCanonical = await hook(recovered.core, "canonical", { cwd, ppid: 78 });
+    expect(retainedCanonical.session?.id).toBe(canonical.session?.id);
+    expect(await recovered.core.request(retainedCanonical.peer, "board.get", { topic: canonicalTopic })).toEqual(canonicalBoard);
+    expect(await recovered.core.request(retainedCanonical.peer, "board.history", { topic: canonicalTopic, key: "handoff/marketing" })).toEqual(canonicalHistory);
+    await expect(recovered.core.request(fresh.peer, "board.get", { topic: canonicalTopic })).rejects.toThrow();
+    await expect(recovered.core.request(retainedCanonical.peer, "board.get", { topic })).rejects.toThrow();
   });
 
   it("discovers a newly created Git remote for a fresh owner without rebinding the previous owner", async () => {
