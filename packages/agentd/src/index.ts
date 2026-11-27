@@ -8,3 +8,6 @@ export { AlreadyRunningError } from "./ipc.js";
 export { Registry, processStart, type LocalRecord } from "./registry.js";
 export { WakeScheduler, realClock, type Clock } from "./wake.js";
 export type { Adapter, LocalSession } from "./adapters/types.js";
+
+export { loadProjectContexts, projectContextRevision, updateProjectContext, ProjectContext } from "./project-contexts.js";
+export { Projects } from "./project.js";

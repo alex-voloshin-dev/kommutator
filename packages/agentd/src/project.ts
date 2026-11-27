@@ -33,6 +33,7 @@ export class Projects {
       return normalizeRemote(stdout.trim());
     } catch { return undefined; }
   }) {}
+  async observe(cwd: string): Promise<string | undefined> { return this.readRemote(cwd); }
   async key(cwd: string, callerProject?: string): Promise<string> {
     let remote = this.remotes.get(cwd);
     if (!remote) { remote = this.readRemote(cwd); this.remotes.set(cwd, remote); }

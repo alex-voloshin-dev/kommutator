@@ -6,6 +6,7 @@ import { DaemonCore, type CoreOptions } from "./core.js";
 import { HubLink, type HubTransport } from "./hub-link.js";
 import { AlreadyRunningError, startIpc } from "./ipc.js";
 import { pathsFor } from "./paths.js";
+import { loadProjectContexts } from "./project-contexts.js";
 
 export interface DaemonOptions extends Omit<CoreOptions, "config" | "dbPath" | "transport" | "onShutdown"> {
   home?: string;
@@ -19,6 +20,7 @@ export async function startDaemon(options: DaemonOptions = {}) {
   const paths = pathsFor(options.home);
   await mkdir(paths.home, { recursive: true, mode: 0o700 });
   await chmod(paths.home, 0o700);
+  const projectContexts = await loadProjectContexts(paths.home);
   const config = Config.parse(options.config ?? await loadConfig(paths.home));
   if (existsSync(paths.config)) await chmod(paths.config, 0o600);
   const log = (message: string) => {
@@ -50,7 +52,7 @@ export async function startDaemon(options: DaemonOptions = {}) {
   };
   try {
     const transport = options.transport ?? new HubLink(config, (message) => { if (core) core.report(message); else log(message); });
-    core = new DaemonCore({ ...options, config, dbPath: paths.stateDb, transport, onError: log, onShutdown: () => { setTimeout(() => { void close().catch(() => log("daemon shutdown failed")); }, 10); } });
+    core = new DaemonCore({ ...options, projectContexts, config, dbPath: paths.stateDb, transport, onError: log, onShutdown: () => { setTimeout(() => { void close().catch(() => log("daemon shutdown failed")); }, 10); } });
     await chmod(paths.stateDb, 0o600);
     await core.start();
     await writeFile(paths.daemonInfo, JSON.stringify({ pid: process.pid, version: RELEASE_VERSION, started_at: new Date().toISOString(), endpoint: paths.ipc }) + "\n", { mode: 0o600 });

@@ -61,6 +61,47 @@ mark messages read. An unavailable daemon/hub or unauthorized selection fails. A
 upgrading an older client/daemon, restart the daemon to load board CLI support.
 `kom board --help` lists the commands; `kom board revert` remains deferred.
 
+## Select a future checkout project context
+
+Existing Claude process/conversation owners keep their established project when Git discovery
+recovers or the inferred origin changes. An explicit `KOM_PROJECT` or daemon project must
+match on first registration and every refresh; remove or correct a stale value. Changed cwd
+still requires a new owner. Existing Codex roots keep their project across process reload/resume.
+
+To restore future access to a known legacy board namespace, supply the exact checkout path,
+its current sanitized normalized origin and the intended project key from your own evidence:
+
+```sh
+kom project-context select --cwd /absolute/checkout --remote github.com/owner/repo --project legacy-key
+kom project-context select --cwd /absolute/checkout --remote github.com/owner/repo --project legacy-key --apply --expect-revision <preview-revision>
+```
+
+The first command previews the prior selection, selected namespace and full-record revision.
+The second revalidates Git and compares that exact entry under an exclusive local writer lock.
+No hub call, service restart, current membership change or board migration occurs. The private
+`project-contexts.json` beside config is bounded and loaded at compatible daemon startup;
+old daemons ignore it. Restart the daemon ordinarily, then create a new Claude OS owner or
+new conversation under the existing generation fences, or a new independent Codex root.
+Returning to an established Claude conversation retains its context; merely reloading/resuming
+an existing Codex root cannot activate a new selection. A new owner may receive a new handle.
+
+Only the exact absolute cwd matches; symlink aliases, nested directories and sibling worktrees
+need their own deliberate selection. New selected owners fail closed if fresh origin evidence
+is absent or different. Existing owners stay pinned. Legacy and canonical board histories,
+authors and CAS versions remain independent; neither namespace is merged or rewritten.
+
+To remove a future selection, even after a checkout was deleted or moved:
+
+```sh
+kom project-context remove --cwd /absolute/checkout
+kom project-context remove --cwd /absolute/checkout --apply --expect-revision <preview-revision>
+```
+
+A revision conflict requires a new preview. A retained `project-contexts.json.lock` is never
+automatically reclaimed: inspect the owning operation and file explicitly before recovery.
+Malformed, symlinked, nonprivate or unreadable existing configuration stops daemon startup;
+correct the private file rather than silently falling back to another project.
+
 ## Dashboard
 
 Open the configured hub URL and authenticate with any username and the hub key as password.

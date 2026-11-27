@@ -19,6 +19,7 @@ import { realClock, WakeScheduler, type Clock } from "./wake.js";
 import { compareProcessBirth } from "./process.js";
 import { ResyncCoordinator } from "./resync.js";
 import { Projects } from "./project.js";
+import type { ProjectContext } from "./project-contexts.js";
 
 export type Hello = z.infer<(typeof Methods)["ipc.hello"]>;
 export interface IpcPeer { hello?: Hello; key?: string; ownerPid?: number; ownerBirth?: string; ownerGeneration?: number; ended?: boolean; operationOwner?: OperationOwner; operationsReady?: boolean }
@@ -36,6 +37,7 @@ export interface CoreOptions {
   onError?: (message: string) => void;
   onShutdown?: () => void;
   project?: string;
+  projectContexts?: readonly ProjectContext[];
 }
 const ObjectParams = z.record(z.string(), z.unknown());
 const Poll = z.object({ event: z.enum(["PostToolUse", "UserPromptSubmit", "Stop"]), stop_hook_active: z.boolean().optional() });
@@ -279,10 +281,30 @@ export class DaemonCore {
     const pid = hello.client === "hook" ? hello.ppid : hello.pid;
     let birth: string | undefined;
     try { birth = pid ? await (this.options.processStart ?? processStart)(pid) : undefined; } catch { /* Missing process evidence cannot establish ownership. */ }
-    if (vendor === "codex" && (!pid || !birth)) throw new RpcError(-32020, "Codex process ownership unavailable; retry after the process probe recovers.");
-    const project = hello.cwd ? await this.projects.key(hello.cwd, this.options.project ?? hello.project_key) : undefined;
     this.requireOpen();
+    if (vendor === "codex" && (!pid || !birth)) throw new RpcError(-32020, "Codex process ownership unavailable; retry after the process probe recovers.");
     let existing = this.registry.get(key);
+    let established = existing;
+    if (vendor === "claude-code") {
+      if (!vendorId || !pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
+      const sameOwner = this.registry.all().filter(record => record.session.vendor === vendor &&
+        record.session.vendor_session_id === vendorId && record.pid === pid && record.processStartedAt === birth);
+      if (sameOwner.length > 1) throw new RpcError(-32020, "ambiguous Claude process ownership");
+      established = sameOwner[0];
+      if (established && established.session.cwd !== hello.cwd) throw new RpcError(-32020, "Conflicting project context: cwd changed; start a new Claude OS owner");
+    }
+    const selection = !established && hello.cwd ? this.options.projectContexts?.find(entry => entry.cwd === hello.cwd) : undefined;
+    let project = established?.session.project_key;
+    if (!established && hello.cwd) {
+      if (selection) {
+        if (await this.projects.observe(hello.cwd) !== selection.remote) throw new RpcError(-32020, "Selected project context origin unavailable or changed; verify private checkout selection");
+        project = selection.project_key;
+      } else project = await this.projects.key(hello.cwd, this.options.project ?? hello.project_key);
+    }
+    if ((vendor === "claude-code" || selection) && [hello.project_key, this.options.project].some(value => value !== undefined && value !== project)) {
+      throw new RpcError(-32020, "Conflicting project context: remove or correct stale KOM_PROJECT or daemon project; explicit context must match");
+    }
+    this.requireOpen();
     if (vendor === "claude-code") {
       if (!vendorId || !pid || !birth) throw new RpcError(-32020, "Claude process ownership unavailable; restart this session with trusted hooks");
       await this.reconcileRetirements(record => record.session.vendor === vendor && record.pid === pid && record.processStartedAt === birth);
@@ -299,12 +321,6 @@ export class DaemonCore {
           (record.session.vendor_session_id === vendorId && record.session.state === "gone" && (generation === 0 || record.goneReason !== "liveness")))))) {
         throw new RpcError(-32020, "stale or conflicting Claude conversation generation; use /exit, then claude --resume with trusted hooks");
       }
-      if (generation > latestGeneration) for (const prior of owned) {
-        if (prior.session.state === "gone") continue;
-        this.wake.cancel(prior.key);
-        // A repeated SessionStart refreshes its fence without ending the same conversation.
-        if (prior.session.vendor_session_id !== vendorId) this.markGone(prior, "superseded");
-      }
       const candidates = this.registry.all().filter(record => record.session.vendor === vendor && record.session.vendor_session_id === vendorId);
       const sameOwner = candidates.filter(record => record.pid === pid && record.processStartedAt === birth);
       if (sameOwner.length > 1) throw new RpcError(-32020, "ambiguous Claude process ownership");
@@ -319,6 +335,13 @@ export class DaemonCore {
           const provenDead = observedBirth === undefined && (this.options.processExists ?? processExists)(prior.pid) === false;
           if (provenDead || compareProcessBirth(observedBirth, prior.processStartedAt) === "different") existing = prior;
         }
+      }
+      this.requireOpen();
+      if (generation > latestGeneration) for (const prior of owned) {
+        if (prior.session.state === "gone") continue;
+        this.wake.cancel(prior.key);
+        // A repeated SessionStart refreshes its fence without ending the same conversation.
+        if (prior.session.vendor_session_id !== vendorId) this.markGone(prior, "superseded");
       }
       if (existing) key = existing.key;
       else if (candidates.length) key = `${key}:owner:${createHash("sha256").update(`${pid}:${birth}`).digest("hex")}`;

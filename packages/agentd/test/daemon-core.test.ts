@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, symlink } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,7 +8,7 @@ import { promisify } from "node:util";
 import { z } from "zod";
 import { createConformanceHarness, RemoteRpcError } from "@kommutator/hub/testing";
 import { PROTOCOL_VERSION, Results, RegisteredSession, Methods } from "@kommutator/protocol";
-import { DaemonCore, type IpcPeer } from "../src/core.js";
+import { DaemonCore, type CoreOptions, type IpcPeer } from "../src/core.js";
 import { OfflineError, RpcError } from "../src/errors.js";
 import type { HubTransport } from "../src/hub-link.js";
 import { claudeAdapter } from "../src/adapters/claude.js";
@@ -75,7 +75,7 @@ class FakeTransport implements HubTransport {
 const cleanup: Array<() => Promise<void>> = [];
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close(); });
 
-async function fixture(options: { online?: boolean; dbPath?: string; clock?: ManualClock; hub?: ReturnType<typeof createConformanceHarness>; birth?: (pid: number) => Promise<string | undefined>; alive?: boolean; exists?: (pid: number) => boolean | undefined; ended?: NonNullable<Adapter["isEnded"]> } = {}) {
+async function fixture(options: { online?: boolean; dbPath?: string; clock?: ManualClock; hub?: ReturnType<typeof createConformanceHarness>; birth?: (pid: number) => Promise<string | undefined>; alive?: boolean; exists?: (pid: number) => boolean | undefined; ended?: NonNullable<Adapter["isEnded"]>; project?: string; projectContexts?: CoreOptions["projectContexts"] } = {}) {
   const hub = options.hub ?? createConformanceHarness();
   if (!options.hub) cleanup.push(async () => hub.close());
   const transport = new FakeTransport(hub);
@@ -85,7 +85,7 @@ async function fixture(options: { online?: boolean; dbPath?: string; clock?: Man
     if (wake) attempts.push({ id: message.id, at: clock.time });
     return wake ? { outcome: "written" } : { outcome: "inbox" };
   } };
-  const core = new DaemonCore({ config, dbPath: options.dbPath ?? ":memory:", transport, clock, adapters: [adapter], processStart: options.birth ?? (async () => "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"), ...(options.exists ? { processExists: options.exists } : {}), ...(options.alive === undefined ? { isAlive: async () => true } : {} ) });
+  const core = new DaemonCore({ ...(options.project ? { project: options.project } : {}), ...(options.projectContexts ? { projectContexts: options.projectContexts } : {}), config, dbPath: options.dbPath ?? ":memory:", transport, clock, adapters: [adapter], processStart: options.birth ?? (async () => "linux-v1:01234567-89ab-cdef-0123-456789abcdef:1"), ...(options.exists ? { processExists: options.exists } : {}), ...(options.alive === undefined ? { isAlive: async () => true } : {} ) });
   let closed = false;
   const close = async () => { if (!closed) { closed = true; await core.close(); } };
   cleanup.push(close);
@@ -113,6 +113,92 @@ async function send(core: DaemonCore, peer: IpcPeer, to: string, body = "message
 }
 
 describe("daemon identity and IPC authorization", () => {
+  it("rejects first and refreshed conflicting explicit Claude contexts before lifecycle mutation", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "kom-context-explicit-"));
+    cleanup.push(() => rm(cwd, { recursive: true, force: true }));
+    const git = promisify(execFile);
+    await git("git", ["-C", cwd, "init", "--quiet"]);
+    await git("git", ["-C", cwd, "remote", "add", "origin", "https://github.com/example/context.git"]);
+    const project = "github.com/example/context";
+    const { core, transport } = await fixture({ project });
+    await expect(hook(core, "explicit", { cwd, project_key: "stale" })).rejects.toThrow("remove or correct stale KOM_PROJECT");
+    expect(core.registry.all()).toHaveLength(0);
+    expect(transport.calls.filter(call => call.method === "session.upsert")).toHaveLength(0);
+    const first = await hook(core, "explicit", { cwd, project_key: project, owner_generation: 1 });
+    expect((await hook(core, "explicit", { cwd, project_key: project, owner_generation: 1 })).session?.id).toBe(first.session?.id);
+    expect((await hook(core, "explicit", { cwd, owner_generation: 1 })).session?.id).toBe(first.session?.id);
+    const before = core.registry.all();
+    const calls = transport.calls.length;
+    await expect(hook(core, "other-conversation", { cwd, project_key: "stale", owner_generation: 2 })).rejects.toThrow("Conflicting project context");
+    await expect(hook(core, "explicit", { cwd: "/changed", owner_generation: 2 })).rejects.toThrow("cwd changed");
+    expect(core.registry.all()).toEqual(before);
+    expect(transport.calls).toHaveLength(calls);
+    const staleDaemon = await fixture({ project: "stale" });
+    await expect(hook(staleDaemon.core, "explicit", { cwd, project_key: project })).rejects.toThrow("Conflicting project context");
+    expect(staleDaemon.core.registry.all()).toHaveLength(0);
+  });
+
+  it("retains legacy persisted Claude and Codex contexts after restart while selecting new seats and preserving real board history", async () => {
+    const home = await mkdtemp(join(tmpdir(), "kom-context-board-"));
+    cleanup.push(() => rm(home, { recursive: true, force: true }));
+    const cwd = join(home, "checkout");
+    await promisify(execFile)("git", ["init", "--quiet", cwd]);
+    const dbPath = join(home, "state.db");
+    const first = await fixture({ dbPath });
+    const legacy = await hook(first.core, "legacy", { cwd, project_key: "legacy", ppid: 71 });
+    const old = await hook(first.core, "old", { cwd, project_key: "other", ppid: 72 });
+    const codexHello = { client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: 4, vendor: "codex", vendor_session_id: "root", pid: 80, cwd };
+    const oldCodex = HelloReply.parse(await first.core.request(first.core.peer(), "ipc.hello", codexHello));
+    const topic = "project:legacy";
+    await first.core.request(legacy.peer, "board.put", { topic, key: "handoff/marketing", body: "legacy one" });
+    await first.core.request(legacy.peer, "board.put", { topic, key: "handoff/marketing", body: "legacy two", if_version: 1 });
+    const board = await first.core.request(legacy.peer, "board.get", { topic });
+    const history = await first.core.request(legacy.peer, "board.history", { topic, key: "handoff/marketing" });
+    await first.close();
+    await promisify(execFile)("git", ["-C", cwd, "remote", "add", "origin", "https://github.com/example/context.git"]);
+    const selection = { cwd, remote: "github.com/example/context", project_key: "legacy" };
+    const recovered = await fixture({ dbPath, hub: first.hub, projectContexts: [selection] });
+    const retained = await hook(recovered.core, "old", { cwd, ppid: 72 });
+    expect(retained.session?.id).toBe(old.session?.id);
+    expect(retained.session?.project_key).toBe("other");
+    await expect(recovered.core.request(retained.peer, "board.get", { topic })).rejects.toThrow();
+    const reloadedCodex = HelloReply.parse(await recovered.core.request(recovered.core.peer(), "ipc.hello", { ...codexHello, pid: 81 }));
+    expect(reloadedCodex.session?.id).toBe(oldCodex.session?.id);
+    expect(reloadedCodex.session?.project_key).toBe(oldCodex.session?.project_key);
+    const fresh = await hook(recovered.core, "new", { cwd, ppid: 73 });
+    expect(fresh.session?.project_key).toBe("legacy");
+    expect(await recovered.core.request(fresh.peer, "board.get", { topic })).toEqual(board);
+    expect(await recovered.core.request(fresh.peer, "board.history", { topic, key: "handoff/marketing" })).toEqual(history);
+    await expect(recovered.core.request(fresh.peer, "board.put", { topic, key: "handoff/marketing", body: "stale", if_version: 1 })).rejects.toThrow();
+    await expect(recovered.core.request(retained.peer, "topic.join", { name: topic })).rejects.toThrow();
+    // A newly named conversation in one OS owner selects normally; returning to A keeps A's context.
+    const a = await hook(recovered.core, "old", { cwd, ppid: 72, owner_generation: 1 });
+    const b = await hook(recovered.core, "new-conversation", { cwd, ppid: 72, owner_generation: 2 });
+    expect(b.session?.project_key).toBe("legacy");
+    const resumedA = await hook(recovered.core, "old", { cwd, ppid: 72, owner_generation: 3 });
+    expect(resumedA.session?.id).toBe(a.session?.id);
+    expect(resumedA.session?.project_key).toBe("other");
+    await expect(hook(recovered.core, "new-conversation", { cwd, ppid: 72, owner_generation: 2 })).rejects.toThrow("stale or conflicting");
+    const newCodex = HelloReply.parse(await recovered.core.request(recovered.core.peer(), "ipc.hello", { ...codexHello, vendor_session_id: "independent", pid: 82 }));
+    expect(newCodex.session?.project_key).toBe("legacy");
+    expect(newCodex.session?.id).not.toBe(oldCodex.session?.id);
+    await expect(recovered.core.request(recovered.core.peer(), "ipc.hello", { ...codexHello, vendor_session_id: "conflict", project_key: "wrong", pid: 83 })).rejects.toThrow("Conflicting project context");
+    await promisify(execFile)("git", ["-C", cwd, "remote", "set-url", "origin", "https://github.com/example/changed.git"]);
+    expect((await hook(recovered.core, "new", { cwd, ppid: 73 })).session?.id).toBe(fresh.session?.id);
+    await expect(hook(recovered.core, "unverified-new", { cwd, ppid: 74 })).rejects.toThrow("origin unavailable or changed");
+    const alias = join(home, "alias");
+    await symlink(cwd, alias);
+    const aliasOwner = await hook(recovered.core, "alias", { cwd: alias, ppid: 76 });
+    expect(aliasOwner.session?.project_key).toBe("github.com/example/changed");
+    await expect(recovered.core.request(aliasOwner.peer, "board.get", { topic })).rejects.toThrow();
+    await promisify(execFile)("git", ["-C", cwd, "remote", "remove", "origin"]);
+    await expect(hook(recovered.core, "missing-origin", { cwd, ppid: 77 })).rejects.toThrow("origin unavailable or changed");
+    const sibling = await hook(recovered.core, "sibling", { cwd: home, ppid: 75 });
+    expect(sibling.session?.project_key).not.toBe("legacy");
+    await expect(recovered.core.request(sibling.peer, "board.get", { topic })).rejects.toThrow();
+    expect(await recovered.core.request(fresh.peer, "board.history", { topic, key: "handoff/marketing" })).toEqual(history);
+  });
+
   it("discovers a newly created Git remote for a fresh owner without rebinding the previous owner", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "kom-new-project-"));
     cleanup.push(async () => rm(cwd, { recursive: true, force: true }));
@@ -127,7 +213,13 @@ describe("daemon identity and IPC authorization", () => {
     const fresh = await hook(core, "after-git", { cwd, ppid: 56 });
     expect(fresh.session?.project_key).toBe("github.com/example/new-project");
     expect(fresh.session?.id).not.toBe(old.session?.id);
-    await expect(hook(core, "before-git", { cwd })).rejects.toThrow("Conflicting project context");
+    const refreshed = await hook(core, "before-git", { cwd });
+    expect(refreshed.session?.id).toBe(old.session?.id);
+    expect(refreshed.session?.project_key).toBe(old.session?.project_key);
+    const bound = core.peer();
+    await core.request(bound, "ipc.hello", { client: "shim", protocol_version: PROTOCOL_VERSION, runtime_contract: 4,
+      pid: 3000, ppid: 55, vendor: "claude-code", vendor_session_id: "before-git", cwd });
+    expect(Identity.parse(await core.request(bound, "whoami", {})).session.id).toBe(old.session?.id);
     const previous = Identity.parse(await core.request(old.peer, "whoami", {}));
     expect(previous.session.id).toBe(old.session?.id);
     expect(previous.session.project_key).toBe(old.session?.project_key);

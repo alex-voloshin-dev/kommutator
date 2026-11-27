@@ -6,6 +6,7 @@ export function pathsFor(home = process.env["KOM_HOME"] ?? join(homedir(), ".kom
   return {
   home,
   config: join(home, "config.json"),
+  projectContexts: join(home, "project-contexts.json"),
   daemonInfo: join(home, "agentd.json"),
   stateDb: join(home, "state.db"),
   log: join(home, "agentd.log"),
