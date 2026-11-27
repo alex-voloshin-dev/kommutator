@@ -1,0 +1,65 @@
+{
+  "version": "0.18.0",
+  "state": "qualification-pending",
+  "source": "c3ceb3ebbe7b7caa4f804a7de24077f4b287fef6",
+  "reviews": "correctness/security/external approve round2; independent QA completed",
+  "workspace": {
+    "ordered_exact_version": {
+      "result": "passed",
+      "tests": 916
+    },
+    "qa_initial": {
+      "passed": 552,
+      "failed": 3,
+      "cause": "unknown"
+    },
+    "qa_ordered_repeat": {
+      "result": "passed",
+      "tests": 916
+    },
+    "release_check": {
+      "result": "failed",
+      "passed": 914,
+      "failed": 2,
+      "file": "packages/cli/test/operation-timeout.test.ts",
+      "error": "IPC timeout",
+      "cause": "unknown",
+      "later_script_and_export_gates": "not reached"
+    }
+  },
+  "source_scan": {
+    "initial": "synthetic board key findings",
+    "precise_exception": "exact test path and literal handoff/marketing",
+    "independent_security_review": "approve",
+    "subsequent": "no findings"
+  },
+  "artifact_scan": {
+    "exit": 1,
+    "findings": 2,
+    "disposition": "verified SHA-256 of path-key license, not credentials",
+    "hash": "48da2f39e100d4085767e94966b43f4fa95ff6a0698fba57ed460914e35f94a0"
+  },
+  "public_install_and_rollout": "pending",
+  "limits": [
+    "historical availability/registration/IPC causes unresolved",
+    "no live remote context migration",
+    "no real model/native idle wake/day-long delivery/subnet/reboot acceptance"
+  ],
+  "focused_after_release_failure": {
+    "result": "passed",
+    "tests": 2,
+    "cause_established": false,
+    "earlier_wrong_filter": "executed no tests"
+  },
+  "separate_script_tests": 162,
+  "ci_source": {
+    "head": "c3ceb3ebbe7b7caa4f804a7de24077f4b287fef6",
+    "branch": 46051379328,
+    "pr": 46051387732,
+    "secret_scans": [
+      46051379280,
+      46051387740
+    ],
+    "all": "success first attempt"
+  }
+}

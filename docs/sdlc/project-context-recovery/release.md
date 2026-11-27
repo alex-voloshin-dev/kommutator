@@ -57,8 +57,19 @@ Independent QA95e73d2 added process CLI/startup, bounds/descriptor and divergent
 board-history coverage. First full QA run passed552 and timed out3 agentd tests;
 CLI did not run. Unchanged focused218+4 passed, then one ordered repeat passed
 916. The timeout causes remain unknown. Exact-version0.18.0 ordered build,
-typecheck and916 workspace tests passed. Full release gate, final hosted CI,
-public artifacts/installs and local rollout remain pending.
+typecheck and916 workspace tests passed. Subsequent full local release gate failed914/916 on two unchanged operation-timeout
+IPC cases; later script/export phases were not reached. Both focused cases then
+passed unchanged; initial incorrect-filter command ran no tests. Cause unknown,
+tracked in issue25 comment7225796536. Separately162 script tests, export integrity
+and clean-PATH smoke passed; synthetic exported E2E was still running at this note.
+
+Full hosted gates on c3ceb3e passed first attempt: branch46051379328 and
+PR46051387732, with secret scans46051379280/46051387740. These execute all916
+workspace and162 script tests plus audit/integrity/clean-PATH/exported E2E.
+Maintainer qualification accepts the bounded repairs based on independent reviews,
+QA, ordered exact-version tests and two complete hosted gates, retaining local
+failures as unresolved rather than declaring the local full gate green.
+Final documentation-head/tag checks, public installs and rollout remain pending.
 
 Source-history scanning initially flagged synthetic `handoff/marketing` board
 entry keys. A precise path AND literal-value exception retains the detector;

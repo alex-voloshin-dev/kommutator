@@ -1627,3 +1627,18 @@ were made. See evidence/2026-11-27-completed-availability.json for the snapshot
 hash and failed samples. This completes sampled HTTP observation, not day-long
 message delivery, native idle wake or continuous availability acceptance.
 Historical entries saying collection is ongoing describe their earlier snapshots.
+
+## 2026-11-27 project-context recovery candidate0.18.0
+
+Reproduced inferred-context drift on old core; established Claude context now stays
+pinned and new operator-only checkout selection preserves both divergent boards.
+Codex binding guidance distinguishes missing and ambiguous owners. Independent
+design/code/security/external reviews and QA completed, including repair of an
+external-review stale-owner-after-await finding. Exact-version ordered build,
+typecheck and916 tests passed; subsequent full local release gate failed914/916
+on two IPC request timeouts, not explained by focused2/2 success. Separate162
+script tests, integrity and clean-PATH smoke passed. Full source branch/PR hosted
+gates46051379328/46051387732 and secret scans passed first attempt.
+Publication/rollout pending; see [qualification evidence](evidence/2026-11-27-project-context-qualification.json)
+and [release report](../docs/sdlc/project-context-recovery/release.md). No claim
+of all historical availability/registration causes fixed or merged board histories.
