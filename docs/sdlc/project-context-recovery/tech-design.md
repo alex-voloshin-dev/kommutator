@@ -1,0 +1,92 @@
+---
+type: tech-design
+feature: project-context-recovery
+status: draft
+review_decision: proceed
+date: 2026-11-27
+requirements_source: explicit-user-request-no-prd
+decisions:
+  - adr-001-project-context.md
+components:
+  - packages/agentd/src/core.ts
+  - packages/agentd/src/project.ts
+  - packages/agentd/src/config.ts
+  - packages/agentd/src/binding.ts
+  - packages/cli/src/index.ts
+risks:
+  - Legacy records contain no project discovery provenance
+  - Operator selection can intentionally associate unrelated projects
+  - Mapping activation requires daemon restart plus a new Claude OS owner or new independent Codex root for changed context
+  - Git verification failure prevents mapped new registration
+---
+
+# Project context recovery technical design
+
+The user requested repair of Claude project-context failures, safe access to the legacy project board, and release preparation. There is no PRD. This draft requires independent review; implementation must first amend DESIGN §19 as described below.
+
+## Verified source behavior
+
+`Projects.key` caches positive normalized Git origins and evicts missing/failed results. `registerOwner` computes discovery before selecting the exact Claude owner and rejects any difference from its established project. Thus initial fallback followed by successful discovery deterministically rejects the existing owner. The existing `daemon-core.test.ts` test beginning “discovers a newly created Git remote” explicitly expects that rejection. This demonstrates a source defect, not the exact cause of the remote report. Failed lookup includes several causes; timeout is not proven.
+
+Existing records store project, cwd, conversation, process birth, generation and lifecycle state, but no discovery provenance. A short project key cannot be classified as accidental. Hub registration supplies reserved project membership; updates do not move membership and manual reserved-topic joins are forbidden. These contracts remain intact.
+
+## 1. Established Claude context
+
+Resolve the exact Claude owner through current conversation, PID, observed birth and generation/retirement checks before deciding whether project discovery is necessary. For one established same-process owner with identical cwd, retain its persisted `session.project_key`. Do not rediscover or rewrite that identity merely because Git now succeeds or returns a different inferred result. This lifetime pinning applies equally to transient lookup recovery, deliberate Git initialization and intentional origin edits: legacy records provide no provenance with which to distinguish them. An intentional inferred-project change requires a new OS owner/context. This deliberately changes the existing DESIGN §19 rejection policy; it is not a claim that intentional edits were previously supported. This also avoids spending the Git timeout on routine established-owner refreshes.
+
+Explicit `hello.project_key`, or an explicitly configured daemon project option, must equal the established project if supplied; mismatch rejects with a context-conflict error. Do not interpret explicit disagreement as inferred drift. This conservative rule can expose previously ignored KOM_PROJECT values when Git had precedence; explain removal/correction of stale explicit context in diagnostics, never silently retarget an owner. A matching explicit value is accepted; omission is accepted without inventing provenance. The private mapping below selects future registrations, not a replacement project for an established owner.
+
+Preserve exact cwd equality, ambiguity rejection, observed birth, durable retirement markers, generation ordering, lifecycle epoch and peer pins. Missing evidence, stale generations and ended owners do not become eligible because the project was retained. A continuous accepted generation refresh can retain context and existing operation-observation transfer only under all current endpoint/process/lifecycle conditions. A context conflict should be detected before publishing new daemon lifecycle mutations. This does not claim to repair hook journal A → B → A prepublication validation; retain that separate roadmap item.
+
+A new process remains a new resolution attempt even for the same conversation. Discover its effective project normally, with the mapping rules below if configured. Reuse a predecessor only when the existing unique-candidate, identical cwd/project, and positive dead-process/PID-reuse checks all pass. Never copy a prior project merely because a conversation ID or cwd matches. Ambiguous history or a live predecessor yields a distinct identity; no promise of recovering the old UUID or handle.
+
+## 2. Explicit checkout selection for legacy boards
+
+Add a versioned owner-private `project-contexts.json` alongside existing private configuration, outside the repository and plugin cache. It contains only strict bounded records `{ cwd, remote, project_key }`, where cwd is an exact absolute checkout path, remote is an observed normalized origin, and project_key satisfies the existing project-key validator. Use a version field, at most 128 entries and a 64 KiB file bound. Reject duplicate cwd entries, unknown fields and malformed files. Keep the existing main config schema and database schemas unchanged. Require a regular owner-owned private file; reject symlinks and group/world access on read and write. Open with no-follow semantics, then fstat the opened descriptor to validate type, ownership, permissions and bounds before reading; pathname checks alone are insufficient. Write via an exclusively created 0600 temporary file in the same private directory and atomic rename.
+
+Paths match exact absolute cwd values used in hello; do not merge symlink aliases, nested directories, sibling worktrees or repositories sharing a basename. CLI resolves a supplied cwd to an absolute lexical path, prints that exact value, and requires an existing directory. Each alias needs its own deliberate selection. There is at most one selection per cwd.
+
+Provide a CLI-only `kom project-context select --cwd <absolute-path> --remote <normalized-origin> --project <key>` command. Default invocation previews; `--apply` performs the same validation and writes the selection atomically with mode 0600 in the existing private directory. Preview reports the observed sanitized normalized origin, selected project, prior exact-cwd selection if any, future reserved project topic, and restart plus vendor-specific activation requirements (new Claude OS owner or new independent Codex root). Apply requires all three explicit fields, freshly re-reads Git, and rejects any disagreement with the supplied normalized remote. It must not infer the intended legacy key from basename, session names or topic similarity. Report lookup failure without echoing raw origin URLs or credentials. Preview supplies an opaque revision token computed from a canonical serialization of the complete exact-cwd record (cwd, remote and project_key), or a domain-separated absence marker for that cwd. Apply additionally requires `--expect-revision <token>`. Under the exclusive writer lock, freshly read and validate the file, recompute that exact-cwd revision and reject any mismatch before mutation. Comparing project_key alone is insufficient: a concurrent remoteA/projectP → remoteB/projectP edit must invalidate the preview. Use the freshly read file to preserve unrelated entries; unrelated-cwd edits do not invalidate this record-scoped revision. Support an exact-cwd preview/remove operation, with explicit apply and the same revision check, to undo future selection. Serialize competing local writers with an exclusive private lock; reject contention instead of silently overwriting another change, and preserve unrelated entries. Never automatically delete an apparently stale lock; recovery requires explicit operator inspection/action.
+
+Load and validate this bounded file at daemon startup. A malformed or unreadable existing file fails startup explicitly rather than silently using discovery; missing file means no selections. Configuration changes require an explicit ordinary daemon restart; command execution does not restart services or alter active sessions. An old daemon ignores the new file, so preview/apply must explain that compatible daemon activation is required. There is no automatic compatibility claim or schema bump.
+
+For a genuinely new owner whose cwd exactly matches a loaded selection, make a fresh bounded Git-origin observation, bypassing the positive discovery cache. Only a successfully normalized origin exactly equal to the stored remote authorizes choosing the stored project key. Missing remote, failed lookup or mismatch rejects that new registration; never silently fall back. A conflicting explicit caller/daemon project value also rejects. Other cwd values retain existing normalized-remote → caller project → basename discovery and negative-cache eviction. Mapping precedence is therefore an explicit operator choice restricted by checkout and current remote evidence, not a global alias.
+
+An already established owner remains on its persisted project even if selection changes or Git changes. Applying a mapping does not move it; even daemon restart must preserve its project. For Claude, to use another selected project, create a new OS owner. Claude predecessor-reuse rules in this design apply only to Claude. For a resumed Claude conversation, resolve the selected project first, then apply unchanged predecessor eligibility. If it differs from the predecessor project, allocate a new seat. Codex instead retains its root-keyed record and project across shim/process replacement and resume. Mapping activation for Codex requires a new independent root (a new thread with its own per-call metadata), not merely a process reload, daemon restart or resuming the existing root. Do not rewrite an existing Codex root to apply a selection. Only normal authenticated hub registration creates that seat's membership in `project:<chosen-key>`, permitting board reads and versioned writes through existing APIs. The old board, authors, versions and memberships remain untouched. Reports 516/517 describe both short and canonical namespaces already holding history; retain both independently. Report 519 additionally describes the same Marketing handoff key at legacy version 1 and canonical version 8 with divergent contents (peer-reported evidence tracked in feedback triage, not independent board inspection). Version numbers are local to their namespaces; neither selects a global winner. Never merge or overwrite either entry as part of this recovery. Selection restores future access to one chosen namespace, not unified access to both histories, and does not repair current seats. Where a live authorized local seat already exists, the existing exact-session CLI board-management path can inspect its board under normal membership; it cannot lend that membership to another seat. Cross-project ad-hoc coordination remains a separate mitigation, not a history merge.
+
+The local OS user is already the configuration authority, so deliberate selection is permitted locally. It is not exposed as an MCP tool argument, hook input, project alias RPC, or reserved-topic join bypass. No new IPC method is necessary: the CLI edits private configuration without contacting the hub. It cannot enumerate hidden boards to suggest a target. An operator must supply the legacy key from their own evidence.
+
+## 3. Diagnostics and component changes
+
+| Component | Change and boundary |
+| --- | --- |
+| `agentd/core.ts` | Select established Claude context before inferred discovery; retain process/generation/lifecycle checks; use mapped resolution only for new owners |
+| `agentd/project.ts` | Separate normalized observation from effective-key selection; preserve bounded lookup and negative-cache retry; fresh observations for mapping validation |
+| `agentd/config.ts`, private paths/helper | Strict bounded mapping loader and reusable validator; no credentials or source-tree state |
+| CLI command dispatch/help | Preview/apply/remove private selection; serialized atomic writes; sanitized output; no service restart |
+| `agentd/binding.ts` and relevant Codex call sites | Replace misleading generic hook advice for Codex with per-call root metadata and current registration guidance; do not suggest a hook wait establishes Codex identity |
+| DESIGN/PROTOCOL/install/troubleshooting | Record precedence, scope, activation, new-seat caveat and operator recipe; no new wire fields |
+
+Claude context diagnostics distinguish changed cwd/explicit intent from inferred discovery. Codex missing registration guidance should say that the current independent root requires per-call session/thread metadata and successful registration, and advise reconnecting the current integration if necessary. Preserve fork rejection and never suggest inherited environment IDs, selecting an arbitrary session, or guessing by cwd. Ambiguous exact matches deserve ambiguity wording, not “waiting for its hook.” Diagnostics must not print tokens, raw Git origin URLs or private board contents.
+
+## Required contract amendment before code
+
+Amend DESIGN §19 Project discovery and add an explicit checkout-selection subsection before implementation. Replace the blanket existing-Claude conflict sentence with the established-owner versus inferred-discovery distinction; document strict explicit-context checks and unchanged owner fences. Record lifetime pinning for both recovered and intentional inferred remote changes, without attributing historical provenance. Record the private file, bounds, full-record preview revision and locked compare/write, validation, precedence, startup loading, restart and vendor-specific activation, fresh remote equality check, failure behavior and unchanged predecessor reuse. Update the session project-key summary to link to this exception. Update PROTOCOL caller identity text to explain that selection is local configuration, with no MCP selector or membership bypass. Executable wire schemas need no fields; reuse their project-key constraints in local configuration validation. If implementation introduces any persisted registry change despite this design, stop and review the schema/version implications first.
+
+## Acceptance and negative controls
+
+1. Deterministic baseline: initial failed/missing origin creates fallback owner; recovered origin is observed by a genuinely new owner; existing-owner hook refresh and fresh shim bind retain original UUID/project and succeed. Baseline old implementation must fail the repaired expectation. Repeat with a legacy persisted record lacking provenance after daemon restart.
+2. Preserve rejection for changed cwd, conflicting explicit project, unverified/reused process birth, stale/absent generation after fencing, retired owner, duplicate same-owner matches, shutdown/disconnect and delayed asynchronous completion. Verify no unintended session.upsert, membership or operation ownership transfer on rejection.
+3. New owners still discover remote after negative cache eviction. Unique proven-dead same-project predecessor can resume; different project, live predecessor and ambiguous history cannot inherit its identity. A → B → A cannot bypass generation tombstones.
+4. Preview writes nothing and contacts no hub. Apply validates exact cwd, project constraints and fresh remote; secure atomic write preserves other entries. Invalid JSON/version/duplicates/oversize, concurrent writer/stale full-record revision (including same-key changed-remote), unsafe file permissions/symlink (including replacement between pathname inspection and open), nonregular file, exclusive temporary-file collision, retained lock, remote mismatch/failure, symlink alias and sibling cwd cases fail or remain unmatched as specified. No raw credential-bearing origins in output.
+5. In an isolated real hub/daemon fixture, create a legacy project board with CAS versions. Select it for an exact checkout whose current origin differs from the legacy key. After compatible daemon restart and new Claude owner or independent Codex root registration, read the unchanged legacy board through normal membership; ordinary unmapped owner still cannot read it. Verify author/version retention, reserved join rejection, no membership copied to an old mismatching owner, and no CAS/replay/receipt changes.
+6. An existing Codex root retains its project across process replacement/reload and resume even with a different matching selection; a new independent Codex root honors the selection with exact per-call metadata. Forks cannot activate a new seat. Mapping removal affects future registrations only. Established owner works without rediscovery even if selection no longer validates; new mapped owner fails closed. Resuming a dead predecessor whose project differs produces a new seat, never a promise of the prior handle.
+7. Codex diagnostics are vendor appropriate while per-call identity and fork controls remain strict. MCP schemas reject project selectors. Existing hook full-process limits and 140/90 ms timers remain unchanged.
+
+Run Node 26.13.0 / pnpm 12.18.0 ordered workspace build, typecheck and tests, then release qualification including `pnpm release:check`. Use behavioral tests, not tests that mirror documentation. Independent design/code/security review and QA must precede release claims. Record actual failures and exact versioned evidence; no production configuration or board recovery occurs merely from writing this design.
+
+## Risks and exclusions
+
+The operator can select an incorrect project key; explicit preview and exact remote scope limit accidental use, but do not prove semantic equivalence between namespaces. No automatic short-key migration is safe. A new owner may receive a new handle and does not inherit old private messages or operation observations. No bulk board copy, topic merge, historical rewrite, outbox deletion/retry, replay-key change, receipt advance or durability change is included.
+
+Fresh remote verification can fail under transient Git trouble; mapped new registration fails clearly while established owners continue. Startup-only selection avoids filesystem reload work inside hook deadlines but requires a planned daemon restart. Availability/storage investigation remains separate; this repair does not explain or fix journal stalls, unknown operations, day-long stability, subnet acceptance or reboot recovery. Release notes must keep those gates open.
