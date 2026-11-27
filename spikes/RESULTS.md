@@ -1687,3 +1687,20 @@ Observed hub healthy, daemon/MCP0.18.0, contract4, connected active caller and
 retained feedback subscriptions. Startup lifecycle rows drained; old blocked644
 remains, aggregate degraded. Timer restored. No blind resend/deletion or claim
 of historical availability repair. See [restart evidence](evidence/2026-11-27-user-requested-restart.json).
+
+## 2026-11-27 final observation and backing-device correlation
+
+Completed the earlier hour: 360 probes, 355 expected401, five timeouts (one on
+0.17.2, four on0.18.0). The later21:42 user restart is outside that window.
+Mapped the Docker data filesystem through Ubuntu's VHD on C: to Windows disk0.
+A new bounded110-second run on0.18.0 produced11 probes/eight401/three timeouts.
+All three matched journal/folio waits and overlapped the90-sample per-device
+Windows collector. One failed interval contained sampled average write209.205ms.
+Both collectors exited0; source hashes and nearby counters are retained.
+This establishes temporal overlap, not the IO issuer or a universal cause.
+No stress, service changes, durability relaxation or unknown-operation resend.
+Current MCP/daemon/hub0.18.0 remain connected; old blocked644 persists.
+Incident handoff parsed successfully (investigating, not resolved); no code tests
+were run for these documentation/evidence-only changes. See
+[incident](../docs/sdlc/storage-correlation/incident.md) and
+[evidence](evidence/2026-11-27-backing-disk-correlation.json).

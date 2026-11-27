@@ -1,0 +1,587 @@
+{
+  "version": "0.18.0",
+  "mapping": {
+    "distribution": "Ubuntu-24.04",
+    "guest_filesystem": "/dev/sdd ext4",
+    "windows_drive": "C:",
+    "physical_disk": 0,
+    "bus": "SATA",
+    "health": "Healthy/Online",
+    "instance": "0 c:"
+  },
+  "windows": {
+    "samples": 90,
+    "first": "2026-11-27T21:50:08.0479676Z",
+    "last": "2026-11-27T21:51:38.0043798Z",
+    "counter_statuses": [
+      0
+    ],
+    "ranges": {
+      "\\physicaldisk(0 c:)\\avg. disk sec/write": {
+        "min": 0,
+        "max": 0.23660836363636362
+      },
+      "\\physicaldisk(0 c:)\\avg. disk sec/read": {
+        "min": 0,
+        "max": 0.3105159462962963
+      },
+      "\\physicaldisk(0 c:)\\current disk queue length": {
+        "min": 0,
+        "max": 255
+      },
+      "\\memory\\available mbytes": {
+        "min": 1788,
+        "max": 2325
+      }
+    },
+    "exit": 0
+  },
+  "guest": {
+    "samples": 11,
+    "first": "2026-11-27T21:50:06.415307+00:00",
+    "last": "2026-11-27T21:51:46.327637+00:00",
+    "outcomes": {
+      "401": 8,
+      "timeout": 3
+    },
+    "overlapping_windows_samples": 9,
+    "overlap_outcomes": {
+      "401": 6,
+      "timeout": 3
+    },
+    "all_birth_matched": true,
+    "completion": {
+      "finished_at": "2026-11-27T21:51:56.327523+00:00",
+      "samples": 11,
+      "unsuccessful": 3,
+      "duration_s": 110,
+      "bounded": true,
+      "termination_reason": "duration",
+      "bytes": 8216
+    }
+  },
+  "hashes": {
+    "windows.jsonl": "0a7f1b4f0c2aec1340baf07d8a6f72466ccc1ec337132ee9e93345023acdc21f",
+    "day-observation.jsonl": "bfb95487cb062e87ce6b39a61ef61e2f4a45ca57a13f7a82ce155560b7aee148"
+  },
+  "limits": [
+    "No stress, service mutation, kernel or durability change.",
+    "Counter instance maps to backing disk, not exclusively WSL VHD IO.",
+    "Sampled average latency is not an individual IO latency distribution.",
+    "Separate later observations cannot explain five earlier failed probes.",
+    "Host and guest timestamps are compared as UTC without an independently measured clock-offset bound.",
+    "Concurrent background IO and observer contribution were not measured; no process-specific attribution."
+  ],
+  "failed_probe_correlations": [
+    {
+      "guest": {
+        "at": "2026-11-27T21:50:36.324400+00:00",
+        "container": {
+          "started": "2026-11-27T21:42:33.467200495Z",
+          "image": "kommutator-hub:release-0.18.0",
+          "node_pid": 2012984,
+          "node_birth": "51733514"
+        },
+        "container_refreshed_at": "2026-11-27T21:50:06.415131+00:00",
+        "cache_age_ms": 30001,
+        "before": {
+          "pid": 2012984,
+          "birth_ticks": "51733514",
+          "state": "D",
+          "wait": "folio_wait_bit_common",
+          "cpu_ns": 5792464500,
+          "runqueue_ns": 288263600
+        },
+        "io": {
+          "some": {
+            "avg10": 19.13,
+            "avg60": 14.04
+          },
+          "full": {
+            "avg10": 14.5,
+            "avg60": 11.53
+          }
+        },
+        "memory": {
+          "some": {
+            "avg10": 0.0,
+            "avg60": 0.93
+          },
+          "full": {
+            "avg10": 0.0,
+            "avg60": 0.87
+          }
+        },
+        "error": "timeout",
+        "http_elapsed_ms": 801.442,
+        "after": {
+          "pid": 2012984,
+          "birth_ticks": "51733514",
+          "state": "D",
+          "wait": "jbd2_log_wait_commit",
+          "cpu_ns": 5792523200,
+          "runqueue_ns": 288263600
+        },
+        "same_process_birth": true
+      },
+      "windows_within_two_seconds": [
+        {
+          "at": "2026-11-27T21:50:34.4552612Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.06751913333333333,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.074887475,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 6,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1923,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:35.4630634Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.05654552881355933,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.0246387,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 2,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1919,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:36.4676282Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.026617394144144144,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.02057882699386503,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 18,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1911,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:37.4813774Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.060977336,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.04742904782608695,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 1,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1910,
+              "status": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "guest": {
+        "at": "2026-11-27T21:50:46.324658+00:00",
+        "container": {
+          "started": "2026-11-27T21:42:33.467200495Z",
+          "image": "kommutator-hub:release-0.18.0",
+          "node_pid": 2012984,
+          "node_birth": "51733514"
+        },
+        "container_refreshed_at": "2026-11-27T21:50:06.415131+00:00",
+        "cache_age_ms": 40001,
+        "before": {
+          "pid": 2012984,
+          "birth_ticks": "51733514",
+          "state": "D",
+          "wait": "jbd2_log_wait_commit",
+          "cpu_ns": 5797635100,
+          "runqueue_ns": 288373700
+        },
+        "io": {
+          "some": {
+            "avg10": 61.11,
+            "avg60": 24.72
+          },
+          "full": {
+            "avg10": 53.11,
+            "avg60": 21.01
+          }
+        },
+        "memory": {
+          "some": {
+            "avg10": 3.52,
+            "avg60": 1.68
+          },
+          "full": {
+            "avg10": 2.42,
+            "avg60": 1.35
+          }
+        },
+        "error": "timeout",
+        "http_elapsed_ms": 801.693,
+        "after": {
+          "pid": 2012984,
+          "birth_ticks": "51733514",
+          "state": "D",
+          "wait": "jbd2_log_wait_commit",
+          "cpu_ns": 5797635100,
+          "runqueue_ns": 288373700
+        },
+        "same_process_birth": true
+      },
+      "windows_within_two_seconds": [
+        {
+          "at": "2026-11-27T21:50:44.5280228Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.16200243529411765,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.10508597906976744,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 3,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1906,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:45.5386992Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.2086030558139535,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.14985640666666666,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 4,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1902,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:46.5473236Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.2092054534883721,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.05100420303030303,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 3,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1900,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:47.5631806Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.23660836363636362,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.0619560875,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 14,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1898,
+              "status": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "guest": {
+        "at": "2026-11-27T21:50:56.325043+00:00",
+        "container": {
+          "started": "2026-11-27T21:42:33.467200495Z",
+          "image": "kommutator-hub:release-0.18.0",
+          "node_pid": 2012984,
+          "node_birth": "51733514"
+        },
+        "container_refreshed_at": "2026-11-27T21:50:06.415131+00:00",
+        "cache_age_ms": 50001,
+        "before": {
+          "pid": 2012984,
+          "birth_ticks": "51733514",
+          "state": "D",
+          "wait": "folio_wait_bit_common",
+          "cpu_ns": 5799702900,
+          "runqueue_ns": 289223200
+        },
+        "io": {
+          "some": {
+            "avg10": 80.52,
+            "avg60": 35.13
+          },
+          "full": {
+            "avg10": 72.47,
+            "avg60": 30.73
+          }
+        },
+        "memory": {
+          "some": {
+            "avg10": 19.27,
+            "avg60": 5.19
+          },
+          "full": {
+            "avg10": 17.39,
+            "avg60": 4.57
+          }
+        },
+        "error": "timeout",
+        "http_elapsed_ms": 801.807,
+        "after": {
+          "pid": 2012984,
+          "birth_ticks": "51733514",
+          "state": "D",
+          "wait": "folio_wait_bit_common",
+          "cpu_ns": 5799702900,
+          "runqueue_ns": 289223200
+        },
+        "same_process_birth": true
+      },
+      "windows_within_two_seconds": [
+        {
+          "at": "2026-11-27T21:50:54.6267931Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.05983771615384615,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.01828324516129032,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 26,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1898,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:55.6374738Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.04789086432432432,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.014389955797101448,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 2,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1888,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:56.6525338Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.028520191836734692,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.01845961612903226,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 8,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1901,
+              "status": 0
+            }
+          ]
+        },
+        {
+          "at": "2026-11-27T21:50:57.6645232Z",
+          "samples": [
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/write",
+              "instance": "0 c:",
+              "value": 0.13078413,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\avg. disk sec/read",
+              "instance": "0 c:",
+              "value": 0.11178399166666668,
+              "status": 0
+            },
+            {
+              "counter": "\\physicaldisk(0 c:)\\current disk queue length",
+              "instance": "0 c:",
+              "value": 9,
+              "status": 0
+            },
+            {
+              "counter": "\\memory\\available mbytes",
+              "instance": null,
+              "value": 1902,
+              "status": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

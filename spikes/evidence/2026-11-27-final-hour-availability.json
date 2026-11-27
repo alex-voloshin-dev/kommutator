@@ -1,0 +1,153 @@
+{
+  "observed_version": "0.18.0",
+  "source_sha256": "6153d3f4fdd2c64287b12e2b803e95fc7349acdbc5f6a4511a6af5dae7d2b7d3",
+  "first": "2026-11-27T18:18:06.183160+00:00",
+  "last": "2026-11-27T19:17:58.465557+00:00",
+  "samples": 360,
+  "expected_401": 355,
+  "timeouts": 5,
+  "termination": "duration; systemd Result=success, exit 0",
+  "failures": [
+    {
+      "at": "2026-11-27T18:56:06.193522+00:00",
+      "container": {
+        "started": "2026-11-25T17:23:21.563610249Z",
+        "image": "kommutator-hub:release-0.17.2",
+        "node_pid": 3837635,
+        "node_birth": "32898273"
+      },
+      "before": {
+        "pid": 3837635,
+        "birth_ticks": "32898273",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 1213589841500,
+        "runqueue_ns": 5422348900
+      },
+      "after": {
+        "pid": 3837635,
+        "birth_ticks": "32898273",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 1213589841500,
+        "runqueue_ns": 5422348900
+      },
+      "same_process_birth": true,
+      "http_elapsed_ms": 805.064
+    },
+    {
+      "at": "2026-11-27T18:58:18.407723+00:00",
+      "container": {
+        "started": "2026-11-27T18:56:48.209911355Z",
+        "image": "kommutator-hub:release-0.18.0",
+        "node_pid": 1766325,
+        "node_birth": "50738945"
+      },
+      "before": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 1542852000,
+        "runqueue_ns": 34912200
+      },
+      "after": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 1545074500,
+        "runqueue_ns": 34954500
+      },
+      "same_process_birth": true,
+      "http_elapsed_ms": 803.23
+    },
+    {
+      "at": "2026-11-27T18:58:28.407992+00:00",
+      "container": {
+        "started": "2026-11-27T18:56:48.209911355Z",
+        "image": "kommutator-hub:release-0.18.0",
+        "node_pid": 1766325,
+        "node_birth": "50738945"
+      },
+      "before": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 1548217100,
+        "runqueue_ns": 116668100
+      },
+      "after": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 1548240500,
+        "runqueue_ns": 116668100
+      },
+      "same_process_birth": true,
+      "http_elapsed_ms": 802.937
+    },
+    {
+      "at": "2026-11-27T19:02:38.417557+00:00",
+      "container": {
+        "started": "2026-11-27T18:56:48.209911355Z",
+        "image": "kommutator-hub:release-0.18.0",
+        "node_pid": 1766325,
+        "node_birth": "50738945"
+      },
+      "before": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 4578819900,
+        "runqueue_ns": 258465700
+      },
+      "after": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 4578819900,
+        "runqueue_ns": 258465700
+      },
+      "same_process_birth": true,
+      "http_elapsed_ms": 804.664
+    },
+    {
+      "at": "2026-11-27T19:03:58.447151+00:00",
+      "container": {
+        "started": "2026-11-27T18:56:48.209911355Z",
+        "image": "kommutator-hub:release-0.18.0",
+        "node_pid": 1766325,
+        "node_birth": "50738945"
+      },
+      "before": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 5416453000,
+        "runqueue_ns": 306248500
+      },
+      "after": {
+        "pid": 1766325,
+        "birth_ticks": "50738945",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 5416453000,
+        "runqueue_ns": 306248500
+      },
+      "same_process_birth": true,
+      "http_elapsed_ms": 804.971
+    }
+  ],
+  "limits": [
+    "Unauthenticated loopback availability, not message delivery.",
+    "Later restart at 21:42:33 UTC is outside this observation.",
+    "No contemporaneous per-device Windows counters for these five failures.",
+    "Resource waits observed; universal root cause remains unknown."
+  ]
+}
