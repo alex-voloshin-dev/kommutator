@@ -45,6 +45,14 @@ describe("project identity", () => {
     expect(await projects.key("/repo")).toBe("github.com/Owner/repo");
     expect(calls).toBe(2);
   });
+  it("fresh observation bypasses positive discovery cache for explicit selections", async () => {
+    let remote = "github.com/Owner/first";
+    const projects = new Projects(async () => remote);
+    expect(await projects.key("/repo")).toBe(remote);
+    remote = "github.com/Owner/second";
+    expect(await projects.observe("/repo")).toBe(remote);
+    expect(await projects.key("/repo")).toBe("github.com/Owner/first");
+  });
   it("retains a successful lookup for this daemon lifetime", async () => {
     let calls = 0;
     const projects = new Projects(async () => { calls++; return "github.com/Owner/repo"; });

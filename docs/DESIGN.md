@@ -171,7 +171,7 @@ reconnection and the outbox live in one place; the host keeps working while the 
 | `name`, `host`, `role` | one grammar: `[a-z0-9][a-z0-9_-]{0,62}` (`Ident` in `packages/protocol`), lowercased by the hub and by the address parser | anything that can end up in an address is validated by the same schema at registration, rename and `set_status`; `host` is the short name in `config.json` (set by `kom init`, default `toIdent(hostname)`: lowercase, `.local` stripped, other characters → `-`); auto session names are `<vendor>-<repo>-<n>` from the repository basename, sanitized the same way |
 | `vendor` | adapter / MCP `clientInfo` | `claude-code`, `codex`, `chatgpt-work`, `other` |
 | `vendor_session_id` | hook payload | correlation only |
-| `cwd`, `project_key` | hook payload / MCP `roots` | project key = normalized git remote → `KOM_PROJECT` → basename of cwd |
+| `cwd`, `project_key` | hook payload / MCP `roots` | project key = normalized git remote → `KOM_PROJECT` → basename of cwd, except established context and explicit checkout selection (§19) |
 | `state` | `active` · `idle` · `gone` · `unknown` | `unknown` when the host stops heartbeating (60 s) |
 | `status_line` | `set_status` | one sentence, on the dashboard |
 | `wake` | `on` (default) · `off` | `kom dnd` toggles it from the terminal |
@@ -1275,9 +1275,36 @@ Implementation decisions for steps 3–4 (2026-10-25):
   Concurrent lookups for one cwd share an in-flight request; successful remote results
   remain cached for the daemon lifetime. Missing or failed lookups are evicted so a later
   registration can discover a newly initialized repository or recover from a transient
-  Git failure. This does not migrate existing sessions, topics or boards. Existing Claude
-  owners still reject conflicting project context and require a fresh session; existing
-  registered identities are not silently rewritten.
+  Git failure. This does not migrate existing sessions, topics or boards. An exact established
+  Claude process owner retains its persisted project for identical cwd without rediscovery,
+  including intentional inferred Git changes and recovery from failed lookup. Explicit caller
+  or daemon project must each independently match, including the first registration. This
+  deliberately tightens the former remote-overrides-hint behavior: remove or correct stale
+  KOM_PROJECT/daemon context rather than creating an immediately unusable owner.
+  Changed cwd or explicit conflict rejects before publishing
+  lifecycle mutations. Process birth, generation, retirement, ambiguity and peer fences remain.
+  A new process resolves normally; only a unique proven-dead same-cwd/project predecessor
+  can be reused. Existing Codex roots retain their project across process replacement/resume.
+- **Explicit checkout selection (2026-11-27):** owner-private `project-contexts.json` beside
+  private config uses version 1 and strict `{ cwd, remote, project_key }` entries, at most
+  128 entries/64 KiB, no duplicate exact absolute cwd or unknown fields. Reuse IPC project-key
+  constraints. Read using no-follow open and descriptor type/owner/private-permission/size
+  checks; reject malformed/unreadable files at startup. Missing means no selections.
+  CLI-only `project-context select/remove` defaults to preview. Remove permits deleted checkout
+  paths; select requires explicit cwd,
+  normalized remote and project, an existing directory and fresh bounded matching Git evidence.
+  Preview supplies a full-record canonical revision (or cwd-scoped absence). Apply requires
+  `--expect-revision`, exclusive private writer lock, fresh file validation and record CAS;
+  unrelated entries survive. Never reclaim stale locks automatically. Write via exclusive
+  0600 same-directory temporary file and atomic rename. No hub contact or MCP selector.
+  Loaded selections affect only new owners at the exact cwd (no alias/nesting resolution).
+  Fresh uncached normalized origin must equal stored remote; lookup failure, mismatch or
+  conflicting explicit context rejects without fallback. Other cwd retain normal discovery.
+  Changes require a compatible daemon restart and a new Claude OS owner/conversation or new independent
+  Codex root, not a resumed existing Codex root. Established owners remain pinned even if
+  mapping validation would now fail. Normal authenticated registration alone grants selected
+  project membership. No membership transfer, historical board merge or version/author rewrite.
+  Old daemons ignore this file; the CLI neither restarts services nor repairs current seats.
 - **Adapter evidence:** the observed `user/message.content` envelope preserves the hub
   sender and reply IDs in content; silence remains `written`. No positive ACK classifier
   is justified. Production MCP detached survival is process-tested with fake vendor

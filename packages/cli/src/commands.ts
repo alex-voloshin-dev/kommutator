@@ -5,6 +5,7 @@ import { IpcClient, cliHello } from "./ipc-client.js";
 import { initialize } from "./init.js";
 import { readStatus, runDoctor } from "./doctor.js";
 import { runLogs } from "./logs.js";
+import { projectContextCommand } from "./project-context.js";
 import { boardCommand } from "./board.js";
 import { confirmDaemonStopped } from "./daemon-stop.js";
 import * as z from "zod";
@@ -52,6 +53,7 @@ export async function runCommands(): Promise<void> {
   const main = defineCommand({
     meta: { name: "kom", description: "kommutator — switchboard for coding agents" },
     subCommands: {
+      "project-context": projectContextCommand,
       daemon: defineCommand({ meta: { name: "daemon", description: "manage the per-host daemon" }, subCommands: {
         run: defineCommand({ meta: { name: "run" }, run: async () => { await runDaemon(); } }),
         stop: defineCommand({ meta: { name: "stop" }, run: stopDaemon }),

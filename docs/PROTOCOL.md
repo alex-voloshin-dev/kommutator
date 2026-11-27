@@ -30,6 +30,18 @@ IPC connection to one session at `ipc.hello` and stamps `session_id` on every fo
 The hub authorizes each call against that session's topic memberships (boards, session lists)
 and derives authorship from it (board `author`, message `from`).
 
+An established exact Claude process owner retains its persisted project for identical cwd;
+each explicit caller/daemon project assertion must match even on first registration;
+remove or correct stale KOM_PROJECT rather than relying on Git to override it. Inferred
+Git changes do not retarget established owners.
+Private versioned checkout selection (`project-contexts.json`, DESIGN §19) is CLI-managed local
+configuration, never a new MCP argument or reserved-topic membership bypass. New owners at
+an exact selected cwd require fresh matching normalized Git evidence before registration.
+Activation requires compatible daemon restart plus a new Claude OS owner/conversation or independent
+Codex root; an existing Codex root retains its project across reload/resume. Existing boards,
+authors, versions, generation/birth/retirement fences and predecessor eligibility are unchanged.
+
+
 `ipc.hello` (shim, hook or CLI → agentd, once per IPC connection) carries the facts that binding
 needs: `client` (`shim` | `hook` | `cli`), `pid` (the shim's own pid, which dies with the agent; a
 hook's own pid), `ppid`, `cwd`, `vendor`, `vendor_session_id`, MCP `client_info` (shim),

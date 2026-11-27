@@ -56,3 +56,10 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^packages/agentd/test/resync-transport\.test\.ts$''', '''^spikes/bounded-resync-probe\.mjs$''']
 regexes = ['''^isolated-test-key-12345$''']
+
+[[rules.allowlists]]
+description = "Synthetic board entry key for divergent project history regression"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^packages/agentd/test/daemon-core\.test\.ts$''']
+regexes = ['''^handoff/marketing$''']
