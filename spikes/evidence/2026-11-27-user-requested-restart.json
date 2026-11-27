@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-27",
+  "action": "explicit operator plugin refresh and service restart",
+  "codex_plugins": {
+    "installed": 14,
+    "git_managed": {
+      "kommutator": "0.18.0",
+      "agentic-forge": "2026.11.19"
+    },
+    "remote_reconcile": {
+      "changed": 0,
+      "failed": 0
+    },
+    "initial_cli_list": "cancelled after63seconds without output; native app-server installed/reconcile succeeded"
+  },
+  "claude_plugins": {
+    "kommutator": "0.18.0",
+    "agentic-forge": "2026.11.19",
+    "synced": 10,
+    "synced_update": "CLI rejected synced update as account-managed; freshness not certified"
+  },
+  "hub": {
+    "version": "0.18.0",
+    "started": "2026-11-27T21:42:33.467200495Z",
+    "container_health": "healthy"
+  },
+  "daemon": {
+    "version": "0.18.0",
+    "pid": 2015190,
+    "started": "2026-11-27T21:42:41Z",
+    "connected": true
+  },
+  "loaded_mcp": "0.18.0",
+  "runtime_contract": 4,
+  "caller": "active",
+  "feedback_topics_retained": true,
+  "outbox": {
+    "retained_blocked_id": 644,
+    "depth_after_settlement": 1,
+    "deleted_or_resent": false
+  },
+  "aggregate_health": "degraded for retained blocked work",
+  "deploy_timer": "active",
+  "limits": [
+    "does not close historical availability investigation",
+    "no automatic transfer of hook approval",
+    "remote clients not upgraded"
+  ]
+}

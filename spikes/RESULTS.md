@@ -1673,3 +1673,17 @@ with the burst. Aggregate disks are not proven WSL backing-device attribution,
 and sampled averages are not individual I/O distributions. No root cause or
 configuration fix inferred; no stress/kernel/durability changes. See
 [storage evidence](evidence/2026-11-27-windows-storage-sampling.json).
+
+## 2026-11-27 user-requested plugin refresh and restart
+
+Refreshed configured catalogs and installed local plugins: Kommutator 0.18.0
+and Agentic Forge 2026.11.19 already current. Native Codex reconciliation checked
+14 installed plugins, no remote changes/failures. Initial CLI list was cancelled
+after 63 seconds without output; native installed/reconcile succeeded. Claude
+CLI rejects account-synced updates; ten synced plugins are not certified current.
+
+After draining updater, restarted hub at21:42:33UTC and daemon at21:42:41UTC.
+Observed hub healthy, daemon/MCP0.18.0, contract4, connected active caller and
+retained feedback subscriptions. Startup lifecycle rows drained; old blocked644
+remains, aggregate degraded. Timer restored. No blind resend/deletion or claim
+of historical availability repair. See [restart evidence](evidence/2026-11-27-user-requested-restart.json).
