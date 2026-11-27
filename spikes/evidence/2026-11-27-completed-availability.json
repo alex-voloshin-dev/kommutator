@@ -1,0 +1,214 @@
+{
+  "source_sha256": "25c6c8561dd4dec6cc13ab3b4880b5fb6671eed04907954e406419d515c04070",
+  "bytes": 6362139,
+  "samples": 8640,
+  "first": "2026-11-25T16:11:42.616418+00:00",
+  "last": "2026-11-26T16:11:36.724319+00:00",
+  "outcomes": {
+    "401": 8636,
+    "timeout": 4
+  },
+  "unit_result": "success",
+  "exit_status": 0,
+  "failure_samples": [
+    {
+      "at": "2026-11-25T16:12:32.582359+00:00",
+      "container": {
+        "started": "2026-11-25T03:17:21.924415358Z",
+        "image": "kommutator-hub:release-0.17.0",
+        "node_pid": 2665713,
+        "node_birth": "27822312"
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 804.557,
+      "before": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 298998364600,
+        "runqueue_ns": 770308700
+      },
+      "after": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 298998364600,
+        "runqueue_ns": 770308700
+      },
+      "same_process_birth": true,
+      "io": {
+        "some": {
+          "avg10": 16.66,
+          "avg60": 4.68
+        },
+        "full": {
+          "avg10": 15.49,
+          "avg60": 4.38
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0
+        }
+      }
+    },
+    {
+      "at": "2026-11-25T16:26:32.605979+00:00",
+      "container": {
+        "started": "2026-11-25T03:17:21.924415358Z",
+        "image": "kommutator-hub:release-0.17.0",
+        "node_pid": 2665713,
+        "node_birth": "27822312"
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 800.912,
+      "before": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 305098875600,
+        "runqueue_ns": 911828200
+      },
+      "after": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 305103192500,
+        "runqueue_ns": 911828200
+      },
+      "same_process_birth": true,
+      "io": {
+        "some": {
+          "avg10": 24.59,
+          "avg60": 11.7
+        },
+        "full": {
+          "avg10": 18.91,
+          "avg60": 9.4
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 7.23,
+          "avg60": 1.33
+        },
+        "full": {
+          "avg10": 6.35,
+          "avg60": 1.17
+        }
+      }
+    },
+    {
+      "at": "2026-11-25T16:26:52.606344+00:00",
+      "container": {
+        "started": "2026-11-25T03:17:21.924415358Z",
+        "image": "kommutator-hub:release-0.17.0",
+        "node_pid": 2665713,
+        "node_birth": "27822312"
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 804.609,
+      "before": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 305219890100,
+        "runqueue_ns": 912227700
+      },
+      "after": {
+        "pid": 2665713,
+        "birth_ticks": "27822312",
+        "state": "D",
+        "wait": "folio_wait_bit_common",
+        "cpu_ns": 305219890100,
+        "runqueue_ns": 912227700
+      },
+      "same_process_birth": true,
+      "io": {
+        "some": {
+          "avg10": 4.86,
+          "avg60": 9.52
+        },
+        "full": {
+          "avg10": 3.91,
+          "avg60": 7.72
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 1.0,
+          "avg60": 0.98
+        },
+        "full": {
+          "avg10": 0.89,
+          "avg60": 0.86
+        }
+      }
+    },
+    {
+      "at": "2026-11-25T23:20:13.867895+00:00",
+      "container": {
+        "started": "2026-11-25T17:23:21.563610249Z",
+        "image": "kommutator-hub:release-0.17.2",
+        "node_pid": 3837635,
+        "node_birth": "32898273"
+      },
+      "error": "timeout",
+      "http_elapsed_ms": 805.126,
+      "before": {
+        "pid": 3837635,
+        "birth_ticks": "32898273",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 144775325600,
+        "runqueue_ns": 333070900
+      },
+      "after": {
+        "pid": 3837635,
+        "birth_ticks": "32898273",
+        "state": "D",
+        "wait": "jbd2_log_wait_commit",
+        "cpu_ns": 144777682400,
+        "runqueue_ns": 333070900
+      },
+      "same_process_birth": true,
+      "io": {
+        "some": {
+          "avg10": 1.35,
+          "avg60": 0.43
+        },
+        "full": {
+          "avg10": 1.35,
+          "avg60": 0.43
+        }
+      },
+      "memory": {
+        "some": {
+          "avg10": 0.0,
+          "avg60": 0.0
+        },
+        "full": {
+          "avg10": 0.0,
+          "avg60": 0.0
+        }
+      }
+    }
+  ],
+  "limits": [
+    "Sampled unauthenticated HTTP response availability, not authenticated message delivery or idle wake.",
+    "Ten-second sampling cannot bound all outage intervals.",
+    "Three timeouts before rollout, fourth after explicit user restart on0.17.2; all birth-matched storage waits.",
+    "No common historical root cause established; no kernel/durability changes.",
+    "No agentd log entries23:15-23:25UTC; routine updater ended23:19:50 before23:20:13timeout, temporal proximity not causality."
+  ]
+}

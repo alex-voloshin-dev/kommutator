@@ -1607,3 +1607,23 @@ execution and live Claude activation not certified. Announcement c31f34db-747f-4
 See [qualification](evidence/2026-11-25-local-rebind-qualification.json),
 [rollout](evidence/2026-11-25-local-rebind-rollout.json), and the still ongoing
 [availability evidence](evidence/2026-11-25-ongoing-availability.json).
+
+
+## 2026-11-27 completed sampled availability observation
+
+The bounded Nov25 collector completed successfully (exit0) with8640 samples,
+8636 expected unauthenticated HTTP401 responses and four800ms-budget timeouts.
+Collection spans Nov25 16:11:42 to Nov26 16:11:36UTC. Three failures preceded
+0.17.2 rollout; the fourth at Nov25 23:20:13.867UTC occurred on the0.17.2 hub
+started by the explicit17:23:21 user restart, birth matched before and after.
+That final sample shows D-state/jbd2_log_wait_commit on both snapshots,
+2.3568ms main-thread CPU increase and no runqueue increase across805.126ms.
+This associates that sample with storage waiting, not a proven universal cause.
+
+No daemon log records were found in the bounded23:15-23:25UTC interval.
+A routine updater run ended23:19:50UTC with idle/applied0.17.2; proximity is
+not evidence it caused the failure. No production stress or durability changes
+were made. See evidence/2026-11-27-completed-availability.json for the snapshot
+hash and failed samples. This completes sampled HTTP observation, not day-long
+message delivery, native idle wake or continuous availability acceptance.
+Historical entries saying collection is ongoing describe their earlier snapshots.
